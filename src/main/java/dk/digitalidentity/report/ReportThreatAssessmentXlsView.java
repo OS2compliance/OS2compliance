@@ -1,6 +1,7 @@
 package dk.digitalidentity.report;
 
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -22,7 +24,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -35,303 +36,222 @@ import static dk.digitalidentity.report.XlsUtil.createCell;
 public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 
 	@Override
-	protected void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request, HttpServletResponse response) {
-		final ThreatAssessment threatAssessment = (ThreatAssessment) model.get("threatAssessment");
-		String customOwnerName = (String) model.get("customOwnerName");
-		String customResponsibleName = (String) model.get("customResponsibleName");
-		String customOperationName = (String) model.get("customOperationName");
-		String dataAccessPersons = (String) model.get("dataAccessPersons");
-		String accessCount = (String) model.get("accessCount");
-		String dataCategories = (String) model.get("dataCategories");
+	protected void buildExcelDocument(Map<String, Object> model, Workbook workbook,
+			HttpServletRequest request, HttpServletResponse response) {
 
+		final ThreatAssessment threatAssessment = (ThreatAssessment) model.get("threatAssessment");
 		if (threatAssessment == null) {
 			throw new IllegalArgumentException("ThreatAssessment not found in model");
 		}
 
-		Sheet sheet = workbook.createSheet("ThreatAssessment");
-		Font headerFont = createExcelFont(workbook);
-		CellStyle headerStyle = setSheetStyle(workbook, headerFont);
-		Map<String, String> data = new HashMap<>();
-		data.put("customOwnerName", customOwnerName);
-		data.put("customResponsibleName", customResponsibleName);
-		data.put("customOperationName", customOperationName);
-		data.put("dataAccessPersons", dataAccessPersons);
-		data.put("accessCount", accessCount);
-		data.put("dataCategories", dataCategories);
-
-		createHeader(sheet, headerStyle, data);
-
-		// Create normal cell style for data rows
-		CellStyle normalStyle = workbook.createCellStyle();
-		normalStyle.setWrapText(true);
-
-		normalStyle.setBorderBottom(BorderStyle.THIN);
-		normalStyle.setBorderTop(BorderStyle.THIN);
-		normalStyle.setBorderLeft(BorderStyle.THIN);
-		normalStyle.setBorderRight(BorderStyle.THIN);
-		normalStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-		normalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
+		// Extract model data
+		final ModelData modelData = extractModelData(model);
 		final List<Relatable> relations = (List<Relatable>) model.get("relations");
+		final Asset riskAsset = (Asset) model.get("riskAsset");
+		final Register riskRegister = (Register) model.get("riskRegister");
 
-		Asset riskAsset = (Asset) model.get("riskAsset");
-		Register riskRegister = (Register) model.get("riskRegister");
+		// Create styles
+		final ExcelStyles styles = createExcelStyles(workbook);
 
-		List<Task> riskAssessmentTasks = relations.stream().filter(t -> t.getRelationType() == RelationType.TASK)
+		// Create "Stamdata" sheet
+		createStamDataSheet(workbook, threatAssessment, modelData, relations, riskAsset, riskRegister, styles);
+
+		// Create "Trussler" sheet for CustomThreats
+		createTrusslerSheet(workbook, threatAssessment, styles);
+	}
+
+	private void createStamDataSheet(Workbook workbook, ThreatAssessment threatAssessment,
+			ModelData modelData, List<Relatable> relations, Asset riskAsset, Register riskRegister,
+			ExcelStyles styles) {
+
+		Sheet sheet = workbook.createSheet("Stamdata");
+
+		// Create header
+		createStamDataHeader(sheet, modelData, styles.headerStyle);
+
+		// Get related tasks
+		List<Task> riskAssessmentTasks = relations.stream()
+				.filter(t -> t.getRelationType() == RelationType.TASK)
 				.map(Task.class::cast)
 				.toList();
 
-		inputThreatAssessmentData(sheet, normalStyle, threatAssessment, riskAsset, riskRegister, riskAssessmentTasks, data);
+		// Create data row
+		createStamDataRow(sheet, threatAssessment, riskAsset, riskRegister, riskAssessmentTasks,
+				modelData, styles.normalStyle);
 
-		// Auto-size columns after data is added
-		for (int i = 0; i < 19; i++) {
-			sheet.autoSizeColumn(i);
+		// Auto-size columns
+		autoSizeColumns(sheet, 19);
+	}
+
+	private void createTrusslerSheet(Workbook workbook, ThreatAssessment threatAssessment, ExcelStyles styles) {
+		Sheet sheet = workbook.createSheet("Trussler");
+
+		// Create header for custom threats
+		createTrusslerHeader(sheet, styles.headerStyle);
+
+		// Create data rows for custom threats
+		createTrusslerRows(sheet, threatAssessment, styles);
+
+		// Auto-size columns
+		autoSizeColumns(sheet, 2);
+	}
+
+	private void createStamDataHeader(Sheet sheet, ModelData modelData, CellStyle headerStyle) {
+		final Row header = sheet.createRow(0);
+		final String[] headers = {
+				"Titel", "Kommentarer", "Undertitel", "Tilstede på mødet", "Kritikalitet",
+				modelData.customOwnerName != null ? modelData.customOwnerName : "Systemejer",
+				modelData.customResponsibleName != null ? modelData.customResponsibleName : "Systemansvarlig",
+				modelData.customOperationName != null ? modelData.customOperationName : "Driftsansvarlig",
+				"Systemtype", "Formål", "Medtagne konsekvensområder", "Leverandør",
+				"Sletteprocedure udarbejdet", "Link til Sletteprocedure", "Samfundskritisk",
+				"Hvem har adgang til personoplysningerne", "Hvor mange har adgang til personoplysningerne?",
+				"Kategorier af registrerede og typer af personoplysninger", "Opgaver oprettet under risikovurderingen"
+		};
+
+		for (int i = 0; i < headers.length; i++) {
+			createCell(header, i, headers[i], headerStyle);
 		}
 	}
 
-	private void createHeader(Sheet sheet, CellStyle headerStyle, Map<String, String> model) {
+	private void createTrusslerHeader(Sheet sheet, CellStyle headerStyle) {
 		final Row header = sheet.createRow(0);
+		final String[] headers = {
+				"Trussel type", "Beskrivelse"
+		};
 
-		createCell(header, 0, "Titel", headerStyle);
-		createCell(header, 1, "Kommentarer", headerStyle);
-		createCell(header, 2, "Undertitel", headerStyle);
-		createCell(header, 3, "Tilstede på mødet", headerStyle);
-		createCell(header, 4, "Kritikalitet", headerStyle);
-		createCell(header, 5, model.getOrDefault("customOwnerName", "Systemejer"), headerStyle);
-		createCell(header, 6, model.getOrDefault("customResponsibleName", "Systemansvarlig"), headerStyle);
-		createCell(header, 7, model.getOrDefault("customOperationName", "Driftsansvarlig"), headerStyle);
-		createCell(header, 8, "Systemtype", headerStyle);
-		createCell(header, 9, "Formål", headerStyle);
-		createCell(header, 10, "Medtagne konsekvensområder", headerStyle);
-		createCell(header, 11, "Leverandør", headerStyle);
-		createCell(header, 12, "Sletteprocedure udarbejdet", headerStyle);
-		createCell(header, 13, "Link til Sletteprocedure", headerStyle);
-		createCell(header, 14, "Samfundskritisk", headerStyle);
-		createCell(header, 15, "Hvem har adgang til personoplysningerne", headerStyle);
-		createCell(header, 16, "Hvor mange har adgang til personoplysningerne?", headerStyle);
-		createCell(header, 17, "Kategorier af registrerede og typer af personoplysninger", headerStyle);
-		createCell(header, 18, "Opgaver oprettet under risikovurderingen", headerStyle);
+		for (int i = 0; i < headers.length; i++) {
+			createCell(header, i, headers[i], headerStyle);
+		}
 	}
 
-	private void inputThreatAssessmentData(Sheet sheet, CellStyle cellStyle, ThreatAssessment threatAssessment,
-			Asset riskAsset, Register riskRegister, List<Task> tasks, Map<String, String> model) {
+	private void createStamDataRow(Sheet sheet, ThreatAssessment threatAssessment, Asset riskAsset,
+			Register riskRegister, List<Task> tasks, ModelData modelData, CellStyle cellStyle) {
+
 		final Row row = sheet.createRow(1);
+		int cellNum = 0;
 
-		// Column 0: Titel
-		createCell(row, 0, threatAssessment.getName(), cellStyle);
+		// Basic threat assessment data
+		createCell(row, cellNum++, threatAssessment.getName(), cellStyle);
+		createCell(row, cellNum++, safeString(threatAssessment.getComment()), cellStyle);
+		createCell(row, cellNum++, getSubHeading(threatAssessment, riskAsset, riskRegister), cellStyle);
+		createCell(row, cellNum++, getPresentAtMeetingString(threatAssessment), cellStyle);
+		createCell(row, cellNum++, getCriticality(riskAsset, riskRegister), cellStyle);
 
-		// Column 1: Kommentarer
-		createCell(row, 1, threatAssessment.getComment() != null ? threatAssessment.getComment() : "", cellStyle);
-
-		// Column 2: Undertitel
-		createCell(row, 2, getSubHeading(threatAssessment, riskAsset, riskRegister), cellStyle);
-
-		// Column 3: Tilstede på mødet
-		String presentAtMeeting = Optional.ofNullable(threatAssessment.getPresentAtMeeting())
-				.filter(users -> !users.isEmpty())
-				.map(users -> users.stream()
-						.map(User::getName)
-						.collect(Collectors.joining(", ")))
-				.orElse("Ingen tilstede");
-		createCell(row, 3, presentAtMeeting, cellStyle);
-
-		// Column 4: Kritikalitet
-		createCell(row, 4, getCriticality(riskAsset, riskRegister), cellStyle);
-
-		// Fill remaining columns based on Asset or Register
+		// Asset or Register specific data (columns 5-17)
 		if (riskAsset != null) {
-			fillAssetData(row, cellStyle, riskAsset, model);
+			fillAssetData(row, cellNum, riskAsset, modelData, cellStyle);
 		} else if (riskRegister != null) {
-			fillRegisterData(row, cellStyle, riskRegister, model);
+			fillRegisterData(row, cellNum, riskRegister, modelData, cellStyle);
 		} else {
-			// Fill with empty values if neither asset nor register exists
-			for (int i = 5; i < 18; i++) {
-				createCell(row, i, "", cellStyle);
+			// Fill with empty values
+			for (int i = 0; i < 13; i++) {
+				if (i == 5) { // Column 10 (risk areas) - even when no asset/register
+					createCell(row, cellNum + i, String.join(", ", buildRiskAreas(threatAssessment)), cellStyle);
+				} else {
+					createCell(row, cellNum + i, "", cellStyle);
+				}
 			}
 		}
+		cellNum += 13;
 
-		// Column 10: Risk areas
-		createCell(row, 10, String.join(",", buildRiskAreas(threatAssessment)), cellStyle);
-
-		// Column 18: Related tasks
-		String taskNames = Optional.ofNullable(tasks)
-				.map(taskList -> taskList.stream()
-						.map(Task::getName)
-						.collect(Collectors.joining(",")))
-				.orElse("");
-		createCell(row, 18, taskNames, cellStyle);
+		// Column 18: Tasks
+		createCell(row, cellNum, getTasksString(tasks), cellStyle);
 	}
 
-	private void fillAssetData(Row row, CellStyle cellStyle, Asset riskAsset, Map<String, String> model) {
-		// Column 5: System owners
-		String systemOwners = Optional.ofNullable(riskAsset.getResponsibleUsers())
-				.map(users -> users.stream()
-						.map(User::getName)
-						.collect(Collectors.joining(", ")))
-				.orElse("");
-		createCell(row, 5, systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners, cellStyle);
+	private void createTrusslerRows(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles) {
+		if (threatAssessment.getCustomThreats() == null || threatAssessment.getCustomThreats().isEmpty()) {
+			// Create empty row with message
+			Row emptyRow = sheet.createRow(1);
+			createCell(emptyRow, 0, "Ingen tilpassede trusler fundet", styles.normalStyle);
+			return;
+		}
 
-		// Column 6: System responsible
-		String systemResponsible = Optional.ofNullable(riskAsset.getManagers())
-				.map(managers -> managers.stream()
-						.map(User::getName)
-						.collect(Collectors.joining(", ")))
-				.orElse("");
-		createCell(row, 6, systemResponsible.isBlank() ? "Ikke udfyldt" : systemResponsible, cellStyle);
+		int rowNum = 1;
+		for (CustomThreat customThreat : threatAssessment.getCustomThreats()) {
+			Row row = sheet.createRow(rowNum++);
+			int cellNum = 0;
 
-		// Column 7: Operation responsible
-		String operationResponsible = Optional.ofNullable(riskAsset.getOperationResponsibleUsers())
-				.map(users -> users.stream()
-						.map(User::getName)
-						.collect(Collectors.joining(", ")))
-				.orElse("");
-		createCell(row, 7, operationResponsible.isBlank() ? "Ikke udfyldt" : operationResponsible, cellStyle);
+			createCell(row, cellNum++, safeString(customThreat.getThreatType()), styles.normalStyle);
+			createCell(row, cellNum++, safeString(customThreat.getDescription()), styles.normalStyle);
+		}
+	}
 
-		// Column 8: Systemtype
+	private void fillAssetData(Row row, int startCell, Asset riskAsset, ModelData modelData, CellStyle cellStyle) {
+		int cellNum = startCell;
+
+		// Owners (column 5)
+		createCell(row, cellNum++, getUsersString(riskAsset.getResponsibleUsers(), "Ikke udfyldt"), cellStyle);
+
+		// Managers (column 6)
+		createCell(row, cellNum++, getUsersString(riskAsset.getManagers(), "Ikke udfyldt"), cellStyle);
+
+		// Operation responsible (column 7)
+		createCell(row, cellNum++, getUsersString(riskAsset.getOperationResponsibleUsers(), "Ikke udfyldt"), cellStyle);
+
+		// Asset type (column 8)
 		String assetType = Optional.ofNullable(riskAsset.getAssetType())
 				.map(ChoiceValue::getCaption)
 				.orElse("Ikke angivet");
-		createCell(row, 8, assetType, cellStyle);
+		createCell(row, cellNum++, assetType, cellStyle);
 
-		// Column 9: Formål
-		createCell(row, 9, "Ikke udfyldt", cellStyle);
+		// Purpose (column 9) - Not available for Asset
+		createCell(row, cellNum++, "Ikke udfyldt", cellStyle);
 
-		// Column 11: Leverandør
+		// Risk areas (column 10) - Will be filled later
+		createCell(row, cellNum++, "", cellStyle);
+
+		// Supplier (column 11)
 		String supplierName = Optional.ofNullable(riskAsset.getSupplier())
 				.map(Relatable::getName)
 				.orElse("Ukendt");
-		createCell(row, 11, supplierName, cellStyle);
+		createCell(row, cellNum++, supplierName, cellStyle);
 
-		// Column 12: Sletteprocedure udarbejdet
-		String deletionProcedure = Optional.ofNullable(riskAsset.getDataProcessing())
-				.map(DataProcessing::getDeletionProcedure)
-				.map(DeletionProcedure::getMessage)
-				.orElse("Ikke udfyldt");
-		createCell(row, 12, deletionProcedure, cellStyle);
+		// Deletion procedure fields (columns 12-13)
+		fillDeletionProcedureData(row, cellNum, riskAsset.getDataProcessing(), cellStyle);
+		cellNum += 2;
 
-		// Column 13: Link til Sletteprocedure
-		String deletionLink = Optional.ofNullable(riskAsset.getDataProcessing())
-				.map(DataProcessing::getDeletionProcedureLink)
-				.orElse("Ikke angivet");
-		createCell(row, 13, deletionLink, cellStyle);
+		// Socially critical (column 14)
+		createCell(row, cellNum++, riskAsset.isSociallyCritical() ? "Ja" : "Nej", cellStyle);
 
-		// Column 14: Samfundskritisk
-		createCell(row, 14, riskAsset.isSociallyCritical() ? "Ja" : "Nej", cellStyle);
-
-		// Column 15: Hvem har adgang til personoplysningerne
-		createCell(row, 15, model.getOrDefault("dataAccessPersons", "Ikke udfyldt"), cellStyle);
-
-		// Column 16: Hvor mange har adgang til personoplysningerne?
-		createCell(row, 16, model.getOrDefault("accessCount", "0"), cellStyle);
-
-		// Column 17: Kategorier af registrerede og typer af personoplysninger
-		String dataCategories = model.getOrDefault("dataCategories", "Ikke udfyldt");
-		createCell(row, 17, dataCategories, cellStyle);
+		// Data access fields (columns 15-17)
+		fillDataAccessFields(row, cellNum, modelData, cellStyle);
 	}
 
-	private void fillRegisterData(Row row, CellStyle cellStyle, Register riskRegister, Map<String, String> model) {
-		// Column 5: System owners
-		String systemOwners = Optional.ofNullable(riskRegister.getResponsibleUsers())
-				.map(users -> users.stream()
-						.map(User::getName)
-						.collect(Collectors.joining(", ")))
-				.orElse("");
-		createCell(row, 5, systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners, cellStyle);
+	private void fillRegisterData(Row row, int startCell, Register riskRegister, ModelData modelData, CellStyle cellStyle) {
+		int cellNum = startCell;
 
-		// Column 6-7: Not applicable for Register
-		createCell(row, 6, "", cellStyle);
-		createCell(row, 7, "", cellStyle);
+		// Owners (column 5)
+		createCell(row, cellNum++, getUsersString(riskRegister.getResponsibleUsers(), "Ikke udfyldt"), cellStyle);
 
-		// Column 8: Systemtype
-		createCell(row, 8, "Fortegnelse", cellStyle);
+		// Columns 6-7: Not applicable for Register
+		createCell(row, cellNum++, "", cellStyle);
+		createCell(row, cellNum++, "", cellStyle);
 
-		// Column 9: Formål
-		String purpose = Optional.ofNullable(riskRegister.getPurpose())
-				.orElse("");
-		createCell(row, 9, purpose, cellStyle);
+		// System type (column 8)
+		createCell(row, cellNum++, "Fortegnelse", cellStyle);
 
-		// Column 11: Leverandør (not applicable for Register)
-		createCell(row, 11, "", cellStyle);
+		// Purpose (column 9)
+		createCell(row, cellNum++, safeString(riskRegister.getPurpose()), cellStyle);
 
-		// Column 12: Sletteprocedure udarbejdet
-		String deletionProcedure = Optional.ofNullable(riskRegister.getDataProcessing())
-				.map(DataProcessing::getDeletionProcedure)
-				.map(DeletionProcedure::getMessage)
-				.orElse("Ikke udfyldt");
-		createCell(row, 12, deletionProcedure, cellStyle);
+		// Risk areas (column 10) - Will be filled later
+		createCell(row, cellNum++, "", cellStyle);
 
-		// Column 13: Link til Sletteprocedure
-		String deletionLink = Optional.ofNullable(riskRegister.getDataProcessing())
-				.map(DataProcessing::getDeletionProcedureLink)
-				.orElse("");
-		createCell(row, 13, deletionLink, cellStyle);
+		// Supplier (column 11) - Not applicable for Register
+		createCell(row, cellNum++, "", cellStyle);
 
-		// Column 14: Samfundskritisk (not applicable for Register)
-		createCell(row, 14, "", cellStyle);
+		// Deletion procedure fields (columns 12-13)
+		fillDeletionProcedureData(row, cellNum, riskRegister.getDataProcessing(), cellStyle);
+		cellNum += 2;
 
-		// Column 15: Hvem har adgang til personoplysningerne
-		String dataAccessPersons = model.getOrDefault("dataAccessPersons", "Ikke udfyldt");
-		createCell(row, 15, dataAccessPersons, cellStyle);
+		// Socially critical (column 14) - Not applicable for Register
+		createCell(row, cellNum++, "", cellStyle);
 
-		// Column 16: Hvor mange har adgang til personoplysningerne?
-		String accessCount = model.getOrDefault("accessCount", "0");
-		createCell(row, 16, accessCount, cellStyle);
-
-		// Column 17: Kategorier af registrerede og typer af personoplysninger
-		String dataCategories = model.getOrDefault("dataCategories", "Ikke udfyldt");
-		createCell(row, 17, dataCategories, cellStyle);
+		// Data access fields (columns 15-17)
+		fillDataAccessFields(row, cellNum, modelData, cellStyle);
 	}
 
-	private String getSubHeading(final ThreatAssessment threatAssessment, final Asset asset, final Register register) {
-		if (asset != null) {
-			String owners = Optional.ofNullable(asset.getResponsibleUsers())
-					.filter(users -> !users.isEmpty())
-					.map(users -> users.stream()
-							.map(User::getName)
-							.collect(Collectors.joining(", ")))
-					.orElse(null);
-			if (owners != null) {
-				return "Systemejere: " + owners;
-			}
-		} else if (register != null) {
-			String owners = Optional.ofNullable(register.getResponsibleUsers())
-					.filter(users -> !users.isEmpty())
-					.map(users -> users.stream()
-							.map(User::getName)
-							.collect(Collectors.joining(", ")))
-					.orElse(null);
-
-			if (owners != null) {
-				return "Behandlingsansvarlige: " + owners;
-			}
-		}
-		if (threatAssessment.getResponsibleUser() != null) {
-			return "Risikoejer: " + threatAssessment.getResponsibleUser().getName();
-		}
-		return "Risikoejer ikke udfyldt";
-	}
-
-	private String getCriticality(final Asset asset, final Register register) {
-		StringBuilder stringBuilder = new StringBuilder();
-		if (asset != null) {
-			stringBuilder.append("Systemet er: ");
-			stringBuilder.append(asset.getCriticality() != null ? asset.getCriticality().getMessage() : "Ikke udfyldt");
-			stringBuilder.append(" | ");
-			stringBuilder.append("Nødplan: ");
-			stringBuilder.append(asset.getEmergencyPlanLink() != null && !asset.getEmergencyPlanLink().isEmpty() ? asset.getEmergencyPlanLink() : "Ikke udfyldt");
-		} else if (register != null) {
-			stringBuilder.append("Behandlingsaktiviteten er: ");
-			stringBuilder.append(register.getCriticality() != null ? register.getCriticality().getMessage() : "Ikke udfyldt");
-			stringBuilder.append(" | ");
-			stringBuilder.append("Nødplan: ");
-			stringBuilder.append(register.getEmergencyPlanLink() != null && !register.getEmergencyPlanLink().isEmpty() ? register.getEmergencyPlanLink() : "Ikke udfyldt");
-		}
-		if (asset == null && register == null) {
-			return "Ikke angivet";
-		}
-		return stringBuilder.toString();
-	}
-
+	// Helper methods
 	private Set<String> buildRiskAreas(ThreatAssessment threatAssessment) {
 		Set<String> result = new HashSet<>();
 		if (threatAssessment.isOrganisation()) {
@@ -346,21 +266,168 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		return result;
 	}
 
-	private static Font createExcelFont(Workbook workbook) {
+	private ModelData extractModelData(Map<String, Object> model) {
+		return new ModelData(
+				(String) model.get("customOwnerName"),
+				(String) model.get("customResponsibleName"),
+				(String) model.get("customOperationName"),
+				(String) model.get("dataAccessPersons"),
+				(String) model.get("accessCount"),
+				(String) model.get("dataCategories")
+		);
+	}
+
+	private ExcelStyles createExcelStyles(Workbook workbook) {
+		return new ExcelStyles(
+				createHeaderStyle(workbook),
+				createNormalStyle(workbook),
+				createDateStyle(workbook)
+		);
+	}
+
+	private CellStyle createHeaderStyle(Workbook workbook) {
+		CellStyle headerStyle = workbook.createCellStyle();
 		Font headerFont = workbook.createFont();
 		headerFont.setBold(true);
 		headerFont.setColor(IndexedColors.BLACK.getIndex());
 		headerFont.setFontName("Arial");
 		headerFont.setFontHeightInPoints((short) 11);
-		return headerFont;
-	}
 
-	private static CellStyle setSheetStyle(Workbook workbook, Font headerFont) {
-		CellStyle headerStyle = workbook.createCellStyle();
-		headerStyle.setWrapText(true);
 		headerStyle.setFont(headerFont);
 		headerStyle.setFillForegroundColor(IndexedColors.WHITE.getIndex());
 		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		addBorders(headerStyle);
 		return headerStyle;
 	}
+
+	private CellStyle createNormalStyle(Workbook workbook) {
+		CellStyle normalStyle = workbook.createCellStyle();
+		normalStyle.setWrapText(true);
+		normalStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+		normalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		addBorders(normalStyle);
+		return normalStyle;
+	}
+
+	private CellStyle createDateStyle(Workbook workbook) {
+		CellStyle dateStyle = workbook.createCellStyle();
+		CreationHelper createHelper = workbook.getCreationHelper();
+		dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy"));
+		dateStyle.setWrapText(true);
+		dateStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+		dateStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		addBorders(dateStyle);
+		return dateStyle;
+	}
+
+	private void addBorders(CellStyle style) {
+		style.setBorderBottom(BorderStyle.THIN);
+		style.setBorderTop(BorderStyle.THIN);
+		style.setBorderLeft(BorderStyle.THIN);
+		style.setBorderRight(BorderStyle.THIN);
+	}
+
+	private void fillDeletionProcedureData(Row row, int startCell, DataProcessing dataProcessing, CellStyle cellStyle) {
+		String deletionProcedure = Optional.ofNullable(dataProcessing)
+				.map(DataProcessing::getDeletionProcedure)
+				.map(DeletionProcedure::getMessage)
+				.orElse("Ikke udfyldt");
+		createCell(row, startCell, deletionProcedure, cellStyle);
+
+		String deletionLink = Optional.ofNullable(dataProcessing)
+				.map(DataProcessing::getDeletionProcedureLink)
+				.orElse("Ikke angivet");
+		createCell(row, startCell + 1, deletionLink, cellStyle);
+	}
+
+	private void fillDataAccessFields(Row row, int startCell, ModelData modelData, CellStyle cellStyle) {
+		createCell(row, startCell, safeString(modelData.dataAccessPersons, "Ikke udfyldt"), cellStyle);
+		createCell(row, startCell + 1, safeString(modelData.accessCount, "0"), cellStyle);
+		createCell(row, startCell + 2, safeString(modelData.dataCategories, "Ikke udfyldt"), cellStyle);
+	}
+
+	private String getUsersString(List<User> users, String defaultValue) {
+		if (users == null || users.isEmpty()) {
+			return defaultValue;
+		}
+		String result = users.stream()
+				.map(User::getName)
+				.filter(name -> name != null && !name.isBlank())
+				.collect(Collectors.joining(", "));
+		return result.isBlank() ? defaultValue : result;
+	}
+
+	private String getPresentAtMeetingString(ThreatAssessment threatAssessment) {
+		return Optional.ofNullable(threatAssessment.getPresentAtMeeting())
+				.filter(users -> !users.isEmpty())
+				.map(users -> users.stream()
+						.map(User::getName)
+						.filter(name -> name != null && !name.isBlank())
+						.collect(Collectors.joining(", ")))
+				.orElse("Ingen tilstede");
+	}
+
+	private String getTasksString(List<Task> tasks) {
+		return Optional.ofNullable(tasks)
+				.map(taskList -> taskList.stream()
+						.map(Task::getName)
+						.filter(name -> name != null && !name.isBlank())
+						.collect(Collectors.joining(", ")))
+				.orElse("");
+	}
+
+	private String safeString(String value) {
+		return value != null ? value : "";
+	}
+
+	private String safeString(String value, String defaultValue) {
+		return (value != null && !value.isBlank()) ? value : defaultValue;
+	}
+
+	private void autoSizeColumns(Sheet sheet, int columnCount) {
+		for (int i = 0; i < columnCount; i++) {
+			sheet.autoSizeColumn(i);
+		}
+	}
+
+	// Keep existing methods that are still relevant
+	private String getSubHeading(final ThreatAssessment threatAssessment, final Asset asset, final Register register) {
+		if (asset != null) {
+			String owners = getUsersString(asset.getResponsibleUsers(), null);
+			if (owners != null) {
+				return "Systemejere: " + owners;
+			}
+		} else if (register != null) {
+			String owners = getUsersString(register.getResponsibleUsers(), null);
+			if (owners != null) {
+				return "Behandlingsansvarlige: " + owners;
+			}
+		}
+		if (threatAssessment.getResponsibleUser() != null) {
+			return "Risikoejer: " + threatAssessment.getResponsibleUser().getName();
+		}
+		return "Risikoejer ikke udfyldt";
+	}
+
+	private String getCriticality(final Asset asset, final Register register) {
+		StringBuilder sb = new StringBuilder();
+		if (asset != null) {
+			sb.append("Systemet er: ");
+			sb.append(asset.getCriticality() != null ? asset.getCriticality().getMessage() : "Ikke udfyldt");
+			sb.append(" | Nødplan: ");
+			sb.append(asset.getEmergencyPlanLink() != null && !asset.getEmergencyPlanLink().isEmpty() ?
+					asset.getEmergencyPlanLink() : "Ikke udfyldt");
+		} else if (register != null) {
+			sb.append("Behandlingsaktiviteten er: ");
+			sb.append(register.getCriticality() != null ? register.getCriticality().getMessage() : "Ikke udfyldt");
+			sb.append(" | Nødplan: ");
+			sb.append(register.getEmergencyPlanLink() != null && !register.getEmergencyPlanLink().isEmpty() ?
+					register.getEmergencyPlanLink() : "Ikke udfyldt");
+		}
+		return asset == null && register == null ? "Ikke angivet" : sb.toString();
+	}
+
+	// Records
+	private record ModelData(String customOwnerName, String customResponsibleName, String customOperationName, String dataAccessPersons, String accessCount, String dataCategories) {}
+	private record ExcelStyles(CellStyle headerStyle, CellStyle normalStyle, CellStyle dateStyle) {}
 }
