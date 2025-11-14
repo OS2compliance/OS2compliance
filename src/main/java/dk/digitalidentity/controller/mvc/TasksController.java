@@ -125,6 +125,7 @@ public class TasksController {
             model.addAttribute("formTitle", "Ny opgave");
             model.addAttribute("action", "/tasks/create");
             model.addAttribute("relations", Collections.emptyList());
+			model.addAttribute("isEditing", false);
         } else {
             final Task task = taskService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -143,6 +144,7 @@ public class TasksController {
             model.addAttribute("formTitle", "Rediger opgave");
             model.addAttribute("relations", relations);
             model.addAttribute("action", "/tasks/edit?showIndex=true");
+			model.addAttribute("isEditing", true);
         }
         return "tasks/form";
     }
@@ -174,7 +176,6 @@ public class TasksController {
 
         if (riskId != null) {
             threatAssessmentService.handleTaskRiskAssociation(savedTask, riskId, riskCustomId, riskCatalogIdentifier);
-            return "redirect:/risks/" + riskId;
         }
 
         return "redirect:/tasks/"+savedTask.getId();
