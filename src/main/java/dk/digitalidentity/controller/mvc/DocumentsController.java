@@ -6,9 +6,6 @@ import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
-import dk.digitalidentity.model.entity.enums.DocumentStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.Roles;
@@ -24,14 +21,9 @@ import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -45,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -66,7 +58,7 @@ public class DocumentsController {
 	@RequireReadOwnerOnly
     @GetMapping
     public String documentsList(final Model model) {
-		model.addAttribute("document", new DocumentFormDTO(null, null, null, null, null, null, null, null, null));
+		model.addAttribute("document", new DocumentFormDTO(null, null, null, null, null, null, null, null, null, List.of()));
         model.addAttribute("isSuperuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 		model.addAttribute("possibleDocumentTypes", choiceService.findChoiceValuesForListIdentifier("document-type"));
         return "documents/index";
@@ -92,6 +84,8 @@ public class DocumentsController {
 		document.setRevisionInterval(documentForm.getRevisionInterval());
 		document.setNextRevision(documentForm.getNextRevision());
 		document.setResponsibleUser(documentForm.getResponsibleUser());
+		document.setTags(new HashSet<>(documentForm.getTags()));
+
 
 		final Document savedDocument = documentService.create(document);
 		relationService.setRelationsAbsolute(savedDocument, relations);

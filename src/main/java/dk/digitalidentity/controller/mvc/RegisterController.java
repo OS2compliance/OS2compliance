@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.mapping.KLEMapper;
 import dk.digitalidentity.model.KLELegalReferenceDTO;
@@ -148,6 +149,8 @@ public class RegisterController {
     @Transactional
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
+		ChoiceValue choiceValue = choiceValueService.findByIdentifier(Constants.CHOICE_LIST_REGISTER_STATUS_NOT_STARTED_ID);
+		register.setStatus(choiceValue);
         final Register saved = registerService.save(register);
         return "redirect:/registers/" + saved.getId();
     }
