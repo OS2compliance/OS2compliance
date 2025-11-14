@@ -42,6 +42,7 @@ public interface Constants {
 
     String CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID = "asset-type-it-system-123456";
     String CHOICE_LIST_TASK_RESULT_NO_ERROR_ID = "control-result-no-error-123456";
+    String CHOICE_LIST_REGISTER_STATUS_NOT_STARTED_ID = "register-status-not-started-123456";
 
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
