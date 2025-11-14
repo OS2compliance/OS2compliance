@@ -14,25 +14,22 @@ function ReportHandler() {
     };
 
     this.attachReportLinkHandlers = function() {
-        const self = this;
         const reportLinks = document.querySelectorAll('.report-link');
 
-        reportLinks.forEach(function(link) {
-            link.addEventListener('click', function(e) {
+        reportLinks.forEach((link) => {
+            link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const url = link.getAttribute('data-report-url');
                 const filename = link.getAttribute('data-filename');
 
                 if (url) {
-                    self.downloadReport(url, filename);
+                    this.downloadReport(url, filename);
                 }
             });
         });
     };
 
     this.downloadReport = function(url, filename) {
-        const self = this;
-
         this.showLoading();
 
         fetch(url, {
@@ -41,24 +38,24 @@ function ReportHandler() {
                 'Accept': 'application/octet-stream'
             }
         })
-        .then(function(response) {
+        .then((response) => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
 
             if (!filename) {
-                filename = self.extractFilenameFromHeaders(response.headers);
+                filename = this.extractFilenameFromHeaders(response.headers);
             }
 
             return response.blob();
         })
-        .then(function(blob) {
-            self.triggerBlobDownload(blob, filename || 'rapport.pdf');
-            self.hideLoading();
+        .then((blob) => {
+            this.triggerBlobDownload(blob, filename || 'rapport.pdf');
+            this.hideLoading();
         })
-        .catch(function(error) {
+        .catch((error) => {
             toastService.error('Der opstod en fejl ved download af rapporten. Prøv venligst igen.');
-            self.hideLoading();
+            this.hideLoading();
         });
     };
 
