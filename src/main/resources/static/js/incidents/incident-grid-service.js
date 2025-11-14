@@ -140,7 +140,7 @@ export default function IncidentGridService () {
             ['name', 'createdAt', 'updatedAt', 'allowedActions'],
             ['id'])
 
-        initGridActions()
+        this.initGridActions()
         initSaveAsExcelButton(customGridFunctions, 'Hændelseslog')
     }
 
@@ -240,14 +240,14 @@ export default function IncidentGridService () {
         })
     }
 
-};
+    this.initGridActions = () => {
+        delegateListItemActions('incidentsTable',
+            (id, elem) => this.incidentService.editIncident('editIncidentDialog', id),
+            (id, name, elem) => this.incidentService.deleteIncident(this.incidentGrid, id, name),
+        )
+    }
 
-function initGridActions() {
-    delegateListItemActions('incidentsTable',
-        (id, elem) => incidentService.editIncident('editIncidentDialog', id),
-        (id, name, elem) => incidentService.deleteIncident(incidentGridService.incidentGrid, id, name),
-    )
-}
+};
 
 function formatAsLink(label, href, shouldOpenInWindow = false) {
     const nullSafeLabel = label === null || label === undefined ? '' : label;
