@@ -3,6 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.model.dto.AssetWithMappingsDTO;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
@@ -41,11 +42,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Controller
@@ -58,7 +61,6 @@ public class SupplierController {
     private final AssetOversightDao assetOversightDao;
 
     private final RelationService relationService;
-    private final AssetService assetService;
     private final TaskService taskService;
 	private final AssetSupplierMappingService assetSupplierMappingService;
 
@@ -69,6 +71,14 @@ public class SupplierController {
         return "suppliers/index";
 	}
 
+	public record SupplierAssetListDTO(Long assetId,
+									   String assetName,
+									   Long supplierId,
+									   String service,
+									   String thirdCountryTransfer,
+									   String acceptanceBasis,
+									   boolean removable
+									   ) {}
 	@RequireReadOwnerOnly
 	@GetMapping("{id}")
 	public String supplier(final Model model, @PathVariable final String id) {
@@ -97,6 +107,9 @@ public class SupplierController {
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .toList();
 
+
+		model.addAttribute("assetRelationListDTOs", mapToSupplierAssetListDTO(supplier, assetsWithMappings, assetRelated));
+
         model.addAttribute("oversights", assetOversights);
         model.addAttribute("changeableSupplier", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) );
 		model.addAttribute("supplier", supplier);
@@ -104,9 +117,47 @@ public class SupplierController {
         model.addAttribute("documents", documents);
         model.addAttribute("assetsRelated", assetRelated);
 		model.addAttribute("assetsWithMappings", assetsWithMappings);
+
         model.addAttribute("incidents", incidents);
 		model.addAttribute("contacts", contacts);
 		return "suppliers/view";
+	}
+
+	private List<SupplierAssetListDTO> mapToSupplierAssetListDTO(Supplier supplier, List<AssetWithMappingsDTO> assetsWithMappings, List<Relatable> assetRelated) {
+		Stream<SupplierAssetListDTO> assetWithMappingsStream = assetsWithMappings.stream().map(am -> new SupplierAssetListDTO(
+				am.getAssetId(),
+				am.getAssetName(),
+				am.getSupplierId(),
+				am.getService(),
+				am.getThirdCountryTransfer() != null ? am.getThirdCountryTransfer().getMessage() : "Nej",
+				am.getAcceptanceBasis(),
+				false)
+		);
+
+		Stream<SupplierAssetListDTO> assetRelatedStream = assetRelated.stream().map(ar -> {
+
+			if (ar instanceof Asset a) {
+				final String thirdCountry = a.getSuppliers().stream()
+						.filter(s -> supplier == s.getSupplier() && s.getThirdCountryTransfer() != null)
+						.map(s -> s.getThirdCountryTransfer().getMessage())
+						.findAny()
+						.orElse("Nej");
+				return new SupplierAssetListDTO(
+						a.getId(),
+						a.getName(),
+						supplier.getId(),
+						null,
+						thirdCountry,
+						null,
+						true
+				);
+			}
+			return null;
+		}).filter(Objects::nonNull);
+
+		return Stream.concat(assetWithMappingsStream, assetRelatedStream)
+				.sorted(Comparator.comparing(SupplierAssetListDTO::assetName))
+				.toList();
 	}
 
     @RequireDeleteAll
