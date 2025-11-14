@@ -7,6 +7,7 @@ export default class RiskImageRapportDialog {
     init() {
         this.#initHiddenCheckboxes()
         this.#initDatePickers()
+        this.#initFormValidation();
     }
 
     #initHiddenCheckboxes() {
@@ -93,6 +94,44 @@ export default class RiskImageRapportDialog {
         }
         let yyyy = date.getFullYear();
         return `${dd}/${mm}-${yyyy}`;
+    }
+
+    #initFormValidation() {
+        const form = document.getElementById('riskImageReportForm');
+        const checkboxes = document.querySelectorAll('input[name="includedTypes"]');
+        const errorMessage = document.getElementById('includedTypesError');
+        const modalElement = document.getElementById('riskImageReportDialog');
+
+        const validateCheckboxes = () => {
+            const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
+
+            if (!isAnyChecked) {
+                errorMessage.style.display = 'block';
+                return false;
+            } else {
+                errorMessage.style.display = 'none';
+                return true;
+            }
+        };
+
+        // Validate on checkbox change
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                validateCheckboxes();
+            });
+        });
+
+        // Validate on form submit
+        form.addEventListener('submit', (e) => {
+            if (!validateCheckboxes()) {
+                e.preventDefault();
+                e.stopPropagation();
+            } else {
+                // Close modal if validation passes
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                modal.hide();
+            }
+        });
     }
 
 }

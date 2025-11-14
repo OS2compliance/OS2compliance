@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.mapping.KLEMapper;
 import dk.digitalidentity.model.KLELegalReferenceDTO;
@@ -27,6 +28,7 @@ import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
@@ -147,6 +149,8 @@ public class RegisterController {
     @Transactional
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
+		ChoiceValue choiceValue = choiceValueService.findByIdentifier(Constants.CHOICE_LIST_REGISTER_STATUS_NOT_STARTED_ID);
+		register.setStatus(choiceValue);
         final Register saved = registerService.save(register);
         return "redirect:/registers/" + saved.getId();
     }
@@ -544,7 +548,7 @@ public class RegisterController {
         model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
-		model.addAttribute("risk", new ThreatAssessment());
+		model.addAttribute("risk",createThreatassessmentFormModelForRegister());
 		model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 
         model.addAttribute("organisationAssessmentColumnTypes", getOrganisationAssessmentColumnTypes());
@@ -552,6 +556,12 @@ public class RegisterController {
 
         return "registers/view";
     }
+
+	private ThreatAssessment createThreatassessmentFormModelForRegister() {
+		ThreatAssessment threatAssessment = new ThreatAssessment();
+		threatAssessment.setThreatAssessmentType(ThreatAssessmentType.REGISTER);
+		return threatAssessment;
+	}
 
 	private List<ChoiceValue> getOrganisationAssessmentColumnTypes() {
 		return choiceService.findChoiceList("organisation-assessment-columns")
