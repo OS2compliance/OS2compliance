@@ -114,6 +114,9 @@
     </div>
 </div>
 
+<!-- Hidden download link for reports -->
+<a id="reportDownloadLink" class="d-none" download></a>
+
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script type="module" th:src="@{/js/reports/report.js}"></script>
