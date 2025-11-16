@@ -16,11 +16,8 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalog;
-import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -157,7 +154,7 @@ public class RiskController {
 
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("risk", threatAssessment);
-		model.addAttribute("isResponsible", threatAssessmentService.isResponsibleFor(threatAssessment));
+		model.addAttribute("isResponsible", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || threatAssessmentService.isResponsibleFor(threatAssessment));
         return "risks/editForm";
     }
 
@@ -170,7 +167,8 @@ public class RiskController {
 								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets
 	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+        if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
+				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
@@ -184,7 +182,7 @@ public class RiskController {
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         editedAssessment.setResponsibleOu(assessment.getResponsibleOu());
 
-		if (!threatAssessmentService.isResponsibleFor(editedAssessment)) {
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || threatAssessmentService.isResponsibleFor(editedAssessment)) {
 			editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
 		}
 
@@ -240,6 +238,8 @@ public class RiskController {
         }
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.copy(sourceId);
         savedThreatAssessment.setName(assessment.getName());
+		savedThreatAssessment.setResponsibleUser(assessment.getResponsibleUser());
+		savedThreatAssessment.setResponsibleOu(assessment.getResponsibleOu());
 		if (presentUserUuids != null && !presentUserUuids.isEmpty()) {
 			savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
 		}
@@ -341,9 +341,6 @@ public class RiskController {
         boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
         model.addAttribute("signed", signed);
 
-        final Document document = new Document();
-        document.setDocumentType(DocumentType.PROCEDURE);
-        model.addAttribute("document", document);
         return "risks/view";
     }
 
@@ -410,8 +407,7 @@ public class RiskController {
     public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
         threatAssessment.setRevisionInterval(assessment.getRevisionInterval());
@@ -455,6 +451,26 @@ public class RiskController {
         return "redirect:/risks/" + id;
     }
 
+	@Transactional
+	@RequireUpdateOwnerOnly
+	@PostMapping("{id}/customthreats/edit")
+	public String formEditCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreatDTO customThreatDTO) {
+		final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		CustomThreat customThreat = threatAssessment.getCustomThreats().stream()
+				.filter(ct -> ct.getId().equals(customThreatDTO.id()))
+				.findFirst()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		customThreat.setThreatType(customThreatDTO.threatType);
+		customThreat.setDescription(customThreatDTO.description);
+
+		threatAssessmentService.save(threatAssessment);
+		eventPublisher.publishEvent(ThreatAssessmentUpdatedEvent.builder().threatAssessmentId(id).build());
+
+		return "redirect:/risks/" + id;
+	}
+
 	private String findElementName(final ThreatAssessment threatAssessment) {
         final ThreatAssessmentType threatAssessmentType = threatAssessment.getThreatAssessmentType();
         if (ThreatAssessmentType.ASSET.equals(threatAssessmentType)) {
@@ -478,37 +494,45 @@ public class RiskController {
         }
     }
 
-    private void createTaskAndSendMail(final ThreatAssessment savedThreatAssessment) {
-        if (savedThreatAssessment.getResponsibleUser() != null) {
-            EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.RISK_REMINDER);
-            if (template.isEnabled()) {
-                final Task task = threatAssessmentService.createAssociatedTask(savedThreatAssessment);
-                if (task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail())) {
-                    final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
-                    final String recipient = task.getResponsibleUser().getName();
-                    final String objectName = task.getName();
-                    final String link = "<a href=\"" + url + "\">" + url + "</a>";
+	private void createTaskAndSendMail(final ThreatAssessment savedThreatAssessment) {
+		if (savedThreatAssessment.getResponsibleUser() != null) {
+			EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.RISK_REMINDER);
+			if (template.isEnabled()) {
+				final Task task = threatAssessmentService.createAssociatedTask(savedThreatAssessment);
+				if (task != null && !task.getResponsibleUsers().isEmpty()) {
+					final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" + task.getId();
+					final String objectName = task.getName();
+					final String link = "<a href=\"" + url + "\">" + url + "</a>";
 
-                    String title = template.getTitle();
-                    title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-                    title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-                    title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-                    String message = template.getMessage();
-                    message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-                    message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-                    message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-                    eventPublisher.publishEvent(EmailEvent.builder()
-                        .message(message)
-                        .subject(title)
-                        .email(task.getResponsibleUser().getEmail())
-						.templateType(template.getTemplateType())
-                        .build());
-                }
-            } else {
-                log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
-            }
-        }
-    }
+					// Send email to each responsible user
+					for (User responsibleUser : task.getResponsibleUsers()) {
+						if (!StringUtils.isEmpty(responsibleUser.getEmail())) {
+							final String recipient = responsibleUser.getName();
+
+							String title = template.getTitle();
+							title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+							title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+							title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+
+							String message = template.getMessage();
+							message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+							message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+							message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+
+							eventPublisher.publishEvent(EmailEvent.builder()
+									.message(message)
+									.subject(title)
+									.email(responsibleUser.getEmail())
+									.templateType(template.getTemplateType())
+									.build());
+						}
+					}
+				}
+			} else {
+				log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
+			}
+		}
+	}
 
     private void relateAssets(final Set<Long> selectedAsset, final ThreatAssessment savedThreatAssessment) {
         final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);
@@ -585,7 +609,7 @@ public class RiskController {
 		);
 
         model.addAttribute("risk", externalDTO);
-		model.addAttribute("isResponsible", threatAssessmentService.isResponsibleFor(riskassessment));
+		model.addAttribute("isResponsible", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || threatAssessmentService.isResponsibleFor(riskassessment));
         return "risks/fragments/edit_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
 

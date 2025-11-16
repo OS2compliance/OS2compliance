@@ -1,16 +1,23 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.AiRiskFactor;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
+import dk.digitalidentity.model.entity.enums.DPIACompletionStatus;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentCompletionStatus;
+import dk.digitalidentity.model.entity.interfaces.HasManagers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.Ownable;
+import dk.digitalidentity.statistic.StatisticLabel;
+import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -25,10 +32,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -36,6 +45,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,8 +57,7 @@ import java.util.stream.Collectors;
 @Setter
 @ToString
 @SQLDelete(sql = "UPDATE assets SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
-@Where(clause = "deleted=false")
-public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers {
+public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers, StatisticEnabled, Ownable, Tagable {
 
     @ManyToMany
     @JoinTable(
@@ -86,9 +95,10 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
     @Column
     private String dataProcessingAgreementLink;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private ChoiceOfSupervisionModel supervisoryModel;
+	@Nullable
+	@ManyToOne
+	@JoinColumn(name = "supervisory_model")
+	private ChoiceValue supervisoryModel;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -232,12 +242,12 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 
 	@Override
 	public String getManagerUuids() {
-		return managers.stream().map(m -> m.getUuid()).collect(Collectors.joining(","));
+		return managers.stream().map(User::getUuid).collect(Collectors.joining(","));
 	}
 
 	@Override
 	public String getResponsibleUserUuids() {
-		return responsibleUsers.stream().map(m -> m.getUuid()).collect(Collectors.joining(","));
+		return responsibleUsers.stream().map(User::getUuid).collect(Collectors.joining(","));
 	}
 	@ManyToMany
 	@JoinTable(
@@ -246,4 +256,43 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
 	)
 	private List<OrganisationUnit> departments;
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+	@JoinTable(name = "asset_tag", joinColumns = { @JoinColumn(name = "asset_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	private Set<Tag> tags = new HashSet<>();
+
+	@Transient
+	@Override
+	public boolean isOwnedBy(User user) {
+		return this.responsibleUsers.contains(user) || this.managers.contains(user);
+	}
+
+	@StatisticLabel("Status for konsekvensanalyse")
+	@Formula("(SELECT CASE " +
+			"WHEN a.dpia_opt_out THEN 'OPTED_OUT' " +
+			"WHEN EXISTS (SELECT 1 FROM dpia_asset da WHERE da.asset_id = id) THEN 'COMPLETED' " +
+			"ELSE 'PENDING' " +
+			"END " +
+			"FROM assets a " +
+			"WHERE a.id = id)")
+	@Enumerated(EnumType.STRING)
+	private DPIACompletionStatus dpiaCompletionStatus;
+
+	@StatisticLabel("Status for risikovurdering")
+	@Formula("(SELECT CASE " +
+			"WHEN a.threat_assessment_opt_out THEN 'OPTED_OUT' " +
+			"WHEN EXISTS (" +
+			"SELECT 1 FROM relations r " +
+			"JOIN threat_assessments ta ON (" +
+			"(r.relation_a_type = 'ASSET' AND r.relation_b_type = 'THREAT_ASSESSMENT' AND r.relation_a_id = id AND r.relation_b_id = ta.id) OR " +
+			"(r.relation_b_type = 'ASSET' AND r.relation_a_type = 'THREAT_ASSESSMENT' AND r.relation_b_id = id AND r.relation_a_id = ta.id)" +
+			") " +
+			"WHERE ta.assessment IS NOT NULL" +
+			") THEN 'COMPLETED' " +
+			"ELSE 'PENDING' " +
+			"END " +
+			"FROM assets a " +
+			"WHERE a.id = id)")
+	@Enumerated(EnumType.STRING)
+	private ThreatAssessmentCompletionStatus threatAssessmentCompletionStatus;
 }

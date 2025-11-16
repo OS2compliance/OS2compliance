@@ -12,22 +12,22 @@ public class NameIdParser {
 
     public static Optional<String> parseNameId(final String nameId) {
         if (isUUID(nameId)) {
-            return Optional.of(nameId);
+            return Optional.of(nameId).map(String::toLowerCase);
         } else if (isX509Format(nameId)) {
             return Arrays.stream(StringUtils.split(nameId, ","))
                 .filter(p -> p.contains("Serial="))
                 .map(p -> StringUtils.substringAfter(p, "="))
-                .findFirst();
+                .findFirst()
+					.map(String::toLowerCase);
         } else if (isBase64Binary(nameId)) {
-            return Optional.ofNullable(decodeBase64BinaryUUID(nameId));
+            return Optional.ofNullable(decodeBase64BinaryUUID(nameId)).map(String::toLowerCase);
         }
         return Optional.empty();
     }
 
     private static boolean isUUID(final String nameId) {
         try {
-            //noinspection ResultOfMethodCallIgnored
-            UUID.fromString(nameId);
+			UUID.fromString(nameId);
             return true;
         } catch (final IllegalArgumentException ignored) {}
         return false;

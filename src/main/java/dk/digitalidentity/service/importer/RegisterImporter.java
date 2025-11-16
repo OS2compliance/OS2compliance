@@ -6,9 +6,12 @@ import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
+import dk.digitalidentity.model.entity.kle.KLESubject;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.kle.KLEGroupService;
 import dk.digitalidentity.service.kle.KLEMainGroupService;
+import dk.digitalidentity.service.kle.KLESubjectService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +32,8 @@ public class RegisterImporter {
     private final RegisterMapper registerMapper;
 	private final KLEMainGroupService kleMainGroupService;
 	private final KLEGroupService kleGroupService;
+	private final KLESubjectService kleSubjectService;
+	private final ChoiceValueService choiceValueService;
 
 	@Transactional
     public void importRegister(final Resource resource) throws IOException {
@@ -36,7 +41,7 @@ public class RegisterImporter {
         final RegisterDTO registerDTO = objectMapper.readValue(jsonString, RegisterDTO.class);
 
 		final Register saved = registerService.findByName(registerDTO.getName())
-				.orElseGet(() -> registerService.save(registerMapper.fromDTO(registerDTO)));
+				.orElseGet(() -> registerService.save(registerMapper.fromDTO(registerDTO, choiceValueService)));
 		if (saved.getKleMainGroups().isEmpty() || saved.getKleGroups().isEmpty()) {
 			final Set<KLEMainGroup> mainGroups = kleMainGroupService.getAllByMainGroupNumbers(registerDTO.getKleGroups());
 			final Set<KLEGroup> groups = kleGroupService.getAllByGroupNumbers(registerDTO.getKleGroups());
@@ -53,8 +58,10 @@ public class RegisterImporter {
 		registerService.findByName(registerDTO.getName()).ifPresent(register -> {
 			final Set<KLEMainGroup> mainGroups = kleMainGroupService.getAllByMainGroupNumbers(registerDTO.getKleMainGroups());
 			final Set<KLEGroup> groups = kleGroupService.getAllByGroupNumbers(registerDTO.getKleGroups());
+			final Set<KLESubject> subjects = kleSubjectService.findAllBySubjectNumbers(registerDTO.getKleSubjects());
 			register.setKleMainGroups(mainGroups);
 			register.setKleGroups(groups);
+			register.setKleSubjects(subjects);
 		});
 
 	}

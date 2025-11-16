@@ -1,3 +1,7 @@
+import {initStatisticView} from "../statistic/statisticView.js";
+import ColumnOptions from "../grid-js-extension/column-options.js";
+import formatTags from "../tags/tag-grid-formatter.js";
+
 const columnProperties = [
     'id',
     'name',
@@ -8,6 +12,7 @@ const columnProperties = [
     'reportApprovalStatus',
     'screeningConclusion',
     'isExternal',
+    'tags',
     'allowedActions'
 ];
 let createDPIAService, createExternalDPIAService, editDPIAService;
@@ -16,16 +21,23 @@ const updateUrl = (prev, query) => {
     return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 };
 
-document.addEventListener("DOMContentLoaded", function(event) {
+document.addEventListener("DOMContentLoaded", async function(event) {
     createDPIAService = new CreateDPIAService()
     createDPIAService.init()
     editDPIAService = new EditDPIAService()
 
     createExternalDPIAService = new CreateExternalDPIAService()
 
+    // These global variables are only nessacary until onclick events depending on them have been eliminated
+    window.createDPIAService = createDPIAService
+    window.createExternalDPIAService= createExternalDPIAService
+    window.editDPIAService =editDPIAService
+
     initGrid()
 
     initPageTopButtons()
+
+    await initStatisticView("dpia")
 });
 
 function initPageTopButtons() {
@@ -75,8 +87,8 @@ function initGrid() {
                     searchKey: 'name'
                 },
                 formatter: (cell, row) => {
-                    const url = baseUrl + "/" + row.cells[0]['data'];
-                    const isExternal = row.cells[8]['data']; //last cell in row contains the external boolean
+                    const url = baseUrl + "/" + row.cells[columnProperties.indexOf('id')]['data'];
+                    const isExternal = row.cells[columnProperties.indexOf('isExternal')]['data']; //last cell in row contains the external boolean
                     if (isExternal) {
                         return gridjs.html(`<a href="${url}" target="_blank">${cell} (Ekstern)</a>`);
                     } else {
@@ -166,15 +178,20 @@ function initGrid() {
                 hidden: true,
             },
             {
+                name: "Tags",
+                searchable: {
+                    searchKey: 'tagNames',
+                },
+                formatter: (cell, row) => formatTags(cell, row),
+            },
+            {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
                 width: '100px',
                 formatter: (cell, row) => {
-                    console.log(cell)
-                    console.log(row)
-                    const identifier = row.cells[0]['data'];
-                    const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                    const identifier = row.cells[columnProperties.indexOf('id')]['data'];
+                    const name = row.cells[columnProperties.indexOf('name')]['data'].replaceAll("'", "\\'");
                     const external = row.cells[8]['data']
                     const attributeMap = new Map();
                     attributeMap.set('identifier', identifier);
@@ -216,10 +233,16 @@ function initGrid() {
             }
         }
     };
-    const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "dpiaDatatable" ));
-    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, exportDataUrl, 'dpiaDatatable');
+    const datatableId = "dpiaDatatable"
+    const grid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
+    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, exportDataUrl, datatableId);
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
+    new ColumnOptions(
+        datatableId,
+        grid,
+        ['titel', 'allowedActions'],
+        ['titel', 'allowedActions', 'screening', 'status', 'opgaver'],
+        ['id', 'isExternal'])
 
     initSaveAsExcelButton(customGridFunctions, 'Konsekvensanalyser')
 
@@ -229,7 +252,6 @@ function initGrid() {
 function initGridListItemButtons() {
     delegateListItemActions('dpiaDatatable',
         (id, elem) => {
-        console.log(elem.dataset.external)
             if (elem.dataset.external === 'true') {
                 createExternalDPIAService.editExternalClicked(id)
             } else {

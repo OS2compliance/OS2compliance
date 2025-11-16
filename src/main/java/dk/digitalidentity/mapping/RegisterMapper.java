@@ -2,19 +2,24 @@ package dk.digitalidentity.mapping;
 
 
 import dk.digitalidentity.model.dto.RegisterDTO;
+import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Register;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.ChoiceValueService;
+import dk.digitalidentity.service.tag.TagService;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -23,7 +28,9 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface RegisterMapper {
 
-    default RegisterDTO toDTO(final RegisterGrid registerGrid, @Context RegisterService registerService) {
+    default RegisterDTO toDTO(final RegisterGrid registerGrid, Map<Long, Tag> tagsById) {
+		List<TagDTO> tags = TagService.toTagDTO(registerGrid.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList();
+
 		Set<AllowedAction> allowedActions = new HashSet<>();
 		String userUuid = SecurityUtil.getPrincipalUuid();
 		boolean isResponsible = registerGrid != null &&
@@ -48,33 +55,35 @@ public interface RegisterMapper {
                 .updatedAt(nullSafe(() -> registerGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .consequence(nullSafe(() -> registerGrid.getConsequence().getMessage(), ""))
                 .consequenceOrder(registerGrid.getConsequenceOrder())
-                .status(nullSafe(() -> registerGrid.getStatus().getMessage(), ""))
+                .status(registerGrid.getStatus() != null ? registerGrid.getStatus() : "")
                 .statusOrder(registerGrid.getStatusOrder())
                 .risk(nullSafe(() -> registerGrid.getRisk().getMessage(), ""))
                 .riskOrder(registerGrid.getRiskOrder())
                 .assetCount(registerGrid.getAssetCount())
                 .assetAssessment(nullSafe(() -> registerGrid.getAssetAssessment().getMessage()))
                 .assetAssessmentOrder(registerGrid.getAssetAssessmentOrder())
+				.tags(tags)
                 .build();
 
 		registerDTO.setAllowedActions(allowedActions);
 		return registerDTO;
     }
 
-	default List<RegisterDTO> toDTO(final List<RegisterGrid> registers, @Context RegisterService registerService) {
+	default List<RegisterDTO> toDTO(final List<RegisterGrid> registers, Map<Long, Tag> tagsById) {
 		return registers.stream()
-				.map(register -> toDTO(register, registerService))
+				.map(register -> toDTO(register,tagsById ))
 				.toList();
 	}
 
-    default Register fromDTO(final RegisterDTO registerDTO) {
+    default Register fromDTO(final RegisterDTO registerDTO, @Context ChoiceValueService choiceValueService) {
         final Register r = new Register();
         r.setId(registerDTO.getId());
         r.setName(registerDTO.getName());
         r.setPackageName(registerDTO.getPackageName());
         r.setDescription(registerDTO.getDescription());
         r.setGdprChoices(registerDTO.getGdprChoices());
-        r.setStatus(registerDTO.getStatus() == null ? RegisterStatus.NOT_STARTED : RegisterStatus.valueOf(registerDTO.getStatus()));
+		ChoiceValue byIdentifier = choiceValueService.findByIdentifier(registerDTO.getStatus());
+		r.setStatus(byIdentifier != null ? byIdentifier : choiceValueService.findByIdentifier("register-status-not-started-123456"));
         return r;
     }
 

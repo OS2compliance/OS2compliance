@@ -1,9 +1,10 @@
 package dk.digitalidentity.model.entity.enums;
 
+import dk.digitalidentity.model.entity.interfaces.HasMessage;
 import lombok.Getter;
 
 @Getter
-public enum RiskAssessment {
+public enum RiskAssessment implements HasMessage {
     RED("Rød"),
     ORANGE("Orange"),
     GREEN("Grøn"),

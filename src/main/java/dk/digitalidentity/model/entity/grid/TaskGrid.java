@@ -1,11 +1,9 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.OrganisationUnit;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
-import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,14 +16,18 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Immutable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "view_gridjs_tasks")
 @Getter
 @Setter
 @Immutable
-public class TaskGrid  implements HasSingleResponsibleUser {
+public class TaskGrid implements HasMultipleResponsibleUsers {
     @Id
     private Long id;
 
@@ -36,9 +38,11 @@ public class TaskGrid  implements HasSingleResponsibleUser {
     @Enumerated(EnumType.STRING)
     private TaskType taskType;
 
-    @ManyToOne
-    @JoinColumn(name = "responsible_uuid")
-    private User responsibleUser;
+	@Column(name = "responsible_uuid")
+	private String responsibleUserUuids;
+
+	@Column(name = "responsible_names")
+	private String responsibleNames;
 
     @ManyToOne
     @JoinColumn(name = "responsible_ou_uuid")
@@ -58,8 +62,7 @@ public class TaskGrid  implements HasSingleResponsibleUser {
     private boolean completed;
 
     @Column(name = "result")
-    @Enumerated(EnumType.STRING)
-    private TaskResult taskResult;
+    private String taskResult;
 
     @Column
     private Integer taskResultOrder;
@@ -68,5 +71,15 @@ public class TaskGrid  implements HasSingleResponsibleUser {
     private String localizedEnums;
 
     @Column
-    private String tags;
+    private String tagNames;
+
+	@Column
+	private String tagIds;
+
+	@Column
+	private LocalDate lastCompletionDate;
+
+	public Set<String> getResponsibleUserUuidsAsSet() {
+		return Arrays.stream(responsibleUserUuids.split(",")).collect(Collectors.toSet());
+	}
 }

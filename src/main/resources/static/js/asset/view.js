@@ -1,4 +1,5 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import initRelatedTagList from "../tags/related-tag-list.js";
 
 let managersChoicesEditSelect = null;
 let suppliersChoicesEditSelect = null;
@@ -30,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     initTabs();
     rememberSelectedTab();
 
+
     if (threatExists) {
         profilePageLoaded();
     }
@@ -48,6 +50,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
     aiStatusSelect.addEventListener('change', toggleRiskFactorContainer);
 
     initEditButtons();
+
+    initRelatedTagList('#assetTab')
 });
 
 function initEditButtons() {
@@ -278,7 +282,7 @@ function updateSuppliers(choices, search) {
     fetch( `/rest/suppliers/autocomplete?search=${search}`)
         .then(response => response.json()
             .then(data => {
-                alreadySelected = []
+                var alreadySelected = []
                 var sel = choices.passedElement.element;
                 for (var i=0, n=sel.options.length;i<n;i++) {
                     if (sel.options[i].value) alreadySelected.push(sel.options[i].value);

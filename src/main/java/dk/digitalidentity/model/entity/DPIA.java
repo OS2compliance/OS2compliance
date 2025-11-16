@@ -2,14 +2,18 @@ package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.config.StringSetNullSafeConverter;
+import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
+import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -33,7 +37,7 @@ import java.util.Set;
 @Table(name = "dpia")
 @Getter
 @Setter
-public class DPIA extends Relatable implements HasSingleResponsibleUser {
+public class DPIA extends Relatable implements HasSingleResponsibleUser, StatisticEnabled, Tagable {
 	@ManyToMany
 	@JoinTable(
 			name = "dpia_asset",
@@ -44,44 +48,44 @@ public class DPIA extends Relatable implements HasSingleResponsibleUser {
 	@JsonIgnore
 	private List<Asset> assets = new ArrayList<>();
 
-    @Column(name = "dpia_checked_choice_list_identifiers")
-    @Convert(converter = StringSetNullSafeConverter.class)
-    private Set<String> checks = new HashSet<>();
+	@Column(name = "dpia_checked_choice_list_identifiers")
+	@Convert(converter = StringSetNullSafeConverter.class)
+	private Set<String> checks = new HashSet<>();
 
-    @Column(name = "dpia_checked_threat_assessments_ids")
-    private String checkedThreatAssessmentIds;
+	@Column(name = "dpia_checked_threat_assessments_ids")
+	private String checkedThreatAssessmentIds;
 
-    @Column
-    private String conclusion;
+	@Column
+	private String conclusion;
 
-    @Column
-    @DateTimeFormat(pattern = "dd/MM-yyyy")
-    private LocalDate nextRevision;
+	@Column
+	@DateTimeFormat(pattern = "dd/MM-yyyy")
+	private LocalDate nextRevision;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private RevisionInterval revisionInterval;
+	@Column
+	@Enumerated(EnumType.STRING)
+	private RevisionInterval revisionInterval;
 
-    @Column
-    private String comment;
+	@Column
+	private String comment;
 
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<DPIAResponseSection> dpiaResponseSections = new ArrayList<>();
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	@OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
+	@JsonIgnore
+	private List<DPIAResponseSection> dpiaResponseSections = new ArrayList<>();
 
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<DPIAReport> dpiaReports = new ArrayList<>();
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	@OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
+	@JsonIgnore
+	private List<DPIAReport> dpiaReports = new ArrayList<>();
 
-    @Column
-    private boolean fromExternalSource;
+	@Column
+	private boolean fromExternalSource;
 
-    @Column
-    private String externalLink;
+	@Column
+	private String externalLink;
 
 	@Column
 	@DateTimeFormat(pattern = "dd/MM-yyyy")
@@ -98,13 +102,17 @@ public class DPIA extends Relatable implements HasSingleResponsibleUser {
 	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "dpia")
 	private DataProtectionImpactAssessmentScreening dpiaScreening;
 
-	@Override
-    public RelationType getRelationType() {
-        return RelationType.DPIA;
-    }
+	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+	@JoinTable(name = "dpia_tag", joinColumns = { @JoinColumn(name = "dpia_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	private Set<Tag> tags = new HashSet<>();
 
-    @Override
-    public String getLocalizedEnumValues() {
-        return revisionInterval != null ? revisionInterval.getMessage()+" " : "";
-    }
+	@Override
+	public RelationType getRelationType() {
+		return RelationType.DPIA;
+	}
+
+	@Override
+	public String getLocalizedEnumValues() {
+		return revisionInterval != null ? revisionInterval.getMessage() + " " : "";
+	}
 }

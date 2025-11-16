@@ -3,12 +3,12 @@ package dk.digitalidentity.model.dto;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
-import dk.digitalidentity.model.entity.enums.TaskResult;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -38,7 +38,9 @@ public class TaskDTO {
 	@ExcludeFromExport
     private Integer taskResultOrder;
 	@ExcelColumn(headerName = "Tags", order = 5)
-    private String tags;
+    private List<TagDTO> tags;
 	@ExcludeFromExport
     private Set<AllowedAction> allowedActions;
+	@ExcludeFromExport
+	private String lastCompletionDate;
 }

@@ -9,13 +9,13 @@ import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.IncidentType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.UserService;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -88,20 +88,21 @@ public abstract class IncidentMapper {
 
     public abstract List<IncidentDTO> toDTOs(final List<Incident> incidentDTOs);
 
-    public IncidentFieldResponseDTO toDTOResponse(final IncidentFieldResponse response) {
-        final String indexColumnName = nullSafe(() -> response.getIncidentField().getIndexColumnName());
-        return IncidentFieldResponseDTO.builder()
-            .fieldId(response.getIncidentField() != null ? response.getIncidentField().getId() : null)
-            .incidentType(response.getIncidentType())
-            .answerValue(toAnswerValue(response))
-            .indexColumnName(indexColumnName)
-            .question(response.getQuestion())
-            .build();
-    }
+	public IncidentFieldResponseDTO toDTOResponse(final IncidentFieldResponse response) {
+		final String indexColumnName = nullSafe(() -> response.getIncidentField().getIndexColumnName());
+		return IncidentFieldResponseDTO.builder()
+				.fieldId(response.getIncidentField() != null ? response.getIncidentField().getId() : null)
+				.incidentType(response.getIncidentType())
+				.answerValue(toAnswerValue(response))
+				.indexColumnName(indexColumnName)
+				.question(response.getQuestion())
+				.isLinkable(response.getIncidentType() == IncidentType.LINK)
+				.build();
+	}
 
     public String toAnswerValue(final IncidentFieldResponse response) {
         return switch (response.getIncidentType()) {
-            case TEXT -> response.getAnswerText();
+            case TEXT, LINK -> response.getAnswerText();
             case DATE -> nullSafe(() -> response.getAnswerDate().format(DK_DATE_FORMATTER));
             case ASSETS, ASSET, SUPPLIER, SUPPLIERS -> getRelatableNames(response.getAnswerElementIds());
             case ORGANIZATION, ORGANIZATIONS -> getOrgUnitNames(response.getAnswerElementIds());

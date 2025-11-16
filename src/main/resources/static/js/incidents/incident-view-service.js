@@ -1,18 +1,31 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import IncidentService from "./incident-service.js";
+import {validateFormBeforeSubmit} from "./incident-validation-service.js";
 
-let onUnSubmittedService = new OnUnSubmittedService();
-const incidentViewService = new IncidentViewService();
+let incidentViewService;
+let incidentService;
+
+let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener("DOMContentLoaded", function(event) {
+    incidentService = new IncidentService();
+    incidentService.init();
+
+    incidentViewService = new IncidentViewService();
     incidentViewService.init();
+
 });
 
 // Requires incident-service also
 function IncidentViewService() {
+    let onUnSubmittedService = new OnUnSubmittedService();
 
     this.init = () => {
+        const targetId = '_dm-tabsIncident';
+        incidentService.initChoicesAndDatePickers(targetId);
+
         const form = document.getElementById(formId);
-        form.addEventListener("submit", (event) => incidentService.validateFormBeforeSubmit(event, form));
+        form.addEventListener("submit", (event) => validateFormBeforeSubmit(event, form));
 
         const editDescBtn = document.getElementById("editDescBtn");
         const cancelBtn = document.getElementById("cancelBtn");
@@ -31,6 +44,8 @@ function IncidentViewService() {
         saveBtn?.addEventListener("click", () => {
             onUnSubmittedService.reset();
         });
+
+        incidentViewService.setEditable(targetId, false);
     }
 
     this.setEditable = (dialogId, editable) => {

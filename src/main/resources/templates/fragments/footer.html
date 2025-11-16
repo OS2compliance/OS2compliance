@@ -13,6 +13,31 @@
     <template id="copyListItemButtonTemplate" th:if="${gridjs == true}">
         <button type="button" class="copyBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-data-copy fs-5"></i></button>
     </template>
+    <template id="hideListItemButtonTemplate" th:if="${gridjs == true}">
+        <button type="button" class="hideBtn btn btn-icon btn-outline-light btn-xs" title="Skjul"><i class="pli-minimize-3 fs-5"></i></button>
+    </template>
+    <template id="showListItemButtonTemplate" th:if="${gridjs == true}">
+        <button type="button" class="showBtn btn btn-icon btn-outline-light btn-xs" title="Vis"><i class="pli-eye-visible fs-5"></i></button>
+    </template>
+
+    <!-- Template for grid column options -->
+    <template id="columnOptionContainerTemplate" th:if="${gridjs == true}">
+        <div class="btn-group">
+            <button type="button" class="toggleColumnOptionsButton btn dropdown-toggle btn-light" data-bs-toggle="dropdown" aria-expanded="false"
+                    style="pointer-events: auto;" title="Kolonner"><i class="pli-gears fs-4"></i></button>
+            <div class="dropdown-menu">
+                <ul class="columnOptionsMenuContainer m-0 p-0"></ul>
+                <button class="columnOptionsConfirmButton btn btn-secondary w-100 mt-2">Opdater</button>
+            </div>
+        </div>
+    </template>
+    <template id="columnOptionItemTemplate" th:if="${gridjs == true}">
+        <li href="#" class="optionItem dropdown-item cursor-hand">
+            <i class="optionIcon me-1 ti-minus"></i><span class="optionLabel"></span>
+        </li>
+    </template>
+
+    <div th:if="${statistic == true}" id="statisticModalContainer" class="modal fade" tabindex="-1"></div>
 
     <div class="toast" id="toastTemplate">
         <div class="toast-header">
@@ -32,38 +57,39 @@
     <div th:if="${taskDialog == true}" class="modal fade" id="standardFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
     <div th:if="${taskDialog == true}" class="modal fade" id="sectionFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
     <div th:if="${taskDialog == true}" class="modal fade" id="headerFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
-    <script th:if="${taskDialog == true}" th:src="@{/js/task/create-task-service.js}" defer></script>
+    <script th:if="${taskDialog == true}" type="module" th:src="@{/js/task/create-task-service.js}" defer></script>
+    <script th:if="${taskDialog == true}" type="module" th:src="@{/js/task/form-create.js}" defer></script>
+    <script th:if="${taskDialog == true}" th:src="@{/js/task/notification-select-handler.js}"></script>
     <script th:if="${taskDialog == true}" th:src="@{/js/standards/create-standard-service.js}" defer></script>
     <script th:if="${taskDialog == true}" th:src="@{/js/standards/sections/create-section-service.js}" defer></script>
     <script th:src="@{/js/settings/settings-service.js}" defer></script>
 
-	<script th:src="@{/js/common.js}" defer></script>
-	<script th:src="@{/js/form-validation.js}" defer></script>
-	<script th:src="@{/js/choice-service.js}" defer></script>
-	<script th:src="@{/js/relation-service.js}" defer></script>
+    <script th:src="@{/js/common.js}" defer></script>
+    <script th:src="@{/js/form-validation.js}" defer></script>
+    <script th:src="@{/js/choice-service.js}" defer></script>
+    <script th:src="@{/js/relation-service.js}" defer></script>
 
 	<script th:src="@{/webjars/nifty/3.0.1/vendors/popperjs/popper.min.js}" defer></script>
 	<script th:src="@{/webjars/nifty/3.0.1/vendors/bootstrap/bootstrap.min.js}" defer></script>
 	<script th:src="@{/webjars/nifty/3.0.1/js/nifty.js}" defer></script>
-    <script th:src="@{/webjars/nifty/3.0.1/vendors/popperjs/popper.min.js}"></script>
 
     <script th:if="${gridjs == true}" th:src="@{/js/search-service.js}" defer></script>
     <script th:if="${gridjs == true}" th:src="@{/vendor/gridjs/gridjs.umd.js}" defer></script>
-    <script th:if="${gridoptions == true}" th:src="@{/js/grid-options.js}" defer></script>
     <script th:if="${gridjs == true}" th:src="@{/js/custom-grid-functions.js}" defer></script>
     <script th:if="${gridjs == true}" th:src="@{/js/grid-formatter-service.js}" defer></script>
 
     <script nomodule th:src="@{/webjars/nifty/3.0.1/vendors/ionicons/ionicons.js}"></script>
-	<script th:src="@{/vendor/mc-datepicker/mc-calendar.min.js}" defer></script>
-	<script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
-	<script th:if="${sweetalerts == true}" th:src="@{/vendor/sweetalert2/sweetalert2.all.min.js}" defer></script>
+    <script th:src="@{/vendor/mc-datepicker/mc-calendar.min.js}" defer></script>
+    <script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
+    <script th:if="${sweetalerts == true}" th:src="@{/vendor/sweetalert2/sweetalert2.all.min.js}" defer></script>
     <script th:if="${pdf == true}" th:src="@{/vendor/pdfjs/pdf.js}" defer></script>
     <script th:if="${pdf == true}" th:src="@{/vendor/pdfjs/pdf.worker.js}" defer></script>
-    <script th:if="${chart == true}" th:src="@{/vendor/chartjs/chart.min.js}"></script>
 
     <script th:if="${hierarchy == true}" th:src="@{/vendor/d3-org-chart/d3.min.js}" defer></script>
     <script th:if="${hierarchy == true}" th:src="@{/vendor/d3-org-chart/d3-flextree.js}" defer></script>
     <script th:if="${hierarchy == true}" th:src="@{/vendor/d3-org-chart/d3-org-chart.min.js}" defer></script>
+
+    <script th:if="${statistic == true OR chart == true}" th:src="@{/vendor/chartjs/chart.min.js}" defer></script>
 
     <script type="module" th:if="${textEditor == true}" th:src="@{/js/create-ckeditor.js}" defer></script>
     <script type="module" th:if="${imageTextEditor == true}" th:src="@{/js/create-image-ckeditor.js}" defer></script>

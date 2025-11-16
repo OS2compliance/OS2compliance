@@ -1,8 +1,10 @@
 
 let copyTaskService = new CopyTaskService();
 let editTaskService = new EditTaskService();
+let initTagSelect;
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
+    initTagSelect = await import("../tags/tag-selector.js"); // dynamic import. replace with regular import as soon as possible
     copyTaskService.init();
     editTaskService.init();
 });
@@ -32,17 +34,42 @@ function EditTaskService() {
         this.editTaskUserChoicesEditSelect = choiceService.initUserSelect('taskEditFormTaskUserSelect');
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
             var userUuid = self.editTaskUserChoicesEditSelect.passedElement.element.value;
-            fetch( `/rest/ous/user/` + userUuid).then(response =>  response.text().then(data => {
-                self.editTaskOuChoicesSelect.setChoiceByValue(data);
-            })).catch(error => toastService.error(error));
+            fetch( `/rest/ous/user/` + userUuid).then(response =>  {
+                if (response.status === 204) {
+                    return;
+                }
+
+                if (response.ok) {
+                    response.json().then(orgUnit => {
+                        self.editTaskOuChoicesSelect.setChoiceByValue(orgUnit.uuid);
+                    })
+                }
+            }).catch(error => toastService.error(error));
         })
 
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.editTaskUserChoicesEditSelect);
         });
+
+        this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('removeItem', function() {
+            self.editTaskOuChoicesSelect.removeActiveItems();
+        });
+
+        this.initSubTaskButtons();
+
+        subTaskLinkService.validateExistingInputs();
+
         initFormValidationForForm('taskEditForm',
-            () => validateChoices(
-                this.editTaskUserChoicesEditSelect, this.editTaskOuChoicesSelect));
+            () => {
+                const choicesValid = validateChoices(
+                    this.editTaskUserChoicesEditSelect,
+                    this.editTaskOuChoicesSelect
+                );
+                const subTasksValid = subTaskLinkService.validateAllSubTasks();
+
+                return choicesValid && subTasksValid;
+            }
+        );
 
         this.taskModalDialog.querySelector('#taskEditFormThreatAssessmentExplainer').style.display = 'none';
         this.taskModalDialog.querySelector('#taskEditFormRelationsDiv').style.display = 'none';
@@ -58,6 +85,18 @@ function EditTaskService() {
         editTaskModal.show();
     }
 
+    this.initSubTaskButtons = function() {
+        const addBtn = document.getElementById('addSubTaskBtn');
+        if (addBtn) {
+            // Fjern gamle event listeners ved at clone noden
+            const newAddBtn = addBtn.cloneNode(true);
+            addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+
+            newAddBtn.addEventListener('click', () => {
+                subTaskLinkService.addSubTask();
+            });
+        }
+    }
 }
 
 function CopyTaskService() {
@@ -101,12 +140,28 @@ function CopyTaskService() {
            this.initCopyTaskRelationSelect();
        }
 
+        let addSubTaskBtn = document.getElementById('copyAddSubTaskBtn');
+        if (addSubTaskBtn !== null) {
+            addSubTaskBtn.addEventListener("click", () => subTaskLinkService.addSubTask())
+        }
+
+        let removeSubTaskBtn = document.getElementById('copyRemoveSubTaskBtn');
+        if (removeSubTaskBtn !== null) {
+            removeSubTaskBtn.addEventListener("click", () => subTaskLinkService.removeSubTask())
+        }
+
        let tagCopySelect = this.getScopedElementById('copyTaskTagsSelect');
        if(tagCopySelect !== null) {
-           choiceService.initTagSelect('copyTaskTagsSelect');
+           //initTagSelect('copyTaskTagsSelect');
        }
 
-        initFormValidationForForm("copyTaskModalForm");
+        initFormValidationForForm("copyTaskModalForm", () => subTaskLinkService.validateAllSubTasks());
+        this.notificationSelectHandler = initNotificationSelect(
+            'copyTaskNotificationSetting',
+            'copyTaskNotificationSelectDiv',
+            'copyTaskNotificationSelectInput'
+        );
+
 
         this.copyTaskModal = new bootstrap.Modal(this.modalContainer);
         this.copyTaskModal.show();

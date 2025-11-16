@@ -51,7 +51,15 @@ public class OrganisationRestController {
         final User user = userService.findByUuid(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final Position position = user.getPositions().stream()
             .filter(p -> p.getOuUuid() != null)
-            .findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            .findFirst()
+			.orElse(null);
+
+		// If the user does not have a position we return no content and handle in frontend
+		if (position == null) {
+			return ResponseEntity.noContent().build();
+		}
+
+		// If a user has a position we return the OrgUnit that it's mapped to
         return ResponseEntity.ok(mapper.toDTO(organisationUnitDao.findByUuid(position.getOuUuid())));
     }
 }

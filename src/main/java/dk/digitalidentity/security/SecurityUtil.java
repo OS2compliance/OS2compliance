@@ -2,13 +2,16 @@ package dk.digitalidentity.security;
 
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.TokenUser;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -115,6 +118,7 @@ public class SecurityUtil {
 	public static Set<String> getAdminRoles () {
 		return Set.of(
 				Roles.ADMINISTRATOR,
+				Roles.SUPER_USER,
 				Roles.CREATE_ALL,
 				Roles.READ_ALL,
 				Roles.UPDATE_ALL,
@@ -218,6 +222,28 @@ public class SecurityUtil {
 				Roles.SECTION_TASK,
 				Roles.SECTION_INCIDENT
 		);
+	}
+
+	public static String getUserRoleString() {
+		if (!SecurityUtil.isLoggedIn()) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		List<String> roles = new ArrayList<>();
+		if (isAdministrator()) {
+			roles.add("Administrator");
+		}
+		if (isSuperUser()) {
+			roles.add("Superbruger");
+		}
+		if (isUser()) {
+			roles.add("Bruger");
+		}
+		if (isLimitedUser()) {
+			roles.add("Begrænset bruger");
+		}
+
+		return String.join(", ", roles);
 	}
 
 

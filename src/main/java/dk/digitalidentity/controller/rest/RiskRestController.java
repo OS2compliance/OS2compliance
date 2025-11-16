@@ -17,6 +17,7 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
@@ -61,8 +62,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -131,6 +130,17 @@ public class RiskRestController {
 		User user = securityUserService.getCurrentUserOrThrow();
 		String uuid = user.getUuid();
 
+		// Default filter: only show non-hidden items if no explicit filter is set
+		String hiddenFilter = filters.get("hidden");
+		if (hiddenFilter == null || hiddenFilter.isEmpty()) {
+			// First load - default to showing only non-hidden
+			filters.put("hidden", "false");
+		} else if ("ALL".equals(hiddenFilter)) {
+			// User explicitly selected "Alle" - remove filter to show all
+			filters.remove("hidden");
+		}
+		// else: keep the filter value as-is (true or false)
+
 		// Assets user is responsible for
 		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(uuid).stream()
 				.map(Relatable::getName)
@@ -138,9 +148,13 @@ public class RiskRestController {
 
 		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, page, limit, user);
 
+		Set<Long> entityIds = risks.getContent().stream().map(RiskGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = threatAssessmentService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert risks != null;
 
-		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid));
+		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid, tagsById));
     }
 
 	@RequireReadOwnerOnly
@@ -164,9 +178,13 @@ public class RiskRestController {
 
 		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, 0, pageLimit, user);
 
+		Set<Long> entityIds = risks.getContent().stream().map(RiskGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = registerService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert risks != null;
 
-		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid);
+		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid, tagsById);
 		excelExportService.exportToExcel(allData, RiskDTO.class, fileName, response);
 	}
 
@@ -220,15 +238,14 @@ public class RiskRestController {
         return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getSf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getSi(), riskDTO.getRt(), riskDTO.getOt(), riskDTO.getSt(), riskDTO.getSa(), users);
     }
 
-    record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign) {}
+    record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign, List<String> alsoSendTo) {}
 	@RequireCreateOwnerOnly
     @Transactional
     @PostMapping("{id}/mailReport")
     public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
         ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-		if (!SecurityUtil.isOperationAllowed(Roles.CREATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		if (!(SecurityUtil.isOperationAllowed(Roles.CREATE_ALL) ||
+				(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -242,6 +259,19 @@ public class RiskRestController {
 
         final User user = userService.currentUser();
         S3Document s3Document = null;
+
+		List<String> allRecipientEmails = new ArrayList<>();
+		allRecipientEmails.add(responsibleUser.getEmail());
+
+		if (dto.alsoSendTo != null && !dto.alsoSendTo.isEmpty()) {
+			for (String userUuid : dto.alsoSendTo) {
+				userService.findByUuid(userUuid).ifPresent(u -> {
+					if (u.getEmail() != null && !u.getEmail().isBlank()) {
+						allRecipientEmails.add(u.getEmail());
+					}
+				});
+			}
+		}
 
         final EmailEvent emailEvent = EmailEvent.builder()
             .email(responsibleUser.getEmail())
@@ -292,18 +322,24 @@ public class RiskRestController {
                 + environment.getProperty("di.saml.sp.baseUrl") + "/sign/view/" + s3Document.getId() + "</a>"
                 : "";
 
-            String title = formatTemplateString(template.getTitle(), recipient, objectName, messageFromSender, loggedInUserName, link);
-            String message = formatTemplateString(template.getMessage(), recipient, objectName, messageFromSender, loggedInUserName, link);
+			for (String recipientEmail : allRecipientEmails) {
+				String title = formatTemplateString(template.getTitle(), recipientEmail, objectName, messageFromSender, loggedInUserName, link);
+				String message = formatTemplateString(template.getMessage(), recipientEmail, objectName, messageFromSender, loggedInUserName, link);
 
-            emailEvent.setMessage(message);
-            emailEvent.setSubject(title);
-			emailEvent.setTemplateType(template.getTemplateType());
+				final EmailEvent emailEventForRecipient = EmailEvent.builder()
+						.email(recipientEmail)
+						.subject(title)
+						.message(message)
+						.templateType(template.getTemplateType())
+						.build();
+
+				emailEventForRecipient.getAttachments().addAll(emailEvent.getAttachments());
+
+				eventPublisher.publishEvent(emailEventForRecipient);
+			}
         } else {
             log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
         }
-
-        eventPublisher.publishEvent(emailEvent);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -320,16 +356,12 @@ public class RiskRestController {
     @PostMapping("{id}/threats/setfield")
     public ResponseEntity<HttpStatus> setField(@PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		checkUpdateAccess(threatAssessment);
+
+		if (threatAssessment.getThreatAssessmentResponses() == null) {
+			threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
 		}
-
-        if (threatAssessment.getThreatAssessmentResponses() == null) {
-            threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
-        }
 
         final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.dbType, dto.id, dto.identifier);
         if (response == null) {
@@ -370,20 +402,24 @@ public class RiskRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	private void checkUpdateAccess(ThreatAssessment threatAssessment) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) &&
+				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+	}
+
     record SetPrecautionsDTO(@NotNull ThreatDatabaseType threatType, Long threatId, String threatIdentifier, @NotNull List<Long> precautionIds) {}
 	@RequireUpdateOwnerOnly
     @PostMapping("{id}/threats/setPrecautions")
     public ResponseEntity<HttpStatus> setPrecautions(@PathVariable final long id, @Valid @RequestBody final SetPrecautionsDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
+		checkUpdateAccess(threatAssessment);
 
-        if (threatAssessment.getThreatAssessmentResponses() == null) {
-            threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
-        }
+		if (threatAssessment.getThreatAssessmentResponses() == null) {
+			threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
+		}
 
         final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.threatType, dto.threatId, dto.threatIdentifier);
         if (response == null) {
@@ -568,8 +604,8 @@ public class RiskRestController {
 	public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
 		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -638,7 +674,7 @@ public class RiskRestController {
 		}
 
 		// calculate the highest scores the same way its calculated when setting the threatAssessment.assessment
-		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment);
+		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment, true);
 
 		return new RiskLevel(result.globalHighestprobability(), result.globalHighestConsequence());
 	}
@@ -763,4 +799,22 @@ public class RiskRestController {
 
 		return key;
 	}
+
+	@RequireUpdateOwnerOnly
+	@PostMapping("{id}/toggle-hidden")
+	public ResponseEntity<Void> toggleHidden(@PathVariable Long id) {
+		User user = securityUserService.getCurrentUserOrThrow();
+		ThreatAssessment assessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) &&
+				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(assessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		assessment.setHidden(!assessment.isHidden());
+		threatAssessmentService.save(assessment);
+
+		return ResponseEntity.ok().build();
+	}
+
 }

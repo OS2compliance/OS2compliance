@@ -1,9 +1,8 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.HasCustomResponsibleUsers;
-import dk.digitalidentity.model.entity.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.enums.ConsequenceAssessment;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -61,9 +60,8 @@ public class RegisterGrid implements HasMultipleResponsibleUsers, HasCustomRespo
     @Column
     private Integer riskOrder;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private RegisterStatus status;
+	@Column
+	private String status;
 
     @Column
     private Integer statusOrder;
@@ -80,4 +78,10 @@ public class RegisterGrid implements HasMultipleResponsibleUsers, HasCustomRespo
 
     @Column
     private Integer assetAssessmentOrder;
+
+	@Column
+	private String tagNames;
+
+	@Column
+	private String tagIds;
 }

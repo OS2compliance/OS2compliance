@@ -31,18 +31,24 @@
 
                             <div class="col-sm-12">
                                 <label for="groupSelector" class="col-form-label">KLE Grupper</label>
-                                <select class="form-control form-select" multiple="multiple" id="groupSelector" name="groups"  disabled>
+                                <select class="form-control form-select" multiple="multiple" id="groupSelector" name="groups" disabled>
                                     <option th:each="group : ${kleGroups}" th:selected="${group.selected}" th:text="${group.display}" th:value="${group.value}"></option>
+                                </select>
+                            </div>
+
+                            <div class="col-sm-12">
+                                <label for="secondaryGroupSelector" class="col-form-label">KLE Emner</label>
+                                <select class="form-control form-select" multiple="multiple" id="secondaryGroupSelector" name="subjects" disabled>
+                                    <option th:each="group : ${groupSubjects}" th:selected="${group.selected}" th:text="${group.display}" th:value="${group.value}"></option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="form-group row">
                             <label for="status" class="col-form-label">Status</label>
-                            <select class="form-control form-select" th:field="*{status}" name="status" id="status" tabindex="-1" disabled>
-                                <option value=""></option>
-                                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.RegisterStatus).values()}"
-                                        th:value="${status}" th:text="${status.message}"></option>
+                            <select class="form-control form-select" name="status" id="status" tabindex="-1" disabled>
+                                <option value="">-- Vælg status --</option>
+                                <option th:each="statusChoice : ${statusChoices}" th:value="${statusChoice.id}" th:text="${statusChoice.caption}" th:selected="${register.status != null && statusChoice.id == register.status.id}"></option>
                             </select>
                         </div>
                         <div class="form-group row">
@@ -192,7 +198,7 @@
                             </thead>
                             <tbody>
                             <tr th:each="task : ${tasks}">
-                                <td >
+                                <td>
                                     <a th:text="${task.title}" th:href="@{/tasks/{id}(id=${task.id})}"></a>
                                 </td>
                                 <td th:text="${task.responsibleUserName}"></td>
@@ -215,32 +221,43 @@
         </div>
     </div>
 
-    <div class="col-12 mb-3">
-        <div class="card h-100">
-            <div class="card-header toolbar">
-                <h5 class="toolbar-start m-0">Dokumenter</h5>
-                <div class="toolbar-end">
-                    <button type="button" th:if="${changeableRegister}" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${register.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
+    <div class="row">
+
+        <div class="col-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header toolbar">
+                    <h5 class="toolbar-start m-0">Dokumenter</h5>
+                    <div class="toolbar-end">
+                        <button type="button" th:if="${changeableRegister}" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${register.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <table>
-                        <tbody>
-                        <tr th:each="document : ${documents}">
-                            <td class="col-lg-10">
-                                <a th:text="${document.name} + ' - ' + ${document.nextRevision}" th:href="@{/documents/{id}(id=${document.id})}"></a>
-                            </td>
-                            <td class="col-lg-2" title="Fjern relation">
-                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                <div class="card-body">
+                    <div class="row">
+                        <table>
+                            <tbody>
+                            <tr th:each="document : ${documents}">
+                                <td class="col-lg-10">
+                                    <a th:text="${document.name} + ' - ' + ${document.nextRevision}" th:href="@{/documents/{id}(id=${document.id})}"></a>
+                                </td>
+                                <td class="col-lg-2" title="Fjern relation">
+                                    <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <div class="col-6 mb-3">
+            <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (
+                                        tags=${register.tags}, parentId=${register.id}, parentType='register',
+                                        allowAdd=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')},
+                                        allowRemove=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')})}"></div>
+        </div>
     </div>
+
 </div>
 </body>
 </html>

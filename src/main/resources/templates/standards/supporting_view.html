@@ -20,8 +20,11 @@
                         <h1 class="page-title mb-0 mt-2 mb-2" th:text="${template.name}"></h1>
                     </div>
                     <div class="align-self-center d-inline-flex gap-2 mb-2">
-                        <a id="exportStandardToExcel" th:href="@{/reports/word(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv standard</a>
-                        <div th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='createRequirementButton', text='Ny krav', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
+                        <a id="exportStandardToWord" th:href="@{/reports/word(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv standard</a>
+                        <a th:if="${template.identifier == 'iso27002_2022' || template.identifier == 'iso27002_2017'}" id="exportStandardToExcel" th:href="@{/reports/sheet(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv SoA</a>
+                        <div th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}">
+                            <div th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='createRequirementButton', text='Ny krav', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
+                        </div>
                         <div th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='addHeaderButton', text='Ny gruppe', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
@@ -89,8 +92,7 @@
                                                     <td th:if="${isNSIS}" th:text="${section.securityLevel}" style="font-weight: bold;"></td>
                                                     <td th:id="'reasonTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.reason}" style="font-weight: bold;"></td>
                                                     <td th:id="'dateTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${#temporals.format(section.standardSection.updatedAt, 'dd-MM-yyyy')}" style="font-weight: bold;"></td>
-                                                    <td th:id="'responsibleTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.responsibleUser} == null ? '' : ${section.standardSection.responsibleUser.name}" style="font-weight: bold;"></td>
-                                                    <td th:if="${section.standardSection != null && section.standardSection.status != null}" th:id="'statusTD' + ${stat.index} + '.' + ${statSection.index}" th:style="${'display: ' + (section.standardSection.selected ? 'block' : 'none')}">
+                                                    <td th:id="'responsibleTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.responsibleUser} == null ? '' : ${section.standardSection.responsibleUser.name}" style="font-weight: bold;"></td>                                                    <td th:if="${section.standardSection != null && section.standardSection.status != null}" th:id="'statusTD' + ${stat.index} + '.' + ${statSection.index}" th:style="${'display: ' + (section.standardSection.selected ? 'block' : 'none')}">
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_STARTED.equals(section.standardSection.status)} " class="d-block badge bg-yellow-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).IN_PROGRESS.equals(section.standardSection.status)} " class="d-block badge bg-blue-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY.equals(section.standardSection.status)} " class="d-block badge bg-green-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>

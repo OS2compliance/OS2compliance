@@ -1,6 +1,9 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
+import dk.digitalidentity.mapping.KLEMapper;
+import dk.digitalidentity.model.KLELegalReferenceDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
@@ -23,9 +26,9 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterSetting;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
@@ -41,6 +44,7 @@ import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RegisterAssetAssessmentService;
@@ -53,6 +57,7 @@ import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.kle.KLEGroupService;
 import dk.digitalidentity.service.kle.KLELegalReferenceService;
 import dk.digitalidentity.service.kle.KLEMainGroupService;
+import dk.digitalidentity.service.kle.KLESubjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,14 +111,18 @@ public class RegisterController {
 	private final SettingsService settingsService;
 	private final KLEMainGroupService kLEMainGroupService;
 	private final KLEGroupService kLEGroupService;
+	private final KLESubjectService kleSubjectService;
 	private final KLELegalReferenceService kLELegalReferenceService;
+	private final KLEMapper kleMapper;
 	private final CatalogService catalogService;
+	private final ChoiceValueService choiceValueService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
 	public String registerList(Model model) {
 
 		model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
+		model.addAttribute("statusChoices", choiceService.findChoiceValuesForListIdentifier("register-status").stream().toList());
 		return "registers/index";
 	}
 
@@ -140,6 +149,8 @@ public class RegisterController {
     @Transactional
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
+		ChoiceValue choiceValue = choiceValueService.findByIdentifier(Constants.CHOICE_LIST_REGISTER_STATUS_NOT_STARTED_ID);
+		register.setStatus(choiceValue);
         final Register saved = registerService.save(register);
         return "redirect:/registers/" + saved.getId();
     }
@@ -258,9 +269,10 @@ public class RegisterController {
 			@RequestParam(value = "registerRegarding", required = false) final Set<ChoiceValue> registerRegarding,
 			@RequestParam(value = "securityPrecautions", required = false) final String securityPrecautions,
 			@RequestParam(required = false) final String section,
-			@RequestParam(value = "status", required = false) final RegisterStatus status,
+			@RequestParam(value = "status", required = false) final Long statusId,
 			@RequestParam(value = "mainGroups", required = false) final Set<String> mainGroupIds,
-			@RequestParam(value = "groups", required = false) final Set<String> groupIds
+			@RequestParam(value = "groups", required = false) final Set<String> groupIds,
+			@RequestParam(value = "subjects", required = false) final Set<String> subjectIds
 			) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -309,9 +321,11 @@ public class RegisterController {
         if (criticality != null) {
             register.setCriticality(criticality);
         }
-        if (status != null) {
-            register.setStatus(status);
-        }
+		if (statusId != null) {
+			ChoiceValue status = choiceValueService.findById(statusId)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status"));
+			register.setStatus(status);
+		}
 
 		if (mainGroupIds != null && !mainGroupIds.isEmpty()) {
 			register.setKleMainGroups(kLEMainGroupService.getAllByMainGroupNumbers(mainGroupIds));
@@ -322,6 +336,11 @@ public class RegisterController {
 			register.setKleGroups(kLEGroupService.getAllByGroupNumbers(groupIds));
 		} else {
 			register.setKleGroups(new HashSet<>());
+		}
+		if (subjectIds != null && !subjectIds.isEmpty()) {
+			register.setKleSubjects(kleSubjectService.findAllBySubjectNumbers(subjectIds));
+		} else {
+			register.setKleSubjects(new HashSet<>());
 		}
 
         registerService.save(register);
@@ -420,6 +439,7 @@ public class RegisterController {
     }
 
 	@RequireReadOwnerOnly
+	@Transactional
     @GetMapping("{id}")
     public String view(final Model model, @PathVariable final Long id,
                        @RequestParam(required = false) final String section) {
@@ -449,29 +469,44 @@ public class RegisterController {
 		model.addAttribute("mainGroups", mainGroups);
 
 		final Set<KLEGroup> kleGroups = kLEGroupService.getAllForMainGroups(register.getKleMainGroups());
-		model.addAttribute("kleGroups", kleGroups.stream()
+		List<SelectionDTO> selection = kleGroups.stream()
 				.sorted(Comparator.comparing(KLEGroup::getGroupNumber))
-				.map(g -> new SelectionDTO(g.getGroupNumber() +" " + g.getTitle(), g.getGroupNumber(), register.getKleGroups().contains(g))));
+				.map(g -> new SelectionDTO(g.getGroupNumber() + " " + g.getTitle(), g.getGroupNumber(), register.getKleGroups().contains(g))).toList();
+		model.addAttribute("kleGroups", selection);
+		model.addAttribute("groupSubjects", kleGroups.stream()
+				.flatMap(kleGroup -> kleGroup.getSubjects().stream())
+				.sorted(Comparator.comparing(KLESubject::getSubjectNumber))
+				.map(subject -> new SelectionDTO(
+						subject.getSubjectNumber() + " " + subject.getTitle(),
+						subject.getSubjectNumber(),
+						register.getKleSubjects().contains(subject))).toList());
 
 		final Set<String> selectedLegalReferenceAccessionNumbers = register.getRelevantKLELegalReferences().stream().map(KLELegalReference::getAccessionNumber).collect(Collectors.toSet());
-		final Set<SelectionDTO> kleLegalReferences = register.getKleGroups().stream()
+		final Set<KLELegalReferenceDTO> kleLegalReferences = register.getKleGroups().stream()
 				.flatMap(g -> g.getLegalReferences().stream())
-				.map(lr -> new SelectionDTO(lr.getTitle(), lr.getAccessionNumber(), selectedLegalReferenceAccessionNumbers.contains(lr.getAccessionNumber())))
+				.map(kleMapper::toDTO)
+				.peek(lr -> lr.setSelected(selectedLegalReferenceAccessionNumbers.contains(lr.getValue())))
 				.collect(Collectors.toSet());
+
+		kleLegalReferences.addAll(register.getKleSubjects().stream()
+				.flatMap(kleSubject -> kleSubject.getLegalReferences().stream())
+				.map(kleMapper::toDTO)
+				.peek(lr -> lr.setSelected(selectedLegalReferenceAccessionNumbers.contains(lr.getValue())))
+				.collect(Collectors.toSet()));
+
 		model.addAttribute("kleLegalReferences", kleLegalReferences);
-
-		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups()));
-
-
+		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups(), register.getKleSubjects()));
 
 		model.addAttribute("customResponsibleUserFieldName", settingsService.getString(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse"));
 
 		model.addAttribute("recordOfProcessingActivityRegardingChoices", choiceService.findChoiceValuesForListIdentifier("record-of-processing-activity-regarding").stream()
 				.map(cv -> new SelectionChoiceDTO(cv.getCaption(), cv.getId().toString(), register.getRegisterRegarding().contains(cv))));
 
+		model.addAttribute("statusChoices", choiceService.findChoiceValuesForListIdentifier("register-status").stream().toList());
+
         model.addAttribute("section", section);
-		model.addAttribute("changeableRegister", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)	|| registerService.isResponsibleFor(register)) );
-		model.addAttribute("responsibleFieldChangeable", !registerService.isResponsibleFor(register)); // Those responsible for an asset change change who is responsible
+		model.addAttribute("changeableRegister", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || registerService.isResponsibleFor(register)));
+		model.addAttribute("responsibleFieldChangeable", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || registerService.isResponsibleFor(register)));
 
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
@@ -492,7 +527,9 @@ public class RegisterController {
 					return new TaskListDTO(
 							task.getId(),
 							task.getName(),
-							task.getResponsibleUser().getName(),
+							task.getResponsibleUsers().stream()
+									.map(User::getName)
+									.collect(Collectors.joining(", ")),
 							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
 							task.getTaskType().getMessage(),
 							task.getNextDeadline().toString(),
@@ -511,7 +548,7 @@ public class RegisterController {
         model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
-		model.addAttribute("risk", new ThreatAssessment());
+		model.addAttribute("risk",createThreatassessmentFormModelForRegister());
 		model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 
         model.addAttribute("organisationAssessmentColumnTypes", getOrganisationAssessmentColumnTypes());
@@ -519,6 +556,12 @@ public class RegisterController {
 
         return "registers/view";
     }
+
+	private ThreatAssessment createThreatassessmentFormModelForRegister() {
+		ThreatAssessment threatAssessment = new ThreatAssessment();
+		threatAssessment.setThreatAssessmentType(ThreatAssessmentType.REGISTER);
+		return threatAssessment;
+	}
 
 	private List<ChoiceValue> getOrganisationAssessmentColumnTypes() {
 		return choiceService.findChoiceList("organisation-assessment-columns")
@@ -540,17 +583,18 @@ public class RegisterController {
 	record SelectedKLEGroupDTO (String groupNumber, String title, String instructionText, List<KLEKeywordDTO> keywords, List<SelectedKLESubjectDTO> subjects) {}
 	record SelectedKleMainGroupDTO(String mainGroupNumber, String title, List<SelectedKLEGroupDTO> groups) {}
 
-	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups) {
+	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups, Set<KLESubject> kleSubjects) {
 		return mainGroups.stream().map(mg ->
 						new SelectedKleMainGroupDTO(mg.getMainGroupNumber(), mg.getTitle(), mg.getKleGroups().stream()
 								.filter(groups::contains)
-								.map(this::toSelectedKLEGroupDTO)
+								.map(group -> toSelectedKLEGroupDTO(group, kleSubjects))
 								.sorted(Comparator.comparing(SelectedKLEGroupDTO::groupNumber))
 								.toList()))
 				.sorted(Comparator.comparing(SelectedKleMainGroupDTO::mainGroupNumber))
 				.toList();
 	}
-	private SelectedKLEGroupDTO toSelectedKLEGroupDTO(KLEGroup group) {
+
+	private SelectedKLEGroupDTO toSelectedKLEGroupDTO(KLEGroup group, Set<KLESubject> kleSubjects) {
 		return new SelectedKLEGroupDTO(
 				group.getGroupNumber(),
 				group.getTitle(),
@@ -559,6 +603,7 @@ public class RegisterController {
 						.map(k -> new KLEKeywordDTO(k.getText(), k.getHandlingsfacetNr()))
 						.toList(),
 				group.getSubjects().stream()
+						.filter(kleSubjects::contains)
 						.map(this::toSelectedKLESubjectDTO )
 						.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
 						.toList());

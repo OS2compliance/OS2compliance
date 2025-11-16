@@ -27,9 +27,9 @@
             <div class="row mt-3">
               <label for="documentType" class="col-lg-4 col-form-label">Dokumenttype</label>
               <div class="col-lg-8">
-                <select class="form-control form-select" th:field="*{documentType}" id="documentType" required>
-                  <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.DocumentType).values()}"
-                          th:value="${type}" th:text="${type.message}"></option>
+                <select class="form-control form-select" th:field="*{documentTypeId}" id="documentType" required>
+                    <option th:each="option : ${possibleDocumentTypes}"
+                            th:value="${option.id}" th:text="${option.caption}"></option>
                 </select>
                 <div class="invalid-feedback">Der skal vælges en type</div>
               </div>
@@ -66,6 +66,15 @@
                 <div class="invalid-feedback">Der skal vælges en revideringsfrekvens</div>
               </div>
             </div>
+              <div class="row mt-3">
+                  <label for="includeInYearWheel" class="col-lg-4 col-form-label">Skal indgås i årshjulet</label>
+                  <div class="col-lg-8">
+                      <select class="form-control form-select" name="includeInYearWheel" id="includeInYearWheel">
+                          <option value="true">Ja</option>
+                          <option value="false" selected>Nej</option>
+                      </select>
+                  </div>
+              </div>
             <div class="row mt-3">
               <label for="nextRevision" class="col-lg-4 col-form-label">Revideringsdato</label>
               <div class="col-lg-8">
@@ -91,15 +100,17 @@
               </div>
             </div>
             <div class="row mt-3">
-              <label for="createDocumentTagsSelect" class="col-sm-4 col-form-label">Tags</label>
-              <div class="col-sm-8">
-                  <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="tags" id="createDocumentTagsSelect" hidden="" tabindex="-1" multiple></select>
-              </div>
+                <label for="createDocumentTagsSelect" class="col-sm-4 col-form-label">Tags</label>
+                <div class="col-sm-8">
+                    <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="tags" id="createDocumentTagsSelect" hidden="" tabindex="-1" multiple>
+                        <option th:each="tag : ${document.tags}" th:value="${tag.id}" th:text="${tag.value}" selected></option>
+                    </select>
+                </div>
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+          <button id="createCancelButton" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
           <button type="submit" form="createDocumentModal" class="btn btn-primary">Gem</button>
         </div>
       </div>
