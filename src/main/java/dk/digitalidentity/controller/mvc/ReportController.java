@@ -204,8 +204,8 @@ public class ReportController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ThreatAssessment not found");
 		}
 
-		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-		response.setHeader("Content-Disposition", "attachment; filename=\"threat_assessment_" + threatAssessmentId + ".xlsx\"");
+		response.setContentType("application/ms-excel");
+		response.setHeader("Content-Disposition", "attachment; filename=\"threat_assessment_" + threatAssessmentId + ".xls\"");
 
 		final Map<String, Object> model = new HashMap<>();
 		model.put("threatAssessment", threatAssessment);
