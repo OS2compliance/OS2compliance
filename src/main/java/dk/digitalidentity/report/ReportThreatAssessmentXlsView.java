@@ -79,7 +79,6 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createStamDataRow(sheet, threatAssessment, riskAsset, riskRegister, riskAssessmentTasks,
 				modelData, styles.normalStyle);
 
-		// Auto-size columns
 		autoSizeColumns(sheet, 19);
 	}
 
@@ -92,7 +91,6 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		// Create data rows for custom threats
 		createTrusslerRows(sheet, threatAssessment, styles);
 
-		// Auto-size columns
 		autoSizeColumns(sheet, 2);
 	}
 
@@ -390,7 +388,6 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		}
 	}
 
-	// Keep existing methods that are still relevant
 	private String getSubHeading(final ThreatAssessment threatAssessment, final Asset asset, final Register register) {
 		if (asset != null) {
 			String owners = getUsersString(asset.getResponsibleUsers(), null);
