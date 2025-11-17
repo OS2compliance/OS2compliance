@@ -5,13 +5,61 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
-## [2.5.0] - Unreleased
+## [2.5.0] - 2025-11-14
 ### Added
-- (https://os2web.atlassian.net/browse/COMPLY-330) (Aktiver/Databehandling) Nyt felt til brugerstyring
-- (https://os2web.atlassian.net/browse/COMPLY-279) (Rapporter/Årshjul) Rapport over årshjul (i praksis var det bare status der manglede for rapporten)
-- (https://os2web.atlassian.net/browse/COMPLY-314) (Administrativt) Tags - Mulighed for at ændre/rette navn på tag efter oprettelse
+- (https://os2web.atlassian.net/browse/COMPLY-43) (Opgavecenter/Opgave og Kontrol) Ved ny opgave skal det være muligt at klikke Gem og gå til opgave eller gem
+- (https://os2web.atlassian.net/browse/COMPLY-58) (Opgavecenter/Opgave og Kontrol) Oplysningerne omkring et tilsyn skal kunne udfyldes fra opgaven
+- (https://os2web.atlassian.net/browse/COMPLY-84) (Rapporter) Mulighed for at udtrække liste over kontaktpersoner på leverandør
+- (https://os2web.atlassian.net/browse/COMPLY-110) (Opgavecenter/Opgave og Kontrol) Mouse over ved oprettelse af opgave
+- (https://os2web.atlassian.net/browse/COMPLY-141) (Aktiver og Leverandør) Slettes et aktiv der kun har én leverandør skal leverandøren automatisk slettes
+- (https://os2web.atlassian.net/browse/COMPLY-146) (Aktiver/Tilsyn) Ændring af tekst
+- (https://os2web.atlassian.net/browse/COMPLY-173) (Administrativt) Det skal være muligt at kunne justere alle lister selv
+- (https://os2web.atlassian.net/browse/COMPLY-177) (Risikovurdering/Forside) Mulighed for at skjule risikovurderinger fra overblikket
+- (https://os2web.atlassian.net/browse/COMPLY-178) (Risikostyring/Forside) Kolonne på forsiden der viser antal løste opgaver
+- (https://os2web.atlassian.net/browse/COMPLY-187) (Aktiver) Man skal kunne fravælge/inaktivere muligheden for at oprette systemer i OS2compliance (ved synk fra KITOS)
+- (https://os2web.atlassian.net/browse/COMPLY-189) (Dokumenter) Revidering og årshjul
+- (https://os2web.atlassian.net/browse/COMPLY-203) (Opgavecenter/Opgave) Man skal kunne knytte flere ansvarlige til en opgave
+- (https://os2web.atlassian.net/browse/COMPLY-216) (Leverandører) KITOS logo
+- (https://os2web.atlassian.net/browse/COMPLY-218) (Risikostyring/Den enkelte risikovurdering) Udskriv i Excel
+- (https://os2web.atlassian.net/browse/COMPLY-225) (Opgavecenter/Opgave og Kontrol) Mulighed for tjekliste
+- (https://os2web.atlassian.net/browse/COMPLY-226) (Opgavecenter/Opgave og Kontrol) Tags skal være i forskellige farver
+- (https://os2web.atlassian.net/browse/COMPLY-237) (Risikostyring/Den enkelte risikovurdering) Udvid/luk alle trusler
 - (https://os2web.atlassian.net/browse/COMPLY-242) (Risikostyring/Risikovurderingsrapport) Tilføjelser til risikovurderingsrapporten
+- (https://os2web.atlassian.net/browse/COMPLY-250) (Risikovurdering/Den enkelte risikovurdering) Mulighed for at rette i en tilføjet trussel
+- (https://os2web.atlassian.net/browse/COMPLY-266) (Opgavecenter/Opgave) Ved Kontrol status ”Ingen fejl” kræves der alligevel en kommentar
+- (https://os2web.atlassian.net/browse/COMPLY-267) (Aktiver og leverandør/Tilsyn) Mulighed for at slette en leverandør fra et aktiv
+- (https://os2web.atlassian.net/browse/COMPLY-269) (Aktiver/Tilsyn og databehandling) Flyt felter om databehandleraftaler fra fanen Tilsyn
+- (https://os2web.atlassian.net/browse/COMPLY-279) (Rapporter/Årshjul) Rapport over årshjul (i praksis var det bare status der manglede for rapporten)
+- (https://os2web.atlassian.net/browse/COMPLY-281) (Opgavecenter/Forside) Ved "kopier opgave" skal der kunne vinges af i "Skal indgå i årshjul".
+- (https://os2web.atlassian.net/browse/COMPLY-284) (Risikostyring/Den enkelte risikovurdering) CC felt ved afsendelse
+- (https://os2web.atlassian.net/browse/COMPLY-285) (Risikostyring/Risikovurderinger) Risikokataloger skal stå i alfabetisk rækkefølge
+- (https://os2web.atlassian.net/browse/COMPLY-286) (Risikostyring/Risikovurderinger) Signeringsknappen (både for risikovurdering og DPIA) skal være i bunden af dokumentet
+- (https://os2web.atlassian.net/browse/COMPLY-288) (Risikostyring/Rapporten) Ikke relevante trusler med i rapporten
+- (https://os2web.atlassian.net/browse/COMPLY-296) (Aktiver/DBS Tilsyn) Ændring af ordlyd
+- (https://os2web.atlassian.net/browse/COMPLY-298) (Leverandører) 3. landes overblik
+- (https://os2web.atlassian.net/browse/COMPLY-299) (Leverandører+aktiver/oversigt) Overblik og tilsyn
+- (https://os2web.atlassian.net/browse/COMPLY-301) (Dashboard) Mulighed for at se brugerrolle
+- (https://os2web.atlassian.net/browse/COMPLY-305) (Hændelser) Felt til klikbar links
+- (https://os2web.atlassian.net/browse/COMPLY-308) (Hændelser/Hændelseslog) Mulighed for at kunne tagge til fx risikovurdering, konsekvensanalyser, behandlingsaktiviteter, dokumenter.
+- (https://os2web.atlassian.net/browse/COMPLY-309) (Dokumenter/Nyt Dokument) Flere dokumenttyper
+- (https://os2web.atlassian.net/browse/COMPLY-310) (Opgavecenter/Opgave og kontrol) Dato for udført kontrol
+- (https://os2web.atlassian.net/browse/COMPLY-311) (Opgavecenter/Opgave og Kontrol) Beskrivelse af udførte kontroller
+- (https://os2web.atlassian.net/browse/COMPLY-312) (Opgavecenter/Opgave og Kontrol) Individuel opsætning af påmindelse omkring opgaver
+- (https://os2web.atlassian.net/browse/COMPLY-314) (Administrativt) Tags - Mulighed for at ændre/rette navn på tag efter oprettelse
+- (https://os2web.atlassian.net/browse/COMPLY-315) (Administrativt) Ændring af modul-navn
+- (https://os2web.atlassian.net/browse/COMPLY-329) (Aktiver/Databehandling) Nyt felt til logning
+- (https://os2web.atlassian.net/browse/COMPLY-330) (Aktiver/Databehandling) Nyt felt til brugerstyring
+- (https://os2web.atlassian.net/browse/COMPLY-341) Mulighed for massekontrol
+- (https://os2web.atlassian.net/browse/COMPLY-242) (Risikostyring/Risikovurderingsrapport) Tilføjelser til risikovurderingsrapporten
+- (https://os2web.atlassian.net/browse/COMPLY-351) (Risikostyring/Trusselsbillede) Navnet "Trusselsbillede" skal ændres til "Risikobillede"
 - (https://os2web.atlassian.net/browse/COMPLY-352) (Standarder) Når man opretter et krav skal tallet i gruppenavnet være med ved ”tilhører til”
+- (https://os2web.atlassian.net/browse/COMPLY-353) (Standarder) Når man opretter et krav står der ”tilhører til” det skal hedde ”tilhører” eller ”gruppe”
+- (https://os2web.atlassian.net/browse/COMPLY-354) (Behandlingsaktiviteter/generelt) Statusfeltet skal man selv kunne definere under valglister
+- (https://os2web.atlassian.net/browse/COMPLY-355) (Aktiver) Mulighed for selv at redigere valgliste
+- (https://os2web.atlassian.net/browse/COMPLY-356) (Behandlingsaktivitet/Databehandling) Udfor notefeltet lige under Typer af personoplysninger skrives "Note"
+- (https://os2web.atlassian.net/browse/COMPLY-357) (Standard) Udskriv SoA
+- (https://os2web.atlassian.net/browse/COMPLY-357) (Standard) Udskriv SoA
+
 
 ### Changed
 - (https://os2web.atlassian.net/browse/COMPLY-351) (Risikostyring/Trusselsbillede) Navnet "Trusselsbillede" skal ændres til "Risikobillede"
