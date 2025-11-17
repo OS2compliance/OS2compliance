@@ -1,12 +1,12 @@
 package dk.digitalidentity.report;
 
 import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.enums.DeletionProcedure;
@@ -82,18 +82,6 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		autoSizeColumns(sheet, 19);
 	}
 
-	private void createTrusslerSheet(Workbook workbook, ThreatAssessment threatAssessment, ExcelStyles styles) {
-		Sheet sheet = workbook.createSheet("Trussler");
-
-		// Create header for custom threats
-		createTrusslerHeader(sheet, styles.headerStyle);
-
-		// Create data rows for custom threats
-		createTrusslerRows(sheet, threatAssessment, styles);
-
-		autoSizeColumns(sheet, 2);
-	}
-
 	private void createStamDataHeader(Sheet sheet, ModelData modelData, CellStyle headerStyle) {
 		final Row header = sheet.createRow(0);
 		final String[] headers = {
@@ -105,17 +93,6 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 				"Sletteprocedure udarbejdet", "Link til Sletteprocedure", "Samfundskritisk",
 				"Hvem har adgang til personoplysningerne", "Hvor mange har adgang til personoplysningerne?",
 				"Kategorier af registrerede og typer af personoplysninger", "Opgaver oprettet under risikovurderingen"
-		};
-
-		for (int i = 0; i < headers.length; i++) {
-			createCell(header, i, headers[i], headerStyle);
-		}
-	}
-
-	private void createTrusslerHeader(Sheet sheet, CellStyle headerStyle) {
-		final Row header = sheet.createRow(0);
-		final String[] headers = {
-				"Trussel type", "Beskrivelse"
 		};
 
 		for (int i = 0; i < headers.length; i++) {
@@ -157,22 +134,89 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createCell(row, cellNum, getTasksString(tasks), cellStyle);
 	}
 
-	private void createTrusslerRows(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles) {
-		if (threatAssessment.getCustomThreats() == null || threatAssessment.getCustomThreats().isEmpty()) {
-			// Create empty row with message
+	private void createTrusslerSheet(Workbook workbook, ThreatAssessment threatAssessment, ExcelStyles styles) {
+		Sheet sheet = workbook.createSheet("Trussler");
+
+		// Create "trussler" table
+		createComprehensiveThreatsTable(sheet, threatAssessment, styles);
+
+		// Auto-size all columns
+		autoSizeColumns(sheet, 25); // Increased column count for comprehensive table
+	}
+
+	private void createComprehensiveThreatsTable(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles) {
+		// Create header
+		Row header = sheet.createRow(0);
+		String[] headers = {
+				"Trussel Type", "Trussel Beskrivelse", "Ikke Relevant", "Sandsynlighed",
+				"Konf. Registrerede", "Konf. Organisation", "Konf. Samfund",
+				"Integr. Registrerede", "Integr. Organisation", "Integr. Samfund",
+				"Tilg. Registrerede", "Tilg. Organisation", "Tilg. Samfund", "Autent. Samfund",
+				"Problem", "Eksisterende Foranstaltninger", "Metode", "Uddybning",
+				"Restrisiko Sandsynlighed", "Restrisiko Konsekvens"
+		};
+
+		for (int i = 0; i < headers.length; i++) {
+			createCell(header, i, headers[i], styles.headerStyle);
+		}
+
+		int currentRow = 1;
+
+		// Process all ThreatAssessmentResponses
+		if (threatAssessment.getThreatAssessmentResponses() != null && !threatAssessment.getThreatAssessmentResponses().isEmpty()) {
+			for (ThreatAssessmentResponse response : threatAssessment.getThreatAssessmentResponses()) {
+				Row row = sheet.createRow(currentRow++);
+				fillCombinedThreatRow(row, response, styles);
+			}
+		} else {
+			// Empty state
 			Row emptyRow = sheet.createRow(1);
-			createCell(emptyRow, 0, "Ingen tilpassede trusler fundet", styles.normalStyle);
-			return;
+			createCell(emptyRow, 0, "Ingen trusselsvurderinger fundet", styles.normalStyle);
+		}
+	}
+
+	private void fillCombinedThreatRow(Row row, ThreatAssessmentResponse response, ExcelStyles styles) {
+		int cellNum = 0;
+
+		// Determine threat type and get threat info
+		String threatType = "";
+		String threatDescription = "";
+
+		if (response.getThreatCatalogThreat() != null) {
+			threatType = safeString(response.getThreatCatalogThreat().getThreatType());
+			threatDescription = safeString(response.getThreatCatalogThreat().getDescription());
+		} else if (response.getCustomThreat() != null) {
+			threatType = safeString(response.getCustomThreat().getThreatType());
+			threatDescription = safeString(response.getCustomThreat().getDescription());
 		}
 
-		int rowNum = 1;
-		for (CustomThreat customThreat : threatAssessment.getCustomThreats()) {
-			Row row = sheet.createRow(rowNum++);
-			int cellNum = 0;
+		// Fill threat info (columns 0-3)
+		createCell(row, cellNum++, threatType, styles.normalStyle);
+		createCell(row, cellNum++, threatDescription, styles.normalStyle);
 
-			createCell(row, cellNum++, safeString(customThreat.getThreatType()), styles.normalStyle);
-			createCell(row, cellNum++, safeString(customThreat.getDescription()), styles.normalStyle);
-		}
+		// Fill assessment info (columns 4-22)
+		createCell(row, cellNum++, response.isNotRelevant() ? "Ja" : "Nej", styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getProbability())), styles.normalStyle);
+
+		// Risk scores (columns 7-16)
+		createCell(row, cellNum++, safeString(String.valueOf(response.getConfidentialityRegistered())), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getConfidentialityOrganisation())), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getConfidentialitySociety())), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getIntegrityRegistered())), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getIntegrityOrganisation())), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getIntegritySociety())), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getAvailabilityRegistered())), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getAvailabilityOrganisation())), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getAvailabilitySociety())), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getAuthenticitySociety())), styles.normalStyle);
+
+		// Assessment details (columns 17-22)
+		createCell(row, cellNum++, safeString(response.getProblem()), styles.normalStyle);
+		createCell(row, cellNum++, safeString(response.getExistingMeasures()), styles.normalStyle);
+		createCell(row, cellNum++, response.getMethod() != null ? response.getMethod().getMessage() : "", styles.normalStyle);
+		createCell(row, cellNum++, safeString(response.getElaboration()), styles.normalStyle);
+		createCell(row, cellNum++, safeString(String.valueOf(response.getResidualRiskProbability())), styles.normalStyle);
+		createCell(row, cellNum, safeString(String.valueOf(response.getResidualRiskConsequence())), styles.normalStyle);
 	}
 
 	private void fillAssetData(Row row, int startCell, Asset riskAsset, ModelData modelData, CellStyle cellStyle) {
@@ -375,7 +419,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 	}
 
 	private String safeString(String value) {
-		return value != null ? value : "";
+		return (value == null || "null".equals(value)) ? "" : value;
 	}
 
 	private String safeString(String value, String defaultValue) {
