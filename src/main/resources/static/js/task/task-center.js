@@ -166,7 +166,7 @@ function initGrid() {
                     let type = row.cells[2]['data'];
 
                     // if completed and task type opgave
-                    if (cell && type === "Opgave") {
+                    if (cell && type === "Opgave" || row.cells[10]['data'] === true) {
                         status = '<div class="d-block badge bg-success">Udført</div>'
                     } else {
                         let deadline = row.cells[6]['data'];
