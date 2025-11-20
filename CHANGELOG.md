@@ -58,8 +58,6 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-355) (Aktiver) Mulighed for selv at redigere valgliste
 - (https://os2web.atlassian.net/browse/COMPLY-356) (Behandlingsaktivitet/Databehandling) Udfor notefeltet lige under Typer af personoplysninger skrives "Note"
 - (https://os2web.atlassian.net/browse/COMPLY-357) (Standard) Udskriv SoA
-- (https://os2web.atlassian.net/browse/COMPLY-357) (Standard) Udskriv SoA
-
 
 ### Changed
 - (https://os2web.atlassian.net/browse/COMPLY-351) (Risikostyring/Trusselsbillede) Navnet "Trusselsbillede" skal ændres til "Risikobillede"
