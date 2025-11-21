@@ -100,10 +100,12 @@
               </div>
             </div>
             <div class="row mt-3">
-              <label for="createDocumentTagsSelect" class="col-sm-4 col-form-label">Tags</label>
-              <div class="col-sm-8">
-                  <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="tags" id="createDocumentTagsSelect" hidden="" tabindex="-1" multiple></select>
-              </div>
+                <label for="createDocumentTagsSelect" class="col-sm-4 col-form-label">Tags</label>
+                <div class="col-sm-8">
+                    <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="tags" id="createDocumentTagsSelect" hidden="" tabindex="-1" multiple>
+                        <option th:each="tag : ${document.tags}" th:value="${tag.id}" th:text="${tag.value}" selected></option>
+                    </select>
+                </div>
             </div>
           </form>
         </div>

@@ -44,4 +44,5 @@ public class DocumentEditFormDTO {
 
 	@NotNull
 	private User responsibleUser;
+
 }

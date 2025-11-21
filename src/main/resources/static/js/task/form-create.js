@@ -1,5 +1,3 @@
-import {refreshTaskGrid} from './task-center.js';
-
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener('click', async function(e) {
@@ -63,11 +61,22 @@ async function handleSubmit(fd, form) {
             return;
         }
 
-        // Reset form to create another task
-        form.reset();
+        // Close the modal
         form.classList.remove('was-validated');
 
-        refreshTaskGrid();
+        let modal = form.closest('.modal');
+        let bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+        bsModal.hide();
+
+        // If we are on the tasks/index page we need to refresh the grid to show the new task
+        await refreshTaskGridIfExists();
+
+        // If we are on a threat assessment and add a task for a custom threat we need to refresh the page to show the new task
+        if (riskData.taskRiskId) {
+            if (window.location.pathname.includes('/risks/')) {
+                window.location.reload();
+            }
+        }
 
         toastService.info("info", "Opgaven blev gemt");
     } catch (error) {
@@ -127,8 +136,24 @@ function extractSubTasksFromForm(form) {
 
 function extractRiskDataFromForm(fd, form) {
     return {
-        taskRiskId: fd.get(form.id + 'TaskRiskId') ? parseInt(fd.get(form.id + 'TaskRiskId')) : null,
-        riskCustomId: fd.get(form.id + 'RiskCustomId') ? parseInt(fd.get(form.id + 'RiskCustomId')) : null,
-        riskCatalogIdentifier: fd.get(form.id + 'RiskCatalogIdentifier') || null
+        taskRiskId: fd.get('taskRiskId') ? parseInt(fd.get('taskRiskId')) : null,
+        riskCustomId: fd.get('riskCustomId') ? parseInt(fd.get('riskCustomId')) : null,
+        riskCatalogIdentifier: fd.get('riskCatalogIdentifier') || null
     };
+}
+
+async function refreshTaskGridIfExists() {
+    const hasTasksTable = document.getElementById('tasksDatatable') !== null;
+
+    if (hasTasksTable) {
+        // Only import if we need to refresh, i.e. we have the table that needs to be refreshed (and not on DOM load)
+        try {
+            const module = await import('./task-center.js');
+            if (module.refreshTaskGrid) {
+                module.refreshTaskGrid();
+            }
+        } catch (error) {
+            console.debug('Could not load or execute task-center.js:', error);
+        }
+    }
 }
