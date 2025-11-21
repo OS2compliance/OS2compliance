@@ -72,6 +72,22 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 return data.map(field => [ field.id, field.indexColumnName, field.question, field.incidentType ]);
             },
             total: data => data.totalCount
+        },
+        language: {
+            'noRecordsFound': "Ingen data fundet",
+            'search': {
+                'placeholder': 'Søg'
+            },
+            'pagination': {
+                'previous': 'Forrige',
+                'next': 'Næste',
+                'showing': 'Viser',
+                'results': 'Opgaver',
+                'of': 'af',
+                'to': 'til',
+                'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                'page': (page) => `Side ${page}`
+            }
         }
     });
     incidentGrid.render(document.getElementById("incidentFieldsTable"));
