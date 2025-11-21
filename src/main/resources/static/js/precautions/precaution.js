@@ -71,6 +71,7 @@ function initGrid() {
         ],
         data: data,
         language: {
+            'noRecordsFound': "Ingen data fundet",
             'search': {
                 'placeholder': 'Søg'
             },
