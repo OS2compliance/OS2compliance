@@ -220,9 +220,8 @@ html {
     border-radius: .5rem;
     outline: lightgray solid 1px;
 }
-.title {
+.editable-page-title {
     overflow: hidden;
     resize: none;
-    /*This is not really supported on firefox and android yet*/
     field-sizing:content;
 }
