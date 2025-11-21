@@ -3,7 +3,7 @@
 <head th:replace="~{fragments/header :: head (sweetalerts = true, textEditor=true, burgermenu = true)}"></head>
 <body class="jumping">
 <script type="text/javascript" th:src="@{/js/supplier/checkCvr.js}"></script>
-<script type="text/javascript" th:src="@{/js/supplier/formReset.js}"></script>
+<script type="text/javascript" th:src="@{/js/formReset.js}"></script>
 <script th:src="@{/js/oversight/oversight-service.js}" defer></script>
 <link th:href="@{/css/suppliers.css}" rel="stylesheet">
 <div id="root" class="root mn--max hd--expanded">
@@ -44,7 +44,7 @@
 
                     <div class="tab-content">
                         <div id="_dm-tabsGenerelt" class="tab-pane fade active show" role="tabpanel" aria-labelledby="generelt-tab">
-                            <div th:replace="~{suppliers/generelt :: generelt(${supplier})}" />
+                            <div th:replace="~{suppliers/generelt :: generelt(${supplier})}" ></div>
                             <div class="card shadow-none">
                                 <div class="card-header toolbar">
                                     <h5 class="toolbar-start m-0">Kontakter</h5>
@@ -79,31 +79,25 @@
                                     <table class="col-lg-12 table table-striped">
                                         <thead>
                                         <tr>
-                                            <th style="width: 20%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Navn</th>
-                                            <th style="width: 20%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Ydelse</th>
-                                            <th style="width: 20%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Tredjelandsoverførsel</th>
-                                            <th style="width: 20%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Acceptgrundlag</th>
-                                            <th style="width: 20%" th:if="${(!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()) && (assetsRelated != null && !assetsRelated.isEmpty())}">Handlinger</th>
+                                            <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty() }">Navn</th>
+                                            <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty() }">Ydelse</th>
+                                            <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty() }">Tredjelandsoverførsel</th>
+                                            <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty() }">Acceptgrundlag</th>
+                                            <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty()}">Handlinger</th>
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        <tr th:each="asset : ${assetsWithMappings}">
+                                        <tr th:each="asset : ${assetRelationListDTOs}">
                                             <td>
                                                 <a th:text="${asset?.assetName}" th:href="@{ '/assets/' + ${asset?.assetId}}"></a>
                                             </td>
                                             <td th:text="${asset?.service}"></td>
-                                            <td th:text="${asset?.thirdCountryTransfer} ? 'Ja' : 'Nej'"></td>
+                                            <td th:text="${asset?.thirdCountryTransfer}"></td>
                                             <td th:text="${asset?.acceptanceBasis}"></td>
-                                        </tr>
-                                        <tr th:each="asset : ${assetsRelated}">
                                             <td>
-                                                <a th:text="${asset.name}" th:href="@{ '/assets/' + ${asset.id}}"></a>
-                                            </td>
-                                            <td></td>
-                                            <td></td>
-                                            <td th:text="${@assetUtils.hasThirdCountryTransfer(asset) ? 'Ja' : 'Nej'}"></td>
-                                            <td class="col-lg-2" title="Fjern relation">
-                                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${asset.id}, data-relationtype=${asset.relationType}" style="cursor: pointer"></i>
+                                                <div th:if="${asset?.removable}" class="col-lg-2" title="Fjern relation">
+                                                    <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${asset.assetId}, data-relationtype=${'ASSET'}" style="cursor: pointer"></i>
+                                                </div>
                                             </td>
                                         </tr>
                                         </tbody>

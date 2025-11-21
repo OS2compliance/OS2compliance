@@ -19,7 +19,7 @@
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
                 <div class="d-md-flex">
-                    <div class="me-auto w-75">
+                    <div class="me-auto" style="width: 70%;">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/registers}">Fortegnelse</a></li>
@@ -27,7 +27,7 @@
                             </ol>
                         </nav>
                         <div class="row mt-4 mb-3">
-                            <div class="col-12">
+                            <div class="col-11">
                                 <!--suppress XmlInvalidId -->
                                 <textarea id="registerNameField" form="editDescId" name="name" class="page-title transparent-input mb-0 mt-2 col-12 title" rows="1" th:text="${register.name}" disabled></textarea>                            </div>
                         </div>

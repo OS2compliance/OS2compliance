@@ -75,7 +75,7 @@ function initGrid() {
             {
                 name: "Ansvarlig",
                 searchable: {
-                    searchKey: 'responsibleUser.name',
+                    searchKey: 'responsibleNames',
                 },
             },
             {
@@ -166,7 +166,7 @@ function initGrid() {
                     let type = row.cells[2]['data'];
 
                     // if completed and task type opgave
-                    if (cell && type === "Opgave") {
+                    if (cell && type === "Opgave" || row.cells[10]['data'] === true) {
                         status = '<div class="d-block badge bg-success">Udført</div>'
                     } else {
                         let deadline = row.cells[6]['data'];
@@ -219,7 +219,7 @@ function initGrid() {
             },
             then: data => data.content.map(task =>
                 [ task.id, task.name, task.taskType,
-                    task.responsibleUser, task.responsibleOU, task.tags, task.nextDeadline,
+                    task.responsibleNames, task.responsibleOU, task.tags, task.nextDeadline,
                     task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions ]
             ),
             total: data => data.totalCount

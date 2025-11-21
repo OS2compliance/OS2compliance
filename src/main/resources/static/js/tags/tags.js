@@ -4,10 +4,9 @@ const tags = new TagService()
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 
-document.addEventListener("DOMContentLoaded", function(event) {
+document.addEventListener("DOMContentLoaded", function (event) {
 
     initColorPickerListener('createTagColorPicker')
-    initColorPickerListener('editTagColorPicker')
 
     const defaultClassName = {
         table: 'table table-striped',
@@ -130,7 +129,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 });
 
 
-function TagService () {
+function TagService() {
     this.deleteTag = (id, name) => {
         Swal.fire({
             text: `Er du sikker på du vil slette dette tag: '${name}'?`,
@@ -143,16 +142,24 @@ function TagService () {
         }).then((result) => {
             if (result.isConfirmed) {
                 fetch(`${restUrl}/${id}`,
-                    {method: "DELETE", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+                    {method: "DELETE", headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
                     .then(response => location.reload())
                     .catch(error => toastService.error(error));
             }
         });
     }
 
-    this.editTag = (id, value) => {
+    this.editTag = async (id, value) => {
+
+        const container = document.getElementById("editTagModalContainer");
+
+        const networkService = new NetworkService();
+        await networkService.GetFragment(`/admin/tags/${id}`, container)
+
         document.getElementById('editIdentifier').value = id;
         document.getElementById('redigerNavn').value = value;
+
+        initColorPickerListener('editTagColorPicker')
 
         let editDialog = new bootstrap.Modal(document.getElementById('editTagModal'));
         editDialog.show();
