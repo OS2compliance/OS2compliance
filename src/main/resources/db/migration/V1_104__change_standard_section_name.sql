@@ -1,3 +1,3 @@
 
 alter table standard_sections
-    modify name varchar(1800) not null;
+    modify name varchar(768) not null;
