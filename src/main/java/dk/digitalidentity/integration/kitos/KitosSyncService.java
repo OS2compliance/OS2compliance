@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -275,8 +276,12 @@ public class KitosSyncService {
         final List<User> userEntities = userService.findByPropertyKeyValue(KITOS_UUID_PROPERTY_KEY, uuid);
         if (userEntities.size() == 1) {
             return Optional.of(userEntities.get(0));
-        }
-        log.warn("Unexpected number of users found for kitos uuid {}, found {}", uuid, userEntities.size());
+        } else if (userEntities.size() > 1) {
+			log.warn("Multiple users found for kitos uuid {}, found {}, selected user with shortest user id", uuid, userEntities.size());
+			return userEntities.stream()
+					.min(Comparator.comparingInt(u -> u.getUserId().length()));
+		}
+        log.warn("No users could be found for kitos uuid {}", uuid);
         return Optional.empty();
     }
 

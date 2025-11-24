@@ -146,6 +146,7 @@ function pageLoaded() {
         ],
         data: data,
         language: {
+            'noRecordsFound': "Ingen data fundet",
             'search': {
                 'placeholder': 'Søg'
             },
