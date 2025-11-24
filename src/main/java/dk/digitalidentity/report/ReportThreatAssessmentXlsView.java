@@ -1,12 +1,15 @@
 package dk.digitalidentity.report;
 
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalog;
+import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.enums.DeletionProcedure;
@@ -24,6 +27,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +38,10 @@ import java.util.stream.Collectors;
 import static dk.digitalidentity.report.XlsUtil.createCell;
 
 public class ReportThreatAssessmentXlsView extends AbstractXlsView {
+
+	// Records
+	private record ModelData(String customOwnerName, String customResponsibleName, String customOperationName, String dataAccessPersons, String accessCount, String dataCategories) {}
+	private record ExcelStyles(CellStyle headerStyle, CellStyle normalStyle, CellStyle dateStyle) {}
 
 	@Override
 	protected void buildExcelDocument(Map<String, Object> model, Workbook workbook,
@@ -57,7 +65,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createStamDataSheet(workbook, threatAssessment, modelData, relations, riskAsset, riskRegister, styles);
 
 		// Create "Trussler" sheet for CustomThreats
-		createTrusslerSheet(workbook, threatAssessment, styles);
+		createThreatsSheet(workbook, threatAssessment, styles);
 	}
 
 	private void createStamDataSheet(Workbook workbook, ThreatAssessment threatAssessment,
@@ -134,45 +142,100 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createCell(row, cellNum, getTasksString(tasks), cellStyle);
 	}
 
-	private void createTrusslerSheet(Workbook workbook, ThreatAssessment threatAssessment, ExcelStyles styles) {
+	private void createThreatsSheet(Workbook workbook, ThreatAssessment threatAssessment, ExcelStyles styles) {
 		Sheet sheet = workbook.createSheet("Trussler");
 
 		// Create "trussler" table
-		createComprehensiveThreatsTable(sheet, threatAssessment, styles);
+		int columnCount = createComprehensiveThreatsTable(sheet, threatAssessment, styles);
 
 		// Auto-size all columns
-		autoSizeColumns(sheet, 25); // Increased column count for comprehensive table
+		autoSizeColumns(sheet, columnCount);
 	}
 
-	private void createComprehensiveThreatsTable(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles) {
+	private Integer createComprehensiveThreatsTable(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles) {
 		// Create header
-		Row header = sheet.createRow(0);
-		String[] headers = {
-				"Trussel Type", "Trussel Beskrivelse", "Ikke Relevant", "Sandsynlighed",
-				"Konf. Registrerede", "Konf. Organisation", "Konf. Samfund",
-				"Integr. Registrerede", "Integr. Organisation", "Integr. Samfund",
-				"Tilg. Registrerede", "Tilg. Organisation", "Tilg. Samfund", "Autent. Samfund",
-				"Problem", "Eksisterende Foranstaltninger", "Metode", "Uddybning",
-				"Restrisiko Sandsynlighed", "Restrisiko Konsekvens"
-		};
+		int currentRow = 0;
+		int columnCount = 0;
 
-		for (int i = 0; i < headers.length; i++) {
-			createCell(header, i, headers[i], styles.headerStyle);
-		}
-
-		int currentRow = 1;
+		Row header = sheet.createRow(currentRow++);
 
 		// Process all ThreatAssessmentResponses
 		if (threatAssessment.getThreatAssessmentResponses() != null && !threatAssessment.getThreatAssessmentResponses().isEmpty()) {
+			String[] threatResponseHeaders = {
+					"Trussel Type", "Trussel Beskrivelse", "Ikke Relevant", "Sandsynlighed",
+					"Konf. Registrerede", "Konf. Organisation", "Konf. Samfund",
+					"Integr. Registrerede", "Integr. Organisation", "Integr. Samfund",
+					"Tilg. Registrerede", "Tilg. Organisation", "Tilg. Samfund", "Autent. Samfund",
+					"Problem", "Eksisterende Foranstaltninger", "Metode", "Uddybning",
+					"Restrisiko Sandsynlighed", "Restrisiko Konsekvens"
+			};
+			columnCount = threatResponseHeaders.length;
+
+			for (int i = 0; i < columnCount; i++) {
+				createCell(header, i, threatResponseHeaders[i], styles.headerStyle);
+			}
+
 			for (ThreatAssessmentResponse response : threatAssessment.getThreatAssessmentResponses()) {
 				Row row = sheet.createRow(currentRow++);
 				fillCombinedThreatRow(row, response, styles);
 			}
 		} else {
-			// Empty state
+			// Basic headers for catalogs and custom threats
+			String[] basicHeaders = {"Trussel Type", "Trussel Beskrivelse"};
+			columnCount = basicHeaders.length;
+
+			for (int i = 0; i < columnCount; i++) {
+				createCell(header, i, basicHeaders[i], styles.headerStyle);
+			}
+
+			// Collect threats that already have responses (to avoid duplicates)
+			Set<String> processedCatalogThreatIds = threatAssessment.getThreatAssessmentResponses().stream()
+					.map(ThreatAssessmentResponse::getThreatCatalogThreat)
+					.map(ThreatCatalogThreat::getIdentifier)
+					.collect(Collectors.toSet());
+
+			Set<Long> processedCustomThreatIds = threatAssessment.getThreatAssessmentResponses().stream()
+					.map(ThreatAssessmentResponse::getCustomThreat)
+					.map(CustomThreat::getId)
+					.collect(Collectors.toSet());
+
+			// Add catalog threats (excluding those with responses)
+			if (threatAssessment.getThreatCatalogs() != null) {
+				for (ThreatCatalog threatCatalog : threatAssessment.getThreatCatalogs()) {
+					if (threatCatalog.getThreats() != null) {
+						for (ThreatCatalogThreat threat : threatCatalog.getThreats()) {
+							if (!processedCatalogThreatIds.contains(threat.getIdentifier())) {
+								Row row = sheet.createRow(currentRow++);
+								fillBasicThreatRow(row, threat.getThreatType(), threat.getDescription(), styles);
+							}
+						}
+					}
+				}
+			}
+
+			// Add custom threats (excluding those with responses)
+			if (threatAssessment.getCustomThreats() != null) {
+				for (CustomThreat customThreat : threatAssessment.getCustomThreats()) {
+					if (!processedCustomThreatIds.contains(customThreat.getId())) {
+						Row row = sheet.createRow(currentRow++);
+						fillBasicThreatRow(row, customThreat.getThreatType(), customThreat.getDescription(), styles);
+					}
+				}
+			}
+		}
+
+		// Empty state
+		if (currentRow == 1) {
 			Row emptyRow = sheet.createRow(1);
 			createCell(emptyRow, 0, "Ingen trusselsvurderinger fundet", styles.normalStyle);
 		}
+
+		return columnCount;
+	}
+
+	private void fillBasicThreatRow(Row row, String threatType, String threatDescription, ExcelStyles styles) {
+		createCell(row, 0, safeString(threatType), styles.normalStyle);
+		createCell(row, 1, safeString(threatDescription), styles.normalStyle);
 	}
 
 	private void fillCombinedThreatRow(Row row, ThreatAssessmentResponse response, ExcelStyles styles) {
@@ -467,8 +530,4 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		}
 		return asset == null && register == null ? "Ikke angivet" : sb.toString();
 	}
-
-	// Records
-	private record ModelData(String customOwnerName, String customResponsibleName, String customOperationName, String dataAccessPersons, String accessCount, String dataCategories) {}
-	private record ExcelStyles(CellStyle headerStyle, CellStyle normalStyle, CellStyle dateStyle) {}
 }
