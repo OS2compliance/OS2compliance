@@ -27,10 +27,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,6 +38,9 @@ import java.util.stream.Collectors;
 import static dk.digitalidentity.report.XlsUtil.createCell;
 
 public class ReportThreatAssessmentXlsView extends AbstractXlsView {
+
+	private static final int RISK_AREAS_COLUMN_OFFSET = 5;
+	private static final int EMPTY_COLUMNS_COUNT = 13;
 
 	// Records
 	private record ModelData(String customOwnerName, String customResponsibleName, String customOperationName, String dataAccessPersons, String accessCount, String dataCategories) {}
@@ -75,7 +78,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		Sheet sheet = workbook.createSheet("Stamdata");
 
 		// Create header
-		createStamDataHeader(sheet, modelData, styles.headerStyle);
+		int columnCount = createBaseDataHeader(sheet, modelData, styles.headerStyle);
 
 		// Get related tasks
 		List<Task> riskAssessmentTasks = relations.stream()
@@ -84,13 +87,13 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 				.toList();
 
 		// Create data row
-		createStamDataRow(sheet, threatAssessment, riskAsset, riskRegister, riskAssessmentTasks,
+		createBaseDataRow(sheet, threatAssessment, riskAsset, riskRegister, riskAssessmentTasks,
 				modelData, styles.normalStyle);
 
-		autoSizeColumns(sheet, 19);
+		autoSizeColumns(sheet, columnCount);
 	}
 
-	private void createStamDataHeader(Sheet sheet, ModelData modelData, CellStyle headerStyle) {
+	private int createBaseDataHeader(Sheet sheet, ModelData modelData, CellStyle headerStyle) {
 		final Row header = sheet.createRow(0);
 		final String[] headers = {
 				"Titel", "Kommentarer", "Undertitel", "Tilstede på mødet", "Kritikalitet",
@@ -102,13 +105,16 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 				"Hvem har adgang til personoplysningerne", "Hvor mange har adgang til personoplysningerne?",
 				"Kategorier af registrerede og typer af personoplysninger", "Opgaver oprettet under risikovurderingen"
 		};
+		int columnCount = headers.length;
 
-		for (int i = 0; i < headers.length; i++) {
+		for (int i = 0; i < columnCount; i++) {
 			createCell(header, i, headers[i], headerStyle);
 		}
+
+		return columnCount;
 	}
 
-	private void createStamDataRow(Sheet sheet, ThreatAssessment threatAssessment, Asset riskAsset,
+	private void createBaseDataRow(Sheet sheet, ThreatAssessment threatAssessment, Asset riskAsset,
 			Register riskRegister, List<Task> tasks, ModelData modelData, CellStyle cellStyle) {
 
 		final Row row = sheet.createRow(1);
@@ -123,20 +129,21 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 
 		// Asset or Register specific data (columns 5-17)
 		if (riskAsset != null) {
-			fillAssetData(row, cellNum, riskAsset, modelData, cellStyle);
+			cellNum = fillAssetData(row, cellNum, riskAsset, threatAssessment, modelData, cellStyle);
 		} else if (riskRegister != null) {
-			fillRegisterData(row, cellNum, riskRegister, modelData, cellStyle);
+			cellNum = fillRegisterData(row, cellNum, riskRegister, threatAssessment, modelData, cellStyle);
 		} else {
-			// Fill with empty values
-			for (int i = 0; i < 13; i++) {
-				if (i == 5) { // Column 10 (risk areas) - even when no asset/register
+			// Fill 13 empty columns (5-17) because Register and Asset are null
+			for (int i = 0; i < EMPTY_COLUMNS_COUNT; i++) {
+				// Column 10 (risk areas) - even with asset/register null
+				if (i == RISK_AREAS_COLUMN_OFFSET) {
 					createCell(row, cellNum + i, String.join(", ", buildRiskAreas(threatAssessment)), cellStyle);
 				} else {
 					createCell(row, cellNum + i, "", cellStyle);
 				}
 			}
+			cellNum += 13;
 		}
-		cellNum += 13;
 
 		// Column 18: Tasks
 		createCell(row, cellNum, getTasksString(tasks), cellStyle);
@@ -145,97 +152,129 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 	private void createThreatsSheet(Workbook workbook, ThreatAssessment threatAssessment, ExcelStyles styles) {
 		Sheet sheet = workbook.createSheet("Trussler");
 
-		// Create "trussler" table
-		int columnCount = createComprehensiveThreatsTable(sheet, threatAssessment, styles);
+		// Create header for threats sheet
+		int columnCount = createThreatsHeader(sheet, styles);
+
+		// Create data rows
+		createThreatsDataRow(sheet, threatAssessment, styles, columnCount);
 
 		// Auto-size all columns
 		autoSizeColumns(sheet, columnCount);
 	}
 
-	private Integer createComprehensiveThreatsTable(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles) {
-		// Create header
-		int currentRow = 0;
-		int columnCount = 0;
+	private int createThreatsHeader(Sheet sheet, ExcelStyles styles) {
+		Row header = sheet.createRow(0);
 
-		Row header = sheet.createRow(currentRow++);
+		String[] headers = {
+				"Trussel Type", "Trussel Beskrivelse", "Ikke Relevant", "Sandsynlighed",
+				"Konf. Registrerede", "Konf. Organisation", "Konf. Samfund",
+				"Integr. Registrerede", "Integr. Organisation", "Integr. Samfund",
+				"Tilg. Registrerede", "Tilg. Organisation", "Tilg. Samfund", "Autent. Samfund",
+				"Problem", "Eksisterende Foranstaltninger", "Metode", "Uddybning",
+				"Restrisiko Sandsynlighed", "Restrisiko Konsekvens"
+		};
+		int columnCount = headers.length;
 
-		// Process all ThreatAssessmentResponses
-		if (threatAssessment.getThreatAssessmentResponses() != null && !threatAssessment.getThreatAssessmentResponses().isEmpty()) {
-			String[] threatResponseHeaders = {
-					"Trussel Type", "Trussel Beskrivelse", "Ikke Relevant", "Sandsynlighed",
-					"Konf. Registrerede", "Konf. Organisation", "Konf. Samfund",
-					"Integr. Registrerede", "Integr. Organisation", "Integr. Samfund",
-					"Tilg. Registrerede", "Tilg. Organisation", "Tilg. Samfund", "Autent. Samfund",
-					"Problem", "Eksisterende Foranstaltninger", "Metode", "Uddybning",
-					"Restrisiko Sandsynlighed", "Restrisiko Konsekvens"
-			};
-			columnCount = threatResponseHeaders.length;
-
-			for (int i = 0; i < columnCount; i++) {
-				createCell(header, i, threatResponseHeaders[i], styles.headerStyle);
-			}
-
-			for (ThreatAssessmentResponse response : threatAssessment.getThreatAssessmentResponses()) {
-				Row row = sheet.createRow(currentRow++);
-				fillCombinedThreatRow(row, response, styles);
-			}
-		} else {
-			// Basic headers for catalogs and custom threats
-			String[] basicHeaders = {"Trussel Type", "Trussel Beskrivelse"};
-			columnCount = basicHeaders.length;
-
-			for (int i = 0; i < columnCount; i++) {
-				createCell(header, i, basicHeaders[i], styles.headerStyle);
-			}
-
-			// Collect threats that already have responses (to avoid duplicates)
-			Set<String> processedCatalogThreatIds = threatAssessment.getThreatAssessmentResponses().stream()
-					.map(ThreatAssessmentResponse::getThreatCatalogThreat)
-					.map(ThreatCatalogThreat::getIdentifier)
-					.collect(Collectors.toSet());
-
-			Set<Long> processedCustomThreatIds = threatAssessment.getThreatAssessmentResponses().stream()
-					.map(ThreatAssessmentResponse::getCustomThreat)
-					.map(CustomThreat::getId)
-					.collect(Collectors.toSet());
-
-			// Add catalog threats (excluding those with responses)
-			if (threatAssessment.getThreatCatalogs() != null) {
-				for (ThreatCatalog threatCatalog : threatAssessment.getThreatCatalogs()) {
-					if (threatCatalog.getThreats() != null) {
-						for (ThreatCatalogThreat threat : threatCatalog.getThreats()) {
-							if (!processedCatalogThreatIds.contains(threat.getIdentifier())) {
-								Row row = sheet.createRow(currentRow++);
-								fillBasicThreatRow(row, threat.getThreatType(), threat.getDescription(), styles);
-							}
-						}
-					}
-				}
-			}
-
-			// Add custom threats (excluding those with responses)
-			if (threatAssessment.getCustomThreats() != null) {
-				for (CustomThreat customThreat : threatAssessment.getCustomThreats()) {
-					if (!processedCustomThreatIds.contains(customThreat.getId())) {
-						Row row = sheet.createRow(currentRow++);
-						fillBasicThreatRow(row, customThreat.getThreatType(), customThreat.getDescription(), styles);
-					}
-				}
-			}
+		for (int i = 0; i < columnCount; i++) {
+			createCell(header, i, headers[i], styles.headerStyle);
 		}
+
+		return columnCount;
+	}
+
+	private void createThreatsDataRow(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles, int columnCount) {
+		// Header is already created, so current row is 1
+		int currentRow = 1;
+
+		// Collect processed threat identifiers safely
+		Set<String> processedCatalogThreatIds = getProcessedCatalogThreatIds(threatAssessment);
+		Set<Long> processedCustomThreatIds = getProcessedCustomThreatIds(threatAssessment);
+
+		// 1. Add ThreatAssessmentResponses (contain the most data)
+		currentRow = addThreatAssessmentResponses(sheet, threatAssessment, styles, currentRow);
+
+		// 2. Add ThreatCatalogThreats (those that don't have a response)
+		currentRow = addThreatCatalogThreats(sheet, threatAssessment, styles, processedCatalogThreatIds, currentRow, columnCount);
+
+		// 3. Add CustomThreats (also those that don't have a response)
+		currentRow = addCustomThreats(sheet, threatAssessment, styles, processedCustomThreatIds, currentRow, columnCount);
 
 		// Empty state
 		if (currentRow == 1) {
 			Row emptyRow = sheet.createRow(1);
 			createCell(emptyRow, 0, "Ingen trusselsvurderinger fundet", styles.normalStyle);
 		}
-
-		return columnCount;
 	}
 
-	private void fillBasicThreatRow(Row row, String threatType, String threatDescription, ExcelStyles styles) {
+	private int addCustomThreats(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles, Set<Long> processedCustomThreatIds, int currentRow, int columnCount) {
+		if (threatAssessment.getCustomThreats() != null) {
+			for (CustomThreat customThreat : threatAssessment.getCustomThreats()) {
+				if (!processedCustomThreatIds.contains(customThreat.getId())) {
+					Row row = sheet.createRow(currentRow++);
+					fillBasicThreatRow(row, customThreat.getThreatType(), customThreat.getDescription(), styles, columnCount);
+				}
+			}
+		}
+		return currentRow;
+	}
+
+	private int addThreatCatalogThreats(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles, Set<String> processedCatalogThreatIds, int currentRow, int columnCount) {
+		if (threatAssessment.getThreatCatalogs() != null) {
+			for (ThreatCatalog threatCatalog : threatAssessment.getThreatCatalogs()) {
+				if (threatCatalog.getThreats() != null) {
+					for (ThreatCatalogThreat threat : threatCatalog.getThreats()) {
+						if (!processedCatalogThreatIds.contains(threat.getIdentifier())) {
+							Row row = sheet.createRow(currentRow++);
+							fillBasicThreatRow(row, threat.getThreatType(), threat.getDescription(), styles, columnCount);
+						}
+					}
+				}
+			}
+		}
+		return currentRow;
+	}
+
+	private int addThreatAssessmentResponses(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles, int currentRow) {
+		if (threatAssessment.getThreatAssessmentResponses() != null && !threatAssessment.getThreatAssessmentResponses().isEmpty()) {
+			for (ThreatAssessmentResponse response : threatAssessment.getThreatAssessmentResponses()) {
+				Row row = sheet.createRow(currentRow++);
+				fillCombinedThreatRow(row, response, styles);
+			}
+		}
+		return currentRow;
+	}
+
+	private Set<String> getProcessedCatalogThreatIds(ThreatAssessment threatAssessment) {
+		if (threatAssessment.getThreatAssessmentResponses() == null) {
+			return new HashSet<>();
+		}
+
+		return threatAssessment.getThreatAssessmentResponses().stream()
+				.map(ThreatAssessmentResponse::getThreatCatalogThreat)
+				.filter(Objects::nonNull)
+				.map(ThreatCatalogThreat::getIdentifier)
+				.collect(Collectors.toSet());
+	}
+
+	private Set<Long> getProcessedCustomThreatIds(ThreatAssessment threatAssessment) {
+		if (threatAssessment.getThreatAssessmentResponses() == null) {
+			return new HashSet<>();
+		}
+
+		return threatAssessment.getThreatAssessmentResponses().stream()
+				.map(ThreatAssessmentResponse::getCustomThreat)
+				.filter(Objects::nonNull)
+				.map(CustomThreat::getId)
+				.collect(Collectors.toSet());
+	}
+
+	private void fillBasicThreatRow(Row row, String threatType, String threatDescription, ExcelStyles styles, int columnCount) {
 		createCell(row, 0, safeString(threatType), styles.normalStyle);
 		createCell(row, 1, safeString(threatDescription), styles.normalStyle);
+
+		for (int i = 2; i < columnCount; i++) {
+			createCell(row, i, "", styles.normalStyle);
+		}
 	}
 
 	private void fillCombinedThreatRow(Row row, ThreatAssessmentResponse response, ExcelStyles styles) {
@@ -282,7 +321,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createCell(row, cellNum, safeString(String.valueOf(response.getResidualRiskConsequence())), styles.normalStyle);
 	}
 
-	private void fillAssetData(Row row, int startCell, Asset riskAsset, ModelData modelData, CellStyle cellStyle) {
+	private int fillAssetData(Row row, int startCell, Asset riskAsset, ThreatAssessment threatAssessment, ModelData modelData, CellStyle cellStyle) {
 		int cellNum = startCell;
 
 		// Owners (column 5)
@@ -304,7 +343,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createCell(row, cellNum++, "Ikke udfyldt", cellStyle);
 
 		// Risk areas (column 10) - Will be filled later
-		createCell(row, cellNum++, "", cellStyle);
+		createCell(row, cellNum++, String.join(", ", buildRiskAreas(threatAssessment)), cellStyle);
 
 		// Supplier (column 11)
 		String supplierName = Optional.ofNullable(riskAsset.getSupplier())
@@ -321,9 +360,12 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 
 		// Data access fields (columns 15-17)
 		fillDataAccessFields(row, cellNum, modelData, cellStyle);
+		cellNum += 3;
+
+		return cellNum;
 	}
 
-	private void fillRegisterData(Row row, int startCell, Register riskRegister, ModelData modelData, CellStyle cellStyle) {
+	private int fillRegisterData(Row row, int startCell, Register riskRegister, ThreatAssessment threatAssessment, ModelData modelData, CellStyle cellStyle) {
 		int cellNum = startCell;
 
 		// Owners (column 5)
@@ -340,7 +382,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createCell(row, cellNum++, safeString(riskRegister.getPurpose()), cellStyle);
 
 		// Risk areas (column 10) - Will be filled later
-		createCell(row, cellNum++, "", cellStyle);
+		createCell(row, cellNum++, String.join(", ", buildRiskAreas(threatAssessment)), cellStyle);
 
 		// Supplier (column 11) - Not applicable for Register
 		createCell(row, cellNum++, "", cellStyle);
@@ -354,6 +396,9 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 
 		// Data access fields (columns 15-17)
 		fillDataAccessFields(row, cellNum, modelData, cellStyle);
+		cellNum += 3;
+
+		return cellNum;
 	}
 
 	// Helper methods
@@ -445,10 +490,10 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createCell(row, startCell + 1, deletionLink, cellStyle);
 	}
 
-	private void fillDataAccessFields(Row row, int startCell, ModelData modelData, CellStyle cellStyle) {
-		createCell(row, startCell, safeString(modelData.dataAccessPersons, "Ikke udfyldt"), cellStyle);
-		createCell(row, startCell + 1, safeString(modelData.accessCount, "0"), cellStyle);
-		createCell(row, startCell + 2, safeString(modelData.dataCategories, "Ikke udfyldt"), cellStyle);
+	private void fillDataAccessFields(Row row, int cellNum, ModelData modelData, CellStyle cellStyle) {
+		createCell(row, cellNum++, safeString(modelData.dataAccessPersons, "Ikke udfyldt"), cellStyle);
+		createCell(row, cellNum++, safeString(modelData.accessCount, "0"), cellStyle);
+		createCell(row, cellNum, safeString(modelData.dataCategories, "Ikke udfyldt"), cellStyle);
 	}
 
 	private String getUsersString(List<User> users, String defaultValue) {
