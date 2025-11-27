@@ -177,7 +177,7 @@ public class KitosClientService {
         update.setRoles(null);
         update.getGdpr().setBusinessCritical(critical ? GDPRWriteRequestDTO.BusinessCriticalEnum.YES : GDPRWriteRequestDTO.BusinessCriticalEnum.NO);
 
-		itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update);
+		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update));
     }
 
 	/**
@@ -207,7 +207,7 @@ public class KitosClientService {
 		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getRiskAssessmentUrl());
 		update.getGdpr().setPlannedRiskAssessmentDate(getOffsetDateTime(event.getNextRiskAssessment()));
 
-		itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update);
+		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
 	}
 
 	/**
@@ -235,7 +235,15 @@ public class KitosClientService {
 		update.getGdpr().getRiskAssessmentDocumentation().setName(event.getDpiaName());
 		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getDpiaUrl());
 
-		itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update);
+		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
+	}
+
+	private void patchWarnOnError(Runnable runnable) {
+		try {
+			runnable.run();
+		} catch (HttpClientErrorException ex) {
+			log.warn("Could not patch it-system usage", ex);
+		}
 	}
 
 	private void setGdprFieldsNull(GDPRWriteRequestDTO gdpr) {
