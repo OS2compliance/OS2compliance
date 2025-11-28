@@ -396,6 +396,7 @@ function EditRiskService() {
     this.onShown = function () {
         let self = this;
         this.modalContainer = document.getElementById('editModal');
+        this.initTypeSelect();
 
         const presentSelect = this.getScopedElementById('editPresentAtMeetingSelect');
         if (presentSelect !== null) {
@@ -404,18 +405,30 @@ function EditRiskService() {
 
         this.userChoicesSelect = choiceService.initUserSelect("editUserSelect");
         this.ouChoicesSelect = choiceService.initOUSelect("editOuSelect");
-        initFormValidationForForm("editRiskModalForm",
-            () => this.validate());
 
+        initFormValidationForForm("editRiskModalForm", () => this.validate());
 
         this.userChoicesSelect.passedElement.element.addEventListener('change', function () {
             const userUuid = self.userChoicesSelect.passedElement.element.value;
             userChanged(userUuid);
         });
 
-        const assetSelect = this.getScopedElementById('copyAssetSelect');
-        if (assetSelect !== null) {
-            this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
+        const copyAssetSelect = this.getScopedElementById('copyAssetSelect');
+        if (copyAssetSelect !== null) {
+            this.copyAssetChoicesSelect = initAssetSelectRisk(copyAssetSelect);
+        }
+
+        const editAssetSelect = this.getScopedElementById('editAssetSelect');
+        if (editAssetSelect !== null) {
+            this.editAssetChoicesSelect = initAssetSelectRisk(editAssetSelect);
+            this.editAssetChoicesSelect.passedElement.element.addEventListener('change', () => {
+                this.loadAssetSection();
+            });
+        }
+
+        const editRegisterSelect = this.getScopedElementById('editRegisterSelect');
+        if (editRegisterSelect !== null) {
+            this.editRegisterChoicesSelect = initRegisterSelect(editRegisterSelect);
         }
 
         const catalogSelect = this.getScopedElementById('editThreatCatalogSelect');
@@ -425,10 +438,81 @@ function EditRiskService() {
         this.editAssessmentModal.show();
     }
 
+    this.loadAssetSection = function() {
+        const selectedAsset = this.getScopedElementById("editAssetSelect").value;
+
+        if (!selectedAsset) {
+            return;
+        }
+
+        fetch(`/rest/risks/asset?assetIds=${selectedAsset}`)
+            .then(response => response.json()
+                .then(data => {
+                    if (data.elementName) {
+                        this.getScopedElementById('editName').value = data.elementName;
+                    }
+
+                    let user = data.users?.users[0];
+                    if (user) {
+                        this.userChoicesSelect.setChoiceByValue(user.uuid);
+                    }
+                }))
+            .catch(error => toastService.error(error));
+    }
+
+    this.typeChanged = function(selectedType) {
+        const registerRow = document.getElementById("editRegisterSelectRow");
+        const assetRow = document.getElementById("editAssetSelectRow");
+        const copyAssetRow = document.getElementById("copyAssetSelectRow");
+
+        if (selectedType === 'ASSET') {
+            if (registerRow) registerRow.style.display = 'none';
+            if (assetRow) assetRow.style.display = '';
+            if (copyAssetRow) copyAssetRow.style.display = '';
+
+            if (this.editRegisterChoicesSelect) {
+                this.editRegisterChoicesSelect.removeActiveItems();
+            }
+        } else if (selectedType === 'REGISTER') {
+            if (registerRow) registerRow.style.display = '';
+            if (assetRow) assetRow.style.display = 'none';
+            if (copyAssetRow) copyAssetRow.style.display = 'none';
+
+            if (this.copyAssetChoicesSelect) {
+                this.copyAssetChoicesSelect.removeActiveItems();
+            }
+            if (this.editAssetChoicesSelect) {
+                this.editAssetChoicesSelect.removeActiveItems();
+            }
+        } else {
+            if (registerRow) registerRow.style.display = 'none';
+            if (assetRow) assetRow.style.display = 'none';
+            if (copyAssetRow) copyAssetRow.style.display = 'none';
+
+            if (this.copyAssetChoicesSelect) {
+                this.copyAssetChoicesSelect.removeActiveItems();
+            }
+            if (this.editAssetChoicesSelect) {
+                this.editAssetChoicesSelect.removeActiveItems();
+            }
+            if (this.editRegisterChoicesSelect) {
+                this.editRegisterChoicesSelect.removeActiveItems();
+            }
+        }
+    }
+
+    this.initTypeSelect = function() {
+        this.typeChanged(this.getScopedElementById("editThreatAssessmentType").value);
+        const element = this.getScopedElementById('editThreatAssessmentType');
+        element.addEventListener('change', () => {
+            this.typeChanged(element.value);
+        });
+    }
+
     this.validate = function () {
         let result = validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
-        if (this.assetChoicesSelect != null) {
-            result &= checkInputField(this.assetChoicesSelect, true);
+        if (this.copyAssetChoicesSelect != null) {
+            result &= checkInputField(this.copyAssetChoicesSelect, true);
         }
         return result && validateInputFieldLength("editName", 255);
     }

@@ -147,6 +147,7 @@ public class RiskController {
     @GetMapping("{id}/edit")
     public String riskEditDialog(final Model model, @PathVariable("id") final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		model.addAttribute("isAdmin", SecurityUtil.isAdministrator());
 		if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
 			final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
 			model.addAttribute("relatedAssets", assetService.findAllByRelations(assetRelations));
@@ -171,6 +172,9 @@ public class RiskController {
 				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
+		if (editedAssessment.getThreatAssessmentType() != assessment.getThreatAssessmentType()) {
+			editedAssessment.setThreatAssessmentType(assessment.getThreatAssessmentType());
+		}
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
 		}

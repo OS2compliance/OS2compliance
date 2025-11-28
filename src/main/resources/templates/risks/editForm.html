@@ -14,13 +14,13 @@
                     <div class="row mt-3">
                         <label for="editThreatAssessmentType" class="col-sm-4 col-form-label">Type</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="editThreatAssessmentType" required disabled>
+                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="editThreatAssessmentType" required th:disabled="${isAdmin == false}">
                                 <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).values()}"
                                         th:value="${type}" th:text="${type.message}"></option>
                             </select>
                         </div>
                     </div>
-                    <div class="row mt-3" id="copyAssetSelectRow" th:if="*{threatAssessmentType.name() == 'ASSET'}">
+                    <div class="row mt-3" id="copyAssetSelectRow" th:if="*{threatAssessmentType?.name() == 'ASSET'}">
                         <label for="copyAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
                         <div class="col-sm-8">
                             <select class="form-control form-select choices__input" name="selectedAssets" data-type="select-multiple"
@@ -28,6 +28,25 @@
                                 <option th:each="asset : ${relatedAssets}" th:value="${asset.id}" th:text="${asset.name}" selected></option>
                             </select>
                             <div class="invalid-feedback">Der skal vælges mindst et aktiv</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="editRegisterSelectRow" style="display: none;">
+                        <label for="editRegisterSelect" class="col-sm-4 col-form-label">Behandlingsaktivitet</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="editRegisterSelect" hidden="" tabindex="-1">
+                                <option th:if="${register != null}" th:value="${register?.id}" th:text="${register?.name}" selected="selected"></option>
+                            </select>
+                            <div class="invalid-feedback" id="registerError">Der skal vælges mindst en behandlingsaktivitet</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="editAssetSelectRow" style="display: none;">
+                        <label for="editAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedAssets"
+                                    data-type="select-multiple" data-trigger="" id="editAssetSelect"
+                                    hidden="" tabindex="-1" multiple>
+                            </select>
+                            <div class="invalid-feedback" id="assetError">Der skal vælges mindst et asset</div>
                         </div>
                     </div>
                     <div class="row mt-3">
