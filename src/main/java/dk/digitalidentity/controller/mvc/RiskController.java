@@ -8,7 +8,6 @@ import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
-import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
