@@ -274,6 +274,25 @@
                                                 </div>
                                             </div>
 
+                                            <div class="row mb-3" th:if="${dbsAssetLink != null}">
+                                                <label class="col-sm-3 col-form-label">Link til systemforside</label>
+                                                <div class="col-sm-9">
+                                                    <div id="systemFrontPageLink" class="editField">
+                                                        <a th:href="${dbsAssetLink}"
+                                                           class="form-control-link"
+                                                           target="_blank"
+                                                           rel="noopener noreferrer"
+                                                           style="word-wrap: break-word;
+                                                                      overflow-wrap: break-word;
+                                                                      word-break: break-all;
+                                                                      display: inline-block;
+                                                                      max-width: 100%;
+                                                                      white-space: normal;">
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <hr />
 
                                             <div class="row mb-3">
