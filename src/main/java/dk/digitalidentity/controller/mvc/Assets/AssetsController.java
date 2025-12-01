@@ -25,7 +25,6 @@ import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceMeasure;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIAReport;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
