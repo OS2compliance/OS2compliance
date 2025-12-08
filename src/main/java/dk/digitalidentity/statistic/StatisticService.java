@@ -717,5 +717,3 @@ public class StatisticService {
 	}
 
 }
-
-
