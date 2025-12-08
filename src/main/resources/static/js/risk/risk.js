@@ -110,7 +110,6 @@ function CreateTable() {
                 },
                 {
                     name: "Risikovurdering",
-                    width: '120px',
                     searchable: {
                         searchKey: 'name'
                     },
@@ -186,7 +185,6 @@ function CreateTable() {
                 },
                 {
                     name: "Status",
-                    width: '120px',
                     searchable: {
                         searchKey: 'threatAssessmentReportApprovalStatus',
                         fieldId: 'riskStatusSearchSelector'
@@ -267,6 +265,7 @@ function CreateTable() {
                     id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
+                    width: '10%',
                     formatter: (cell, row) => {
                         const identifier = row.cells[columnProperties.indexOf('id')]['data'];
                         const name = row.cells[columnProperties.indexOf('name')]['data'].replaceAll("'", "\\'");
