@@ -251,8 +251,12 @@ SELECT t.id,
                  LEFT JOIN threat_catalogs tc ON tac.threat_catalog_identifier = tc.identifier
         WHERE tac.threat_assessment_id = t.id
           AND tc.deleted = false)                                                                                                                                    AS threat_catalogs,
-       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')                                                                                          AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')                                                                                             AS tag_ids
+       (SELECT GROUP_CONCAT(DISTINCT tg.value ORDER BY tg.value SEPARATOR ',')
+        FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.threat_assessment_id = t.id) AS tag_names,
+       (SELECT GROUP_CONCAT(DISTINCT tg.id ORDER BY tg.value SEPARATOR ',')
+        FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.threat_assessment_id = t.id) AS tag_ids
 FROM threat_assessments t
          LEFT JOIN relations rel ON (
     (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
@@ -266,8 +270,6 @@ FROM threat_assessments t
     (rel.relation_a_type = 'REGISTER' AND rel.relation_a_id = rgs.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
         OR (rel.relation_b_type = 'REGISTER' AND rel.relation_b_id = rgs.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
     )
-         LEFT JOIN threat_assessment_tag rt on rt.threat_assessment_id = t.id
-         LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE t.deleted = false
 GROUP BY t.id;
 

@@ -106,8 +106,9 @@ public class SigningController {
         final DPIAReport dpiaReport = dpiaReportService.findByS3Document(s3Document);
 
         if (threatAssessment != null) {
-            if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.WAITING)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+			if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.WAITING)) {
+				model.addAttribute("threatAssessmentId", threatAssessment.getId());
+				return "sign/already_signed";
             }
 
             String approverUuid = threatAssessment.getThreatAssessmentReportApprover() != null ? threatAssessment.getThreatAssessmentReportApprover().getUuid() : null;
@@ -116,7 +117,7 @@ public class SigningController {
             }
         } else if (dpiaReport != null) {
             if (!dpiaReport.getDpiaReportApprovalStatus().equals(DPIAReportReportApprovalStatus.WAITING)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+				return "sign/already_signed";
             }
 
             if (!Objects.equals(dpiaReport.getReportApproverUuid(), SecurityUtil.getLoggedInUserUuid())) {
@@ -137,9 +138,6 @@ public class SigningController {
         dpiaReport = dpiaReportService.findByS3Document(s3Document);
 
         if (threatAssessment != null) {
-            if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.WAITING)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-            }
 
             String approverUuid = threatAssessment.getThreatAssessmentReportApprover() != null ? threatAssessment.getThreatAssessmentReportApprover().getUuid() : null;
             if (!Objects.equals(approverUuid, SecurityUtil.getLoggedInUserUuid())) {
@@ -149,10 +147,13 @@ public class SigningController {
             threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.SIGNED);
             threatAssessmentService.save(threatAssessment);
 
-            model.addAttribute("threatAssessmentId", threatAssessment.getId());
-        } else if (dpiaReport != null) {
+			model.addAttribute("threatAssessmentId", threatAssessment.getId());
+			if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.WAITING)) {
+				return "sign/already_signed";
+			}
+		} else if (dpiaReport != null) {
             if (!dpiaReport.getDpiaReportApprovalStatus().equals(DPIAReportReportApprovalStatus.WAITING)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+				return "sign/already_signed";
             }
 
             if (!Objects.equals(dpiaReport.getReportApproverUuid(), SecurityUtil.getLoggedInUserUuid())) {

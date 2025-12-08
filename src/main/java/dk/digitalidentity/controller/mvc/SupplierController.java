@@ -19,7 +19,6 @@ import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireSupplier;
-import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.AssetSupplierMappingService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SupplierService;
