@@ -1,6 +1,7 @@
 package dk.digitalidentity.util;
 
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentCompletionStatus;
 
@@ -22,41 +23,51 @@ public final class ColorMapperUtil {
 		}
 
 		// Check specific enum types FIRST
+		// Check specific enum types FIRST
 		if (value instanceof DPIAScreeningConclusion screening) {
 			return switch (screening) {
-				case RED -> "rgba(223, 86, 69, 0.8)";
-				case YELLOW -> "rgba(250, 159, 27, 0.8)";
-				case GREEN -> "rgba(159, 204, 46, 0.8)";
-				case GREY -> "rgba(128, 128, 128, 0.8)";
+				case RED -> ColorConstants.RED;
+				case YELLOW -> ColorConstants.ORANGE;
+				case GREEN -> ColorConstants.LIME;
+				case GREY -> ColorConstants.GREY;
 				default -> null;
 			};
 		}
 
 		if (value instanceof TaskDeadlineStatus status) {
-			System.out.println("status = " + status.getMessage());
 			return switch (status) {
-				case EXCEEDED -> "rgba(223, 86, 69, 0.8)";
-				case FUTURE -> "rgba(250, 159, 27, 0.8)";
-				case COMPLETED -> "rgba(159, 204, 46, 0.8)";
+				case EXCEEDED -> ColorConstants.RED;
+				case FUTURE -> ColorConstants.ORANGE;
+				case COMPLETED -> ColorConstants.LIME;
 				default -> null;
 			};
 		}
 
 		if (value instanceof ThreatAssessmentCompletionStatus status) {
 			return switch (status) {
-				case COMPLETED -> "rgba(159, 204, 46, 0.8)";
-				case OPTED_OUT -> "rgba(128, 128, 128, 0.8)";
-				case PENDING -> "rgba(255, 193, 7, 0.8)";
+				case COMPLETED -> ColorConstants.LIME;
+				case OPTED_OUT -> ColorConstants.GREY;
+				case PENDING -> ColorConstants.AMBER;
 				default -> null;
+			};
+		}
+
+		if (value instanceof RiskAssessment risk) {
+			return switch (risk) {
+				case RED -> ColorConstants.RED;
+				case ORANGE -> ColorConstants.ORANGE;
+				case YELLOW -> ColorConstants.YELLOW;
+				case LIGHT_GREEN -> ColorConstants.LIGHT_GREEN;
+				case GREEN -> ColorConstants.GREEN;
 			};
 		}
 
 		// Tasks for some reason have a null value meaning we cant map them and therefore have to find the key instead
 		if (value instanceof String str) {
 			return switch (str) {
-				case "Overskredet" -> "rgba(223, 86, 69, 0.8)";
-				case "Kommende" -> "rgba(250, 159, 27, 0.8)";
-				case "Udført" -> "rgba(159, 204, 46, 0.8)";
+				case "Overskredet" -> ColorConstants.RED;
+				case "Kommende" -> ColorConstants.ORANGE;
+				case "Udført" -> ColorConstants.LIME;
 				default -> null;
 			};
 		}
