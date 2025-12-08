@@ -797,11 +797,10 @@ public class AssetsController {
         if(Objects.isNull(entityId)){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id blev ikke sendt med");
         }
-
+		ChoiceList list = choiceService.findChoiceList("supervision-model").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find Supervision Model Choices"));
+		List<ChoiceValue> values = list.getValues().stream().filter(v -> v.getIdentifier().startsWith("supervision-model-")).toList();
+		model.addAttribute("supervisions", values);
         if(type.equals("asset")) {
-			ChoiceList list = choiceService.findChoiceList("supervision-model").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find Supervision Model Choices"));
-			List<ChoiceValue> values = list.getValues().stream().filter(v -> v.getIdentifier().startsWith("supervision-model-")).toList();
-			model.addAttribute("supervisions", values);
             final Asset asset = assetService.get(entityId).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det angivne id for aktiviteten findes ikke")
             );
