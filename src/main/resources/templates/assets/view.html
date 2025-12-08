@@ -24,14 +24,14 @@
             <div class="content__header content__boxed overlapping">
                 <div class="content__wrap">
                     <div class="d-md-flex">
-                        <div class="me-auto">
+                        <div class="col me-auto">
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb mb-0">
                                     <li class="breadcrumb-item"><a th:href="@{/assets}">Aktiver</a></li>
                                     <li class="breadcrumb-item active" aria-current="page" th:text="${asset.name}"></li>
                                 </ol>
                             </nav>
-                            <h1 class="page-title mb-0 mt-2">
+                            <h1 class="page-title mb-0 mt-2 justify-content-end">
                                 <span th:text="${asset.name}"></span>
                                 <button type="button"
                                         class="btn btn-secondary btn-sm ms-2"
