@@ -22,6 +22,7 @@ import dk.digitalidentity.statistic.dto.chartJS.ChartJsDataPointDTO;
 import dk.digitalidentity.statistic.dto.chartJS.ChartJsGeneralDatasetDTO;
 import dk.digitalidentity.statistic.enumerable.ChartType;
 import dk.digitalidentity.statistic.enumerable.Period;
+import dk.digitalidentity.util.ColorMapperUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -439,23 +440,53 @@ public class StatisticService {
 	}
 
 	private ChartJsGeneralDatasetDTO toDataSet(String label, List<DataRow> dataRows, AggregationMethod aggregation) {
-		// Group data by label
 		Map<String, List<DataRow>> dataSetData = dataRows.stream()
 				.filter(r -> r != null && r.key != null)
 				.collect(Collectors.groupingBy(r -> r.key));
 
-		// Map to data points
 		List<ChartJsDataPointDTO> dataPoints = toChartJSDataPointDTO(aggregation, dataSetData);
 
-		// Create dataset
-		return ChartJsGeneralDatasetDTO.builder()
+		List<String> colors = dataPoints.stream()
+				.map(ChartJsDataPointDTO::getColor)
+				.filter(Objects::nonNull)
+				.toList();
+
+		// Only set backgroundColor if we have colors
+		ChartJsGeneralDatasetDTO.ChartJsGeneralDatasetDTOBuilder builder = ChartJsGeneralDatasetDTO.builder()
 				.data(dataPoints)
-				.label(formatLabel(label)).build();
+				.label(formatLabel(label));
+
+		if (!colors.isEmpty()) {
+			builder.backgroundColor(colors);
+		}
+
+		return builder.build();
 	}
 
 	private List<ChartJsDataPointDTO> toChartJSDataPointDTO(AggregationMethod aggregation, Map<String, List<DataRow>> data) {
 
-		return data.entrySet().stream().map(e -> ChartJsDataPointDTO.builder().x(formatLabel(e.getKey())).y(aggregateValues(e.getValue(), aggregation)).entityIds(e.getValue().stream().map(v -> v.id).toList()).build()).sorted(Comparator.comparing(ChartJsDataPointDTO::getX)).toList();
+		return data.entrySet().stream()
+				.map(e -> {
+					Object enumValue = e.getValue().getFirst().value;
+					String color = ColorMapperUtil.getColorForValue(enumValue);
+
+					// Use the enum's message for display, not the enum name
+					String displayLabel;
+					if (enumValue instanceof HasMessage hasMessage) {
+						displayLabel = hasMessage.getMessage();
+					} else {
+						displayLabel = enumValue != null ? enumValue.toString() : e.getKey();
+					}
+
+					return ChartJsDataPointDTO.builder()
+							.x(formatLabel(displayLabel))
+							.y(aggregateValues(e.getValue(), aggregation))
+							.entityIds(e.getValue().stream().map(v -> v.id).toList())
+							.color(color)
+							.build();
+				})
+				.sorted(Comparator.comparing(ChartJsDataPointDTO::getX))
+				.toList();
 	}
 
 	/**

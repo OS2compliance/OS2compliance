@@ -16,4 +16,5 @@ import java.util.List;
 public class ChartJsGeneralDatasetDTO {
 	private String label;
 	private List<ChartJsDataPointDTO> data;
+	private List<String> backgroundColor;
 }
