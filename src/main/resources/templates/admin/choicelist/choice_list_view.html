@@ -8,7 +8,7 @@
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
                 <div class="d-md-flex">
-                    <div class="me-auto">
+                    <div class="col me-auto">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
@@ -19,7 +19,7 @@
                             <span th:text="${choiceList?.name}"></span>
                         </h1>
                     </div>
-                    <div class="align-self-center d-inline-flex gap-2">
+                    <div class="align-self-center d-inline-flex gap-2 justify-content-end">
                         <button sec:authorize="hasAnyRole('ROLE_create_all')" id="createChoiceValueButton" th:data-id="${choiceList?.id}" type="button" class="btn btn-info btn-lg hstack gap-2">
                             <i class="ti-plus"></i>
                             <span class="vr"></span>
