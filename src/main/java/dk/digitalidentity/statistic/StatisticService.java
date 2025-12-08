@@ -467,16 +467,18 @@ public class StatisticService {
 
 		return data.entrySet().stream()
 				.map(e -> {
-					Object enumValue = e.getValue().getFirst().value;
+
+					// Get the first non-null value, or fall back to using the key
+					Object enumValue = e.getValue().stream()
+							.map(row -> row.value)
+							.filter(Objects::nonNull)
+							.findFirst()
+							.orElse(e.getKey());
+
+
 					String color = ColorMapperUtil.getColorForValue(enumValue);
 
-					// Use the enum's message for display, not the enum name
-					String displayLabel;
-					if (enumValue instanceof HasMessage hasMessage) {
-						displayLabel = hasMessage.getMessage();
-					} else {
-						displayLabel = enumValue != null ? enumValue.toString() : e.getKey();
-					}
+					String displayLabel = e.getKey();
 
 					return ChartJsDataPointDTO.builder()
 							.x(formatLabel(displayLabel))
