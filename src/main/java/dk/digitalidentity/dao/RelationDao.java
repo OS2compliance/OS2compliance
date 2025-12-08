@@ -3,6 +3,7 @@ package dk.digitalidentity.dao;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.List;
 
-public interface RelationDao extends JpaRepository<Relation, Long>  {
+public interface RelationDao extends JpaRepository<Relation, Long>, JpaSpecificationExecutor<Relation> {
 
     @Query("select r from Relation r where (r.relationAId=:relatedId and r.relationBType=:relationType) or (r.relationBId=:relatedId and r.relationAType=:relationType)")
     List<Relation> findRelatedToWithType(@Param("relatedId") final Long relatedToId, @Param("relationType") final RelationType relatedType);
