@@ -1,4 +1,5 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
+import formatTags from "../tags/tag-grid-formatter.js";
 
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
