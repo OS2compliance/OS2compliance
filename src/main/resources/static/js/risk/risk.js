@@ -472,18 +472,34 @@ function EditRiskService() {
 
             if (this.editRegisterChoicesSelect) {
                 this.editRegisterChoicesSelect.removeActiveItems();
+                this.editRegisterChoicesSelect.passedElement.element.removeAttribute('required');
             }
+
+            if (this.copyAssetChoicesSelect) {
+                this.copyAssetChoicesSelect.passedElement.element.setAttribute('required', 'required');
+            }
+            if (this.editAssetChoicesSelect) {
+                this.editAssetChoicesSelect.passedElement.element.setAttribute('required', 'required');
+            }
+
         } else if (selectedType === 'REGISTER') {
             if (registerRow) registerRow.style.display = '';
             if (assetRow) assetRow.style.display = 'none';
             if (copyAssetRow) copyAssetRow.style.display = 'none';
 
+            if (this.editRegisterChoicesSelect) {
+                this.editRegisterChoicesSelect.passedElement.element.setAttribute('required', 'required');
+            }
+
             if (this.copyAssetChoicesSelect) {
                 this.copyAssetChoicesSelect.removeActiveItems();
+                this.copyAssetChoicesSelect.passedElement.element.removeAttribute('required');
             }
             if (this.editAssetChoicesSelect) {
                 this.editAssetChoicesSelect.removeActiveItems();
+                this.editAssetChoicesSelect.passedElement.element.removeAttribute('required');
             }
+
         } else {
             if (registerRow) registerRow.style.display = 'none';
             if (assetRow) assetRow.style.display = 'none';
@@ -491,12 +507,15 @@ function EditRiskService() {
 
             if (this.copyAssetChoicesSelect) {
                 this.copyAssetChoicesSelect.removeActiveItems();
+                this.copyAssetChoicesSelect.passedElement.element.removeAttribute('required');
             }
             if (this.editAssetChoicesSelect) {
                 this.editAssetChoicesSelect.removeActiveItems();
+                this.editAssetChoicesSelect.passedElement.element.removeAttribute('required');
             }
             if (this.editRegisterChoicesSelect) {
                 this.editRegisterChoicesSelect.removeActiveItems();
+                this.editRegisterChoicesSelect.passedElement.element.removeAttribute('required');
             }
         }
     }
@@ -511,8 +530,9 @@ function EditRiskService() {
 
     this.validate = function () {
         let result = validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
-        if (this.copyAssetChoicesSelect != null) {
-            result &= checkInputField(this.copyAssetChoicesSelect, true);
+        let isAssetTypeSelected = document.getElementById('editThreatAssessmentType').value === 'ASSET'
+        if (this.copyAssetChoicesSelect != null && isAssetTypeSelected) {
+            result &&= checkInputField(this.copyAssetChoicesSelect, true);
         }
         return result && validateInputFieldLength("editName", 255);
     }
