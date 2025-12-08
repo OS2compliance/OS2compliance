@@ -26,6 +26,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
+import org.springframework.web.servlet.view.document.AbstractXlsxView;
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.report.XlsUtil.createCell;
 
-public class ReportThreatAssessmentXlsView extends AbstractXlsView {
+public class ReportThreatAssessmentXlsView extends AbstractXlsxView {
 
 	private static final int RISK_AREAS_COLUMN_OFFSET = 5;
 	private static final int EMPTY_COLUMNS_COUNT = 13;
