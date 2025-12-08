@@ -17,7 +17,7 @@
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
                 <div class="d-md-flex">
-                    <div class="me-auto">
+                    <div class="col me-auto">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/documents}">Dokumenter</a></li>
@@ -27,7 +27,7 @@
                         <h1 class="page-title mb-0 mt-2" th:text="${document.name}"></h1>
                         <p class="lead"></p>
                     </div>
-                    <div class="align-self-center d-inline-flex">
+                    <div class="align-self-center d-inline-flex justify-content-end">
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
