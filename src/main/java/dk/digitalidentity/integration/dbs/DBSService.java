@@ -66,10 +66,10 @@ public class DBSService {
     public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
         //Filter only itSystems related to this cvr
         final List<ItSystem> relevantItSystems = allItSystems.stream()
-				.filter(i ->
+				.filter(i -> i.getStatus() != null && (
 						   "on_going".equals(i.getStatus().getValue())
 						|| "waiting".equals(i.getStatus().getValue())
-						|| "published".equals(i.getStatus().getValue()))
+						|| "published".equals(i.getStatus().getValue())))
 				.filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
 				.toList();
         log.debug("Found {} relevant itSystems in DBS", relevantItSystems.size());
