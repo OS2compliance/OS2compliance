@@ -5,6 +5,7 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
+import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
@@ -31,6 +32,7 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -143,6 +145,7 @@ public class AssetsController {
 	private final OS2complianceConfiguration os2complianceConfiguration;
 	private final ChoiceValueService choiceValueService;
 	private final AssetSupplierMappingService assetSupplierMappingService;
+	private final DBSAssetDao dBSAssetDao;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -282,6 +285,13 @@ public class AssetsController {
 		model.addAttribute("dataProcessing", asset.getDataProcessing());
 		model.addAttribute("dpChoices", dataProcessingService.getChoices());
 		model.addAttribute("acceptanceBasisChoices", acceptListIdentifiers);
+		Relation relatedDbAsset = relationService.findRelatedToWithType(asset, RelationType.DBSASSET).stream().findFirst().orElse(null);
+		if (relatedDbAsset != null) {
+			Long dbsAssetId = (relatedDbAsset.getRelationAId() != null && !relatedDbAsset.getRelationAId().equals(asset.getId()) && relatedDbAsset.getRelationAType() != RelationType.ASSET)
+					? relatedDbAsset.getRelationAId()
+					: relatedDbAsset.getRelationBId();
+			dBSAssetDao.findById(dbsAssetId).ifPresent(dbsAsset -> model.addAttribute("dbsAssetLink", "https://www.dbstilsyn.dk/itsystem/" + dbsAsset.getDbsId() + "/view"));
+		}
         model.addAttribute("isKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY) || p.getKey().equals((KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY))));
         model.addAttribute("isOldKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY)));
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
