@@ -4,6 +4,7 @@ import dk.dbs.api.model.Document;
 import dk.dbs.api.model.ItSystem;
 import dk.dbs.api.model.Supplier;
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.integration.dbs.exception.DBSSynchronizationException;
 import dk.digitalidentity.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,14 +54,18 @@ public class DBSSyncTask {
 			return;
 		}
 
-		final ZonedDateTime lastTimestamp = settingsService.getZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, null);
-        final List<Document> recentDocuments = dbsClientService.getAllDocuments(lastTimestamp != null ? lastTimestamp.toLocalDateTime() : null);
+		try {
+			final ZonedDateTime lastTimestamp = settingsService.getZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, null);
+			final List<Document> recentDocuments = dbsClientService.getAllDocuments(lastTimestamp != null ? lastTimestamp.toLocalDateTime() : null);
 
-        log.info("Started: DBS Oversight Task");
-        final Optional<ZonedDateTime> newestUpdatedTime = dbsService.findNewestUpdatedTime(recentDocuments);
-        dbsService.syncOversight(recentDocuments);
-        newestUpdatedTime.ifPresent(zonedDateTime -> settingsService.setZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, zonedDateTime));
-		log.info("Finished: DBS Oversight Task");
+			log.info("Started: DBS Oversight Task");
+			final Optional<ZonedDateTime> newestUpdatedTime = dbsService.findNewestUpdatedTime(recentDocuments);
+			dbsService.syncOversight(recentDocuments);
+			newestUpdatedTime.ifPresent(zonedDateTime -> settingsService.setZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, zonedDateTime));
+			log.info("Finished: DBS Oversight Task");
+		} catch (DBSSynchronizationException e) {
+			log.warn("Error during DBS Oversight Task", e);
+		}
 	}
 
   @Scheduled(cron = "${os2compliance.integrations.dbs.responsible.cron}")
