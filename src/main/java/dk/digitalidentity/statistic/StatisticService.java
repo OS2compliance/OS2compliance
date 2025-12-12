@@ -170,7 +170,10 @@ public class StatisticService {
 		var root = query.from(entityClass);
 
 		// Build selections (remove nulls)
-		Set<String> validFields = Arrays.stream(fieldNames).filter(Objects::nonNull).filter(s -> !s.equalsIgnoreCase("null")).collect(Collectors.toSet());
+		Set<String> validFields = Arrays.stream(fieldNames)
+				.filter(Objects::nonNull)
+				.filter(s -> !s.equalsIgnoreCase("null"))
+				.collect(Collectors.toSet());
 
 		validFields.add("id"); // Always get the id
 
@@ -647,7 +650,7 @@ public class StatisticService {
 				return Optional.of(fieldName + ".name");
 			}
 			return Optional.empty();
-		}
+	}
 		catch (NoSuchFieldException e) {
 			return Optional.empty();
 		}

@@ -9,7 +9,6 @@ import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Incident;
-import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
@@ -28,14 +27,14 @@ import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.kle.KLEService;
 import dk.digitalidentity.statistic.StatisticService;
+import dk.digitalidentity.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.statistic.enumerable.ChartType;
 import dk.digitalidentity.statistic.enumerable.DateTimePreset;
+import dk.digitalidentity.statistic.enumerable.Period;
 import dk.digitalidentity.statistic.enumerable.SelectableAxis;
 import dk.digitalidentity.statistic.enumerable.SelectablePeriod;
 import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfiguration;
 import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfigurationService;
-import dk.digitalidentity.statistic.enumerable.AggregationMethod;
-import dk.digitalidentity.statistic.enumerable.ChartType;
-import dk.digitalidentity.statistic.enumerable.Period;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -57,9 +56,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Optional;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
@@ -139,6 +138,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(35, this::seedV35);
 		incrementAndPerformIfVersion(36, this::seedV36);
 		incrementAndPerformIfVersion(37, this::seedV37);
+		incrementAndPerformIfVersion(38, this::seedV38);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -157,6 +157,16 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		settingsService.createSetting(KitosConstants.KITOS_ENABLE_SYNC_ITSYSTEMS, "true", "kitos", true);
 	}
 
+	private void seedV38() {
+		Optional<ChartConfiguration> overdueTaskConfig = chartConfigurationService.findByName("Overskredne opgaver");
+		if (overdueTaskConfig.isPresent()) {
+			List<String> allowedXFields = overdueTaskConfig.get().getAllowedXFieldChoices();
+			allowedXFields.clear();
+			allowedXFields.addAll(Arrays.asList("responsibleUsers.name", "responsibleOu"));
+			chartConfigurationService.saveAll(List.of(overdueTaskConfig.get()));
+		}
+	}
+
 	private void seedV37() {
 		ChoiceList choiceList = ChoiceList.builder()
 				.identifier("task-description-template")
@@ -171,6 +181,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private void seedV34() {
 		threatAssessmentService.findAll().forEach(threatAssessmentService::setThreatAssessmentColor);
 	}
+
 	private void seedV36() {
 		settingsService.createSetting(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS, String.valueOf(true), "general", true);
 	}
@@ -568,7 +579,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.aggregation(AggregationMethod.COUNT)
 						.ownerOnly(false)
 						.selectableAxis(SelectableAxis.X_ONLY)
-						.allowedXFieldChoices(List.of("responsibleUser", "responsibleOu"))
+						.allowedXFieldChoices(List.of("responsibleUsers.name", "responsibleOu"))
 						.allowedYFieldChoices(new ArrayList<>())
 						.selectablePeriod(SelectablePeriod.NONE)
 						.selectableDateField(false)
