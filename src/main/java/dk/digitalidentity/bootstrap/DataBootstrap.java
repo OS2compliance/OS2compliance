@@ -158,7 +158,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	}
 
 	private void seedV38() {
-		Optional<ChartConfiguration> overdueTaskConfig = chartConfigurationService.findByName("Overskrevne opgaver");
+		Optional<ChartConfiguration> overdueTaskConfig = chartConfigurationService.findByName("Overskredne opgaver");
 		if (overdueTaskConfig.isPresent()) {
 			List<String> allowedXFields = overdueTaskConfig.get().getAllowedXFieldChoices();
 			allowedXFields.clear();
