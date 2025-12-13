@@ -1,5 +1,6 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
@@ -508,7 +509,8 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
     }
 
     public void setThreatAssessmentColor(final ThreatAssessment savedThreatAssessment) {
-		RiskScoreDTO result = findHighestRiskScore(savedThreatAssessment, true);
+		boolean residual = settingsService.getBoolean(Constants.RISK_ASSESSMENT_USE_RESIDUAL, true);
+		RiskScoreDTO result = findHighestRiskScore(savedThreatAssessment, residual);
 
 		if (result.highestRiskNotAcceptedRiskScore() != -1) {
             final RiskAssessment assessment =

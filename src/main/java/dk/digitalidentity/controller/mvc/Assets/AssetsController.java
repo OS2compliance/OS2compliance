@@ -333,7 +333,6 @@ public class AssetsController {
             model.addAttribute("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("riskProfiles", threatAssessmentService.buildRiskProfileDTOs(newestThreatAssessment));
-            model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
 

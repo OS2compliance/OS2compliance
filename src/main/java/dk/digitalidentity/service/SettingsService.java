@@ -48,6 +48,12 @@ public class SettingsService {
 		return settingString;
 	}
 
+	public boolean getBoolean(final String key, final boolean defaultVal) {
+		return settingDao.findBySettingKey(key)
+            .filter(v -> v.getSettingValue() != null)
+            .map((v -> Boolean.parseBoolean(v.getSettingValue()))).orElse(defaultVal);
+	}
+
     public ZonedDateTime getZonedDateTime(final String key, final ZonedDateTime defaultVal) {
         return settingDao.findBySettingKey(key)
             .map(Setting::getSettingValue)
@@ -121,12 +127,13 @@ public class SettingsService {
 		return createSetting(key, value, null, false);
 	}
 
+	@Transactional
 	public List<Setting> saveAll(final List<Setting> settings) {
 
 		for(final Setting setting : settings) {
 			setString(setting.getSettingKey(), setting.getSettingValue());
 		}
-		
+		settingDao.flush();
 		return this.getAll();
 	}
 	
@@ -145,6 +152,11 @@ public class SettingsService {
 
 	public boolean existsBySettingKey(final String key) {
 		return settingDao.existsBySettingKey(key);
+	}
+
+	@Transactional
+	public boolean settingChanged(final String key, final String checkAgainst) {
+		return !findBySettingKey(key).getSettingValue().equals(checkAgainst);
 	}
 
 	@Transactional

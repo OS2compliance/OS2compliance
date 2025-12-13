@@ -139,6 +139,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(36, this::seedV36);
 		incrementAndPerformIfVersion(37, this::seedV37);
 		incrementAndPerformIfVersion(38, this::seedV38);
+		incrementAndPerformIfVersion(39, this::seedV39);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -151,6 +152,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 			}
 			return 0;
 		});
+	}
+
+	private void seedV39() {
+		settingsService.createSetting(Constants.RISK_ASSESSMENT_USE_RESIDUAL, "true", "risk", true);
+		settingsService.createSetting(Constants.RISK_MATRIX_USE_RESIDUAL, "true", "risk", true);
 	}
 
 	private void seedV35() {

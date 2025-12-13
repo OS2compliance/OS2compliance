@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.rest;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.grid.RiskGridDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
@@ -49,6 +50,7 @@ import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.SecurityUserService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -117,6 +119,7 @@ public class RiskRestController {
 	private final OrganisationService organisationService;
 	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
+	private final SettingsService settingsService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -635,19 +638,19 @@ public class RiskRestController {
 			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
 
 		if (types == null || types.isEmpty()) {
-			return ResponseEntity.ok(new ArrayList<RiskMatrixItem>());
+			return ResponseEntity.ok(new ArrayList<>());
 		}
-
+		boolean useResidualRisk = settingsService.getBoolean(Constants.RISK_MATRIX_USE_RESIDUAL, true);
 		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
 
-		return ResponseEntity.ok(calculateRiskMatrix(threatAssessments));
+		return ResponseEntity.ok(calculateRiskMatrix(threatAssessments, useResidualRisk));
 	}
 
-	public List<RiskMatrixItem> calculateRiskMatrix(List<ThreatAssessment> threatAssessments) {
+	public List<RiskMatrixItem> calculateRiskMatrix(List<ThreatAssessment> threatAssessments, boolean useResidual) {
 		Map<String, Integer> riskCounts = new HashMap<>();
 
 		for (ThreatAssessment assessment : threatAssessments) {
-			RiskLevel riskLevel = calculateRiskLevel(assessment);
+			RiskLevel riskLevel = calculateRiskLevel(assessment, useResidual);
 
 			if (riskLevel.probability() > 0 && riskLevel.consequence() > 0) {
 				String key = riskLevel.probability() + "," + riskLevel.consequence();
@@ -666,7 +669,7 @@ public class RiskRestController {
 	}
 
 	public record RiskLevel(int probability, int consequence) {}
-	public RiskLevel calculateRiskLevel(ThreatAssessment threatAssessment) {
+	public RiskLevel calculateRiskLevel(ThreatAssessment threatAssessment, boolean useResidualRisk) {
 		List<ThreatAssessmentResponse> responses = threatAssessment.getThreatAssessmentResponses();
 
 		if (responses == null || responses.isEmpty()) {
@@ -674,7 +677,7 @@ public class RiskRestController {
 		}
 
 		// calculate the highest scores the same way its calculated when setting the threatAssessment.assessment
-		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment, true);
+		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment, useResidualRisk);
 
 		return new RiskLevel(result.globalHighestprobability(), result.globalHighestConsequence());
 	}
@@ -687,16 +690,17 @@ public class RiskRestController {
 			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
 
 		if (types == null || types.isEmpty()) {
-			return ResponseEntity.ok(new ArrayList<RiskDetailItem>());
+			return ResponseEntity.ok(new ArrayList<>());
 		}
 
 		// Fetch threat assessments filtered by types
 		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
+		boolean residualValues = settingsService.getBoolean(Constants.RISK_MATRIX_USE_RESIDUAL, true);
 
 		// Filter assessments that match the requested probability and consequence
 		List<RiskDetailItem> details = threatAssessments.stream()
 				.filter(assessment -> {
-					RiskLevel riskLevel = calculateRiskLevel(assessment);
+					RiskLevel riskLevel = calculateRiskLevel(assessment, residualValues);
 					return riskLevel.probability() == probability && riskLevel.consequence() == consequence;
 				})
 				.map(assessment -> new RiskDetailItem(
