@@ -136,6 +136,10 @@ public class SettingsService {
 		settingDao.flush();
 		return this.getAll();
 	}
+
+	public void flush() {
+		settingDao.flush();
+	}
 	
 	public List<Setting> getAll() {
 		return settingDao.findAll();

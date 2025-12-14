@@ -5,6 +5,7 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.event.RiskCalculationChangedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
@@ -41,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.Resource;
@@ -67,6 +69,8 @@ import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
  * Since OS2compliance comes with a lot of data baked in, we need some way of updating it when we make a new release,
  * this class does that by keeping track of what data version is the current one and then updating the data incrementally.
  * Much like flyway but for the actual database content and not structure.
+ *
+ * NOTE it has grown in size, and is probably ripe for splitting up into sub classes (maybe using flyway java migrations).
  */
 @Slf4j
 @Order(100)
@@ -91,6 +95,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private final ChartConfigurationService chartConfigurationService;
 	private final StatisticService statisticService;
 	private final ThreatAssessmentService threatAssessmentService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Value("classpath:data/registers/*.json")
 	private Resource[] registers;
@@ -140,6 +145,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(37, this::seedV37);
 		incrementAndPerformIfVersion(38, this::seedV38);
 		incrementAndPerformIfVersion(39, this::seedV39);
+		incrementAndPerformIfVersion(40, this::seedV40);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -152,6 +158,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 			}
 			return 0;
 		});
+	}
+
+	private void seedV40() {
+		settingsService.setString(Constants.RISK_MATRIX_USE_RESIDUAL, "false");
+		settingsService.setString(Constants.RISK_ASSESSMENT_USE_RESIDUAL, "false");
+		settingsService.flush();
+		eventPublisher.publishEvent(new RiskCalculationChangedEvent());
 	}
 
 	private void seedV39() {
