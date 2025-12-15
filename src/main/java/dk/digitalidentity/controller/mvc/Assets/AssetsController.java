@@ -709,6 +709,9 @@ public class AssetsController {
 			asset.setSupervisoryModel(supervisoryModel);
 			isDbs = supervisoryModel.getIdentifier().startsWith("supervision-model-dbs-123456");
 		}
+		if (body.getDataProcessingAgreementStatus() != null) {
+			asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
+		}
 		asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
 		asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
         asset.setNextInspection(body.getNextInspection());
