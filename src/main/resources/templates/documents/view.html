@@ -129,9 +129,9 @@
                                 <div class="row mb-3">
                                     <label for="includeInYearWheel" class="col-sm-2 col-form-label">Indgås i årshjulet</label>
                                     <div class="col-sm-10">
-                                        <select class="form-control form-select editField" name="includeInYearWheel" id="includeInYearWheel" disabled>
-                                            <option value="true" th:selected="${includeInYearWheel == true}">Ja</option>
-                                            <option value="false" th:selected="${includeInYearWheel == false}">Nej</option>
+                                        <select class="form-control form-select editField" th:field="*{includeInYearWheel}" id="includeInYearWheel" disabled>
+                                            <option value="true">Ja</option>
+                                            <option value="false">Nej</option>
                                         </select>
                                     </div>
                                 </div>

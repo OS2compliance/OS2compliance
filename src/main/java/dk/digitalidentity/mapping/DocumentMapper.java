@@ -107,7 +107,8 @@ public interface DocumentMapper {
 			@Mapping(target = "tags", ignore = true),
 			@Mapping(target = "deleted", ignore = true),
 			@Mapping(target = "localizedEnums", ignore = true),
-			@Mapping(target = "documentType", ignore = true)
+			@Mapping(target = "documentType", ignore = true),
+			@Mapping(target = "includeInYearWheel", ignore = true)
 	})
 	Document fromEO(DocumentCreateEO documentCreateEO);
 
