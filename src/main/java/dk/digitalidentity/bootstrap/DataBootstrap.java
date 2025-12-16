@@ -5,11 +5,11 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.event.RiskCalculationChangedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Incident;
-import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
@@ -28,20 +28,21 @@ import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.kle.KLEService;
 import dk.digitalidentity.statistic.StatisticService;
+import dk.digitalidentity.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.statistic.enumerable.ChartType;
 import dk.digitalidentity.statistic.enumerable.DateTimePreset;
+import dk.digitalidentity.statistic.enumerable.Period;
 import dk.digitalidentity.statistic.enumerable.SelectableAxis;
 import dk.digitalidentity.statistic.enumerable.SelectablePeriod;
 import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfiguration;
 import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfigurationService;
-import dk.digitalidentity.statistic.enumerable.AggregationMethod;
-import dk.digitalidentity.statistic.enumerable.ChartType;
-import dk.digitalidentity.statistic.enumerable.Period;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.Resource;
@@ -57,9 +58,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Optional;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
@@ -68,6 +69,8 @@ import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
  * Since OS2compliance comes with a lot of data baked in, we need some way of updating it when we make a new release,
  * this class does that by keeping track of what data version is the current one and then updating the data incrementally.
  * Much like flyway but for the actual database content and not structure.
+ *
+ * NOTE it has grown in size, and is probably ripe for splitting up into sub classes (maybe using flyway java migrations).
  */
 @Slf4j
 @Order(100)
@@ -92,6 +95,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private final ChartConfigurationService chartConfigurationService;
 	private final StatisticService statisticService;
 	private final ThreatAssessmentService threatAssessmentService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Value("classpath:data/registers/*.json")
 	private Resource[] registers;
@@ -139,6 +143,9 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(35, this::seedV35);
 		incrementAndPerformIfVersion(36, this::seedV36);
 		incrementAndPerformIfVersion(37, this::seedV37);
+		incrementAndPerformIfVersion(38, this::seedV38);
+		incrementAndPerformIfVersion(39, this::seedV39);
+		incrementAndPerformIfVersion(40, this::seedV40);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -153,8 +160,30 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		});
 	}
 
+	private void seedV40() {
+		settingsService.setString(Constants.RISK_MATRIX_USE_RESIDUAL, "false");
+		settingsService.setString(Constants.RISK_ASSESSMENT_USE_RESIDUAL, "false");
+		settingsService.flush();
+		eventPublisher.publishEvent(new RiskCalculationChangedEvent());
+	}
+
+	private void seedV39() {
+		settingsService.createSetting(Constants.RISK_ASSESSMENT_USE_RESIDUAL, "true", "risk", true);
+		settingsService.createSetting(Constants.RISK_MATRIX_USE_RESIDUAL, "true", "risk", true);
+	}
+
 	private void seedV35() {
 		settingsService.createSetting(KitosConstants.KITOS_ENABLE_SYNC_ITSYSTEMS, "true", "kitos", true);
+	}
+
+	private void seedV38() {
+		Optional<ChartConfiguration> overdueTaskConfig = chartConfigurationService.findByName("Overskredne opgaver");
+		if (overdueTaskConfig.isPresent()) {
+			List<String> allowedXFields = overdueTaskConfig.get().getAllowedXFieldChoices();
+			allowedXFields.clear();
+			allowedXFields.addAll(Arrays.asList("responsibleUsers.name", "responsibleOu"));
+			chartConfigurationService.saveAll(List.of(overdueTaskConfig.get()));
+		}
 	}
 
 	private void seedV37() {
@@ -171,6 +200,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private void seedV34() {
 		threatAssessmentService.findAll().forEach(threatAssessmentService::setThreatAssessmentColor);
 	}
+
 	private void seedV36() {
 		settingsService.createSetting(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS, String.valueOf(true), "general", true);
 	}
@@ -568,7 +598,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.aggregation(AggregationMethod.COUNT)
 						.ownerOnly(false)
 						.selectableAxis(SelectableAxis.X_ONLY)
-						.allowedXFieldChoices(List.of("responsibleUser", "responsibleOu"))
+						.allowedXFieldChoices(List.of("responsibleUsers.name", "responsibleOu"))
 						.allowedYFieldChoices(new ArrayList<>())
 						.selectablePeriod(SelectablePeriod.NONE)
 						.selectableDateField(false)

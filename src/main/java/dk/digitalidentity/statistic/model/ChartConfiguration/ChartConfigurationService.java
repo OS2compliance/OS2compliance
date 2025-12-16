@@ -29,6 +29,10 @@ public class ChartConfigurationService {
 		return chartConfigurationDao.findById(id);
 	}
 
+	public Optional<ChartConfiguration> findByName(String name) {
+		return chartConfigurationDao.findByName(name);
+	}
+
 	public List<ChartConfiguration> saveAll(List<ChartConfiguration> chartConfigurations) {
 		return chartConfigurationDao.saveAll(chartConfigurations);
 	}

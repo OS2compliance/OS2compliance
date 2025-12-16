@@ -36,6 +36,8 @@ public interface Constants {
     String ARTICLE_30_REPORT_TEMPLATE_DOC = "reports/article30/main.docx";
 	String STANDARD_TEMPLATE_DOC = "reports/default/default.docx";
 
+	String RISK_ASSESSMENT_USE_RESIDUAL = "riskAssessmentUseResidual";
+	String RISK_MATRIX_USE_RESIDUAL = "riskMatrixUseResidual";
     String RISK_SCALE_PROPERTY_NAME = "riskScale";
     String LAST_NOTIFY_RUN_DAY_SETTING = "lastNotifyRunDay";
 	String ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS = "allowMultipleResponsibleOnTasks";

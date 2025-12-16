@@ -315,6 +315,9 @@ public class TaskService implements TagableService<Task> {
             return deadline;
         }
         return switch (repetition) {
+			case EVERY_2_MONTHS -> deadline.plusMonths(2);
+			case EVERY_3_MONTHS -> deadline.plusMonths(3);
+			case EVERY_4_MONTHS -> deadline.plusMonths(4);
             case MONTHLY -> deadline.plusMonths(1);
             case QUARTERLY -> deadline.plusMonths(3);
             case HALF_YEARLY -> deadline.plusMonths(6);

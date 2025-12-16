@@ -1,15 +1,12 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.DBSAssetDao;
-import dk.digitalidentity.dao.grid.DBSAssetGridDao;
 import dk.digitalidentity.mapping.DBSAssetMapper;
 import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
-import dk.digitalidentity.security.Roles;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireDBS;
@@ -18,14 +15,13 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SecurityUserService;
-import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,9 +35,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static dk.digitalidentity.service.FilterService.buildPageable;
-import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Slf4j
 @RestController
@@ -76,6 +69,7 @@ public class DBSAssetsRestController {
 
 	@RequireReadOwnerOnly
 	@PostMapping("export")
+	@Transactional
 	public void export(
 			@RequestParam(value = "order", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
