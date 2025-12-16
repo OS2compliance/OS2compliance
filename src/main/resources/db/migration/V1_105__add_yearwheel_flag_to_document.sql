@@ -1,0 +1,1 @@
+ALTER TABLE documents ADD COLUMN include_in_year_wheel boolean DEFAULT FALSE;
