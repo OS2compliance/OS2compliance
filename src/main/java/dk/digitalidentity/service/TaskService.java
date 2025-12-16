@@ -165,6 +165,7 @@ public class TaskService implements TagableService<Task> {
                     // Deadline was changed on the task, reflect this on the document next revision
                     if (d.getNextRevision() == null || !d.getNextRevision().isEqual(task.getNextDeadline())) {
                         d.setNextRevision(task.getNextDeadline());
+						d.setIncludeInYearWheel(task.getIncludeInReport());
                     }
                 });
         }

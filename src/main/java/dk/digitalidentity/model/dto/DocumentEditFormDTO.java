@@ -45,4 +45,7 @@ public class DocumentEditFormDTO {
 	@NotNull
 	private User responsibleUser;
 
+	@NotNull
+	private boolean includeInYearWheel;
+
 }
