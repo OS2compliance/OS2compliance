@@ -4,9 +4,7 @@ import dk.digitalidentity.model.dto.DocumentEditFormDTO;
 import dk.digitalidentity.model.dto.DocumentFormDTO;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Document;
-import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -41,7 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
 
 @Slf4j
 @Controller

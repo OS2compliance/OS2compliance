@@ -1,6 +1,5 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.controller.mvc.DocumentsController;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.grid.DocumentGridDao;
 import dk.digitalidentity.model.entity.Document;
