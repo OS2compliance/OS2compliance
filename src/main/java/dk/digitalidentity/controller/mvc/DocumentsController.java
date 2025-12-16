@@ -84,7 +84,9 @@ public class DocumentsController {
 		document.setRevisionInterval(documentForm.getRevisionInterval());
 		document.setNextRevision(documentForm.getNextRevision());
 		document.setResponsibleUser(documentForm.getResponsibleUser());
-		document.setTags(new HashSet<>(documentForm.getTags()));
+		if (documentForm.getTags() != null && !documentForm.getTags().isEmpty()) {
+			document.setTags(new HashSet<>(documentForm.getTags()));
+		}
 
 
 		final Document savedDocument = documentService.create(document);
