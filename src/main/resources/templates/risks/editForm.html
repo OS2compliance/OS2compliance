@@ -20,11 +20,11 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row mt-3" id="copyAssetSelectRow" th:if="*{threatAssessmentType?.name() == 'ASSET'}">
-                        <label for="copyAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
+                    <div class="row mt-3" id="editAssetSelectRow" style="display: none;">
+                        <label for="editAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
                         <div class="col-sm-8">
                             <select class="form-control form-select choices__input" name="selectedAssets" data-type="select-multiple"
-                                    data-trigger="" id="copyAssetSelect" hidden="" tabindex="-1" multiple required>
+                                    data-trigger="" id="editAssetSelect" hidden="" tabindex="-1" multiple>
                                 <option th:each="asset : ${relatedAssets}" th:value="${asset.id}" th:text="${asset.name}" selected></option>
                             </select>
                             <div class="invalid-feedback">Der skal vælges mindst et aktiv</div>
@@ -39,17 +39,7 @@
                             <div class="invalid-feedback" id="registerError">Der skal vælges mindst en behandlingsaktivitet</div>
                         </div>
                     </div>
-                    <div class="row mt-3" id="editAssetSelectRow" style="display: none;">
-                        <label for="editAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
-                        <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" name="selectedAssets"
-                                    data-type="select-multiple" data-trigger="" id="editAssetSelect"
-                                    hidden="" tabindex="-1" multiple>
-                            </select>
-                            <div class="invalid-feedback" id="assetError">Der skal vælges mindst et asset</div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
+                    <div class="row mt-3" id="editTielRow">
                         <label for="editName" class="col-sm-4 col-form-label">Titel</label>
                         <div class="col-sm-8">
                             <input th:field="*{name}" id="editName" type="text" class="form-control" required>

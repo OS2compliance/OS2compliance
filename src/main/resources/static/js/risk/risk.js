@@ -463,21 +463,18 @@ function EditRiskService() {
     this.typeChanged = function(selectedType) {
         const registerRow = document.getElementById("editRegisterSelectRow");
         const assetRow = document.getElementById("editAssetSelectRow");
-        const copyAssetRow = document.getElementById("copyAssetSelectRow");
+        const titleRow = document.getElementById("editTielRow");
 
         if (selectedType === 'ASSET') {
             if (registerRow) registerRow.style.display = 'none';
+            if (titleRow) titleRow.style.display = 'none';
             if (assetRow) assetRow.style.display = '';
-            if (copyAssetRow) copyAssetRow.style.display = '';
 
             if (this.editRegisterChoicesSelect) {
                 this.editRegisterChoicesSelect.removeActiveItems();
                 this.editRegisterChoicesSelect.passedElement.element.removeAttribute('required');
             }
 
-            if (this.copyAssetChoicesSelect) {
-                this.copyAssetChoicesSelect.passedElement.element.setAttribute('required', 'required');
-            }
             if (this.editAssetChoicesSelect) {
                 this.editAssetChoicesSelect.passedElement.element.setAttribute('required', 'required');
             }
@@ -485,30 +482,22 @@ function EditRiskService() {
         } else if (selectedType === 'REGISTER') {
             if (registerRow) registerRow.style.display = '';
             if (assetRow) assetRow.style.display = 'none';
-            if (copyAssetRow) copyAssetRow.style.display = 'none';
+            if (titleRow) titleRow.style.display = 'none';
 
             if (this.editRegisterChoicesSelect) {
                 this.editRegisterChoicesSelect.passedElement.element.setAttribute('required', 'required');
             }
 
-            if (this.copyAssetChoicesSelect) {
-                this.copyAssetChoicesSelect.removeActiveItems();
-                this.copyAssetChoicesSelect.passedElement.element.removeAttribute('required');
-            }
             if (this.editAssetChoicesSelect) {
                 this.editAssetChoicesSelect.removeActiveItems();
                 this.editAssetChoicesSelect.passedElement.element.removeAttribute('required');
             }
 
         } else {
+            if (titleRow) titleRow.style.display = '';
             if (registerRow) registerRow.style.display = 'none';
             if (assetRow) assetRow.style.display = 'none';
-            if (copyAssetRow) copyAssetRow.style.display = 'none';
 
-            if (this.copyAssetChoicesSelect) {
-                this.copyAssetChoicesSelect.removeActiveItems();
-                this.copyAssetChoicesSelect.passedElement.element.removeAttribute('required');
-            }
             if (this.editAssetChoicesSelect) {
                 this.editAssetChoicesSelect.removeActiveItems();
                 this.editAssetChoicesSelect.passedElement.element.removeAttribute('required');
