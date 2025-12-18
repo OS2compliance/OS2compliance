@@ -151,6 +151,10 @@ public class RiskController {
 			final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
 			model.addAttribute("relatedAssets", assetService.findAllByRelations(assetRelations));
 		}
+		if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.REGISTER) {
+			final List<Relation> registerRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER);
+			model.addAttribute("relatedRegisters", registerService.findAllByRelations(registerRelations));
+		}
 
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("risk", threatAssessment);
@@ -164,7 +168,8 @@ public class RiskController {
     public String performEdit(@PathVariable("id") final long id,
                               @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
-								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets
+								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets,
+								@RequestParam(name = "selectedRegister", required = false) final Long selectedRegister
 	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
@@ -180,6 +185,9 @@ public class RiskController {
 
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
 			relationService.setRelationsAbsolute(editedAssessment, selectedAssets);
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
+			relateRegister(selectedRegister, editedAssessment);
 		}
         editedAssessment.setName(assessment.getName());
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));

@@ -463,7 +463,7 @@ function EditRiskService() {
     this.typeChanged = function(selectedType) {
         const registerRow = document.getElementById("editRegisterSelectRow");
         const assetRow = document.getElementById("editAssetSelectRow");
-        const titleRow = document.getElementById("editTielRow");
+        const titleRow = document.getElementById("editTitleRow");
 
         if (selectedType === 'ASSET') {
             if (registerRow) registerRow.style.display = 'none';
