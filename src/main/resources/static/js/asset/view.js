@@ -316,6 +316,7 @@ function editMode(enabled, responsibleFieldChangeable) {
     const aiStatus = document.getElementById('aiStatus');
     const active = document.getElementById('activeAsset');
     const aiRiskFactor = document.getElementById('riskFactor');
+    const responsibleUsers = document.getElementById('responsibleUsers');
     if (enabled) {
         rootElement.querySelectorAll('.editField').forEach(elem => {
             elem.disabled = false;
@@ -352,13 +353,11 @@ function editMode(enabled, responsibleFieldChangeable) {
         }
         else {
             suppliersChoicesEditSelect.disable();
+            responsibleChoicesEditSelect.disable();
             let descriptionInput = document.getElementById("description");
             if (descriptionInput) {
                 descriptionInput.disabled = true;
             }
-        }
-        if (responsibleFieldChangeable === 'true') {
-            responsibleChoicesEditSelect.enable();
         }
 
         departmentChoices.enable();
