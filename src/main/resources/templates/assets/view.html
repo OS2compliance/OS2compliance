@@ -122,7 +122,9 @@
 
                                             <div class="row mb-3">
                                                 <label for="supplier"
-                                                    class="col-sm-3 col-form-label">Leverandør</label>
+                                                    class="col-sm-3 col-form-label">Leverandør
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
                                                         data-trigger="" id="supplier" th:field="*{supplier}" hidden=""
@@ -195,7 +197,9 @@
 
                                             <div class="row mb-3">
                                                 <label for="description"
-                                                    class="col-sm-3 col-form-label">Beskrivelse</label>
+                                                    class="col-sm-3 col-form-label">Beskrivelse
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <div class="input-group">
                                                         <textarea id="description" class="form-control editField"
