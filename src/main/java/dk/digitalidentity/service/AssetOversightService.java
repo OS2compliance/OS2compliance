@@ -69,24 +69,23 @@ public class AssetOversightService {
         });
     }
 
-    public void createAssociatedCheck(final AssetOversight oversight) {
-        if (oversight.getNewInspectionDate() == null) {
-            return;
-        }
+    public void createTaskLogForAssociatedTask(final AssetOversight oversight) {
         final Asset asset = oversight.getAsset();
         final Task task = findAssociatedOversightCheck(asset);
         final TaskLog taskLog = new TaskLog();
         taskLog.setTask(task);
         taskLog.setName("Tilsyn udført");
         taskLog.setComment("Status: " + oversight.getStatus().getMessage());
-        taskLog.setCompleted(LocalDate.now());
+        taskLog.setCompleted(oversight.getCreationDate());
         taskLog.setDocumentationLink(samlConfiguration.getSp().getBaseUrl() + "/assets/" + oversight.getAsset().getId());
         User responsibleUser = oversight.getResponsibleUser();
         taskLog.setResponsibleUserName(responsibleUser.getName());
         taskLog.setResponsibleUserUserId(responsibleUser.getUserId());
         taskLog.setDeadline(task.getNextDeadline());
         taskService.completeTask(task, taskLog);
-        task.setNextDeadline(oversight.getNewInspectionDate());
+		if (oversight.getNewInspectionDate() != null) {
+			task.setNextDeadline(oversight.getNewInspectionDate());
+		}
     }
 
     public Optional<AssetOversight> findById(Long id) {

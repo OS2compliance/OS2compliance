@@ -7,6 +7,7 @@ import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.event.RiskCalculationChangedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Incident;
@@ -16,12 +17,14 @@ import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.model.entity.enums.ReportSetting;
+import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SettingsService;
+import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
@@ -70,7 +73,7 @@ import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
  * this class does that by keeping track of what data version is the current one and then updating the data incrementally.
  * Much like flyway but for the actual database content and not structure.
  *
- * NOTE it has grown in size, and is probably ripe for splitting up into sub classes (maybe using flyway java migrations).
+ * NOTE this file has grown in size, and is probably ripe for splitting up into smaller classes (maybe using flyway java migrations).
  */
 @Slf4j
 @Order(100)
@@ -96,6 +99,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private final StatisticService statisticService;
 	private final ThreatAssessmentService threatAssessmentService;
 	private final ApplicationEventPublisher eventPublisher;
+	private final TaskService taskService;
+	private final AssetOversightService assetOversightService;
 
 	@Value("classpath:data/registers/*.json")
 	private Resource[] registers;
@@ -146,6 +151,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(38, this::seedV38);
 		incrementAndPerformIfVersion(39, this::seedV39);
 		incrementAndPerformIfVersion(40, this::seedV40);
+		incrementAndPerformIfVersion(41, this::seedV41);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -158,6 +164,22 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 			}
 			return 0;
 		});
+	}
+
+	private void seedV41() {
+		// Find open tasks where dead-line is passed, for each task check if they are associated with an oversight that has been performed
+		// and in that case finish the task.
+		taskService.findAllTasks()
+				.forEach(t -> {
+					taskService.findOversightAsset(t).stream()
+							.filter(a -> a instanceof Asset)
+							.map(a -> (Asset) a)
+							.filter(a -> a.getAssetOversights() != null
+									&& a.getSupervisoryModel() != null
+									&& "supervision-model-dbs-123456".equals(a.getSupervisoryModel().getIdentifier()))
+							.forEach(a -> a.getAssetOversights()
+									.forEach(assetOversightService::createTaskLogForAssociatedTask));
+				});
 	}
 
 	private void seedV40() {

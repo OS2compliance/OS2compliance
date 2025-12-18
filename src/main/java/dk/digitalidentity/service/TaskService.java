@@ -71,6 +71,9 @@ public class TaskService implements TagableService<Task> {
         return taskDao.findAll();
     }
 
+	public List<Task> findAllTasks() {
+		return taskDao.finAllTasks();
+	}
 
     public void saveAll(final List<Task> all) {
         taskDao.saveAll(all);
