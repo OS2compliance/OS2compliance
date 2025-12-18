@@ -788,7 +788,7 @@ public class AssetsController {
 				}
 				newOversight.setNewInspectionDate(asset.getNextInspectionDate());
 				final AssetOversight attachedOversight = assetOversightService.create(newOversight);
-				assetOversightService.createAssociatedCheck(attachedOversight);
+				assetOversightService.createTaskLogForAssociatedTask(attachedOversight);
 				asset.getAssetOversights().add(attachedOversight);
 			}
 
