@@ -348,9 +348,15 @@ function editMode(enabled, responsibleFieldChangeable) {
             document.getElementById("productLinksViewContainer").hidden = true;
             document.getElementById("productLinksEditContainer").hidden = false;
             document.getElementById("addProductLinkBtn").hidden = false;
+            suppliersChoicesEditSelect.enable();
         }
-
-        suppliersChoicesEditSelect.enable();
+        else {
+            suppliersChoicesEditSelect.disable();
+            let descriptionInput = document.getElementById("description");
+            if (descriptionInput) {
+                descriptionInput.disabled = true;
+            }
+        }
         if (responsibleFieldChangeable === 'true') {
             responsibleChoicesEditSelect.enable();
         }
@@ -402,5 +408,9 @@ function editMode(enabled, responsibleFieldChangeable) {
     if (isKitos) {
         aiStatus.disabled = true;
         aiRiskFactor.disabled = true;
+        let descriptionInput = document.getElementById("description");
+        if (descriptionInput) {
+            descriptionInput.disabled = true;
+        }
     }
 }
