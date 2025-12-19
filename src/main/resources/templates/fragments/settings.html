@@ -381,7 +381,7 @@
                                     <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_ENABLE_SYNC_ITSYSTEMS}">
                                         <div class="row mt-1" style="padding: 0px 8px;">
                                             <label for="stopSyncItSystems" class="col-sm-10 col-form-label"
-                                                   style="color: black;padding: 10px 0px;">Stop synkronisering af IT-Systemer</label>
+                                                   style="color: black;padding: 10px 0px;">Skal OS2compliance synkronisere med KITOS?</label>
                                             <select class="form-control form-select" id="stopSyncItSystems" th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                                 <option value="true" th:selected="${setting.settingValue == 'true'}">Ja</option>
                                                 <option value="false" th:selected="${setting.settingValue == 'false'}">Nej</option>
