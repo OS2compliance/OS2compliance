@@ -5,6 +5,10 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Fixed
+- (Ad-hoc) Sorteringsfejl i standarder
+
 ## [2.5.0] - 2025-11-14
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-43) (Opgavecenter/Opgave og Kontrol) Ved ny opgave skal det være muligt at klikke Gem og gå til opgave eller gem
