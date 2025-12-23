@@ -72,6 +72,9 @@ public class AssetOversightService {
     public void createTaskLogForAssociatedTask(final AssetOversight oversight) {
         final Asset asset = oversight.getAsset();
         final Task task = findAssociatedOversightCheck(asset);
+		if (task == null) {
+			return;
+		}
         final TaskLog taskLog = new TaskLog();
         taskLog.setTask(task);
         taskLog.setName("Tilsyn udført");
