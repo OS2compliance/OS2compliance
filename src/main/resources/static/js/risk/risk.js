@@ -466,10 +466,16 @@ function EditRiskService() {
         const registerRow = document.getElementById("editRegisterSelectRow");
         const assetRow = document.getElementById("editAssetSelectRow");
         const titleRow = document.getElementById("editTitleRow");
+        const titleValue = document.getElementById("editName");
 
         if (selectedType === 'ASSET') {
             if (registerRow) registerRow.style.display = 'none';
-            if (titleRow) titleRow.style.display = 'none';
+            if (titleRow) {
+                titleRow.style.display = '';
+                if (titleValue) {
+                    titleValue.value = '';
+                }
+            }
             if (assetRow) assetRow.style.display = '';
 
             if (this.editRegisterChoicesSelect) {
@@ -484,7 +490,12 @@ function EditRiskService() {
         } else if (selectedType === 'REGISTER') {
             if (registerRow) registerRow.style.display = '';
             if (assetRow) assetRow.style.display = 'none';
-            if (titleRow) titleRow.style.display = 'none';
+            if (titleRow) {
+                titleRow.style.display = '';
+                if (titleValue) {
+                    titleValue.value = '';
+                }
+            }
 
             if (this.editRegisterChoicesSelect) {
                 this.editRegisterChoicesSelect.passedElement.element.setAttribute('required', 'required');
@@ -516,7 +527,7 @@ function EditRiskService() {
         if (threatAssessmentTypeElement) {
             this.typeChanged(threatAssessmentTypeElement.value);
             threatAssessmentTypeElement.addEventListener('change', () => {
-                this.typeChanged(element.value);
+                this.typeChanged(threatAssessmentTypeElement.value);
             });
         }
     }
