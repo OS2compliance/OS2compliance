@@ -14,7 +14,7 @@
                     <div class="row mt-3">
                         <label for="editThreatAssessmentType" class="col-sm-4 col-form-label">Type</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="editThreatAssessmentType" required th:disabled="${isAdmin == false}">
+                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="editThreatAssessmentType" required>
                                 <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).values()}"
                                         th:value="${type}" th:text="${type.message}"></option>
                             </select>

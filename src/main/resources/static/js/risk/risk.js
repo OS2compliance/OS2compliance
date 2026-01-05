@@ -421,9 +421,11 @@ function EditRiskService() {
         const editAssetSelect = this.getScopedElementById('editAssetSelect');
         if (editAssetSelect !== null) {
             this.editAssetChoicesSelect = initAssetSelectRisk(editAssetSelect);
-            this.editAssetChoicesSelect.passedElement.element.addEventListener('change', () => {
-                this.loadAssetSection();
-            });
+            if (this.editAssetChoicesSelect?.passedElement?.element) {
+                this.editAssetChoicesSelect.passedElement.element.addEventListener('change', () => {
+                    this.loadAssetSection();
+                });
+            }
         }
 
         const editRegisterSelect = this.getScopedElementById('editRegisterSelect');
@@ -510,11 +512,13 @@ function EditRiskService() {
     }
 
     this.initTypeSelect = function() {
-        this.typeChanged(this.getScopedElementById("editThreatAssessmentType").value);
-        const element = this.getScopedElementById('editThreatAssessmentType');
-        element.addEventListener('change', () => {
-            this.typeChanged(element.value);
-        });
+        let threatAssessmentTypeElement = this.getScopedElementById("editThreatAssessmentType");
+        if (threatAssessmentTypeElement) {
+            this.typeChanged(threatAssessmentTypeElement.value);
+            threatAssessmentTypeElement.addEventListener('change', () => {
+                this.typeChanged(element.value);
+            });
+        }
     }
 
     this.validate = function () {

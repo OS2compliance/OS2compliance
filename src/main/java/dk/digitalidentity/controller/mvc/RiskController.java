@@ -146,7 +146,6 @@ public class RiskController {
     @GetMapping("{id}/edit")
     public String riskEditDialog(final Model model, @PathVariable("id") final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		model.addAttribute("isAdmin", SecurityUtil.isAdministrator());
 		if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
 			final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
 			model.addAttribute("relatedAssets", assetService.findAllByRelations(assetRelations));
