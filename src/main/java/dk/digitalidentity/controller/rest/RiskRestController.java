@@ -406,8 +406,10 @@ public class RiskRestController {
     }
 
 	private void checkUpdateAccess(ThreatAssessment threatAssessment) {
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) &&
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		boolean canUpdateAll = SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL);
+		boolean canUpdateOwn = SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)
+				&& threatAssessmentService.isResponsibleFor(threatAssessment);
+		if (!canUpdateAll && !canUpdateOwn) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}

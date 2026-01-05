@@ -4,6 +4,7 @@ import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
+import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import jakarta.validation.constraints.NotNull;
 import dk.digitalidentity.service.tag.TagableRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -46,6 +47,9 @@ public interface TaskDao extends TagableRepository<Task> {
 			"(t.id = r.relationAId AND r.relationAType = 'TASK' AND r.relationBType = 'ASSET') " +
 			"OR (t.id = r.relationBId AND r.relationBType = 'TASK' AND r.relationAType = 'ASSET'))")
 	Set<Task> findAllByResponsibleUserAndNotRelatedToAnyAsset(@Param("user") final User responsibleUser);
+
+	@Query("select t from Task t where t.deleted=false and t.taskType='TASK'")
+	List<Task> finAllTasks();
 
     List<Task> findByTaskDescriptionTemplate(ChoiceValue taskDescriptionTemplate);
 }

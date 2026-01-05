@@ -42,7 +42,7 @@ public interface TaskMapper {
 		TaskDTO taskDTO = TaskDTO.builder()
 				.id(taskGrid.getId())
 				.name(taskGrid.getName())
-				.responsibleUser(nullSafe(() -> taskGrid.getResponsibleNames()))
+				.responsibleNames(nullSafe(() -> taskGrid.getResponsibleNames()))
 				.responsibleOU(nullSafe(() -> taskGrid.getResponsibleOU().getName()))
 				.nextDeadline(nullSafe(() -> taskGrid.getNextDeadline().format(DK_DATE_FORMATTER)))
 				.taskRepetition(nullSafe(() -> taskGrid.getTaskRepetition().getMessage()))

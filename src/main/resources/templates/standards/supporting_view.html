@@ -85,7 +85,7 @@
                                                     </span>
                                                 </td>
                                             </tr>
-                                            <th:block th:if="${statusFilter == null || section.standardSection.status == statusFilter}" th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
+                                            <th:block th:if="${statusFilter == null || section.standardSection.status == statusFilter}" th:each="section, statSection : ${sectionParent.children}">
                                                 <tr class="foldable" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
                                                     <td style="border-right: 1px solid black; font-weight: bold; color: black;" th:text="${section.section} + ' ' + ${section.description}"></td>
                                                     <td th:unless="${isNSIS}" th:id="'selectedTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.selected} ? 'Tilvalgt' : 'Fravalgt'" style="font-weight: bold;"></td>
