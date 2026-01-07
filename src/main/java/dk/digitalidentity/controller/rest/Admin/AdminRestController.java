@@ -164,9 +164,10 @@ public class AdminRestController {
                     supplierService.save(supplier);
                     break;
                 case TASK:
-                    Task task = (Task) responsibleFor;
-                    task.setResponsibleUsers(Set.of(userTo));
-                    taskService.saveTask(task);
+					Task task = (Task) responsibleFor;
+					task.getResponsibleUsers().clear();
+					task.getResponsibleUsers().add(userTo);
+					taskService.saveTask(task);
                     break;
                 case THREAT_ASSESSMENT:
                     ThreatAssessment threatAssessment = (ThreatAssessment) responsibleFor;

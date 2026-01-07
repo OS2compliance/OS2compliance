@@ -310,7 +310,8 @@ FROM (SELECT u.uuid,
              u.active,
              t.id
       FROM users u
-               LEFT JOIN tasks t ON u.uuid = t.responsible_uuid and deleted = 0
+           LEFT JOIN task_responsible_users tru ON u.uuid = tru.user_uuid
+           LEFT JOIN tasks t ON tru.task_id = t.id AND t.deleted = 0
 
       UNION ALL
 
