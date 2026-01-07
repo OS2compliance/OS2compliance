@@ -195,7 +195,7 @@ public class DPIARestController {
 	public ResponseEntity<HttpStatus> dpia(@RequestBody final DPIAScreeningUpdateDTO dpiaScreeningUpdateDTO) {
 		final DPIA dpia = dpiaService.find(dpiaScreeningUpdateDTO.dpiaId);
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets())) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets()) && !isResponsibleForDpia(dpia)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -227,7 +227,7 @@ public class DPIARestController {
         final DPIA dpia = dpiaService.find(commentUpdateDTO.dpiaId);
         final List<Asset> assets = dpia.getAssets();
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets())) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets()) && !isResponsibleForDpia(dpia)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -244,7 +244,7 @@ public class DPIARestController {
 	public ResponseEntity<HttpStatus> dpia(@RequestBody final QualityAssuranceUpdateDTO qualityAssuranceUpdateDTO) {
 		final DPIA dpia = dpiaService.find(qualityAssuranceUpdateDTO.dpiaId);
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets())) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets()) && !isResponsibleForDpia(dpia)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -358,7 +358,7 @@ public class DPIARestController {
 		final DPIA dpia = dpiaService.find(dpiaId);
 		final List<Asset> assets = dpia.getAssets();
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets())) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets()) && !isResponsibleForDpia(dpia)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -415,7 +415,7 @@ public class DPIARestController {
 	public void setDPIASectionField(@RequestBody final DPIASetFieldDTO dto, @PathVariable long dpiaId) {
 		final DPIA dpia = dpiaService.find(dpiaId);
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) &&  !isResponsibleForAsset(dpia.getAssets())) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) &&  !isResponsibleForAsset(dpia.getAssets()) && !isResponsibleForDpia(dpia)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -450,8 +450,7 @@ public class DPIARestController {
 	public ResponseEntity<?> mailReport(@PathVariable final long dpiaId, @RequestBody final MailReportDTO dto) throws IOException {
 		final DPIA dpia = dpiaService.find(dpiaId);
 		List<Asset> assets = dpia.getAssets();
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (!isResponsibleForAsset(assets)) {
+		if (!isResponsibleForAsset(assets) && !isResponsibleForDpia(dpia)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 		final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
@@ -556,6 +555,11 @@ public class DPIARestController {
 						.map(User::getUuid))
 				.toList()
 				.contains(SecurityUtil.getPrincipalUuid());
+	}
+
+	private boolean isResponsibleForDpia(final DPIA dpia) {
+		String principalUuid = SecurityUtil.getPrincipalUuid();
+		return dpia.getResponsibleUser() != null && principalUuid.equalsIgnoreCase(dpia.getResponsibleUser().getUuid());
 	}
 
 	private List<DPIAListDTO> mapToListDTO(Page<DPIAGrid> dpiaGrids, String userUuid, Map<Long, Tag> tagsById) {
