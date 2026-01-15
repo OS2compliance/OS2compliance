@@ -48,7 +48,23 @@
         table {
             border-collapse: collapse;
             width: 100%;
-            max-width: 100%;
+            table-layout: fixed;
+        }
+
+        table td {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+        }
+
+        table td > .answer-container {
+            display: block;
+            width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
         }
 
         img {
@@ -138,7 +154,7 @@
         <tr th:each="question : ${section.questions}">
             <td th:text="${question.question}"></td>
             <td>
-                <div th:utext="${question.response}" style="max-width: 100%"></div>
+                <div class="answer-container" th:utext="${question.response}" ></div>
             </td>
         </tr>
         </tbody>
