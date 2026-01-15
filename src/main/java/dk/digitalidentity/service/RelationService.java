@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
@@ -76,7 +77,7 @@ public class RelationService {
 					return null;
 				}))
 				.filter(Objects::nonNull)
-				.toList();
+				.collect(Collectors.toList());
 	}
 
 	public <A extends Relatable> List<RelationDTO<A, Relatable>> findRelations(final A relatedTo, final RelationType relatedType) {
@@ -87,7 +88,7 @@ public class RelationService {
 								? r.getRelationAId()
 								: r.getRelationBId())
 						.orElseThrow(), r))
-				.toList();
+				.collect(Collectors.toList());
 	}
 
 	public List<RelatedDTO> findRelationsAsListDTO(final Relatable relatedTo, final boolean includeTaskLogs) {
