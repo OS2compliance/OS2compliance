@@ -1,319 +1,399 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
+import { formatThreatTypes, formatThreatCatalogs, formatRiskAssessment } from "../risk-assessment-formatter.js";
 
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
-    const defaultClassName = {
-        table: 'table table-striped',
-        search: "form-control",
-        header: "d-flex justify-content-end"
-    };
+const defaultClassName = {
+    table: 'table table-striped',
+    search: "form-control",
+    header: "d-flex justify-content-end"
+};
 
-    const updateUrl = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
+const updateUrl = (prev, query) => {
+    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+};
 
 
-    document.addEventListener("DOMContentLoaded", function(event) {
-        const dialog = document.getElementById('formDialog')
-        if (dialog) {
-            fetch(formUrl)
-                .then(response => {
-                    if (response.ok) {
-                        response.text()
-                            .then(data => {
-                                dialog.innerHTML = data;
-                                formLoaded();
-                                //initFormValidationForForm('formDialog');
-                            })
-                    }
-                })
-                .catch(error => {
-                    toastService.error(error)
-                })
-        }
-
-        initGrid()
-
-        initGridActionButtons()
-
-    });
-
-    function deleteClicked(assetId, name) {
-        Swal.fire({
-          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#03a9f4',
-          cancelButtonColor: '#df5645',
-          confirmButtonText: 'Ja',
-          cancelButtonText: 'Nej'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`${deleteUrl}${assetId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                    .then(() => {
-                        window.location.reload();
-                    });
-          }
-        })
+document.addEventListener("DOMContentLoaded", function(event) {
+    const dialog = document.getElementById('formDialog')
+    if (dialog) {
+        fetch(formUrl)
+            .then(response => {
+                if (response.ok) {
+                    response.text()
+                        .then(data => {
+                            dialog.innerHTML = data;
+                            formLoaded();
+                            //initFormValidationForForm('formDialog');
+                        })
+                }
+            })
+            .catch(error => {
+                toastService.error(error)
+            })
     }
 
-    async function onEditClicked(assetId) {
-        const response = await fetch(`${formUrl}?id=${assetId}`, {
+    initGrid()
+
+    initGridActionButtons()
+
+});
+
+function deleteClicked(assetId, name) {
+    Swal.fire({
+      text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#03a9f4',
+      cancelButtonColor: '#df5645',
+      confirmButtonText: 'Ja',
+      cancelButtonText: 'Nej'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`${deleteUrl}${assetId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                .then(() => {
+                    window.location.reload();
+                });
+      }
+    })
+}
+
+async function onEditClicked(assetId) {
+    const response = await fetch(`${formUrl}?id=${assetId}`, {
+        headers: {
+            'X-CSRF-TOKEN': token
+        }
+    })
+
+    if (!response.ok) {
+        toastService.error(response.error)
+        console.error("Could not load edit fragment for asset")
+    }
+
+    const responseText = await response.text()
+
+    let dialog = document.getElementById('formDialog');
+    dialog.innerHTML = responseText;
+    const editDialog = new bootstrap.Modal(document.getElementById('formDialog'));
+    editDialog.show();
+
+}
+
+function initGrid() {
+    let assetGridConfig = {
+        className: defaultClassName,
+        columns: [
+            {
+                name: "id",
+                hidden: true
+            },
+            {
+                name:"kitos",
+                hidden: true
+            },
+            {
+                name: "Navn",
+                searchable: {
+                    searchKey: 'name'
+                },
+                formatter: (cell, row) => {
+                    const url = viewUrl + row.cells[0]['data'];
+                    if(row.cells[1]['data'] == 'true') {
+                        if (row.cells[12]['data'] == true) {
+                            return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" class="grayscale">`);
+                        }
+                        return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" >`);
+                    } else {
+                        return gridjs.html(`<a href="${url}">${cell}</a>`);
+                    }
+                }
+            },
+            {
+                name: "Leverandør",
+                searchable: {
+                    searchKey: 'supplier'
+                }
+            },
+            {
+                name: "Aktiv",
+                searchable: {
+                    searchKey: 'active',
+                    fieldId : 'activeAssetSelector'
+                },
+                width: '150px',
+                formatter: (cell, row) => {
+                    if (cell) {
+                        return 'Ja';
+                    } else {
+                        return 'Nej';
+                    }
+                }
+            },
+            {
+                name: "Tredjelandsoverførsel",
+                searchable: {
+                    searchKey: 'hasThirdCountryTransfer',
+                    fieldId : 'assetThirdCountrySelector'
+                },
+                width: '150px',
+                formatter: (cell, row) => {
+                    if (cell) {
+                        return 'Ja';
+                    } else {
+                        return 'Nej';
+                    }
+                }
+            },
+            {
+                name: "Type",
+                width: '100px',
+                searchable: {
+                    searchKey: 'assetType'
+                },
+            },
+            {
+                name: "Systemejer",
+                searchable: {
+                    searchKey: 'responsibleUserNames'
+                },
+            },
+            {
+                name: "Systemansvarlig",
+                searchable: {
+                    searchKey: 'managerUserNames'
+                }
+            },
+            {
+                name: "Opdateret",
+                searchable: {
+                    searchKey: 'updatedAt'
+                },
+                width: '100px'
+            },
+            {
+                name: "Sidste tilsyn",
+                searchable: {
+                    searchKey: 'lastOversightDate'
+                },
+                width: '90px',
+                formatter: (cell, row) => {
+                    if (!cell || cell.trim() === '') {
+                        return gridjs.html(`<span>-</span>`);
+                    }
+
+                    var dateParts = cell.split('-');
+                    if (dateParts.length === 3) {
+                        var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+                        return gridjs.html(`<span>${formattedDate}</span>`);
+                    }
+
+                return gridjs.html(`<span>${cell}</span>`);
+                }
+            },
+            {
+                name: "Antal beh.",
+                width: '95px',
+                searchable: {
+                    sortKey: 'registers'
+                },
+            },
+            {
+                name: "Risiko vurdering",
+                searchable: {
+                    searchKey: 'assessment',
+                    fieldId:'assetRiskSearchSelector'
+                },
+                width: '130px',
+                formatter: (cell, row) => {
+                    var assessment = [];
+                    if (cell === "Grøn") {
+                        assessment = [
+                            '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
+                        ]
+                    } else if (cell === "Lysgrøn") {
+                        assessment = [
+                            '<div class="d-block badge bg-green-300" style="width: 60px">' + cell + '</div>'
+                        ]
+                    } else if (cell === "Gul") {
+                        assessment = [
+                            '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
+                        ]
+                    } else if (cell === "Orange") {
+                        assessment = [
+                            '<div class="d-block badge bg-orange" style="width: 60px">' + cell + '</div>'
+                        ]
+                    } else if (cell === "Rød") {
+                        assessment = [
+                            '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
+                        ]
+                    }
+                    return gridjs.html(''.concat(...assessment), 'div')
+                },
+            },
+            {
+                name: "Status",
+                searchable: {
+                    searchKey: 'assetStatus',
+                    fieldId : 'assetStatusSearchSelector'
+                },
+                width: '120px',
+                formatter: (cell, row) => {
+                    var status = cell;
+                    if (cell === "Ikke startet") {
+                        status = '<div class="d-block badge bg-warning">' + cell + '</div>'
+                    } else if (cell === "I gang") {
+                        status = '<div class="d-block badge bg-info">' + cell + '</div>'
+                    } else if (cell === "Klar") {
+                        status = '<div class="d-block badge bg-success">' + cell + '</div>'
+                    }
+                    return gridjs.html(status, 'div');
+                },
+            },
+            {
+                name: "Tags",
+                searchable: {
+                    searchKey: 'tagNames',
+                },
+                formatter: (cell, row) => formatTags(cell, row),
+            },
+            {
+                name: "Trusselstyper",
+                hidden: true,
+                searchable: {
+                    searchKey: 'threatTypeList'
+                },
+                width: '200px',
+                formatter: (cell, row) => formatThreatTypes(cell)
+            },
+            {
+                name: "Risikokataloger",
+                hidden: true,
+                searchable: {
+                    searchKey: 'catalogList'
+                },
+                width: '200px',
+                formatter: (cell, row) => formatThreatCatalogs(cell)
+            },
+            {
+                name: "riskScore",
+                hidden: true
+            },
+            {
+                name: "Gennemsnitlig risiko",
+                hidden: true,
+                width: '150px',
+                searchable: {
+                    sortKey: 'riskScore'
+                },
+                formatter: (cell, row) => {
+                    const riskData = row.cells[19]['data'];
+                    return formatRiskAssessment(cell, row, riskData);
+                }
+            },
+            {
+                name: "riskData",
+                hidden: true
+            },
+            {
+                id: 'allowedActions',
+                name: 'Handlinger',
+                sort: 0,
+                width: '90px',
+                formatter: (cell, row) => {
+                    const attributeMap = new Map();
+                    const identifier = row.cells[0]['data'];
+                    attributeMap.set('identifier', identifier);
+                    const name = row.cells[2]['data'];
+                    attributeMap.set('name', name);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
+                }
+            }
+        ],
+        server:{
+            url: gridAssetsUrl,
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': token
-            }
-        })
-
-        if (!response.ok) {
-            toastService.error(response.error)
-            console.error("Could not load edit fragment for asset")
-        }
-
-        const responseText = await response.text()
-
-        let dialog = document.getElementById('formDialog');
-        dialog.innerHTML = responseText;
-        const editDialog = new bootstrap.Modal(document.getElementById('formDialog'));
-        editDialog.show();
-
-    }
-
-    function initGrid() {
-        let assetGridConfig = {
-            className: defaultClassName,
-            columns: [
-                {
-                    name: "id",
-                    hidden: true
-                },
-                {
-                    name:"kitos",
-                    hidden: true
-                },
-                {
-                    name: "Navn",
-                    searchable: {
-                        searchKey: 'name'
-                    },
-                    formatter: (cell, row) => {
-                        const url = viewUrl + row.cells[0]['data'];
-                        if(row.cells[1]['data'] == 'true') {
-                            if (row.cells[12]['data'] == true) {
-                                return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" class="grayscale">`);
-                            }
-                            return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" >`);
-                        } else {
-                            return gridjs.html(`<a href="${url}">${cell}</a>`);
-                        }
-                    }
-                },
-                {
-                    name: "Leverandør",
-                    searchable: {
-                        searchKey: 'supplier'
-                    }
-                },
-                {
-                    name: "Aktiv",
-                    searchable: {
-                        searchKey: 'active',
-                        fieldId : 'activeAssetSelector'
-                    },
-                    width: '150px',
-                    formatter: (cell, row) => {
-                        if (cell) {
-                            return 'Ja';
-                        } else {
-                            return 'Nej';
-                        }
-                    }
-                },
-                {
-                    name: "Tredjelandsoverførsel",
-                    searchable: {
-                        searchKey: 'hasThirdCountryTransfer',
-                        fieldId : 'assetThirdCountrySelector'
-                    },
-                    width: '150px',
-                    formatter: (cell, row) => {
-                        if (cell) {
-                            return 'Ja';
-                        } else {
-                            return 'Nej';
-                        }
-                    }
-                },
-                {
-                    name: "Type",
-                    width: '100px',
-                    searchable: {
-                        searchKey: 'assetType'
-                    },
-                },
-                {
-                    name: "Systemejer",
-                    searchable: {
-                        searchKey: 'responsibleUserNames'
-                    },
-                },
-                {
-                    name: "Systemansvarlig",
-                    searchable: {
-                        searchKey: 'managerUserNames'
-                    }
-                },
-                {
-                    name: "Opdateret",
-                    searchable: {
-                        searchKey: 'updatedAt'
-                    },
-                    width: '100px'
-                },
-                {
-                    name: "Sidste tilsyn",
-                    searchable: {
-                        searchKey: 'lastOversightDate'
-                    },
-                    width: '90px',
-                    formatter: (cell, row) => {
-                        if (!cell || cell.trim() === '') {
-                            return gridjs.html(`<span>-</span>`);
-                        }
-
-                        var dateParts = cell.split('-');
-                        if (dateParts.length === 3) {
-                            var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
-                            return gridjs.html(`<span>${formattedDate}</span>`);
-                        }
-
-                        return gridjs.html(`<span>${cell}</span>`);
-                    }
-                },
-                {
-                    name: "Antal beh.",
-                    width: '95px',
-                    searchable: {
-                        sortKey: 'registers'
-                    },
-                },
-                {
-                    name: "Risiko vurdering",
-                    searchable: {
-                        searchKey: 'assessment',
-                        fieldId:'assetRiskSearchSelector'
-                    },
-                    width: '130px',
-                    formatter: (cell, row) => {
-                        var assessment = [];
-                        if (cell === "Grøn") {
-                            assessment = [
-                                '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
-                            ]
-                        } else if (cell === "Lysgrøn") {
-                            assessment = [
-                                '<div class="d-block badge bg-green-300" style="width: 60px">' + cell + '</div>'
-                            ]
-                        } else if (cell === "Gul") {
-                            assessment = [
-                                '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
-                            ]
-                        } else if (cell === "Orange") {
-                            assessment = [
-                                '<div class="d-block badge bg-orange" style="width: 60px">' + cell + '</div>'
-                            ]
-                        } else if (cell === "Rød") {
-                            assessment = [
-                                '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
-                            ]
-                        }
-                        return gridjs.html(''.concat(...assessment), 'div')
-                    },
-                },
-                {
-                    name: "Status",
-                    searchable: {
-                        searchKey: 'assetStatus',
-                        fieldId : 'assetStatusSearchSelector'
-                    },
-                    width: '120px',
-                    formatter: (cell, row) => {
-                        var status = cell;
-                        if (cell === "Ikke startet") {
-                            status = '<div class="d-block badge bg-warning">' + cell + '</div>'
-                        } else if (cell === "I gang") {
-                            status = '<div class="d-block badge bg-info">' + cell + '</div>'
-                        } else if (cell === "Klar") {
-                            status = '<div class="d-block badge bg-success">' + cell + '</div>'
-                        }
-                        return gridjs.html(status, 'div');
-                    },
-                },
-                {
-                    name: "Tags",
-                    searchable: {
-                        searchKey: 'tagNames',
-                    },
-                    formatter: (cell, row) => formatTags(cell, row),
-                },
-                {
-                    id: 'allowedActions',
-                    name: 'Handlinger',
-                    sort: 0,
-                    width: '90px',
-                    formatter: (cell, row) => {
-                        const attributeMap = new Map();
-                        const identifier = row.cells[0]['data'];
-                        attributeMap.set('identifier', identifier);
-                        const name = row.cells[2]['data'];
-                        attributeMap.set('name', name);
-                        return gridjs.html(formatAllowedActions(cell, row, attributeMap));
-                    }
-                }
-            ],
-            server:{
-                url: gridAssetsUrl,
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': token
-                },
-                then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.lastOversightDate, asset.registers, asset.assessment, asset.assetStatus, asset.tags, asset.allowedActions, asset.oldKitos],
-                ),
-                total: data => data.totalCount
             },
-            language: {
-                'search': {
-                    'placeholder': 'Søg'
-                },
-                'pagination': {
-                    'previous': 'Forrige',
-                    'next': 'Næste',
-                    'showing': 'Viser',
-                    'results': 'aktiver',
-                    'of': 'af',
-                    'to': 'til',
-                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                    'page': (page) => `Side ${page}`
-                }
+            then: data => data.content.map(asset => {
+                const riskData = {
+                    avgProbability: asset.avgProbability,
+                    avgConsequenceOverall: asset.avgConsequenceOverall,
+                    avgConsequenceConfidentialityRegistered: asset.avgConsequenceConfidentialityRegistered,
+                    avgConsequenceConfidentialityOrganisation: asset.avgConsequenceConfidentialityOrganisation,
+                    avgConsequenceConfidentialitySociety: asset.avgConsequenceConfidentialitySociety,
+                    avgConsequenceIntegrityRegistered: asset.avgConsequenceIntegrityRegistered,
+                    avgConsequenceIntegrityOrganisation: asset.avgConsequenceIntegrityOrganisation,
+                    avgConsequenceIntegritySociety: asset.avgConsequenceIntegritySociety,
+                    avgConsequenceAvailabilityRegistered: asset.avgConsequenceAvailabilityRegistered,
+                    avgConsequenceAvailabilityOrganisation: asset.avgConsequenceAvailabilityOrganisation,
+                    avgConsequenceAvailabilitySociety: asset.avgConsequenceAvailabilitySociety,
+                    avgConsequenceAuthenticitySociety: asset.avgConsequenceAuthenticitySociety
+                };
+
+                // Calculate risk score (probability × consequence) for sorting/searching
+                const riskScore = (asset.avgProbability && asset.avgConsequenceOverall)
+                    ? (asset.avgProbability * asset.avgConsequenceOverall).toFixed(2)
+                    : null;
+
+                return [
+                    asset.id,
+                    asset.kitos,
+                    asset.name,
+                    asset.supplier,
+                    asset.active,
+                    asset.hasThirdCountryTransfer,
+                    asset.assetType,
+                    asset.ownedByUsers,
+                    asset.responsibleUsers,
+                    asset.updatedAt,
+                    asset.lastOversightDate,
+                    asset.registers,
+                    asset.assessment,
+                    asset.assetStatus,
+                    asset.tags,
+                    asset.threatTypeList,
+                    asset.catalogList,
+                    riskScore, // risk score for sorting/searching
+                    null, // placeholder for risk assessment formatter
+                    riskData, // hidden column with all risk data
+                    asset.allowedActions,
+                    asset.oldKitos
+                ];
+            }),
+            total: data => data.totalCount
+        },
+        language: {
+            'search': {
+                'placeholder': 'Søg'
+            },
+            'pagination': {
+                'previous': 'Forrige',
+                'next': 'Næste',
+                'showing': 'Viser',
+                'results': 'aktiver',
+                'of': 'af',
+                'to': 'til',
+                'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                'page': (page) => `Side ${page}`
             }
-        };
-        const datatableId ="assetsDatatable"
-        const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( datatableId ));
+        }
+    };
+    const datatableId ="assetsDatatable"
+    const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( datatableId ));
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, datatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, datatableId);
 
-        new ColumnOptions(datatableId,grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos'])
+    new ColumnOptions(datatableId, grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos', 'riskScore', 'riskData'])
 
+    initSaveAsExcelButton(customGridFunctions,'Aktiver')
+}
 
-
-        initSaveAsExcelButton(customGridFunctions,'Aktiver')
-    }
-
-    function initGridActionButtons() {
-        delegateListItemActions(
-            "assetsDatatable",
-            (id) => onEditClicked(id),
-            (id, name)=> deleteClicked(id, name)
-        )
-    }
+function initGridActionButtons() {
+    delegateListItemActions(
+        "assetsDatatable",
+        (id) => onEditClicked(id),
+        (id, name)=> deleteClicked(id, name)
+    )
+}

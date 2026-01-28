@@ -1,0 +1,56 @@
+.risk-assessment-cell {
+    position: relative;
+    cursor: help;
+}
+
+.risk-tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    padding: 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 220px;
+    max-width: 300px;
+}
+
+.risk-assessment-cell:hover .risk-tooltip {
+    display: block;
+}
+
+.risk-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: white;
+}
+
+.tooltip-section {
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.tooltip-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Color classes */
+.bg-success-light {
+    background-color: #90ee90 !important;
+    color: #000 !important;
+}
+
+.bg-orange {
+    background-color: #ff8c00 !important;
+    color: #fff !important;
+}

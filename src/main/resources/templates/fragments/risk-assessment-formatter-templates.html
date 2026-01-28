@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="da">
+<body>
+
+<!-- Risk Assessment Cell Template -->
+<template id="risk-assessment-cell-template">
+    <div class="risk-assessment-cell">
+        <div class="d-flex flex-column gap-1">
+            <div class="d-flex align-items-center gap-2">
+                <span>Sandsynlighed</span>
+                <span class="badge prob-badge" style="min-width: 35px;" data-prob-value></span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span>Konsekvens</span>
+                <span class="badge cons-badge" style="min-width: 35px;" data-cons-value></span>
+            </div>
+        </div>
+        <div class="risk-tooltip" data-tooltip-content></div>
+    </div>
+</template>
+
+<!-- Tooltip Section Template -->
+<template id="tooltip-section-template">
+    <div class="tooltip-section mb-2">
+        <strong class="d-block mb-1" data-section-title></strong>
+        <div data-section-rows></div>
+    </div>
+</template>
+
+<!-- Tooltip Row Template -->
+<template id="tooltip-row-template">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="me-3" data-row-label></span>
+        <span class="badge" style="min-width: 35px;" data-row-value></span>
+    </div>
+</template>
+
+<!-- Threat Type Badge Template -->
+<template id="threat-type-badge-template">
+    <span class="badge bg-secondary me-1 mb-1" data-type-text></span>
+</template>
+
+<!-- Threat Catalog Badge Template -->
+<template id="threat-catalog-badge-template">
+    <span class="badge bg-info me-1 mb-1" data-catalog-text></span>
+</template>
+
+<!-- Empty State Template -->
+<template id="risk-empty-state-template">
+    <span class="text-muted"></span>
+</template>
+
+</body>
+</html>

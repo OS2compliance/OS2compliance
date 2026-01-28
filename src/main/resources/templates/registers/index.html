@@ -5,6 +5,7 @@
 <script th:src="@{/js/export-service.js}" defer></script>
 <body class="jumping">
     <link rel="stylesheet" th:href="@{/css/register.css}" />
+    <link rel="stylesheet" th:href="@{/css/risk_assessment_table_formatter.css}" />
 	<div id="root" class="root mn--max hd--expanded">
 		<section id="content" class="content">
 			<div class="content__header content__boxed overlapping">
@@ -73,6 +74,7 @@
 
 	<div class="modal fade" id="createRegisterDialog" tabindex="-1" aria-labelledby="registerLabel" aria-hidden="true"></div>
 	<div class="modal fade" id="editRegisterDialog" tabindex="-1" aria-labelledby="registerLabel" aria-hidden="true"></div>
+    <div th:replace="~{fragments/risk-assessment-formatter-templates :: body}"></div>
 
 	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 

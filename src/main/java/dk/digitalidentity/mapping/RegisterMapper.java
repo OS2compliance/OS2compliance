@@ -63,6 +63,22 @@ public interface RegisterMapper {
                 .assetAssessment(nullSafe(() -> registerGrid.getAssetAssessment().getMessage()))
                 .assetAssessmentOrder(registerGrid.getAssetAssessmentOrder())
 				.tags(tags)
+				// Risk assessment fields
+				.avgProbability(registerGrid.getAvgProbability())
+				.avgConsequenceOverall(registerGrid.getAvgConsequenceOverall())
+				.avgConsequenceConfidentialityRegistered(registerGrid.getAvgConsequenceConfidentialityRegistered())
+				.avgConsequenceConfidentialityOrganisation(registerGrid.getAvgConsequenceConfidentialityOrganisation())
+				.avgConsequenceConfidentialitySociety(registerGrid.getAvgConsequenceConfidentialitySociety())
+				.avgConsequenceIntegrityRegistered(registerGrid.getAvgConsequenceIntegrityRegistered())
+				.avgConsequenceIntegrityOrganisation(registerGrid.getAvgConsequenceIntegrityOrganisation())
+				.avgConsequenceIntegritySociety(registerGrid.getAvgConsequenceIntegritySociety())
+				.avgConsequenceAvailabilityRegistered(registerGrid.getAvgConsequenceAvailabilityRegistered())
+				.avgConsequenceAvailabilityOrganisation(registerGrid.getAvgConsequenceAvailabilityOrganisation())
+				.avgConsequenceAvailabilitySociety(registerGrid.getAvgConsequenceAvailabilitySociety())
+				.avgConsequenceAuthenticitySociety(registerGrid.getAvgConsequenceAuthenticitySociety())
+				.threatTypeList(registerGrid.getThreatTypeList())
+				.catalogList(registerGrid.getCatalogList())
+				.riskScore(registerGrid.getRiskScore())
                 .build();
 
 		registerDTO.setAllowedActions(allowedActions);

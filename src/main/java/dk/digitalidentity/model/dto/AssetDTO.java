@@ -56,4 +56,36 @@ public class AssetDTO {
 	private LocalDate lastOversightDate;
 	@ExcludeFromExport
 	private List<TagDTO> tags;
+
+	// Risk assessment calculated fields
+	@ExcludeFromExport
+	private Double avgProbability;
+	@ExcludeFromExport
+	private Double avgConsequenceOverall;
+	@ExcludeFromExport
+	private Double avgConsequenceConfidentialityRegistered;
+	@ExcludeFromExport
+	private Double avgConsequenceConfidentialityOrganisation;
+	@ExcludeFromExport
+	private Double avgConsequenceConfidentialitySociety;
+	@ExcludeFromExport
+	private Double avgConsequenceIntegrityRegistered;
+	@ExcludeFromExport
+	private Double avgConsequenceIntegrityOrganisation;
+	@ExcludeFromExport
+	private Double avgConsequenceIntegritySociety;
+	@ExcludeFromExport
+	private Double avgConsequenceAvailabilityRegistered;
+	@ExcludeFromExport
+	private Double avgConsequenceAvailabilityOrganisation;
+	@ExcludeFromExport
+	private Double avgConsequenceAvailabilitySociety;
+	@ExcludeFromExport
+	private Double avgConsequenceAuthenticitySociety;
+	@ExcludeFromExport
+	private String threatTypeList;
+	@ExcludeFromExport
+	private String catalogList;
+	@ExcludeFromExport
+	private Double riskScore;
 }
