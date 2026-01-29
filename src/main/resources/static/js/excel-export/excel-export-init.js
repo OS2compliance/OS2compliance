@@ -1,0 +1,51 @@
+import { ExcelExportDialog } from './excel-export-dialog.js';
+
+export { initSaveAsExcelButton, initSaveAsExcelButtonClientside };
+
+/**
+ * Initialize Excel export button for serverside grid tables
+ */
+function initSaveAsExcelButton(customGridFunctions, entityType, filename) {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    if (!saveAsExcelButton) {
+        return;
+    }
+
+    saveAsExcelButton.addEventListener("click", async () => {
+        const dialog = new ExcelExportDialog({
+            mode: 'serverside',
+            entityType: entityType,
+            metadataUrl: `/rest/${entityType}/export-metadata`,
+            entitiesUrl: `/rest/${entityType}/export-entities`,
+            exportUrl: `/rest/${entityType}/export-custom`,
+            customGridFunctions: customGridFunctions,
+            defaultFileName: filename
+        });
+
+        await dialog.show();
+    });
+}
+
+/**
+ * Initialize Excel export button for clientside HTML tables
+ */
+function initSaveAsExcelButtonClientside(tableId, entityType, filename) {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    if (!saveAsExcelButton) {
+        return;
+    }
+
+    saveAsExcelButton.addEventListener("click", async () => {
+        const dialog = new ExcelExportDialog({
+            mode: 'clientside',
+            entityType: entityType,
+            metadataUrl: `/rest/${entityType}/export-metadata`,
+            entitiesUrl: null,
+            exportUrl: `/rest/${entityType}/export-custom`,
+            tableId: tableId,
+            defaultFileName: filename
+        });
+
+        await dialog.show();
+    });
+}

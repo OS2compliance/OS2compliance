@@ -1,6 +1,7 @@
 import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
+import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -255,7 +256,7 @@ function initGrid() {
 
     initGridActions()
 
-    initSaveAsExcelButton(customGridFunctions, 'Opgavecenter')
+    initSaveAsExcelButton(customGridFunctions, 'tasks', 'Opgavecenter')
 }
 
 function initGridActions() {

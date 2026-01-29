@@ -1,6 +1,7 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.model.ExcelColumn;
+import dk.digitalidentity.model.dto.TagDTO;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -19,7 +20,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 /**
  * This class exports server side grid tables to excel.
@@ -57,6 +58,64 @@ public class ExcelExportService {
 
 		// Fill data rows
 		fillDataRows(sheet, data, exportableFields, rowStyle, alternateRowStyle);
+
+		// Auto-size columns
+		autoSizeColumns(sheet, columnHeaders.size());
+
+		// Set response headers
+		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
+
+		// Write workbook to output
+		workbook.write(response.getOutputStream());
+		workbook.close();
+	}
+
+	/**
+	 * @param data - The data we provide when calling this method in each of the rest controllers. It contains the columns and rows.
+	 * @param dtoClass - The class of the dto that we export.
+	 * @param selectedColumnNames - The columns to include
+	 * @param fileName - The file name of the exported Excel sheet.
+	 * @param response - The reponse we send back.
+	 * @throws IOException - An exception we throw when an error happens.
+	 */
+	public void exportToExcelWithColumns(
+			List<?> data,
+			Class<?> dtoClass,
+			List<String> selectedColumnNames,
+			String fileName,
+			HttpServletResponse response
+	) throws IOException {
+
+		if (data == null) {
+			throw new IllegalArgumentException("No data provided");
+		}
+
+		// Get all exportable fields
+		List<Field> allFields = getExportableFields(dtoClass);
+
+		// Filter to only selected columns, preserving order
+		List<Field> selectedFields = allFields.stream()
+				.filter(f -> selectedColumnNames.contains(f.getName()))
+				.toList();
+
+		// Create workbook
+		Workbook workbook = new XSSFWorkbook();
+		Sheet sheet = workbook.createSheet("Export");
+
+		// Create styles
+		CellStyle headerStyle = createHeaderStyle(workbook);
+		CellStyle rowStyle = createRowStyle(workbook);
+		CellStyle alternateRowStyle = createAlternateRowStyle(workbook, rowStyle);
+
+		// Get column headers
+		List<String> columnHeaders = getColumnHeaders(selectedFields);
+
+		// Create header row
+		createHeaderRow(sheet, columnHeaders, headerStyle);
+
+		// Fill data rows
+		fillDataRows(sheet, data, selectedFields, rowStyle, alternateRowStyle);
 
 		// Auto-size columns
 		autoSizeColumns(sheet, columnHeaders.size());
@@ -146,14 +205,59 @@ public class ExcelExportService {
 				try {
 					Object value = field.get(dto);
 					Cell cell = row.createCell(c);
-					cell.setCellValue(value != null ? value.toString() : "");
+					cell.setCellValue(formatCellValue(value));
 					cell.setCellStyle(styleToUse);
 				} catch (IllegalAccessException e) {
-					// Log error and continue
 					e.printStackTrace();
 				}
 			}
 		}
+	}
+
+	/**
+	 * Format cell value for Excel export
+	 * Handles special cases like List<TagDTO>
+	 */
+	private String formatCellValue(Object value) {
+		if (value == null) {
+			return "";
+		}
+
+		// Handle List values
+		if (value instanceof List<?> list) {
+			if (list.isEmpty()) {
+				return "";
+			}
+
+			// Try to extract labels from objects that have a getLabel() method
+			StringBuilder result = new StringBuilder();
+			for (int i = 0; i < list.size(); i++) {
+				Object item = list.get(i);
+				if (item != null) {
+					try {
+						// Use reflection to call getLabel() if it exists
+						java.lang.reflect.Method getLabelMethod = item.getClass().getMethod("getLabel");
+						Object label = getLabelMethod.invoke(item);
+						if (label != null) {
+							if (i > 0) {
+								result.append(", ");
+							}
+							result.append(label.toString());
+						}
+					} catch (Exception e) {
+						// No getLabel() method, use toString() instead
+						if (i > 0) {
+							result.append(", ");
+						}
+						result.append(item.toString());
+					}
+				}
+			}
+			return result.toString();
+		}
+
+		// Default: use toString()
+		return value.toString();
 	}
 
 	private void autoSizeColumns(Sheet sheet, int columnCount) {

@@ -341,4 +341,18 @@ class CustomGridFunctions {
 
         return `${this.exportUrl}?${params.toString()}`
     }
+
+    /**
+     * Returns the current filter values (excluding null/empty values)
+     * @returns {object} Current search filter values
+     */
+    getFilters() {
+        const filters = {};
+        for (const [key, value] of Object.entries(this.state.searchValues)) {
+            if (value !== null && value !== undefined && value !== '') {
+                filters[key] = value;
+            }
+        }
+        return filters;
+    }
 }
