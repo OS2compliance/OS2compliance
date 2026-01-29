@@ -5,26 +5,44 @@
 
 .risk-tooltip {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-top: 8px;
+    position: fixed;
     padding: 12px;
     background: white;
     border: 1px solid #dee2e6;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 1000;
+    z-index: 10000;
     min-width: 220px;
     max-width: 300px;
+    pointer-events: none;
 }
 
 .risk-assessment-cell:hover .risk-tooltip {
     display: block;
 }
 
-.risk-tooltip::before {
+.risk-tooltip[data-position="top"]::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: white;
+}
+
+.risk-tooltip[data-position="top"]::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-top-color: #dee2e6;
+    z-index: -1;
+}
+
+.risk-tooltip[data-position="bottom"]::before {
     content: '';
     position: absolute;
     bottom: 100%;
@@ -32,6 +50,17 @@
     transform: translateX(-50%);
     border: 6px solid transparent;
     border-bottom-color: white;
+}
+
+.risk-tooltip[data-position="bottom"]::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-bottom-color: #dee2e6;
+    z-index: -1;
 }
 
 .tooltip-section {
