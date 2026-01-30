@@ -114,7 +114,7 @@ public class AdminRestController {
 	@RequireUpdateAll
     @Transactional
     @PostMapping("transferresponsibility")
-    public ResponseEntity<?> mailReportToSystemOwner(@RequestBody final TransferResponsibilityDTO dto) {
+    public ResponseEntity<?> transferResponsibility(@RequestBody final TransferResponsibilityDTO dto) {
         User userTo = userService.findByUuid(dto.transferTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ResponsibleUserView userFrom = responsibleUserViewService.findByUserUuid(dto.transferFrom);
 
