@@ -1,6 +1,7 @@
 import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
+import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 
 const columnProperties = [
     'id',
@@ -244,7 +245,7 @@ function initGrid() {
         ['titel', 'allowedActions', 'screening', 'status', 'opgaver'],
         ['id', 'isExternal'])
 
-    initSaveAsExcelButton(customGridFunctions, 'Konsekvensanalyser')
+    initSaveAsExcelButton(customGridFunctions, 'dpia', 'dpia', 'Konsekvensanalyser')
 
     initGridListItemButtons()
 }

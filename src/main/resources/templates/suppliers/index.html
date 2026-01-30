@@ -4,7 +4,6 @@
 <body class="jumping">
 	<script type="text/javascript" th:src="@{/js/supplier/checkCvr.js}"></script>
 	<script type="text/javascript" th:src="@{/js/formReset.js}"></script>
-	<script type="text/javascript" th:src="@{/js/export-service.js}"></script>
     <link th:href="@{/css/suppliers.css}" rel="stylesheet">
 	<div id="root" class="root mn--max hd--expanded">
 		<section id="content" class="content">
@@ -57,6 +56,7 @@
 
 	<div sec:authorize="hasRole('ROLE_create_all')" class="modal fade" id="formDialog" tabindex="-1" aria-hidden="true"></div>
 	<div sec:authorize="hasRole('ROLE_update_all')" class="modal fade" id="formEditDialog" tabindex="-1" aria-hidden="true"></div>
+    <div th:replace="~{fragments/excel-export-modal :: excelExportModal}"></div>
 
 	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 

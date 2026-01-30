@@ -1,5 +1,6 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
+import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 
 let editDialog;
 
@@ -210,7 +211,7 @@ function initGrid() {
 
     const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, exportSuppliersUrl, datatableId);
 
-    initSaveAsExcelButton(customGridFunctions, 'Leverandører')
+    initSaveAsExcelButton(customGridFunctions, 'supplier', 'suppliers', 'Leverandører')
 
     new ColumnOptions(
         datatableId,

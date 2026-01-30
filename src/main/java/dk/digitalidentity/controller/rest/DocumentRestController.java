@@ -55,7 +55,6 @@ public class DocumentRestController {
     private final DocumentGridDao documentGridDao;
     private final DocumentMapper mapper;
     private final UserService userService;
-	private final ExcelExportService excelExportService;
 	private final ExcelExportHelperService excelExportHelperService;
 	private final SecurityUserService securityUserService;
 	private final DocumentService documentService;
@@ -80,30 +79,6 @@ public class DocumentRestController {
         assert documents != null;
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), tagsById));
     }
-
-	@RequireReadOwnerOnly
-	@PostMapping("export")
-	public void export(
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
-			HttpServletResponse response
-	) throws IOException {
-		User user = securityUserService.getCurrentUserOrThrow();
-
-		int pageLimit = Integer.MAX_VALUE;
-
-		// Fetch all records (no pagination)
-		Page<DocumentGrid> documents = documentService.getDocuments(sortColumn, sortDirection, filters, 0, pageLimit, user);
-		Set<Long> entityIds = documents.getContent().stream().map(DocumentGrid::getId).collect(Collectors.toSet());
-		Map<Long, Tag> tagsById = documentService.findTagsByEntityIds(entityIds).stream()
-				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
-
-		assert documents != null;
-		List<DocumentDTO> allData = mapper.toDTO(documents.getContent(), tagsById);
-		excelExportService.exportToExcel(allData, DocumentDTO.class, fileName, response);
-	}
 
 	@RequireReadOwnerOnly
     @PostMapping("list/{id}")

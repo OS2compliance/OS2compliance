@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.rest;
 
+import dk.digitalidentity.controller.rest.Admin.MailLogRestController;
 import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.ExcelColumn;
@@ -8,13 +9,21 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
+import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
+import dk.digitalidentity.model.dto.excel.EntityListRequest;
+import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
+import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
+import dk.digitalidentity.model.entity.MailLog;
+import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.MailLogGrid;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireSupplier;
+import dk.digitalidentity.service.ExcelExportHelperService;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.SupplierService;
@@ -29,6 +38,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,6 +66,7 @@ public class SupplierRestController {
 	private final SupplierService supplierService;
 	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
+	private final ExcelExportHelperService excelExportHelperService;
 
 	record SupplierGridDTO(
 			@ExcludeFromExport
@@ -121,39 +132,6 @@ public class SupplierRestController {
 	}
 
 	@RequireReadOwnerOnly
-	@PostMapping("export")
-	public void export(
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
-			HttpServletResponse response
-	) throws IOException {
-		User user = securityUserService.getCurrentUserOrThrow();
-
-		Set<AllowedAction> allowedActions = setAllowedActions();
-
-		int pageLimit = Integer.MAX_VALUE;
-
-		// Fetch all records (no pagination)
-		Page<SupplierGrid> suppliers = supplierService.getSuppliers(sortColumn, sortDirection, filters, 0, pageLimit, user);
-
-		Set<Long> entityIds = suppliers.getContent().stream().map(SupplierGrid::getId).collect(Collectors.toSet());
-		Map<Long, Tag> tagsById = supplierService.findTagsByEntityIds(entityIds).stream()
-				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
-
-		assert suppliers != null;
-
-		final List<SupplierGridDTO> allData = new ArrayList<>();
-		for (final SupplierGrid supplier : suppliers.getContent()) {
-			final SupplierGridDTO dto = new SupplierGridDTO(supplier.getId(), supplier.getName(), supplier.getSolutionCount(),
-					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage(), supplier.getLastOversightDate(), supplier.getKitosUuid(),TagService.toTagDTO(supplier.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(), allowedActions);
-			allData.add(dto);
-		}
-		excelExportService.exportToExcel(allData, SupplierGridDTO.class, fileName, response);
-	}
-
-	@RequireReadOwnerOnly
     @GetMapping("autocomplete")
     public PageDTO<SupplierDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());
@@ -174,6 +152,79 @@ public class SupplierRestController {
 			allowedActions.add(AllowedAction.DELETE);
 		}
 		return allowedActions;
+	}
+
+	@GetMapping("export-metadata")
+	@RequireReadOwnerOnly
+	public ExportMetadataDTO getExportMetadata() {
+		return excelExportHelperService.getMetadata(SupplierGridDTO.class);
+	}
+
+	@PostMapping("export-entities")
+	@RequireReadOwnerOnly
+	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
+		User user = securityUserService.getCurrentUserOrThrow();
+		Page<SupplierGrid> suppliers = supplierService.getSuppliers(
+				null,
+				"ASC",
+				request.getFilters(),
+				0,
+				Integer.MAX_VALUE,
+				user
+		);
+
+		return excelExportHelperService.toEntityListItems(
+				suppliers.getContent(),
+				SupplierGrid::getId,
+				SupplierGrid::getName
+		);
+	}
+
+	@PostMapping("export-custom")
+	@RequireReadOwnerOnly
+	public void exportCustom(
+			@RequestBody ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		List<SupplierGrid> supplierGrids = supplierService.findGridByIds(request.getSelectedIds(), user);
+
+		if (supplierGrids.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		// Get tags
+		Set<Long> entityIds = supplierGrids.stream().map(SupplierGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = supplierService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
+		Set<AllowedAction> allowedActions = setAllowedActions();
+
+		// Map to SupplierGridDTO - everything is already calculated in the view!
+		List<SupplierGridDTO> dtos = supplierGrids.stream()
+				.map(sg -> new SupplierGridDTO(
+						sg.getId(),
+						sg.getName(),
+						sg.getSolutionCount(),
+						sg.getUpdated() != null ? sg.getUpdated().toLocalDate().format(DK_DATE_FORMATTER) : "",
+						sg.getStatus() != null ? sg.getStatus().getMessage() : "",
+						sg.getLastOversightDate(),
+						null, // kitosUuid - excluded from export
+						null, // tags - excluded from export
+						null  // allowedActions - excluded from export
+				))
+				.toList();
+
+		// Use SupplierGrid list instead of Supplier list
+		excelExportHelperService.exportEntities(
+				supplierGrids,
+				SupplierGridDTO.class,
+				dtos,
+				request,
+				response
+		);
 	}
 
 }

@@ -47,6 +47,14 @@ export class ExcelExportDialog {
         try {
             await this.loadMetadata();
             await this.loadDefaultEntities();
+
+            // Check if there are any entities to export
+            if (this.allEntities.length === 0) {
+                this.modalInstance.hide();
+                toastService.error('Der er ingen objekter at eksportere');
+                return;
+            }
+
             this.populateModal();
             this.initializeChoices();
             this.attachEventListeners();
@@ -295,13 +303,15 @@ export class ExcelExportDialog {
             const blob = await response.blob();
             downloadBlob(blob, fileName);
 
+            toastService.info('Excel fil downloadet');
+
+            // Close modal AFTER everything is done
             this.modalInstance.hide();
-            toastService.success('Excel fil downloadet');
 
         } catch (error) {
             toastService.error('Eksport fejlede. Prøv igen.');
-        } finally {
-            // Reset button state
+
+            // Reset button state only on error
             exportButton.disabled = false;
             buttonIcon.style.display = '';
             buttonText.textContent = 'Eksporter';
@@ -314,6 +324,19 @@ export class ExcelExportDialog {
         if (this.choicesInstance) {
             this.choicesInstance.destroy();
             this.choicesInstance = null;
+        }
+
+        // Reset export button state
+        const exportButton = document.getElementById('exportButton');
+        const buttonText = document.getElementById('exportButtonText');
+        const buttonSpinner = document.getElementById('exportButtonSpinner');
+        const buttonIcon = exportButton.querySelector('.fa-download');
+
+        if (exportButton && buttonText && buttonSpinner && buttonIcon) {
+            exportButton.disabled = false;
+            buttonIcon.style.display = '';
+            buttonText.textContent = 'Eksporter';
+            buttonSpinner.style.display = 'none';
         }
 
         // Clear modal instance

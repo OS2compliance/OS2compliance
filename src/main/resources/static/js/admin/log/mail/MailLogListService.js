@@ -1,3 +1,5 @@
+import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
+
 export default class MailLogListService {
     /**Endpoint for grid data*/
     #searchRestUrl = "/rest/admin/log/mail/list";
@@ -95,7 +97,7 @@ export default class MailLogListService {
             sortField: 'sentAt',
         })
 
-        initSaveAsExcelButton(customGridFunctions, 'Mail_Logs');
+        initSaveAsExcelButton(customGridFunctions, 'mailLog', 'admin/log/mail', 'Mail_Logs');
     }
 
     #dateFormatter(rawDate) {

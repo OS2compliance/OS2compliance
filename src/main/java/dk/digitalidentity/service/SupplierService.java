@@ -11,6 +11,7 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
@@ -162,5 +164,33 @@ public class SupplierService implements TagableService<Supplier> {
 
 	public Supplier findById(Long id) {
 		return supplierDao.findById(id).orElse(null);
+	}
+
+	public List<SupplierGrid> findGridByIds(List<Long> ids, User user) {
+		if (ids == null || ids.isEmpty()) {
+			return List.of();
+		}
+
+		// Fetch all supplier grids by IDs
+		List<SupplierGrid> supplierGrids = supplierGridDao.findAllById(ids);
+
+		// Apply security filtering
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			return supplierGrids;
+		} else {
+			// User can only read suppliers they are responsible for
+			// Note: SupplierGrid doesn't have responsibleUser directly,
+			// so we need to fetch actual suppliers for security check
+			List<Supplier> suppliers = supplierDao.findAllById(ids);
+			Set<Long> allowedIds = suppliers.stream()
+					.filter(supplier -> supplier.getResponsibleUser() != null &&
+							supplier.getResponsibleUser().getUuid().equals(user.getUuid()))
+					.map(Supplier::getId)
+					.collect(Collectors.toSet());
+
+			return supplierGrids.stream()
+					.filter(sg -> allowedIds.contains(sg.getId()))
+					.toList();
+		}
 	}
 }

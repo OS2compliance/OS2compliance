@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.mapping.TaskMapper;
-import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SubTaskDTO;
 import dk.digitalidentity.model.dto.TaskCreateRequestDTO;
@@ -13,14 +12,12 @@ import dk.digitalidentity.model.dto.excel.EntityListRequest;
 import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
 import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.SubTask;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
@@ -28,14 +25,13 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.ExcelExportHelperService;
-import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SecurityUserService;
-import dk.digitalidentity.service.ThreatAssessmentService;
-import dk.digitalidentity.service.tag.TagService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.service.tag.TagService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,7 +71,6 @@ public class TaskRestController {
     private final UserService userService;
     private final TaskGridDao taskGridDao;
     private final TaskMapper mapper;
-	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
 	private final TaskService taskService;
 	private final TagService tagService;
@@ -106,28 +101,6 @@ public class TaskRestController {
 		assert tasks != null;
         return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), tagsById));
     }
-
-	@RequireReadOwnerOnly
-	@PostMapping("export")
-	public void export(
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
-			HttpServletResponse response
-	) throws IOException {
-		User user = securityUserService.getCurrentUserOrThrow();
-
-		// Fetch all records (no pagination)
-		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
-
-		Map<Long, Tag> tagsById = tagService.findAll().stream()
-				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
-
-		assert tasks != null;
-		List<TaskDTO> allData = mapper.toDTO(tasks.getContent(), tagsById);
-		excelExportService.exportToExcel(allData, TaskDTO.class, fileName, response);
-	}
 
 	@RequireReadOwnerOnly
     @PostMapping("list/{id}")

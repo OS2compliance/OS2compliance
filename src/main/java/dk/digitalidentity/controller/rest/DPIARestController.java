@@ -1,11 +1,17 @@
 package dk.digitalidentity.controller.rest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import dk.digitalidentity.controller.rest.Admin.MailLogRestController;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.model.dto.DPIAExportDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
+import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
+import dk.digitalidentity.model.dto.excel.EntityListRequest;
+import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
+import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIAReport;
@@ -16,6 +22,7 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.EmailTemplate;
+import dk.digitalidentity.model.entity.MailLog;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.Tag;
@@ -26,6 +33,7 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.DPIAGrid;
+import dk.digitalidentity.model.entity.grid.MailLogGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -41,7 +49,7 @@ import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.EmailTemplateService;
-import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.ExcelExportHelperService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
@@ -49,7 +57,6 @@ import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.tag.TagService;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
@@ -61,10 +68,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -91,6 +97,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
+
 @Slf4j
 @RestController
 @RequestMapping("rest/dpia")
@@ -111,7 +119,7 @@ public class DPIARestController {
 	private final Environment environment;
 	private final ApplicationEventPublisher eventPublisher;
 	private final OrganisationService organisationService;
-	private final ExcelExportService excelExportService;
+	private final ExcelExportHelperService excelExportHelperService;
 	private final SecurityUserService securityUserService;
 
 	public record DPIAListDTO(
@@ -151,31 +159,6 @@ public class DPIARestController {
 
 		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid, tagsById);
 		return new PageDTO<>(dpiaGrids.getTotalElements(), dtos);
-	}
-
-	@RequireReadOwnerOnly
-	@PostMapping("export")
-	public void export(
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
-			HttpServletResponse response
-	) throws IOException {
-		User user = securityUserService.getCurrentUserOrThrow();
-		String userUuid = user.getUuid();
-
-		// Fetch all records (no pagination)
-		Page<DPIAGrid> dpiaGrids = dpiaService.getDPIAs(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
-
-		Set<Long> entityIds = dpiaGrids.getContent().stream().map(DPIAGrid::getId).collect(Collectors.toSet());
-		Map<Long, Tag> tagsById = dpiaService.findTagsByEntityIds(entityIds).stream()
-				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
-
-		assert dpiaGrids != null;
-
-		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid, tagsById);
-		excelExportService.exportToExcel(dtos, DPIAListDTO.class, fileName, response);
 	}
 
 	@RequireDeleteOwnerOnly
@@ -577,5 +560,108 @@ public class DPIARestController {
 						}
 				)
 				.toList();
+	}
+
+	@GetMapping("export-metadata")
+	@RequireReadOwnerOnly
+	public ExportMetadataDTO getExportMetadata() {
+		return excelExportHelperService.getMetadata(DPIAExportDTO.class);
+	}
+
+	@PostMapping("export-entities")
+	@RequireReadOwnerOnly
+	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		Page<DPIAGrid> dpias = dpiaService.getDPIAs(
+				null,
+				"ASC",
+				request.getFilters(),
+				0,
+				Integer.MAX_VALUE,
+				user
+		);
+
+		return excelExportHelperService.toEntityListItems(
+				dpias.getContent(),
+				DPIAGrid::getId,
+				DPIAGrid::getName
+		);
+	}
+
+	@PostMapping("export-custom")
+	@RequireReadOwnerOnly
+	public void exportCustom(
+			@RequestBody ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+		String userUuid = user.getUuid();
+
+		List<DPIA> dpias = dpiaService.findByIds(request.getSelectedIds(), user);
+
+		if (dpias.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		// Get tags
+		Set<Long> entityIds = dpias.stream().map(DPIA::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = dpiaService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
+		// Map to export DTOs
+		List<DPIAExportDTO> dtos = dpias.stream()
+				.map(dpia -> mapToDPIAExportDTO(dpia, tagsById))
+				.toList();
+
+		excelExportHelperService.exportEntities(
+				dpias,
+				DPIAExportDTO.class,
+				dtos,
+				request,
+				response
+		);
+	}
+
+	private DPIAExportDTO mapToDPIAExportDTO(DPIA dpia, Map<Long, Tag> tagsById) {
+		List<TagDTO> tags = dpia.getTags().stream()
+				.map(tag -> {
+					Tag loadedTag = tagsById.get(tag.getId());
+					if (loadedTag == null) {
+						return null;
+					}
+					return TagDTO.builder()
+							.label(loadedTag.getValue())
+							.color(loadedTag.getColor().getHexCode())
+							.contrast(loadedTag.getColor().getContrastHexCode())
+							.build();
+				})
+				.filter(Objects::nonNull)
+				.sorted(Comparator.comparing(TagDTO::getLabel))
+				.toList();
+
+		return DPIAExportDTO.builder()
+				.id(dpia.getId())
+				.name(dpia.getName())
+				.responsibleUserName(dpia.getResponsibleUser() != null ? dpia.getResponsibleUser().getName() : "")
+				.responsibleOuName(dpia.getResponsibleOu() != null ? dpia.getResponsibleOu().getName() : "")
+				.userUpdatedDate(dpia.getUserUpdatedDate())
+				.taskCount(0) // Will need to calculate this if needed
+				.status(getReportApprovalStatus(dpia))
+				.screeningConclusion(dpia.getDpiaScreening() != null && dpia.getDpiaScreening().getConclusion() != null
+						? dpia.getDpiaScreening().getConclusion().getMessage()
+						: "")
+				.tags(tags)
+				.build();
+	}
+
+	private String getReportApprovalStatus(DPIA dpia) {
+		return dpia.getDpiaReports().stream()
+				.max(Comparator.comparingLong(DPIAReport::getId))
+				.map(report -> report.getDpiaReportApprovalStatus() != null
+						? report.getDpiaReportApprovalStatus().getMessage()
+						: "")
+				.orElse("");
 	}
 }

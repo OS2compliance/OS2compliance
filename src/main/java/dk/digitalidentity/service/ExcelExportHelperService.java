@@ -137,6 +137,31 @@ public class ExcelExportHelperService {
 	}
 
 	/**
+	 * Export entities without tags and mapper to Excel
+	 */
+	public <TEntity, TDTO> void exportEntities(
+			List<TEntity> entities,
+			Class<TDTO> dtoClass,
+			List<TDTO> dtos,
+			ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+		if (entities.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		// Export
+		excelExportService.exportToExcelWithColumns(
+				dtos,
+				dtoClass,
+				request.getSelectedColumns(),
+				request.getFileName(),
+				response
+		);
+	}
+
+	/**
 	 * Functional interface for mapping entities to DTOs with tags
 	 */
 	@FunctionalInterface
