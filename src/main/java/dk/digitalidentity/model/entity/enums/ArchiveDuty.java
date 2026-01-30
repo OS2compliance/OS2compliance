@@ -11,6 +11,9 @@ public enum ArchiveDuty {
 	UNDECIDED("Ikke besluttet"),
 	B("B"),
 	K("K"),
+	BK("BK"),
+	KD("KD"),
+	KB("KB"),
 	UNKNOWN("Ukendt"),
 	PRESERVEDATACANDISCARDDOCUMENTS("Bevar data, dokumenter kan kasseres");
 
@@ -22,6 +25,9 @@ public enum ArchiveDuty {
 			case UNDECIDED -> ArchiveDuty.UNDECIDED;
 			case B -> ArchiveDuty.B;
 			case K -> ArchiveDuty.K;
+			case BK -> ArchiveDuty.BK;
+			case KD -> ArchiveDuty.KD;
+			case KB -> ArchiveDuty.KB;
 			case UNKNOWN -> ArchiveDuty.UNKNOWN;
 			case PRESERVEDATACANDISCARDDOCUMENTS -> ArchiveDuty.PRESERVEDATACANDISCARDDOCUMENTS;
 		};
@@ -33,6 +39,9 @@ public enum ArchiveDuty {
 			case UNDECIDED -> ArchiveDuty.UNDECIDED;
 			case B -> ArchiveDuty.B;
 			case K -> ArchiveDuty.K;
+			case BK -> ArchiveDuty.BK;
+			case KD -> ArchiveDuty.KD;
+			case KB -> ArchiveDuty.KB;
 			case UNKNOWN -> ArchiveDuty.UNKNOWN;
 			case PRESERVEDATACANDISCARDDOCUMENTS -> ArchiveDuty.PRESERVEDATACANDISCARDDOCUMENTS;
 		};
