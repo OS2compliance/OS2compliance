@@ -179,17 +179,8 @@ public class SupplierService implements TagableService<Supplier> {
 			return supplierGrids;
 		} else {
 			// User can only read suppliers they are responsible for
-			// Note: SupplierGrid doesn't have responsibleUser directly,
-			// so we need to fetch actual suppliers for security check
-			List<Supplier> suppliers = supplierDao.findAllById(ids);
-			Set<Long> allowedIds = suppliers.stream()
-					.filter(supplier -> supplier.getResponsibleUser() != null &&
-							supplier.getResponsibleUser().getUuid().equals(user.getUuid()))
-					.map(Supplier::getId)
-					.collect(Collectors.toSet());
-
 			return supplierGrids.stream()
-					.filter(sg -> allowedIds.contains(sg.getId()))
+					.filter(sg -> sg.getResponsibleUuid().equals(user.getUuid()))
 					.toList();
 		}
 	}

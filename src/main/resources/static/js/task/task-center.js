@@ -256,7 +256,7 @@ function initGrid() {
 
     initGridActions()
 
-    initSaveAsExcelButton(customGridFunctions, 'tasks', 'tasks', 'Opgavecenter')
+    initSaveAsExcelButton(customGridFunctions, 'task', 'tasks', 'Opgavecenter')
 }
 
 function initGridActions() {

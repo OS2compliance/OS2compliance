@@ -195,13 +195,6 @@ public class SupplierRestController {
 			return;
 		}
 
-		// Get tags
-		Set<Long> entityIds = supplierGrids.stream().map(SupplierGrid::getId).collect(Collectors.toSet());
-		Map<Long, Tag> tagsById = supplierService.findTagsByEntityIds(entityIds).stream()
-				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
-
-		Set<AllowedAction> allowedActions = setAllowedActions();
-
 		// Map to SupplierGridDTO - everything is already calculated in the view!
 		List<SupplierGridDTO> dtos = supplierGrids.stream()
 				.map(sg -> new SupplierGridDTO(

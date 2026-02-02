@@ -4,9 +4,17 @@ import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.dto.RegisterDTO;
+import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
+import dk.digitalidentity.model.dto.excel.EntityListRequest;
+import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
+import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.service.ExcelExportHelperService;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
@@ -29,6 +37,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,7 +47,9 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -48,7 +59,7 @@ import java.util.List;
 public class IncidentRestController {
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
-	private final ExcelExportService excelExportService;
+	private final ExcelExportHelperService excelExportHelperService;
 
     @RequireReadAll
     @GetMapping("questions")
@@ -121,33 +132,6 @@ public class IncidentRestController {
 		return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
     }
 
-	@RequireReadOwnerOnly
-	@PostMapping("export")
-	public void export(
-			@RequestParam(name = "search", required = false) final String search,
-			@RequestParam(name = "order", required = false) final String order,
-			@RequestParam(name = "dir", required = false) final String dir,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate fromDateParam,
-			@RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam,
-			HttpServletResponse response
-	) throws IOException {
-		Sort sort;
-		if (StringUtils.isNotEmpty(order)) {
-			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-			sort = Sort.by(direction, order);
-		} else {
-			sort = Sort.by(Sort.Direction.DESC, "createdAt");
-		}
-		final Pageable sortAndPage = PageRequest.of(0, Integer.MAX_VALUE, sort);
-		Page<Incident> incidents = incidentService.getIncidents(search, fromDateParam, toDateParam, sortAndPage);
-
-		assert incidents != null;
-
-		List<IncidentDTO> allData = incidentMapper.toDTOs(incidents.getContent());
-		excelExportService.exportToExcel(allData, IncidentDTO.class, fileName, response);
-	}
-
 	@RequireReadAll
     @GetMapping("columns")
     public List<String> visibleColumns() {
@@ -156,5 +140,91 @@ public class IncidentRestController {
             .filter(StringUtils::isNotEmpty)
             .toList();
     }
+
+	@GetMapping("export-metadata")
+	@RequireReadOwnerOnly
+	public ExportMetadataDTO getExportMetadata() {
+		return excelExportHelperService.getMetadata(IncidentDTO.class);
+	}
+
+	@PostMapping("export-entities")
+	@RequireReadOwnerOnly
+	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
+		// Extract date filters from request filters map
+		LocalDate fromDate = extractDateFromFilters(request.getFilters(), "fromDate");
+		LocalDate toDate = extractDateFromFilters(request.getFilters(), "toDate");
+		String search = request.getFilters().getOrDefault("search", null);
+
+		// Build sort
+		Sort sort;
+		if (StringUtils.isNotEmpty(request.getSortColumn())) {
+			Sort.Direction direction = "DESC".equalsIgnoreCase(request.getSortDirection())
+					? Sort.Direction.DESC
+					: Sort.Direction.ASC;
+			sort = Sort.by(direction, request.getSortColumn());
+		} else {
+			sort = Sort.by(Sort.Direction.DESC, "createdAt");
+		}
+
+		Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, sort);
+		Page<Incident> incidents = incidentService.getIncidents(search, fromDate, toDate, pageable);
+
+		return excelExportHelperService.toEntityListItems(
+				incidents.getContent(),
+				Incident::getId,
+				Incident::getName
+		);
+	}
+
+	@PostMapping("export-custom")
+	@RequireReadOwnerOnly
+	public void exportCustom(
+			@RequestBody ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+
+		if (request.getSelectedIds() == null || request.getSelectedIds().isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		List<Incident> incidents = incidentService.findByIds(request.getSelectedIds());
+
+		if (incidents.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		List<IncidentDTO> dtos = incidentMapper.toDTOs(incidents);
+
+		excelExportHelperService.exportEntities(
+				incidents,
+				IncidentDTO.class,
+				dtos,
+				request,
+				response
+		);
+	}
+
+	/**
+	 * Extract date from filters map with format dd/MM-yyyy
+	 */
+	private LocalDate extractDateFromFilters(Map<String, String> filters, String key) {
+		if (filters == null || !filters.containsKey(key)) {
+			return null;
+		}
+
+		String dateStr = filters.get(key);
+		if (dateStr == null || dateStr.isBlank()) {
+			return null;
+		}
+
+		try {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
+			return LocalDate.parse(dateStr, formatter);
+		} catch (Exception e) {
+			return null;
+		}
+	}
 
 }

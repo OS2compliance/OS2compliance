@@ -180,7 +180,7 @@ function initGrid() {
     //Enables custom column search, serverside sorting and pagination
     const customGridFunctions = new CustomGridFunctions(grid, gridDocumentsUrl, exportDocumentsUrl, datatableId);
 
-    initSaveAsExcelButton(customGridFunctions, 'documents', 'documents', 'Dokumenter');
+    initSaveAsExcelButton(customGridFunctions, 'document', 'documents', 'Dokumenter');
 
     new ColumnOptions(
         datatableId,

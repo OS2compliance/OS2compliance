@@ -76,14 +76,28 @@ export class ExcelExportDialog {
         if (this.mode === 'serverside') {
             const filters = this.customGridFunctions.getFilters();
 
-            // Fetch ALL available entities (no filters) for choices
+            // Merge with extra filters if available
+            const allFilters = this.extraFilters
+                ? { ...filters, ...this.extraFilters }
+                : filters;
+
+            let sortState = { column: null, direction: 'ASC' };
+            if (this.customGridFunctions && typeof this.customGridFunctions.getSortState === 'function') {
+                sortState = this.customGridFunctions.getSortState();
+            }
+
+            // Fetch ALL available entities
             const allEntitiesResponse = await fetch(this.entitiesUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': token
                 },
-                body: JSON.stringify({ filters: {} }) // Empty filters to get all
+                body: JSON.stringify({
+                    filters: this.extraFilters || {},
+                    sortColumn: sortState.column,
+                    sortDirection: sortState.direction
+                })
             });
 
             if (!allEntitiesResponse.ok) {
@@ -92,14 +106,18 @@ export class ExcelExportDialog {
 
             this.allEntities = await allEntitiesResponse.json();
 
-            // Fetch filtered entities for pre-selection
+            // Fetch filtered entities
             const filteredEntitiesResponse = await fetch(this.entitiesUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': token
                 },
-                body: JSON.stringify({ filters })
+                body: JSON.stringify({
+                    filters: allFilters,
+                    sortColumn: sortState.column,
+                    sortDirection: sortState.direction
+                })
             });
 
             if (!filteredEntitiesResponse.ok) {
@@ -108,14 +126,14 @@ export class ExcelExportDialog {
 
             this.selectedEntities = await filteredEntitiesResponse.json();
         } else {
-            // Clientside: extract from table DOM
+             // Clientside: extract from table DOM
             const table = document.getElementById(this.tableId);
             const rows = Array.from(table.querySelectorAll('tbody tr'));
             this.selectedEntities = rows.map(row => ({
                 id: row.dataset.id || row.querySelector('td:first-child')?.textContent.trim(),
                 name: row.querySelector('td:first-child')?.textContent.trim()
             }));
-            this.allEntities = this.selectedEntities; // For clientside, all = selected
+            this.allEntities = this.selectedEntities;
         }
     }
 
@@ -261,6 +279,12 @@ export class ExcelExportDialog {
             .map(cb => cb.value);
         const fileName = document.getElementById('excelFileName').value || this.defaultFileName;
 
+        // Safely get sort state with fallback
+        let sortState = { column: null, direction: 'ASC' };
+        if (this.customGridFunctions && typeof this.customGridFunctions.getSortState === 'function') {
+            sortState = this.customGridFunctions.getSortState();
+        }
+
         if (selectedEntityIds.length === 0) {
             toastService.error('Vælg mindst én post at eksportere');
             return;
@@ -292,7 +316,9 @@ export class ExcelExportDialog {
                 body: JSON.stringify({
                     selectedIds: selectedEntityIds,
                     selectedColumns: selectedColumns,
-                    fileName: fileName
+                    fileName: fileName,
+                    sortColumn: sortState.column,
+                    sortDirection: sortState.direction
                 })
             });
 

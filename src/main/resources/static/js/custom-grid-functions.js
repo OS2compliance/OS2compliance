@@ -355,4 +355,12 @@ class CustomGridFunctions {
         }
         return filters;
     }
+
+    getSortState() {
+        // Return current sort state from grid
+        return {
+            column: this.state.sortColumn || null,
+            direction: this.state.sortDirection || 'ASC'
+        };
+    }
 }

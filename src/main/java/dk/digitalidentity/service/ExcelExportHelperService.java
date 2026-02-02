@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -97,6 +101,11 @@ public class ExcelExportHelperService {
 		// Map to DTOs
 		List<TDTO> dtos = mapper.map(entities, tagsById);
 
+		// Sort DTOs if requested
+		if (request.getSortColumn() != null) {
+			dtos = sortDTOs(dtos, request.getSortColumn(), request.getSortDirection());
+		}
+
 		// Export
 		excelExportService.exportToExcelWithColumns(
 				dtos,
@@ -126,6 +135,11 @@ public class ExcelExportHelperService {
 		// Map to DTOs
 		List<TDTO> dtos = mapper.apply(entities);
 
+		// Sort DTOs if requested
+		if (request.getSortColumn() != null) {
+			dtos = sortDTOs(dtos, request.getSortColumn(), request.getSortDirection());
+		}
+
 		// Export
 		excelExportService.exportToExcelWithColumns(
 				dtos,
@@ -149,6 +163,11 @@ public class ExcelExportHelperService {
 		if (entities.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return;
+		}
+
+		// Sort DTOs if requested
+		if (request.getSortColumn() != null) {
+			dtos = sortDTOs(dtos, request.getSortColumn(), request.getSortDirection());
 		}
 
 		// Export
@@ -185,5 +204,125 @@ public class ExcelExportHelperService {
 							.build();
 				})
 				.toList();
+	}
+
+	/**
+	 * Sort DTOs by field name using reflection
+	 *
+	 * @param dtos List of DTOs to sort
+	 * @param sortColumn Field name to sort by
+	 * @param sortDirection ASC or DESC
+	 * @return Sorted list
+	 */
+	public <TDTO> List<TDTO> sortDTOs(List<TDTO> dtos, String sortColumn, String sortDirection) {
+		if (dtos.isEmpty() || sortColumn == null || sortColumn.isBlank()) {
+			return dtos;
+		}
+
+		try {
+			Class<?> dtoClass = dtos.get(0).getClass();
+			Field field = dtoClass.getDeclaredField(sortColumn);
+			field.setAccessible(true);
+
+			Comparator<TDTO> comparator = (a, b) -> {
+				try {
+					Object valueA = field.get(a);
+					Object valueB = field.get(b);
+
+					// Handle nulls
+					if (valueA == null && valueB == null) return 0;
+					if (valueA == null) return 1;
+					if (valueB == null) return -1;
+
+					// Handle LocalDate directly
+					if (valueA instanceof LocalDate) {
+						return ((LocalDate) valueA).compareTo((LocalDate) valueB);
+					}
+
+					// Handle String dates (dd/MM-yyyy format)
+					if (valueA instanceof String && valueB instanceof String) {
+						String strA = ((String) valueA).trim();
+						String strB = ((String) valueB).trim();
+
+						// Try to parse as date (Danish format: dd/MM-yyyy)
+						LocalDate dateA = parseDate(strA);
+						LocalDate dateB = parseDate(strB);
+
+						if (dateA != null && dateB != null) {
+							return dateA.compareTo(dateB);
+						}
+
+						// Regular string comparison (case-insensitive, trimmed)
+						return strA.compareToIgnoreCase(strB);
+					}
+
+					// Handle numbers
+					if (valueA instanceof Number && valueB instanceof Number) {
+						double numA = ((Number) valueA).doubleValue();
+						double numB = ((Number) valueB).doubleValue();
+						return Double.compare(numA, numB);
+					}
+
+					// Handle booleans
+					if (valueA instanceof Boolean && valueB instanceof Boolean) {
+						return Boolean.compare((Boolean) valueA, (Boolean) valueB);
+					}
+
+					// Handle List (compare by size, or first element if same size)
+					if (valueA instanceof List && valueB instanceof List) {
+						List<?> listA = (List<?>) valueA;
+						List<?> listB = (List<?>) valueB;
+						int sizeCompare = Integer.compare(listA.size(), listB.size());
+						if (sizeCompare != 0) return sizeCompare;
+
+						// If same size and not empty, try to compare first elements
+						if (!listA.isEmpty() && !listB.isEmpty()) {
+							Object firstA = listA.get(0);
+							Object firstB = listB.get(0);
+							if (firstA instanceof Comparable && firstB instanceof Comparable) {
+								return ((Comparable) firstA).compareTo(firstB);
+							}
+						}
+						return 0;
+					}
+
+					// Generic comparable
+					if (valueA instanceof Comparable) {
+						return ((Comparable) valueA).compareTo(valueB);
+					}
+
+					return 0;
+				} catch (IllegalAccessException e) {
+					return 0;
+				}
+			};
+
+			if ("DESC".equalsIgnoreCase(sortDirection)) {
+				comparator = comparator.reversed();
+			}
+
+			return dtos.stream().sorted(comparator).toList();
+
+		} catch (NoSuchFieldException e) {
+			// Field doesn't exist, return unsorted
+			return dtos;
+		}
+	}
+
+	/**
+	 * Parse Danish date format (dd/MM-yyyy)
+	 * Returns null if not a valid date
+	 */
+	private LocalDate parseDate(String dateStr) {
+		if (dateStr == null || dateStr.isBlank()) {
+			return null;
+		}
+
+		try {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
+			return LocalDate.parse(dateStr, formatter);
+		} catch (DateTimeParseException e) {
+			return null;
+		}
 	}
 }

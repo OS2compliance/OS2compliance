@@ -1,26 +1,40 @@
 import { ExcelExportDialog } from './excel-export-dialog.js';
 
-export { initSaveAsExcelButton, initSaveAsExcelButtonClientside };
-
 /**
  * Initialize Excel export button for serverside grid tables
  */
-function initSaveAsExcelButton(customGridFunctions, entityType, urlName, filename) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    if (!saveAsExcelButton) {
+export function initSaveAsExcelButton(customGridFunctions, entityType, defaultFileName, extraFiltersFunction = null) {
+    const button = document.getElementById('saveAsExcelButton');
+    if (!button) {
         return;
     }
 
-    saveAsExcelButton.addEventListener("click", async () => {
-        const dialog = new ExcelExportDialog({
-            mode: 'serverside',
+    button.addEventListener('click', async () => {
+        const mode = customGridFunctions ? 'serverside' : 'clientside';
+
+        // Merge grid filters with extra filters
+        let filters = customGridFunctions ? customGridFunctions.getFilters() : {};
+        if (extraFiltersFunction && typeof extraFiltersFunction === 'function') {
+            const extraFilters = extraFiltersFunction();
+            filters = { ...filters, ...extraFilters };
+        }
+
+        const config = {
+            mode: mode,
             entityType: entityType,
-            metadataUrl: `/rest/${urlName}/export-metadata`,
-            entitiesUrl: `/rest/${urlName}/export-entities`,
-            exportUrl: `/rest/${urlName}/export-custom`,
+            metadataUrl: `/rest/${entityType}/export-metadata`,
+            entitiesUrl: `/rest/${entityType}/export-entities`,
+            exportUrl: `/rest/${entityType}/export-custom`,
             customGridFunctions: customGridFunctions,
-            defaultFileName: filename
-        });
+            defaultFileName: defaultFileName
+        };
+
+        const dialog = new ExcelExportDialog(config);
+
+        // Store extra filters for use in dialog
+        if (extraFiltersFunction) {
+            dialog.extraFilters = extraFiltersFunction();
+        }
 
         await dialog.show();
     });
@@ -29,7 +43,7 @@ function initSaveAsExcelButton(customGridFunctions, entityType, urlName, filenam
 /**
  * Initialize Excel export button for clientside HTML tables
  */
-function initSaveAsExcelButtonClientside(tableId, entityType, urlName, filename) {
+export function initSaveAsExcelButtonClientside(tableId, entityType, urlName, filename) {
     const saveAsExcelButton = document.getElementById("saveAsExcelButton");
     if (!saveAsExcelButton) {
         return;
