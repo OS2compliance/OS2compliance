@@ -38,7 +38,7 @@ public class AssetEO {
         CRITICAL, NON_CRITICAL
     }
 	public enum ArchiveDuty {
-		UNDECIDED,B,K,UNKNOWN,PRESERVEDATACANDISCARDDOCUMENTS
+		UNDECIDED,B,K,BK,KD,KB,UNKNOWN,PRESERVEDATACANDISCARDDOCUMENTS
 	}
 
     @Schema(description = "Internal ID in OS2compliance", accessMode = Schema.AccessMode.READ_ONLY, example = ID_EXAMPLE)
