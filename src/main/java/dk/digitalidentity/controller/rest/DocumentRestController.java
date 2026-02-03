@@ -2,10 +2,8 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.grid.DocumentGridDao;
 import dk.digitalidentity.mapping.DocumentMapper;
-import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
-import dk.digitalidentity.model.dto.excel.ColumnInfo;
 import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
 import dk.digitalidentity.model.dto.excel.EntityListRequest;
 import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
@@ -18,7 +16,6 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireDocument;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.ExcelExportHelperService;
-import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,8 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

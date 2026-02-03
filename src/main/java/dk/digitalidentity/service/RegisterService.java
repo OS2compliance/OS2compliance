@@ -213,14 +213,14 @@ public class RegisterService implements TagableService<Register> {
 			return List.of();
 		}
 
-		// Fetch all supplier grids by IDs
+		// Fetch all register grids by IDs
 		List<RegisterGrid> registerGrids = registerGridDao.findAllById(ids);
 
 		// Apply security filtering
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			return registerGrids;
 		} else {
-			// User can only read suppliers they are responsible for
+			// User can only read registers they are responsible for
 			return registerGrids.stream()
 					.filter(rg ->
 								rg.getResponsibleUserUuids().contains(user.getUuid()) ||

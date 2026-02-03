@@ -31,49 +31,6 @@ public class ExcelExportService {
 	/**
 	 * @param data - The data we provide when calling this method in each of the rest controllers. It contains the columns and rows.
 	 * @param dtoClass - The class of the dto that we export.
-	 * @param fileName - The file name of the exported Excel sheet.
-	 * @param response - The reponse we send back.
-	 * @throws IOException - An exception we throw when an error happens.
-	 */
-	public void exportToExcel(List<?> data, Class<?> dtoClass, String fileName, HttpServletResponse response) throws IOException {
-		if (data == null) {
-			throw new IllegalArgumentException("No data provided");
-		}
-
-		// Create workbook
-		Workbook workbook = new XSSFWorkbook();
-		Sheet sheet = workbook.createSheet("Export");
-
-		// Create styles
-		CellStyle headerStyle = createHeaderStyle(workbook);
-		CellStyle rowStyle = createRowStyle(workbook);
-		CellStyle alternateRowStyle = createAlternateRowStyle(workbook, rowStyle);
-
-		// Get column information from the DTO class
-		List<Field> exportableFields = getExportableFields(dtoClass);
-		List<String> columnHeaders = getColumnHeaders(exportableFields);
-
-		// Create header row
-		createHeaderRow(sheet, columnHeaders, headerStyle);
-
-		// Fill data rows
-		fillDataRows(sheet, data, exportableFields, rowStyle, alternateRowStyle);
-
-		// Auto-size columns
-		autoSizeColumns(sheet, columnHeaders.size());
-
-		// Set response headers
-		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-		response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
-
-		// Write workbook to output
-		workbook.write(response.getOutputStream());
-		workbook.close();
-	}
-
-	/**
-	 * @param data - The data we provide when calling this method in each of the rest controllers. It contains the columns and rows.
-	 * @param dtoClass - The class of the dto that we export.
 	 * @param selectedColumnNames - The columns to include
 	 * @param fileName - The file name of the exported Excel sheet.
 	 * @param response - The reponse we send back.
@@ -135,14 +92,6 @@ public class ExcelExportService {
 				.sorted(Comparator.comparingInt(f -> f.getAnnotation(ExcelColumn.class).order()))
 				.peek(f -> f.setAccessible(true))
 				.toList();
-	}
-
-	private boolean isActionField(String fieldName) {
-		String lowerName = fieldName.toLowerCase();
-		return lowerName.equals("handlinger") ||
-				lowerName.equals("actions") ||
-				lowerName.equals("action") ||
-				lowerName.equals("id");
 	}
 
 

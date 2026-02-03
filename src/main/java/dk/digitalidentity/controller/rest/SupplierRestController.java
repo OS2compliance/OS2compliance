@@ -1,7 +1,5 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.controller.rest.Admin.MailLogRestController;
-import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
@@ -13,11 +11,8 @@ import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
 import dk.digitalidentity.model.dto.excel.EntityListRequest;
 import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
 import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
-import dk.digitalidentity.model.entity.MailLog;
-import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.MailLogGrid;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -25,7 +20,6 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireSupplier;
 import dk.digitalidentity.service.ExcelExportHelperService;
 import dk.digitalidentity.service.SecurityUserService;
-import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.tag.TagService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -64,7 +58,6 @@ import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 public class SupplierRestController {
 	private final SupplierMapper supplierMapper;
 	private final SupplierService supplierService;
-	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
 	private final ExcelExportHelperService excelExportHelperService;
 

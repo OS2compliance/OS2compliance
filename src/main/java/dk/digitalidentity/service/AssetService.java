@@ -829,14 +829,14 @@ public class AssetService implements TagableService<Asset> {
 			return List.of();
 		}
 
-		// Fetch all supplier grids by IDs
+		// Fetch all asset grids by IDs
 		List<AssetGrid> assetGrids = assetGridDao.findAllById(ids);
 
 		// Apply security filtering
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			return assetGrids;
 		} else {
-			// User can only read suppliers they are responsible for
+			// User can only read assets they are responsible for
 			return assetGrids.stream()
 					.filter(ag ->
 							ag.getResponsibleUserUuids().contains(user.getUuid()) ||

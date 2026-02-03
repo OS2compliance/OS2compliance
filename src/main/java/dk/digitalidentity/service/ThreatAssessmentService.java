@@ -4,6 +4,7 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
+import dk.digitalidentity.dao.grid.RiskGridDao;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceValue;
@@ -29,6 +30,9 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
+import dk.digitalidentity.model.entity.grid.RiskGrid;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.RiskProfileDTO;
@@ -39,6 +43,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
@@ -68,6 +73,8 @@ import java.util.stream.Collectors;
 import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.integration.kitos.KitosConstants.*;
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Service
@@ -83,6 +90,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
     private final ChoiceService choiceService;
 	private final SettingsService settingsService;
 	private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
+	private final RiskGridDao riskGridDao;
 
 	public boolean isResponsibleFor(ThreatAssessment threatAssessment) {
 		return threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid());
@@ -1157,5 +1165,48 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		}
 
 		relationService.addRelation(savedTask, response);
+	}
+
+	public Page<RiskGrid> getRisks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		Page<RiskGrid> risks = null;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged-in user can see all
+			risks = riskGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, RiskGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					RiskGrid.class
+			);
+		}
+		else {
+			// Logged-in user can see only own
+			risks = riskGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, RiskGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					RiskGrid.class
+			);
+		}
+		return risks;
+	}
+
+	public List<RiskGrid> findByIds(List<Long> ids, User user) {
+		if (ids == null || ids.isEmpty()) {
+			return List.of();
+		}
+
+		// Fetch all risk grids by IDs
+		List<RiskGrid> riskGrids = riskGridDao.findAllById(ids);
+
+		// Apply security filtering
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			return riskGrids;
+		} else {
+			// User can only read threatAssessments they are responsible for
+			return riskGrids.stream()
+					.filter(rg ->
+							rg.getResponsibleUser().getUuid().equals(user.getUuid())
+					)
+					.toList();
+		}
 	}
 }

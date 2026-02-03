@@ -2,6 +2,7 @@ import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import {CreateThreatAssessmentService, initRegisterSelect, initAssetSelectRisk, userChanged} from "./createThreatAssessmentService.js";
+import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 
 const columnProperties = [
     'id',
@@ -340,7 +341,7 @@ function CreateTable() {
         const datatableId = 'risksDatatable'
         const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, exportRisksUrl, datatableId);
 
-        initSaveAsExcelButton(customGridFunctions, 'Risikovurderinger');
+        initSaveAsExcelButton(customGridFunctions,'threatAssessment', 'risks', 'Risikovurderinger');
 
         new ColumnOptions(
             datatableId,

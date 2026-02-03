@@ -156,7 +156,7 @@ export default function IncidentGridService () {
             ['id'])
 
         this.initGridActions()
-        initSaveAsExcelButton(customGridFunctions, 'incident', 'Hændelseslog', () => {
+        initSaveAsExcelButton(customGridFunctions, 'incident', 'incidents', 'Hændelseslog', () => {
             // Return additional filters including dates
             return {
                 fromDate: this.filterFrom || '',

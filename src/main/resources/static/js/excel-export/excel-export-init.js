@@ -3,7 +3,7 @@ import { ExcelExportDialog } from './excel-export-dialog.js';
 /**
  * Initialize Excel export button for serverside grid tables
  */
-export function initSaveAsExcelButton(customGridFunctions, entityType, defaultFileName, extraFiltersFunction = null) {
+export function initSaveAsExcelButton(customGridFunctions, entityType, urlName, defaultFileName, extraFiltersFunction = null) {
     const button = document.getElementById('saveAsExcelButton');
     if (!button) {
         return;
@@ -22,9 +22,9 @@ export function initSaveAsExcelButton(customGridFunctions, entityType, defaultFi
         const config = {
             mode: mode,
             entityType: entityType,
-            metadataUrl: `/rest/${entityType}/export-metadata`,
-            entitiesUrl: `/rest/${entityType}/export-entities`,
-            exportUrl: `/rest/${entityType}/export-custom`,
+            metadataUrl: `/rest/${urlName}/export-metadata`,
+            entitiesUrl: `/rest/${urlName}/export-entities`,
+            exportUrl: `/rest/${urlName}/export-custom`,
             customGridFunctions: customGridFunctions,
             defaultFileName: defaultFileName
         };

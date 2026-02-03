@@ -251,26 +251,40 @@ export class ExcelExportDialog {
     attachEventListeners() {
         // Select all columns checkbox
         const selectAllCheckbox = document.getElementById('selectAllColumns');
-        selectAllCheckbox.addEventListener('change', (e) => {
+        const selectAllHandler = (e) => {
             const checkboxes = document.querySelectorAll('.column-checkbox');
             checkboxes.forEach(cb => cb.checked = e.target.checked);
-        });
+        };
+        selectAllCheckbox.addEventListener('change', selectAllHandler);
+
+        // Store handler so we can remove it later
+        this.selectAllHandler = selectAllHandler;
 
         // Individual column checkboxes update "select all"
         const columnCheckboxes = document.querySelectorAll('.column-checkbox');
+        const columnChangeHandler = () => {
+            const allCheckboxes = document.querySelectorAll('.column-checkbox');
+            const allChecked = Array.from(allCheckboxes).every(checkbox => checkbox.checked);
+            selectAllCheckbox.checked = allChecked;
+        };
+
         columnCheckboxes.forEach(cb => {
-            cb.addEventListener('change', () => {
-                const allCheckboxes = document.querySelectorAll('.column-checkbox');
-                const allChecked = Array.from(allCheckboxes).every(checkbox => checkbox.checked);
-                selectAllCheckbox.checked = allChecked;
-            });
+            cb.addEventListener('change', columnChangeHandler);
         });
+
+        // Store handlers
+        this.columnChangeHandler = columnChangeHandler;
+        this.columnCheckboxes = Array.from(columnCheckboxes);
 
         // Export button
         const exportButton = document.getElementById('exportButton');
-        exportButton.addEventListener('click', () => {
+        const exportHandler = () => {
             this.performExport();
-        });
+        };
+        exportButton.addEventListener('click', exportHandler);
+
+        // Store handler so we can remove it later
+        this.exportHandler = exportHandler;
     }
 
     async performExport() {
@@ -352,11 +366,27 @@ export class ExcelExportDialog {
             this.choicesInstance = null;
         }
 
-        // Reset export button state
+        // Remove event listeners
+        const selectAllCheckbox = document.getElementById('selectAllColumns');
+        if (selectAllCheckbox && this.selectAllHandler) {
+            selectAllCheckbox.removeEventListener('change', this.selectAllHandler);
+        }
+
+        if (this.columnCheckboxes && this.columnChangeHandler) {
+            this.columnCheckboxes.forEach(cb => {
+                cb.removeEventListener('change', this.columnChangeHandler);
+            });
+        }
+
         const exportButton = document.getElementById('exportButton');
+        if (exportButton && this.exportHandler) {
+            exportButton.removeEventListener('click', this.exportHandler);
+        }
+
+        // Reset export button state
         const buttonText = document.getElementById('exportButtonText');
         const buttonSpinner = document.getElementById('exportButtonSpinner');
-        const buttonIcon = exportButton.querySelector('.fa-download');
+        const buttonIcon = exportButton?.querySelector('.fa-download');
 
         if (exportButton && buttonText && buttonSpinner && buttonIcon) {
             exportButton.disabled = false;
