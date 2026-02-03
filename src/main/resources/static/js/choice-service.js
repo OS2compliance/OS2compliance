@@ -173,7 +173,7 @@ function ChoiceService() {
                     choices.setChoices(data.content.map(reg => {
                         return {
                             id: reg.id,
-                            name: truncateString(reg.typeMessage + ": " + reg.name, 60)
+                            name: truncateMiddleString(reg.typeMessage + ": " + reg.name, 80, 30, 50)
                         }
                     }), 'id', 'name', true);
                 }))
