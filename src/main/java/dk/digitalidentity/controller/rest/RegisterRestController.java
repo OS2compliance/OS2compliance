@@ -134,7 +134,10 @@ public class RegisterRestController {
 			HttpServletResponse response
 	) throws IOException {
 		User user = securityUserService.getCurrentUserOrThrow();
-		List<RegisterGrid> registerGrids = registerService.findByIds(request.getSelectedIds(), user);
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<RegisterGrid> registerGrids = registerService.findByIds(ids, user);
 
 		if (registerGrids.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

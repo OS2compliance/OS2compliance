@@ -321,7 +321,7 @@ function initGrid() {
     const registerDatatableId = 'registersDatatable';
     grid = new gridjs.Grid(gridConfig).render(document.getElementById(registerDatatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, exportRegistersUrl, registerDatatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, registerDatatableId);
 
     new ColumnOptions(
         registerDatatableId,

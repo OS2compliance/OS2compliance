@@ -5,7 +5,6 @@
  */
 class CustomGridFunctions {
     dataUrl
-    exportUrl
     grid
     gridId
     state = {
@@ -21,21 +20,18 @@ class CustomGridFunctions {
      * Enabled custom sort, search and pagination for an existing GridJS object
      * @param {Grid} grid GridJS grid element
      * @param {string} dataUrl Server endpoint handling data request
-     * @param {string} exportUrl Server endpoint handling the Excel export
      * @param gridId
      * @param initialSortConfig config object for the initial sorting of columns
      */
     constructor(
         grid,
         dataUrl,
-        exportUrl,
         gridId,
         initialSortConfig  = {
             sortDirection: 'ASC',
             sortColumn: '',
     }) {
         this.dataUrl = dataUrl
-        this.exportUrl = exportUrl
         this.grid = grid
         this.state.page = 0
         this.state.limit = 50
@@ -315,31 +311,6 @@ class CustomGridFunctions {
         if (retrievedState) {
             this.state = retrievedState
         }
-    }
-
-    /**
-     * Builds a custom export URL that uses current filters & sorting but disables pagination
-     */
-    getExportUrl() {
-        const params = new URLSearchParams()
-
-        if (this.state.sortColumn) {
-            params.append("order", this.state.sortColumn)
-        }
-        if (this.state.sortDirection) {
-            params.append("dir", this.state.sortDirection)
-        }
-
-        for (const [key, value] of Object.entries(this.state.searchValues)) {
-            if (value !== null && value !== undefined && value !== '') {
-                params.append(key, value)
-            }
-        }
-
-        params.set("page", 0)
-        params.set("limit", 99999)
-
-        return `${this.exportUrl}?${params.toString()}`
     }
 
     /**

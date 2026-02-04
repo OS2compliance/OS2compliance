@@ -121,7 +121,10 @@ public class MailLogRestController {
 			@RequestBody ExcelExportRequest request,
 			HttpServletResponse response
 	) throws IOException {
-		List<MailLog> mailLogs = mailLogService.findByIds(request.getSelectedIds());
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<MailLog> mailLogs = mailLogService.findByIds(ids);
 
 		List<MailLogGridDTO> dtos = mailLogs.stream().map(ml ->
 				new MailLogGridDTO(
@@ -135,7 +138,6 @@ public class MailLogRestController {
 
 
 		excelExportHelperService.exportEntities(
-				mailLogs,
 				MailLogGridDTO.class,
 				dtos,
 				request,

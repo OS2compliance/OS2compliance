@@ -526,7 +526,10 @@ public class AssetsRestController {
 			HttpServletResponse response
 	) throws IOException {
 		User user = securityUserService.getCurrentUserOrThrow();
-		List<AssetGrid> assetGrids = assetService.findByIds(request.getSelectedIds(), user);
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<AssetGrid> assetGrids = assetService.findByIds(ids, user);
 
 		if (assetGrids.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

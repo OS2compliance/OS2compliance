@@ -43,7 +43,7 @@ export function initSaveAsExcelButton(customGridFunctions, entityType, urlName, 
 /**
  * Initialize Excel export button for clientside HTML tables
  */
-export function initSaveAsExcelButtonClientside(tableId, entityType, urlName, filename) {
+export function initSaveAsExcelButtonClientside(tableId, entityType, urlName, filename, dataProvider = null) {
     const saveAsExcelButton = document.getElementById("saveAsExcelButton");
     if (!saveAsExcelButton) {
         return;
@@ -57,6 +57,7 @@ export function initSaveAsExcelButtonClientside(tableId, entityType, urlName, fi
             entitiesUrl: null,
             exportUrl: `/rest/${urlName}/export-custom`,
             tableId: tableId,
+            dataProvider: dataProvider,
             defaultFileName: filename
         });
 

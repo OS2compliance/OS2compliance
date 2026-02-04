@@ -598,7 +598,10 @@ public class DPIARestController {
 		User user = securityUserService.getCurrentUserOrThrow();
 		String userUuid = user.getUuid();
 
-		List<DPIA> dpias = dpiaService.findByIds(request.getSelectedIds(), user);
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<DPIA> dpias = dpiaService.findByIds(ids, user);
 
 		if (dpias.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -616,7 +619,6 @@ public class DPIARestController {
 				.toList();
 
 		excelExportHelperService.exportEntities(
-				dpias,
 				DPIAExportDTO.class,
 				dtos,
 				request,

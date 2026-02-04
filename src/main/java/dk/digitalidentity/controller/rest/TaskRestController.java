@@ -276,7 +276,10 @@ public class TaskRestController {
 	) throws IOException {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-		List<Task> tasks = taskService.findByIds(request.getSelectedIds(), user);
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<Task> tasks = taskService.findByIds(ids, user);
 
 		excelExportHelperService.exportEntitiesWithTags(
 				tasks,

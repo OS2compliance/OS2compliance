@@ -2,7 +2,6 @@
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 <body class="jumping">
-<script th:src="@{/js/export-service.js}" defer></script>
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -49,9 +48,10 @@
     <div id="choiceListEditModalContainer" class="modal" role="dialog"></div>
 </div>
 
+<div th:replace="~{fragments/excel-export-modal :: excelExportModal}"></div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
-<script th:src="@{/js/admin/customChoiceLists/customChoiceLists.js}" defer></script>
+<script type="module" th:src="@{/js/admin/customChoiceLists/customChoiceLists.js}"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
@@ -61,13 +61,6 @@
         const data = [[${choiceLists}]];
         const isSuperuser = [[${isSuperuser}]];
     +]*/
-    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-    let customChoiceListService, networkService
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        customChoiceListService = new CustomChoiceListService()
-        networkService = new NetworkService(token)
-    });
 
     /*]]>*/
 </script>

@@ -209,7 +209,7 @@ function initGrid() {
     const datatableId ='suppliersDatatable'
     const grid = new gridjs.Grid(gridConfig).render(document.getElementById(datatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, exportSuppliersUrl, datatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, datatableId);
 
     initSaveAsExcelButton(customGridFunctions, 'supplier', 'suppliers', 'Leverandører')
 

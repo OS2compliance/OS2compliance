@@ -1,6 +1,9 @@
 package dk.digitalidentity.controller.rest;
 
+import dk.digitalidentity.controller.mvc.IncidentController;
 import dk.digitalidentity.mapping.IncidentMapper;
+import dk.digitalidentity.model.ExcelColumn;
+import dk.digitalidentity.model.ExcludeFromExport;
 import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
@@ -10,6 +13,8 @@ import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
 import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
@@ -182,7 +187,10 @@ public class IncidentRestController {
 			return;
 		}
 
-		List<Incident> incidents = incidentService.findByIds(request.getSelectedIds());
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<Incident> incidents = incidentService.findByIds(ids);
 
 		if (incidents.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -192,7 +200,6 @@ public class IncidentRestController {
 		List<IncidentDTO> dtos = incidentMapper.toDTOs(incidents);
 
 		excelExportHelperService.exportEntities(
-				incidents,
 				IncidentDTO.class,
 				dtos,
 				request,
@@ -219,6 +226,50 @@ public class IncidentRestController {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+
+	@GetMapping(value = "fields/export-metadata")
+	@RequireReadOwnerOnly
+	public ExportMetadataDTO getExportMetadataField() {
+		return excelExportHelperService.getMetadata(IncidentFieldDTO.class);
+	}
+
+	@PostMapping("fields/export-entities")
+	@RequireReadOwnerOnly
+	public List<EntityListItemDTO> getFieldEntitiesForExport(@RequestBody EntityListRequest request) {
+		List<IncidentFieldDTO> fields = incidentMapper.toFieldDTOs(incidentService.getAllFields());
+
+		return excelExportHelperService.toEntityListItems(
+				fields,
+				IncidentFieldDTO::getId,
+				IncidentFieldDTO::getQuestion
+		);
+	}
+
+	@PostMapping("fields/export-custom")
+	@RequireReadOwnerOnly
+	public void exportCustomField(
+			@RequestBody ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+
+		List<IncidentField> fields = incidentService.findFieldsByIds(ids);
+
+		if (fields.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		excelExportHelperService.exportEntities(
+				fields,
+				IncidentFieldDTO.class,
+				incidentMapper::toFieldDTOs,
+				request,
+				response
+		);
 	}
 
 }

@@ -5,7 +5,7 @@ import java.util.List;
 
 @Data
 public class ExcelExportRequest {
-	private List<Long> selectedIds;
+	private List<String> selectedIds;
 	private List<String> selectedColumns;
 	private String fileName;
 	private String sortColumn;

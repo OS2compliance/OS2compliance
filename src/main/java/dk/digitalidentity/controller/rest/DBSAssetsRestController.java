@@ -128,7 +128,10 @@ public class DBSAssetsRestController {
 			@RequestBody ExcelExportRequest request,
 			HttpServletResponse response
 	) throws IOException {
-		List<DBSAssetGrid> dbsAssetGrids = assetService.findDBSGridByIds(request.getSelectedIds());
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<DBSAssetGrid> dbsAssetGrids = assetService.findDBSGridByIds(ids);
 
 		if (dbsAssetGrids.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

@@ -1,7 +1,6 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.model.ExcelColumn;
-import dk.digitalidentity.model.dto.TagDTO;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -20,7 +19,6 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This class exports server side grid tables to excel.

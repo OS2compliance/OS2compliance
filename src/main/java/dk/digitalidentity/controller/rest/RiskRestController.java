@@ -802,7 +802,10 @@ public class RiskRestController {
 			HttpServletResponse response
 	) throws IOException {
 		User user = securityUserService.getCurrentUserOrThrow();
-		List<RiskGrid> riskGrids = threatAssessmentService.findByIds(request.getSelectedIds(), user);
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<RiskGrid> riskGrids = threatAssessmentService.findByIds(ids, user);
 
 		if (riskGrids.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

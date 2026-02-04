@@ -236,7 +236,7 @@ function initGrid() {
     };
     const datatableId = "dpiaDatatable"
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
-    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, exportDataUrl, datatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, datatableId);
 
     new ColumnOptions(
         datatableId,

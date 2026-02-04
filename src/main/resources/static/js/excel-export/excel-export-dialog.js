@@ -22,6 +22,7 @@ export class ExcelExportDialog {
         this.exportUrl = config.exportUrl;
         this.customGridFunctions = config.customGridFunctions;
         this.tableId = config.tableId;
+        this.dataProvider = config.dataProvider || null;
         this.defaultFileName = config.defaultFileName;
 
         this.choicesInstance = null;
@@ -126,14 +127,22 @@ export class ExcelExportDialog {
 
             this.selectedEntities = await filteredEntitiesResponse.json();
         } else {
-             // Clientside: extract from table DOM
-            const table = document.getElementById(this.tableId);
-            const rows = Array.from(table.querySelectorAll('tbody tr'));
-            this.selectedEntities = rows.map(row => ({
-                id: row.dataset.id || row.querySelector('td:first-child')?.textContent.trim(),
-                name: row.querySelector('td:first-child')?.textContent.trim()
-            }));
-            this.allEntities = this.selectedEntities;
+            // Clientside: extract from table DOM
+            if (this.dataProvider) {
+                // Use dataProvider for Grid.js tables where id column is hidden
+                const entities = typeof this.dataProvider === 'function' ? this.dataProvider() : this.dataProvider;
+                this.selectedEntities = entities;
+                this.allEntities = entities;
+            } else {
+                // Standard HTML table - extract from DOM
+                const table = document.getElementById(this.tableId);
+                const rows = Array.from(table.querySelectorAll('tbody tr'));
+                this.selectedEntities = rows.map(row => ({
+                    id: row.dataset.id || row.querySelector('td:first-child')?.textContent.trim(),
+                    name: row.querySelector('td:first-child')?.textContent.trim()
+                }));
+                this.allEntities = this.selectedEntities;
+            }
         }
     }
 
@@ -297,6 +306,8 @@ export class ExcelExportDialog {
         let sortState = { column: null, direction: 'ASC' };
         if (this.customGridFunctions && typeof this.customGridFunctions.getSortState === 'function') {
             sortState = this.customGridFunctions.getSortState();
+        } else if (this.mode === 'clientside' && this.tableId) {
+            sortState = this.getSortStateFromTable();
         }
 
         if (selectedEntityIds.length === 0) {
@@ -410,5 +421,39 @@ export class ExcelExportDialog {
             loadingState.style.display = 'none';
             mainContent.style.display = 'block';
         }
+    }
+
+    /**
+     * Read sort state from Grid.js table DOM using loaded metadata for column mapping
+     */
+    getSortStateFromTable() {
+        const table = document.getElementById(this.tableId);
+        if (!table) return { column: null, direction: 'ASC' };
+
+        const headers = table.querySelectorAll('th');
+        for (const th of headers) {
+
+            const buttons = th.querySelectorAll('button');
+            const button = buttons[0];
+
+            if (button == null) continue;
+
+            // Determine direction from sort indicators
+            const isAsc = button.classList.contains('gridjs-sort-asc');
+            const isDesc = button.classList.contains('gridjs-sort-desc');
+
+            if (!isAsc && !isDesc) continue;
+
+            // Clean display name
+            const displayName = th.textContent;
+
+            // Map display name to field name using already loaded metadata
+            const column = this.availableColumns.find(col => col.displayName === displayName);
+            if (!column) continue;
+
+            return { column: column.fieldName, direction: isDesc ? 'DESC' : 'ASC' };
+        }
+
+        return { column: null, direction: 'ASC' };
     }
 }

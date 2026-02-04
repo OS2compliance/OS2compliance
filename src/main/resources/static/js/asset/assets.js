@@ -384,7 +384,7 @@ function initGrid() {
     const datatableId ="assetsDatatable"
     const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( datatableId ));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, datatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, datatableId);
 
     new ColumnOptions(datatableId, grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos', 'riskScore', 'riskData'])
 

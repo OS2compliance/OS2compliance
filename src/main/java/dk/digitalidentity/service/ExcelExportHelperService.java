@@ -153,14 +153,13 @@ public class ExcelExportHelperService {
 	/**
 	 * Export entities without tags and mapper to Excel
 	 */
-	public <TEntity, TDTO> void exportEntities(
-			List<TEntity> entities,
+	public <TDTO> void exportEntities(
 			Class<TDTO> dtoClass,
 			List<TDTO> dtos,
 			ExcelExportRequest request,
 			HttpServletResponse response
 	) throws IOException {
-		if (entities.isEmpty()) {
+		if (dtos.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return;
 		}

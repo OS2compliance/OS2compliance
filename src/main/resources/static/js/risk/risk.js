@@ -339,7 +339,7 @@ function CreateTable() {
         });
 
         const datatableId = 'risksDatatable'
-        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, exportRisksUrl, datatableId);
+        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, datatableId);
 
         initSaveAsExcelButton(customGridFunctions,'threatAssessment', 'risks', 'Risikovurderinger');
 

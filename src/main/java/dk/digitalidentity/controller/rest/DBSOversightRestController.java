@@ -90,7 +90,10 @@ public class DBSOversightRestController {
 			@RequestBody ExcelExportRequest request,
 			HttpServletResponse response
 	) throws IOException {
-		List<DBSOversightGrid> dbsOversightGrids = assetOversightService.findDBSGridByIds(request.getSelectedIds());
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<DBSOversightGrid> dbsOversightGrids = assetOversightService.findDBSGridByIds(ids);
 
 		if (dbsOversightGrids.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

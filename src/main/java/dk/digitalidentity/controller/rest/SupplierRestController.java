@@ -181,7 +181,10 @@ public class SupplierRestController {
 	) throws IOException {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-		List<SupplierGrid> supplierGrids = supplierService.findGridByIds(request.getSelectedIds(), user);
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<SupplierGrid> supplierGrids = supplierService.findGridByIds(ids, user);
 
 		if (supplierGrids.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -205,7 +208,6 @@ public class SupplierRestController {
 
 		// Use SupplierGrid list instead of Supplier list
 		excelExportHelperService.exportEntities(
-				supplierGrids,
 				SupplierGridDTO.class,
 				dtos,
 				request,

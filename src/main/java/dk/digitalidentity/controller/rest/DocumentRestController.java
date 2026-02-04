@@ -137,7 +137,10 @@ public class DocumentRestController {
 	) throws IOException {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-		List<Document> documents = documentService.findByIds(request.getSelectedIds(), user);
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<Document> documents = documentService.findByIds(ids, user);
 
 		excelExportHelperService.exportEntities(
 				documents,

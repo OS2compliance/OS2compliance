@@ -1,12 +1,11 @@
+import { initSaveAsExcelButtonClientside } from "/js/excel-export/excel-export-init.js";
+
 let transferToChoice, transferFromChoice, transferFromSelect, transferToSelect, transferResponsibilityModal;
 
-token = document.getElementsByName("_csrf")[0].getAttribute("content");
+const token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener("DOMContentLoaded", function(event) {
     pageLoaded()
-
-
-    initSaveAsExcelButtonWithDefaultGrid('inactiveUsersDatatable', 'Inaktive_ansvarlige')
 });
 
 function transferResponsibility() {
@@ -162,4 +161,12 @@ function pageLoaded() {
             }
         }
     }).render(document.getElementById("inactiveUsersDatatable"));
+
+    initSaveAsExcelButtonClientside('inactiveUsersDatatable', 'user', 'users/inactive', 'Inaktive_ansvarlige', () => {
+        // data variable is available from Thymeleaf
+        return data.map(item => ({
+            id: item.uuid,
+            name: item.name
+        }));
+    });
 }
