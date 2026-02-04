@@ -109,6 +109,12 @@
             width:33%;
         }
 
+        .threatAndTasksTables .preserve-linebreaks {
+            white-space: pre-wrap !important;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
     </style>
 </head>
 <body>
@@ -292,7 +298,7 @@
                     <tr th:if="${threat.relevant}">
                         <td th:text="${threat.index}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.threatType}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
-                        <td th:text="${threat.threat}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td class="preserve-linebreaks" th:text="${threat.threat}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.initialRisk.probability > 0 ? threat.initialRisk.probability : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.initialRisk.consequence > 0 ? threat.initialRisk.consequence : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.initialRisk.score > 0  && threat.initialRisk.color != null? threat.initialRisk.score : ''}" th:style="'background-color:' + ${threat.initialRisk.color}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
