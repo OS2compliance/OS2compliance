@@ -299,7 +299,8 @@ public class RiskController {
     public String risk(final Model model, @PathVariable final long id) {
 		final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		if (!(SecurityUtil.isOperationAllowed(Roles.READ_ALL) ||
-				(SecurityUtil.isOperationAllowed(Roles.READ_OWNER_ONLY) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
+				(SecurityUtil.isOperationAllowed(Roles.READ_OWNER_ONLY) &&
+						threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
         model.addAttribute("risk", threatAssessment);
