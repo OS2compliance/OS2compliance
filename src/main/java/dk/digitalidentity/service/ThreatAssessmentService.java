@@ -1050,7 +1050,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		if (comment == null || comment.isBlank()) {
 			return null;
 		}
-		return StringEscapeUtils.escapeHtml4(comment.replace("\n", "<br/>"));
+		return StringEscapeUtils.escapeHtml4(comment).replace("\n", "<br/>");
 	}
 
     private String getPresent(final ThreatAssessment threatAssessment) {
