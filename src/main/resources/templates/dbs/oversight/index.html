@@ -49,7 +49,7 @@
                                 <!-- Custom search selectors-->
                                 <select class="form-control form-select editField" data-trigger="" name="oversightResultSearchSelector" id="oversightResultSearchSelector" tabindex="-1" required >
                                     <option th:text="'Alle'" th:value="null"></option>
-                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).values()}"
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.ColorStatus).values()}"
                                             th:value="${option}" th:text="${option.message}"></option>
                                     <option th:text="'Ingen'" th:value="__EMPTY__"></option>
                                 </select>

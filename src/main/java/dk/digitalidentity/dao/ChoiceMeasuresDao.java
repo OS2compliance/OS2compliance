@@ -1,5 +1,6 @@
 package dk.digitalidentity.dao;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -17,4 +18,9 @@ public interface ChoiceMeasuresDao extends JpaRepository<ChoiceMeasure, Long> {
 
     @Query("select cm from ChoiceMeasure cm where cm.name like :search or cm.identifier like :search")
     Page<ChoiceMeasure> searchForMeasure(@Param("search") final String search, final Pageable pageable);
+
+	@Query("SELECT cm FROM ChoiceMeasure cm " +
+			"JOIN FETCH cm.category c " +
+			"ORDER BY c.sortOrder, cm.sortOrder")
+	List<ChoiceMeasure> findAllSorted();
 }

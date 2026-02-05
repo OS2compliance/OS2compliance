@@ -59,7 +59,9 @@
                                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#assetTab" type="button" role="tab" aria-controls="asset" aria-selected="true">Generelt</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#measuresTab" type="button" role="tab" aria-controls="historik" aria-selected="false">Foranstaltninger</button>
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#measuresTab" type="button" role="tab" aria-controls="historik" aria-selected="false">
+                                    <span th:if="${asset.assetMeasureStatus != null}" class="badge" th:classappend="${asset.assetMeasureStatus.name() == 'RED'} ? 'bg-red' : (${asset.assetMeasureStatus.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspSikkerhed
+                                </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataProcessingTab" type="button" role="tab" aria-controls="historik" aria-selected="false">Databehandling</button>

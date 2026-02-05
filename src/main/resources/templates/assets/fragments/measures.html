@@ -6,31 +6,46 @@
         <div class="row">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
                 <div class="row mb-3 gap-1">
-                    <button id="editMeasureBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setMeasureEditState(true)">Rediger foranstaltninger</button>
-                    <button id="cancelMeasureBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setMeasureEditState(false)" hidden>Annuller</button>
+                    <button id="editMeasureBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right">Rediger foranstaltninger</button>
+                    <button id="cancelMeasureBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" hidden>Annuller</button>
                     <button id="saveMeasureBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
                 </div>
                 <input name="assetId" th:value="${asset.id}" hidden>
+
+                <div class="row mb-3">
+                    <label for="assetMeasureStatus" class="col-sm-2 col-form-label">Vurdering</label>
+                    <div class="col-sm-4">
+                        <select class="form-control form-select editField"
+                                id="assetMeasureStatus"
+                                name="assetMeasureStatus"
+                                disabled>
+                            <option value="">Vælg vurdering</option>
+                            <option value="GREEN" th:selected="${asset.assetMeasureStatus?.name() == 'GREEN'}">Grøn</option>
+                            <option value="YELLOW" th:selected="${asset.assetMeasureStatus?.name() == 'YELLOW'}">Gul</option>
+                            <option value="RED" th:selected="${asset.assetMeasureStatus?.name() == 'RED'}">Rød</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div class="row mb-3">
                     <table class="table table-striped" style="border-collapse: collapse;">
                         <thead>
                             <tr>
                                 <th class="col-lg-1">Kategori</th>
-                                <th class="col-lg-4">Tekniske foranstaltninger</th>
+                                <th class="col-lg-4">Spørgsmål</th>
                                 <th class="col-lg-2">Svar</th>
                                 <th class="col-lg-3">Noter</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="collapse show" aria-expanded="true"  th:each="measure, itemStat : *{measures}"  th:id="|measureRow_${measure.identifier}|">
-                                <td th:text="${measure.choice.category}"></td>
+                                <td th:text="${measure.choice.category.name}"></td>
                                 <td>
                                     <span th:text="${measure.choice.name}"></span>
                                     <input th:name="|measures[${itemStat.index}].identifier|" th:value="${measure.identifier}" hidden>
                                 </td>
                                 <td>
-                                    <select class="form-control form-select editField" th:name="|measures[${itemStat.index}].answer|" onchange="measureStateChanged()"
+                                    <select class="form-control form-select editField" th:name="|measures[${itemStat.index}].answer|"
                                             th:id="|measureSelect${measure.identifier}|" tabindex="-1" disabled>
                                         <option value=""></option>
                                         <option th:each="choice: ${measure.choice.values}" th:value="${choice.identifier}"
@@ -53,7 +68,8 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
 
-        const measures = /*[[${measuresForm.measures}]]*/ [];
+        const measures = /*[[${measuresForJs}]]*/ [];
+
         document.addEventListener("DOMContentLoaded", function(event) {
             const collapseElementList = [].slice.call(document.querySelectorAll('.collapse'));
             collapseElementList.map(function (collapseEl) {
@@ -62,6 +78,27 @@
                 });
             });
             measureStateChanged();
+
+            // Add event listeners to buttons
+            const editBtn = document.getElementById('editMeasureBtn');
+            const cancelBtn = document.getElementById('cancelMeasureBtn');
+
+            if (editBtn) {
+                editBtn.addEventListener('click', function() {
+                    setMeasureEditState(true);
+                });
+            }
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    setMeasureEditState(false);
+                });
+            }
+
+            // Add change listeners to all selects
+            document.querySelectorAll('select[id^="measureSelect"]').forEach(select => {
+                select.addEventListener('change', measureStateChanged);
+            });
         });
 
         function measureStateChanged() {
@@ -69,6 +106,8 @@
             measures.forEach(m => {
                 const questionIdentifier = m.choice.identifier;
                 const select = document.getElementById('measureSelect' + questionIdentifier);
+                if (!select) return;
+
                 const selectedValue = select.value;
                 // "measure-7" => "Foretages backup af data i systemet?"
                 if (questionIdentifier === "measure-7") {
