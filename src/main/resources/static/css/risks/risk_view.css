@@ -46,6 +46,12 @@ textarea {
     color: #75868f;
 }
 
+.preserve-linebreaks {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
 select {
   color: #75868f;
   background-color: transparent;
