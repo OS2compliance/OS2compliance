@@ -42,7 +42,7 @@
                         <div th:if="${log.taskResult} != null" class="row mb-1">
                             <div class="col-lg-3 col-sm-4"><h5>Resultat:</h5></div>
                             <div class="col-lg-9 col-sm-8 fs-6">
-                                <span class="badge" th:classappend="${log.taskResult?.name == 'CRITICAL_ERROR'} ? 'bg-red' : (${log.taskResult?.name == 'NO_CRITICAL_ERROR'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbsp<span th:text="${log.taskResult?.value}"></span>
+                                <span class="badge" th:classappend="${log.taskResult?.identifier == 'CRITICAL_ERROR'} ? 'bg-red' : (${log.taskResult?.identifier == 'NO_CRITICAL_ERROR'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbsp<span th:text="${log.taskResult?.caption}"></span>
                             </div>
                         </div>
                     </div>
