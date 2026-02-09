@@ -11,7 +11,8 @@ SELECT s.id,
         WHERE a.supplier_id = s.id)                                         AS last_oversight_date,
        prop.prop_value                                                      AS kitos_uuid,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
+       s.responsible_uuid
 FROM suppliers s
          LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
          LEFT JOIN supplier_tag rt ON rt.supplier_id = s.id

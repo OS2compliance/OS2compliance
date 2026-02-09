@@ -39,6 +39,8 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
+import dk.digitalidentity.model.entity.grid.RegisterGrid;
+import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
@@ -812,5 +814,35 @@ public class AssetService implements TagableService<Asset> {
 			assets = new ArrayList<>(assetDao.findByAssetType_IdentifierAndResponsibleUsers_Uuid(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID, userUuid));
 		}
 		return assets;
+	}
+
+	public List<DBSAssetGrid> findDBSGridByIds(List<Long> ids) {
+		if (ids == null || ids.isEmpty() || !SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			return List.of();
+		}
+
+		return dbsAssetGridDao.findAllById(ids);
+	}
+
+	public List<AssetGrid> findByIds(List<Long> ids, User user) {
+		if (ids == null || ids.isEmpty()) {
+			return List.of();
+		}
+
+		// Fetch all asset grids by IDs
+		List<AssetGrid> assetGrids = assetGridDao.findAllById(ids);
+
+		// Apply security filtering
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			return assetGrids;
+		} else {
+			// User can only read assets they are responsible for
+			return assetGrids.stream()
+					.filter(ag ->
+							ag.getResponsibleUserUuids().contains(user.getUuid()) ||
+									ag.getManagerUuids().contains(user.getUuid())
+					)
+					.toList();
+		}
 	}
 }

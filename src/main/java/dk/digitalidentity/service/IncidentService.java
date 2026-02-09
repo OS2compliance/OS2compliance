@@ -243,4 +243,12 @@ public class IncidentService {
 	public List<Incident> getByIds (List<Long> ids) {
 		return incidentDao.findAllById(ids);
 	}
+
+	public List<Incident> findByIds(List<Long> selectedIds) {
+		return incidentDao.findAllById(selectedIds);
+	}
+
+	public List<IncidentField> findFieldsByIds(List<Long> ids) {
+		return (List<IncidentField>) incidentFieldDao.findAllById(ids);
+	}
 }

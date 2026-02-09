@@ -81,11 +81,12 @@
     <nav th:replace="~{fragments/navbar :: main (page='incidentlogs')}"></nav>
 </div>
 
+<div th:replace="~{fragments/excel-export-modal :: excelExportModal}"></div>
+
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true, statistic = true)}"></div>
 
 <script type="module"  th:src="@{/js/incidents/incident-service.js}" defer></script>
 <script type="module"  th:src="@{/js/incidents/incidentlog.js}" defer></script>
-<script th:src="@{/js/export-service.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+

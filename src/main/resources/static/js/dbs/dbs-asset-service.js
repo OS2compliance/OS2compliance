@@ -1,4 +1,5 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
+import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 
 let dbsAssetService = new DBSAssetService();
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -115,7 +116,7 @@ function DBSAssetService() {
         });
 
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridDBSAssetsUrl, exportDBSAssetsUrl,'assetsDatatable');
+        const customGridFunctions = new CustomGridFunctions(grid, gridDBSAssetsUrl,'assetsDatatable');
 
         new ColumnOptions(
             'assetsDatatable',
@@ -124,7 +125,7 @@ function DBSAssetService() {
             ['dbsNavn','aktiv(er)', 'sidstHentet', 'leverandør'],
             ['id'])
 
-        initSaveAsExcelButton(customGridFunctions, 'DBS_aktiver');
+        initSaveAsExcelButton(customGridFunctions, 'dbsAsset', 'dbs/assets', 'DBS_aktiver');
     }
 
     this.handleAddRemoveEvent = async function (event) {

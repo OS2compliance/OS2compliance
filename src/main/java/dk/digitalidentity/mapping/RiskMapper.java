@@ -48,6 +48,12 @@ public interface RiskMapper {
                 .build();
     }
 
+	default List<RiskDTO> toDTO(List<RiskGrid> riskGrids, Map<Long, Tag> tagsById) {
+		return riskGrids.stream()
+				.map(grid -> toDTO(grid, tagsById))
+				.toList();
+	}
+
     default RiskDTO toDTO(final RiskGrid riskGrid, Set<AllowedAction> allowedActions, Map<Long, Tag> tagsById) {
         RiskDTO riskDTO = toDTO(riskGrid, tagsById);
 		riskDTO.setAllowedActions(allowedActions);
