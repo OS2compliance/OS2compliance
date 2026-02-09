@@ -13,3 +13,4 @@ application-dev.properties
 
 target/
 .factorypath
+/.claude/
