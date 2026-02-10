@@ -243,7 +243,7 @@ public class AssetsController {
 
 		for (final ChoiceMeasure choiceMeasure : choiceMeasures) {
 			final AssetMeasure assetMeasure = assetMeasures.stream()
-					.filter(m -> Objects.equals(m.getMeasure().getId(), choiceMeasure.getId()))
+					.filter(m -> m.getMeasure() != null && Objects.equals(m.getMeasure().getId(), choiceMeasure.getId()))
 					.findAny().orElse(new AssetMeasure());
 			final ViewMeasureDTO measure = new ViewMeasureDTO();
 
