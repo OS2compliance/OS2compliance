@@ -1,6 +1,7 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { formatThreatTypes, formatThreatCatalogs, formatRiskAssessment } from "../risk-assessment-formatter.js";
+import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
@@ -383,11 +384,11 @@ function initGrid() {
     const datatableId ="assetsDatatable"
     const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( datatableId ));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, datatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, datatableId);
 
     new ColumnOptions(datatableId, grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos', 'riskScore', 'riskData'])
 
-    initSaveAsExcelButton(customGridFunctions,'Aktiver')
+    initSaveAsExcelButton(customGridFunctions, 'asset', 'assets', 'Aktiver')
 }
 
 function initGridActionButtons() {

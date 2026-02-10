@@ -4,6 +4,10 @@ import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.mapping.DBSAssetMapper;
 import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
+import dk.digitalidentity.model.dto.excel.EntityListRequest;
+import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
+import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
@@ -12,7 +16,7 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireDBS;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
-import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.ExcelExportHelperService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SecurityUserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,8 +52,8 @@ public class DBSAssetsRestController {
     private final AssetService assetService;
     private final AssetOversightService assetOversightService;
     private final RelationService relationService;
-	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
+	private final ExcelExportHelperService excelExportHelperService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -65,28 +70,6 @@ public class DBSAssetsRestController {
 
 		assert assets != null;
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
-	}
-
-	@RequireReadOwnerOnly
-	@PostMapping("export")
-	@Transactional
-	public void export(
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
-			HttpServletResponse response
-	) throws IOException {
-		User user = securityUserService.getCurrentUserOrThrow();
-
-		int pageLimit = Integer.MAX_VALUE;
-
-		// Fetch all records (no pagination)
-		Page<DBSAssetGrid> assets = assetService.getDbsAssets(sortColumn, sortDirection, filters, 0, pageLimit, user);
-
-		assert assets != null;
-		List<DBSAssetDTO> allData = mapper.toDTO(assets.getContent());
-		excelExportService.exportToExcel(allData, DBSAssetDTO.class, fileName, response);
 	}
 
 	record UpdateDBSAssetDTO(long id, List<Long> assets) {}
@@ -111,5 +94,56 @@ public class DBSAssetsRestController {
 				|| fieldName.equals("supplier")
                 || fieldName.equals("assets.name")
 				|| fieldName.equals("name");
+	}
+
+	@GetMapping("export-metadata")
+	@RequireReadOwnerOnly
+	public ExportMetadataDTO getExportMetadata() {
+		return excelExportHelperService.getMetadata(DBSAssetDTO.class);
+	}
+
+	@PostMapping("export-entities")
+	@RequireReadOwnerOnly
+	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
+		User user = securityUserService.getCurrentUserOrThrow();
+		Page<DBSAssetGrid> assets = assetService.getDbsAssets(
+				null,
+				"ASC",
+				request.getFilters(),
+				0,
+				Integer.MAX_VALUE,
+				user
+		);
+
+		return excelExportHelperService.toEntityListItems(
+				assets.getContent(),
+				DBSAssetGrid::getId,
+				DBSAssetGrid::getName
+		);
+	}
+
+	@PostMapping("export-custom")
+	@RequireReadOwnerOnly
+	public void exportCustom(
+			@RequestBody ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<DBSAssetGrid> dbsAssetGrids = assetService.findDBSGridByIds(ids);
+
+		if (dbsAssetGrids.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		excelExportHelperService.exportEntities(
+				dbsAssetGrids,
+				DBSAssetDTO.class,
+				mapper::toDTO,
+				request,
+				response
+		);
 	}
 }

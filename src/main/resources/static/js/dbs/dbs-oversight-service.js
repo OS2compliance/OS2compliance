@@ -188,9 +188,9 @@ function DBSOversightService() {
         });
         searchService.initSearch(grid, gridConfig);
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridDBSOversightUrl, exportDBSOversightUrl, 'assetsDatatable');
+        const customGridFunctions = new CustomGridFunctions(grid, gridDBSOversightUrl, 'assetsDatatable');
 
-        initSaveAsExcelButton(customGridFunctions, 'DBS_tilsyn');
+        initSaveAsExcelButton(customGridFunctions, 'dbsOversight', 'dbs/oversight' 'DBS_tilsyn');
 
         new ColumnOptions(
             'assetsDatatable',

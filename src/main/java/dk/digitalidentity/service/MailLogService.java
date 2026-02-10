@@ -2,7 +2,9 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.MailLogDao;
 import dk.digitalidentity.dao.grid.MailLogGridDao;
+import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.MailLog;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.grid.MailLogGrid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -41,5 +44,9 @@ public class MailLogService {
 				buildPageable(page, pageLimit, sortColumn, sortDirection),
 				MailLogGrid.class
 		);
+	}
+
+	public List<MailLog> findByIds(List<Long> selectedIds) {
+		return mailLogDao.findAllById(selectedIds);
 	}
 }

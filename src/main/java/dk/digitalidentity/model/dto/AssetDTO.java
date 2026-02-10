@@ -58,33 +58,33 @@ public class AssetDTO {
 	private List<TagDTO> tags;
 
 	// Risk assessment calculated fields
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Gennemsnitlig sandsynlighed", order = 14)
 	private Double avgProbability;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Gennemsnitlig Konsekvens", order = 15)
 	private Double avgConsequenceOverall;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for den registrerede - fortrolighed", order = 16)
 	private Double avgConsequenceConfidentialityRegistered;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for organisationen - fortrolighed", order = 19)
 	private Double avgConsequenceConfidentialityOrganisation;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for samfundet - fortrolighed", order = 22)
 	private Double avgConsequenceConfidentialitySociety;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for den registrerede - integritet", order = 17)
 	private Double avgConsequenceIntegrityRegistered;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for organisationen - integritet", order = 20)
 	private Double avgConsequenceIntegrityOrganisation;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for samfundet - integritet", order = 23)
 	private Double avgConsequenceIntegritySociety;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for den registrerede - tilgængelighed", order = 18)
 	private Double avgConsequenceAvailabilityRegistered;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for organisationen - tilgængelighed", order = 21)
 	private Double avgConsequenceAvailabilityOrganisation;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for samfundet - tilgængelighed", order = 24)
 	private Double avgConsequenceAvailabilitySociety;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Konsekvens for samfundet - autenticitet", order = 25)
 	private Double avgConsequenceAuthenticitySociety;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Trusselstyper", order = 12)
 	private String threatTypeList;
-	@ExcludeFromExport
+	@ExcelColumn(headerName = "Risikokataloger", order = 13)
 	private String catalogList;
 	@ExcludeFromExport
 	private Double riskScore;

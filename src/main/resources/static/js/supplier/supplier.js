@@ -1,5 +1,6 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
+import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 
 let editDialog;
 
@@ -208,9 +209,9 @@ function initGrid() {
     const datatableId ='suppliersDatatable'
     const grid = new gridjs.Grid(gridConfig).render(document.getElementById(datatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, exportSuppliersUrl, datatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, datatableId);
 
-    initSaveAsExcelButton(customGridFunctions, 'Leverandører')
+    initSaveAsExcelButton(customGridFunctions, 'supplier', 'suppliers', 'Leverandører')
 
     new ColumnOptions(
         datatableId,

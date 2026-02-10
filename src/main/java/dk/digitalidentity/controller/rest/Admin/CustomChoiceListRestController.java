@@ -1,17 +1,19 @@
 package dk.digitalidentity.controller.rest.Admin;
 
+import dk.digitalidentity.model.ExcelColumn;
+import dk.digitalidentity.model.ExcludeFromExport;
+import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
+import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
-import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
-import dk.digitalidentity.service.DocumentService;
-import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.ChoiceValueService;
-import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ExcelExportHelperService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +24,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -32,11 +38,8 @@ import java.util.Objects;
 public class CustomChoiceListRestController {
 
     private final ChoiceService choiceService;
-    private final AssetService assetService;
-    private final RegisterService registerService;
 	private final ChoiceValueService choiceValueService;
-	private final TaskService taskService;
-	private final DocumentService documentService;
+	private final ExcelExportHelperService excelExportHelperService;
 
 	// Request/Response DTOs
 	public record CreateChoiceListRecord(String caption, String description) {}
@@ -156,5 +159,50 @@ public class CustomChoiceListRestController {
 		}
 
 		return ResponseEntity.ok(ChoiceValueDetailResponse.success(choiceValue));
+	}
+
+	record ChoiceListExportDTO(
+			@ExcludeFromExport
+			Long id,
+			@ExcelColumn(headerName = "Titel", order = 1)
+			String name
+	) {}
+
+	@GetMapping(value = "export-metadata", consumes = "*/*")
+	@RequireReadOwnerOnly
+	public ExportMetadataDTO getExportMetadata() {
+		return excelExportHelperService.getMetadata(ChoiceListExportDTO.class);
+	}
+
+	@PostMapping("export-custom")
+	@RequireReadOwnerOnly
+	public void exportCustom(
+			@RequestBody ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+
+		List<ChoiceList> choiceLists = choiceService.findByIds(ids);
+
+		if (choiceLists.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		List<ChoiceListExportDTO> dtos = choiceLists.stream()
+				.map(cl -> new ChoiceListExportDTO(
+						cl.getId(),
+						cl.getName()
+				))
+				.toList();
+
+		excelExportHelperService.exportEntities(
+				ChoiceListExportDTO.class,
+				dtos,
+				request,
+				response
+		);
 	}
 }

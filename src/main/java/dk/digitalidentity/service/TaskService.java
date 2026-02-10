@@ -436,4 +436,24 @@ public class TaskService implements TagableService<Task> {
 			relationService.addRelation(savedTask, relatable);
 		}
 	}
+
+	public List<Task> findByIds(List<Long> ids, User user) {
+		if (ids == null || ids.isEmpty()) {
+			return List.of();
+		}
+
+		// Fetch all tasks by IDs
+		List<Task> tasks = taskDao.findAllById(ids);
+
+		// Apply security filtering
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			return tasks;
+		} else {
+			// User can only read tasks where they are one of the responsible users
+			return tasks.stream()
+					.filter(task -> task.getResponsibleUsers().stream()
+							.anyMatch(responsibleUser -> responsibleUser.getUuid().equals(user.getUuid())))
+					.toList();
+		}
+	}
 }

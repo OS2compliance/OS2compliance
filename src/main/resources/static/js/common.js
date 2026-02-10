@@ -517,13 +517,3 @@ class NetworkService {
     }
 
 }
-
-function initSaveAsExcelButton(customGridFunctions, filename) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton?.addEventListener("click", () => exportGridServerSide(customGridFunctions, filename))
-}
-
-function initSaveAsExcelButtonWithDefaultGrid(tableId, filename) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click", () => exportHtmlTableToExcel(tableId, filename))
-}

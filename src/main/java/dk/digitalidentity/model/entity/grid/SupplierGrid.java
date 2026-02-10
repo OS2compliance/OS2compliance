@@ -52,4 +52,6 @@ public class SupplierGrid {
 	@Column
 	private String tagIds;
 
+	@Column String responsibleUuid;
+
 }

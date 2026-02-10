@@ -1,6 +1,7 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { formatThreatTypes, formatThreatCatalogs, formatRiskAssessment } from "../risk-assessment-formatter.js";
+import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 
 let grid = null;
 
@@ -320,7 +321,7 @@ function initGrid() {
     const registerDatatableId = 'registersDatatable';
     grid = new gridjs.Grid(gridConfig).render(document.getElementById(registerDatatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, exportRegistersUrl, registerDatatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, registerDatatableId);
 
     new ColumnOptions(
         registerDatatableId,
@@ -329,6 +330,6 @@ function initGrid() {
         ['titel','risikoVurdering','status', 'aktiver'],
         ['id', 'riskScore', 'riskData'])
 
-    initSaveAsExcelButton(customGridFunctions, 'Fortegnelse')
+    initSaveAsExcelButton(customGridFunctions, 'register', 'registers', 'Fortegnelse')
 
 }

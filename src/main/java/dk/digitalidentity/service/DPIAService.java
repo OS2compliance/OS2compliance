@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
@@ -335,5 +336,38 @@ public class DPIAService implements TagableService<DPIA> {
 	@Override
 	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
 		return dpiaDao.findTagsByEntityIds(entityIds);
+	}
+
+	public List<DPIA> findByIds(List<Long> ids, User user) {
+		if (ids == null || ids.isEmpty()) {
+			return List.of();
+		}
+
+		// Fetch all DPIAs by IDs
+		List<DPIA> dpias = dpiaDao.findAllById(ids);
+
+		// Apply security filtering
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			return dpias;
+		} else {
+			// User can only read DPIAs they are responsible for
+			String userUuid = user.getUuid();
+			Set<DPIA> ownedAssetDPIAs = findByOwnedAsset(userUuid);
+			Set<Long> ownedAssetDPIAIds = ownedAssetDPIAs.stream()
+					.map(DPIA::getId)
+					.collect(Collectors.toSet());
+
+			return dpias.stream()
+					.filter(dpia -> {
+						boolean isRiskOwner = dpia.getResponsibleUser() != null &&
+								dpia.getResponsibleUser().getUuid().equals(userUuid);
+						boolean isAssetOwner = ownedAssetDPIAIds.contains(dpia.getId());
+						boolean isApprover = dpia.getDpiaReports().stream()
+								.anyMatch(r -> r.getReportApproverUuid().equalsIgnoreCase(userUuid));
+
+						return isRiskOwner || isAssetOwner || isApprover;
+					})
+					.toList();
+		}
 	}
 }
