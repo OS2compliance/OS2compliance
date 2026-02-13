@@ -1,5 +1,6 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import IncidentService from "./incident-service.js";
+import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 
 export default function IncidentGridService () {
     this.incidentService = new IncidentService();
@@ -155,7 +156,14 @@ export default function IncidentGridService () {
             ['id'])
 
         this.initGridActions()
-        initSaveAsExcelButton(customGridFunctions, 'Hændelseslog')
+        initSaveAsExcelButton(customGridFunctions, 'incident', 'incidents', 'Hændelseslog', () => {
+            // Return additional filters including dates
+            return {
+                fromDate: this.filterFrom || '',
+                toDate: this.filterTo || '',
+                search: searchService.getSavedSearch() || ''
+            };
+        });
     }
 
     this.mapRow = (field) => {

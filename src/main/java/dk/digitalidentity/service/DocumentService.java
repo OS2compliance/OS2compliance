@@ -211,4 +211,26 @@ public class DocumentService implements TagableService<Document> {
 	public boolean isInUseOnDocument(Long id) {
 		return documentDao.existsByDocumentTypeId(id);
 	}
+
+	public List<Document> findByIds(List<Long> ids, User user) {
+		if (ids == null || ids.isEmpty()) {
+			return List.of();
+		}
+
+		// Fetch all documents by IDs
+		List<Document> documents = documentDao.findAllById(ids);
+
+		// Apply same security filtering as in the grid
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// User can read all documents
+			return documents;
+		} else {
+			// User can only read documents where they are responsible
+			return documents.stream()
+					.filter(doc -> doc.getResponsibleUser() != null &&
+							doc.getResponsibleUser().getUuid().equals(user.getUuid()))
+					.toList();
+		}
+	}
+
 }

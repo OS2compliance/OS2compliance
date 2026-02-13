@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -139,5 +140,50 @@ public interface TaskMapper {
 					}
 				})
 				.collect(Collectors.toSet());
+	}
+
+	default TaskDTO toDTOForExport(final Task task, Map<Long, Tag> tagsById) {
+		// Map tags from tagsById map
+		List<TagDTO> tags = task.getTags().stream()
+				.map(tag -> {
+					Tag loadedTag = tagsById.get(tag.getId());
+					if (loadedTag == null) {
+						return null;
+					}
+					return TagDTO.builder()
+							.label(loadedTag.getValue())
+							.color(loadedTag.getColor().getHexCode())
+							.contrast(loadedTag.getColor().getContrastHexCode())
+							.build();
+				})
+				.filter(java.util.Objects::nonNull)
+				.sorted(Comparator.comparing(TagDTO::getLabel))
+				.toList();
+
+		// Get responsible user names
+		String responsibleNames = task.getResponsibleUsers().stream()
+				.map(User::getName)
+				.collect(Collectors.joining(", "));
+
+		// Check if task is completed
+		boolean completed = task.getTaskType() == TaskType.TASK && !task.getLogs().isEmpty();
+
+		return TaskDTO.builder()
+				.id(task.getId())
+				.name(task.getName())
+				.taskType(nullSafe(() -> task.getTaskType().getMessage()))
+				.responsibleNames(responsibleNames)
+				.responsibleOU(nullSafe(() -> task.getResponsibleOu().getName()))
+				.nextDeadline(nullSafe(() -> task.getNextDeadline().format(DK_DATE_FORMATTER)))
+				.taskRepetition(nullSafe(() -> task.getRepetition().getMessage()))
+				.completed(completed)
+				.tags(tags)
+				.build();
+	}
+
+	default List<TaskDTO> toDTOForExportFromTasks(List<Task> tasks, Map<Long, Tag> tagsById) {
+		List<TaskDTO> taskDTOS = new ArrayList<>();
+		tasks.forEach(task -> taskDTOS.add(toDTOForExport(task, tagsById)));
+		return taskDTOS;
 	}
 }

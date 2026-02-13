@@ -1,10 +1,11 @@
+import { initSaveAsExcelButtonClientside } from "/js/excel-export/excel-export-init.js";
+
 const catalog = new CatalogService();
 
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener("DOMContentLoaded", function (event) {
     initGrid()
-    initSaveAsExcelButtonWithDefaultGrid('catalogsDatatable', 'Trusselskataloger')
 });
 
 function initGrid() {
@@ -89,6 +90,13 @@ function initGrid() {
             }
         }
     }).render(document.getElementById("catalogsDatatable"));
+
+    initSaveAsExcelButtonClientside('catalogsDatatable', 'threatCatalog', 'catalogs', 'Trusselskataloger', () => {
+        return data.map(item => ({
+            id: item.identifier,  // String UUID
+            name: item.name
+        }));
+    });
 }
 
 function CatalogService() {

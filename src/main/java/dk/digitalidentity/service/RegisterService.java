@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
+import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.tag.TagableService;
@@ -205,5 +206,27 @@ public class RegisterService implements TagableService<Register> {
 	@Override
 	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
 		return registerDao.findTagsByEntityIds(entityIds);
+	}
+
+	public List<RegisterGrid> findByIds(List<Long> ids, User user) {
+		if (ids == null || ids.isEmpty()) {
+			return List.of();
+		}
+
+		// Fetch all register grids by IDs
+		List<RegisterGrid> registerGrids = registerGridDao.findAllById(ids);
+
+		// Apply security filtering
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			return registerGrids;
+		} else {
+			// User can only read registers they are responsible for
+			return registerGrids.stream()
+					.filter(rg ->
+								rg.getResponsibleUserUuids().contains(user.getUuid()) ||
+								rg.getCustomResponsibleUserUuids().contains(user.getUuid())
+						   )
+					.toList();
+		}
 	}
 }

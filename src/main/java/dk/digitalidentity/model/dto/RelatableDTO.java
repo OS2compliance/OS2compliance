@@ -14,4 +14,9 @@ public class RelatableDTO {
     private String name;
     private String type;
     private String typeMessage;
+
+	// Used by ExcelExportService.formatCellValue() for List formatting
+	public String getLabel() {
+		return typeMessage + ": " + name;
+	}
 }

@@ -113,4 +113,8 @@ public class TagService {
 				.filter(Objects::nonNull)
 				.collect(Collectors.toSet());
 	}
+
+	public List<Tag> findByIds(List<Long> selectedIds) {
+		return tagDao.findAllById(selectedIds);
+	}
 }
