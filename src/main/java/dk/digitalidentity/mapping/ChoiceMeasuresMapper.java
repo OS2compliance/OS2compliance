@@ -36,7 +36,7 @@ public interface ChoiceMeasuresMapper {
                 .id(measure.getId())
                 .identifier(measure.getIdentifier())
                 .name(measure.getName())
-                .category(measure.getCategory())
+				.category(measure.getCategory().getName())
                 .valueIdentifiers(measure.getValues().stream()
                         .map(ChoiceValue::getIdentifier)
                         .collect(Collectors.toList()))
@@ -45,6 +45,9 @@ public interface ChoiceMeasuresMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "values", ignore = true)
+	@Mapping(target = "category", ignore = true)
+	@Mapping(target = "sortOrder", ignore = true)
+	@Mapping(target = "deleted", ignore = true)
     ChoiceMeasure fromDTO(final ChoiceMeasureDTO eo);
 
     default PageDTO<ChoiceMeasureDTO> toDTO(final Page<ChoiceMeasure> measures) {

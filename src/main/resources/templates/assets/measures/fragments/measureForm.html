@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<th:block th:fragment="measureForm">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="${formTitle}"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+                    <i class="pli-exclamation me-2"></i>
+                    <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <form th:id="${formId}" class="needs-validation" novalidate th:action="@{/assets/measures/schema/measure/form}" th:object="${measure}" method="post">
+                    <input id="id" th:field="*{id}" type="hidden">
+
+                    <div class="row mt-4">
+                        <label class="col-sm-4 col-form-label">Kategori <span class="text-danger">*</span></label>
+                        <div class="col-sm-8">
+                            <select th:field="*{categoryId}" class="form-control" required>
+                                <option value="">Vælg kategori</option>
+                                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Vælg venligst en kategori
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <label class="col-sm-4 col-form-label">Spørgsmål <span class="text-danger">*</span></label>
+                        <div class="col-sm-8">
+                            <textarea th:field="*{name}" class="form-control" rows="3" required minlength="3"></textarea>
+                            <div class="invalid-feedback">
+                                Spørgsmål er påkrævet og skal være mindst 3 tegn
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <label th:for="${formId + 'ValuesSelect'}" class="col-sm-4 col-form-label">Mulige svar</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select" th:field="*{valueIds}" th:id="${formId + 'ValuesSelect'}" multiple>
+                                <option th:each="value : ${availableValues}"
+                                        th:value="${value.id}"
+                                        th:text="${value.caption}"
+                                        th:selected="${measure.valueIds != null && measure.valueIds.contains(value.id)}">
+                                </option>
+                            </select>
+                            <small class="form-text text-muted">Vælg hvilke svarmuligheder der skal være tilgængelige for dette spørgsmål</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="button" class="btn btn-primary submit-measure-form">Gem</button>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

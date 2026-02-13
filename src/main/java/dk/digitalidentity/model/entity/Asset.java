@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.enums.AiRiskFactor;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
+import dk.digitalidentity.model.entity.enums.ColorStatus;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIACompletionStatus;
@@ -180,6 +181,10 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "data_processing_id", referencedColumnName = "id")
     private DataProcessing dataProcessing;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private ColorStatus assetMeasureStatus;
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

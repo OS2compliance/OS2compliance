@@ -97,6 +97,10 @@ public class ChoiceService {
 		return choiceListDao.save(choiceList);
 	}
 
+	public Optional<ChoiceValue> findById(long id) {
+		return choiceValueDao.findById(id);
+	}
+
 	public List<ChoiceList> findByIds(List<Long> ids) {
 		return choiceListDao.findAllById(ids);
 	}

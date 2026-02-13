@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head (textEditor = false, sweetalerts = true)}"></head>
+<body class="jumping">
+<script type="module" th:src="@{/js/asset/measures/schema.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/dpia_schema.css}" />
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Opsætning af sikkerhed</li>
+                            </ol>
+                        </nav>
+                        <div class="row mt-4 mb-2">
+                            <h1 class="page-title mb-0">Opsætning af sikkerhed</h1>
+                        </div>
+                    </div>
+                    <div class="align-self-center d-inline-flex gap-2">
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='createCategoryButton', text='Ny kategori', iconClass='ti-plus')}"></div>
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='createMeasureButton', text='Nyt spørgsmål', iconClass='ti-plus')}"></div>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed rounded-0">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div id="spinner" class="sk-circle-fade" style="display: none;">
+                                    <div class="sk-circle1 sk-circle"></div>
+                                    <div class="sk-circle2 sk-circle"></div>
+                                    <div class="sk-circle3 sk-circle"></div>
+                                    <div class="sk-circle4 sk-circle"></div>
+                                    <div class="sk-circle5 sk-circle"></div>
+                                    <div class="sk-circle6 sk-circle"></div>
+                                    <div class="sk-circle7 sk-circle"></div>
+                                    <div class="sk-circle8 sk-circle"></div>
+                                    <div class="sk-circle9 sk-circle"></div>
+                                    <div class="sk-circle10 sk-circle"></div>
+                                    <div class="sk-circle11 sk-circle"></div>
+                                    <div class="sk-circle12 sk-circle"></div>
+                                </div>
+                                <div id="schemaPlaceholder"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade" tabindex="-1" id="createCategoryDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="editCategoryDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="createMeasureDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="editMeasureDialog" aria-hidden="true"></div>
+
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='asset.security')}"></nav>
+</div>
+
+<div th:replace="~{fragments/footer :: footer (textEditor = false, taskDialog = true, sweetalerts = true)}"></div>
+
+</body>
+</html>

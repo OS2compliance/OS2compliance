@@ -37,7 +37,7 @@ import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
+import dk.digitalidentity.model.entity.enums.ColorStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
@@ -203,6 +203,8 @@ public class AssetsController {
 	record RiskAssessmentKitosSync(long assetId, String fillOption, boolean riskAssessmentConducted, @DateTimeFormat(pattern = "dd/MM-yyyy") Date riskAssessmentConductedDate, String result) {}
     record AssetEditDPIADTO(Long assetId, boolean optOut) {}
 	public record AssetRelatedDPIADTO(long id, String name, String responsibleUserName, String responsibleOuName, LocalDate userUpdatedDate, DPIAScreeningConclusion screeningConclusion) {}
+	record MeasureChoiceInfo(String identifier) {}
+	record MeasureForJs(String identifier, MeasureChoiceInfo choice) {}
 	@RequireReadOwnerOnly
 	@GetMapping("{id}")
     @Transactional
@@ -231,13 +233,18 @@ public class AssetsController {
 
 		// MEASURES
 
-		final List<ChoiceMeasure> choiceMeasures = choiceMeasuresDao.findAll();
+		final List<ChoiceMeasure> choiceMeasures = choiceMeasuresDao.findAllSorted();
 		final List<AssetMeasure> assetMeasures = assetMeasuresDao.findByAsset(asset);
 
 		final List<ViewMeasureDTO> measures = new ArrayList<>();
 
+		// Create a simplified list for JavaScript (no circular references)
+		final List<MeasureForJs> measuresForJs = new ArrayList<>();
+
 		for (final ChoiceMeasure choiceMeasure : choiceMeasures) {
-			final AssetMeasure assetMeasure = assetMeasures.stream().filter(m -> Objects.equals(m.getMeasure().getId(), choiceMeasure.getId())).findAny().orElse(new AssetMeasure());
+			final AssetMeasure assetMeasure = assetMeasures.stream()
+					.filter(m -> m.getMeasure() != null && Objects.equals(m.getMeasure().getId(), choiceMeasure.getId()))
+					.findAny().orElse(new AssetMeasure());
 			final ViewMeasureDTO measure = new ViewMeasureDTO();
 
 			measure.setId(assetMeasure.getId());
@@ -248,7 +255,14 @@ public class AssetsController {
 			measure.setChoice(choiceMeasure);
 
 			measures.add(measure);
+
+			// Add simplified version for JavaScript
+			measuresForJs.add(new MeasureForJs(
+					choiceMeasure.getIdentifier(),
+					new MeasureChoiceInfo(choiceMeasure.getIdentifier())
+			));
 		}
+
 		final ViewMeasuresDTO measuresForm = new ViewMeasuresDTO(0L, measures);
 
 		// DPIA
@@ -297,6 +311,7 @@ public class AssetsController {
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
+		model.addAttribute("measuresForJs", measuresForJs);
         model.addAttribute("supplier", supplierService.getAll());
 		model.addAttribute("dpiaForm", dpiaForm);
 		model.addAttribute("relatedDPIAs", relatedDPIADTOs);
@@ -505,6 +520,9 @@ public class AssetsController {
         if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
+
+		asset.setAssetMeasureStatus(measuresForm.getAssetMeasureStatus());
+
         for (final SaveMeasureDTO answer : measuresForm.getMeasures()) {
             AssetMeasure existing = assetMeasuresDao.findByAssetAndMeasureIdentifier(asset, answer.getIdentifier()).orElse(null);
             if (existing == null) {
@@ -726,7 +744,7 @@ public class AssetsController {
         return "redirect:/assets/" + asset.getId();
     }
 
-    record AssetOversightDTO (Long id, Set<Long> assetIds, User responsibleUser, ChoiceValue supervisionModel, Long supervisionModelId, @Size(max = 4096) String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
+    record AssetOversightDTO (Long id, Set<Long> assetIds, User responsibleUser, ChoiceValue supervisionModel, Long supervisionModelId, @Size(max = 4096) String conclusion, String dbsLink, String internalDocumentationLink, ColorStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
     }
 	@RequireUpdateOwnerOnly
     @Transactional
@@ -822,7 +840,7 @@ public class AssetsController {
             );
 
             if (id == null) {
-                model.addAttribute("oversight", new AssetOversightDTO(null, Set.of(asset.getId()), asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), asset.getSupervisoryModel() != null ? asset.getSupervisoryModel().getId() : null, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
+                model.addAttribute("oversight", new AssetOversightDTO(null, Set.of(asset.getId()), asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), asset.getSupervisoryModel() != null ? asset.getSupervisoryModel().getId() : null, "", "", "", ColorStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
                 model.addAttribute("inspectionType", asset.getNextInspection());
             } else {
                 final AssetOversight assetOversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), id)).findAny().orElseThrow(() ->
@@ -839,7 +857,7 @@ public class AssetsController {
 
             if (id == null) {
 				ChoiceValue choiceValue = choiceValueService.findByIdentifier("supervision-model-sworn-statement-123456");
-				model.addAttribute("oversight", new AssetOversightDTO(null, null, new User(), choiceValue, choiceValue != null ? choiceValue.getId() : null, "", "","", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
+				model.addAttribute("oversight", new AssetOversightDTO(null, null, new User(), choiceValue, choiceValue != null ? choiceValue.getId() : null, "", "","", ColorStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
                 model.addAttribute("supplier", supplier);
                 model.addAttribute("inspectionType", null);
                 model.addAttribute("supplierAssets", supplier.getAssets());

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<th:block th:fragment="categoryForm">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="${formTitle}"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+                    <i class="pli-exclamation me-2"></i>
+                    <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <form th:id="${formId}" class="needs-validation" novalidate th:action="@{/assets/measures/schema/category/form}" th:object="${category}" method="post">
+                    <input id="id" th:field="*{id}" type="hidden">
+                    <div class="row mt-4">
+                        <label class="col-sm-4 col-form-label">Kategorinavn</label>
+                        <div class="col-sm-8">
+                            <input th:field="*{name}" type="text" class="form-control" required minlength="2">
+                            <div class="invalid-feedback">
+                                Kategorinavn er påkrævet og skal være mindst 2 tegn
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="button" class="btn btn-primary submit-category-form">Gem</button>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
