@@ -1,5 +1,6 @@
 package dk.digitalidentity.statistic;
 
+import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
@@ -63,6 +64,7 @@ public class StatisticService {
 	private final EntityManager entityManager;
 	private final UserService userService;
 	private final IncidentService incidentService;
+	private final IncidentMapper incidentMapper;
 
 	record DataRow(String id, String key, Object value) {
 	}
@@ -84,7 +86,7 @@ public class StatisticService {
 		return switch (chartType) {
 			case ChartType.BAR -> generateBarChart(rawData, parsedLabel, yField, aggregation);
 			case ChartType.PIE -> generatePieChart(rawData, parsedLabel, yField, aggregation, groupTimeBy, dateField);
-			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, dateField, yField);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, dateField, yField, groupTimeBy);
 		};
 	}
 
@@ -103,37 +105,43 @@ public class StatisticService {
 	 * @return DTO with data for a ChartJS chart
 	 */
 	public ChartJsDataDTO generateIncidentChart(ChartType chartType, String xField, String yField, AggregationMethod aggregation, Period groupTimeBy, String dateField, LocalDate startDate, LocalDate endDate, Long incidentFieldId) {
-		String answerChoicesFieldName = "answerChoiceValues";
 		IncidentField incidentField = incidentService.findField(incidentFieldId).orElseThrow();
 
-		IncidentType type = incidentField.getIncidentType();
-		boolean isChoiceListType = type == IncidentType.CHOICE_LIST || type == IncidentType.CHOICE_LIST_MULTIPLE;
+		// Hent incidents med responses for dette felt
+		LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : LocalDateTime.MIN;
+		LocalDateTime endDateTime = endDate != null ? endDate.atTime(23, 59, 59) : LocalDateTime.MAX;
 
-		Set<String> fieldNamesForIncidents = new HashSet<>();
-		Set<String> fieldNamesForIncidentsFields = new HashSet<>();
-		Set<String> fieldNamesForIncidentsFieldResponses = new HashSet<>();
+		List<Incident> incidents = incidentService.findByFieldIdAndDateRange(incidentFieldId, startDateTime, endDateTime);
 
-		Map<String, Set<String>> prefixMap = Map.of(getPrefixForField(Incident.class), fieldNamesForIncidents, getPrefixForField(IncidentField.class), fieldNamesForIncidentsFields, getPrefixForField(IncidentFieldResponse.class), fieldNamesForIncidentsFieldResponses);
+		// Konverter til rawData med korrekte svar-værdier
+		List<Map<String, Object>> rawData = incidents.stream()
+				.flatMap(incident -> incident.getResponses().stream()
+						.filter(response -> response.getIncidentField() != null
+								&& response.getIncidentField().getId().equals(incidentFieldId))
+						.map(response -> {
+							Map<String, Object> row = new HashMap<>();
+							row.put("id", incident.getId());
+							row.put("answerValue", incidentMapper.toAnswerValue(response));
+							row.put("indexColumnName", incidentField.getIndexColumnName());
 
-		// Only x-values are  prefixed with the entity to search.
-		// Y values are assumed  to be incidentField entities and are only used for post-data fetching processing
-		String xFieldNoPrefix = removePrefixAndAddToRelevantList(xField, prefixMap);
+							if ("createdAt".equals(dateField)) {
+								row.put(dateField, incident.getCreatedAt());
+							} else if ("updatedAt".equals(dateField)) {
+								row.put(dateField, incident.getUpdatedAt());
+							}
 
-		fieldNamesForIncidentsFields.add("indexColumnName"); // column Name of the incident question
-		if (isChoiceListType) {
-			fieldNamesForIncidentsFieldResponses.add(answerChoicesFieldName); // chosen values for choicelist type of question
-		}
+							return row;
+						}))
+				.filter(row -> row.get("answerValue") != null)
+				.toList();
 
-		// Fetch data
-		List<Map<String, Object>> rawData = getFilteredFieldDataForIncidents(incidentFieldId, dateField, startDate, endDate, fieldNamesForIncidents, fieldNamesForIncidentsFields, fieldNamesForIncidentsFieldResponses);
+		String answerValueField = "answerValue";
 
 		return switch (chartType) {
-			case ChartType.BAR -> generateBarChart(rawData, xFieldNoPrefix, yField, aggregation);
-			case ChartType.PIE -> generatePieChart(rawData, isChoiceListType ? answerChoicesFieldName : xFieldNoPrefix, yField, aggregation, groupTimeBy, dateField);
-			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xFieldNoPrefix, yField, aggregation, dateField, isChoiceListType ? answerChoicesFieldName : "indexColumnName");
-		}
-
-				;
+			case ChartType.BAR -> generateBarChart(rawData, answerValueField, yField, aggregation);
+			case ChartType.PIE -> generatePieChart(rawData, answerValueField, yField, aggregation, groupTimeBy, dateField);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, dateField, yField, aggregation, dateField, answerValueField, groupTimeBy);
+		};
 	}
 
 	/**
@@ -347,9 +355,10 @@ public class StatisticService {
 	 * @param xField      name of the field holding the labels for the chart
 	 * @param yField      name of the field holding the values for the chart
 	 * @param aggregation what type of aggregation should be performed on the data
+	 * @param groupTimeBy the period to group by
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
-	private ChartJsDataDTO generateStackedBarChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, String dateField, String stackField) {
+	private ChartJsDataDTO generateStackedBarChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, String dateField, String stackField, Period groupTimeBy) {
 		// map to datarows
 		List<StackedDataRow> dataRows = rawData.stream().map(d -> {
 			String dateString = d.get(dateField).toString();
@@ -363,7 +372,14 @@ public class StatisticService {
 				groupByDate = LocalDate.parse(dateString);
 			}
 
-			return new StackedDataRow(d.get("id").toString(), formatLabel(d.get(xField)), d.get(yField), formatLabel(d.get(stackField)), groupByDate);
+			// Format the date label based on groupTimeBy
+			String dateLabel = switch (groupTimeBy) {
+				case MONTH -> groupByDate.withDayOfMonth(1).toString();
+				case YEAR -> groupByDate.withDayOfYear(1).toString();
+				default -> groupByDate.toString();
+			};
+
+			return new StackedDataRow(d.get("id").toString(), dateLabel, d.get(yField), formatLabel(d.get(stackField)), groupByDate);
 		}).toList();
 
 		// group by stack field, to sort into datasets

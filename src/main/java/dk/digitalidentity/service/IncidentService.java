@@ -251,4 +251,8 @@ public class IncidentService {
 	public List<IncidentField> findFieldsByIds(List<Long> ids) {
 		return (List<IncidentField>) incidentFieldDao.findAllById(ids);
 	}
+
+	public List<Incident> findByFieldIdAndDateRange(Long incidentFieldId, LocalDateTime startDate, LocalDateTime endDate) {
+		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(incidentFieldId, startDate, endDate);
+	}
 }
