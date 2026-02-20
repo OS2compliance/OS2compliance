@@ -45,6 +45,7 @@ public class NotifyResponsibleTask {
         } else {
             settingsService.setZonedDateTime(LAST_NOTIFY_RUN_DAY_SETTING, ZonedDateTime.now());
         }
+		log.info("Start: Notifying responsible users about deadlines");
 
         //Get notification settings
         List<Setting> notificationSettings = settingsService.getByAssociation("notification");
@@ -135,5 +136,6 @@ public class NotifyResponsibleTask {
 			}
 			tasksToNotify.forEach(task -> notifyService.notifyTask(task.getId()));
 		}
+		log.info("Done: Notifying responsible users about deadlines");
 	}
 }
