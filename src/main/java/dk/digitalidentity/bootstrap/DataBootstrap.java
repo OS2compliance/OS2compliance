@@ -152,6 +152,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(39, this::seedV39);
 		incrementAndPerformIfVersion(40, this::seedV40);
 		incrementAndPerformIfVersion(41, this::seedV41);
+		incrementAndPerformIfVersion(42, this::seedV42);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -164,6 +165,23 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 			}
 			return 0;
 		});
+	}
+
+	private void seedV42() {
+		List<ChartConfiguration> toSave = new ArrayList<>();
+
+		ChartConfiguration taskDashboardChart = chartConfigurationService.findByName("Fordeling af opgaver").orElse(null);
+		if (taskDashboardChart != null) {
+			taskDashboardChart.setSelectablePeriod(SelectablePeriod.NONE);
+			toSave.add(taskDashboardChart);
+		}
+		ChartConfiguration incidentStackedBarChart = chartConfigurationService.findByName("Hændelser (Søjlediagram)").orElse(null);
+		if (incidentStackedBarChart != null) {
+			incidentStackedBarChart.setSelectablePeriod(SelectablePeriod.NONE);
+			toSave.add(incidentStackedBarChart);
+		}
+
+		chartConfigurationService.saveAll(toSave);
 	}
 
 	private void seedV41() {
