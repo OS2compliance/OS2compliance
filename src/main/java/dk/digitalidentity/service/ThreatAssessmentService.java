@@ -855,12 +855,11 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
             context.setVariable("dataCategories", registeredCategories.stream().map(cat ->
                 {
                     Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
-                    List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> Objects.requireNonNull(choiceService.getValue(type).orElse(null)).getCaption())
+                    List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> choiceService.getValue(type).map(v -> v.getCaption()).orElse(null))
                         .filter(Objects::nonNull)
                         .toList();
-                    if (title.isEmpty()) {return null;}
-                    return new registeredDataCategory(title.get().getCaption(), types);
-                })
+					return title.map(choiceValue -> new registeredDataCategory(choiceValue.getCaption(), types)).orElse(null);
+				})
                 .filter(Objects::nonNull)
                 .toList());
         }
