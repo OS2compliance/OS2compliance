@@ -380,13 +380,13 @@ GROUP BY a.id;
 
 CREATE OR REPLACE VIEW view_gridjs_assessments AS
 SELECT t.id,
-       TRIM(t.name)                                                                                                                                                  as name,
+       TRIM(t.name)                                                                                                                                                  AS name,
        t.responsible_uuid,
        t.responsible_ou_uuid,
-       t.threat_assessment_type                                                                                                                                      as type,
-       t.threat_assessment_report_user_uuid                                                                                                                          as signer_uuid,
+       t.threat_assessment_type                                                                                                                                      AS type,
+       t.threat_assessment_report_user_uuid                                                                                                                          AS signer_uuid,
        t.threat_assessment_report_approval_status,
-       t.updated_at                                                                                                                                                  as date,
+       t.updated_at                                                                                                                                                  AS date,
        t.assessment,
        t.hidden,
        t.localized_enums,
@@ -396,26 +396,26 @@ SELECT t.id,
             WHEN t.assessment = 'YELLOW' THEN 3
             WHEN t.assessment = 'ORANGE' THEN 4
             WHEN t.assessment = 'RED' THEN 5
-           END)                                                                                                                                                      as assessment_order,
+           END)                                                                                                                                                      AS assessment_order,
        (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks,
        (SELECT COUNT(r.id)
         FROM relations r
-        JOIN tasks task ON (
+                 JOIN tasks task ON (
             (r.relation_a_id = task.id AND r.relation_a_type = 'TASK' AND r.relation_b_id = t.id) OR
             (r.relation_b_id = task.id AND r.relation_b_type = 'TASK' AND r.relation_a_id = t.id)
             )
         WHERE (SELECT CASE
-                    WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = task.id) THEN 'COMPLETED'
-                    WHEN task.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
-                    ELSE 'EXCEEDED'
-                    END) = 'COMPLETED'
-        ) AS completed_tasks,
+                          WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = task.id) THEN 'COMPLETED'
+                          WHEN task.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
+                          ELSE 'EXCEEDED'
+                          END) = 'COMPLETED'
+       )                                                                                                                                                            AS completed_tasks,
        t.from_external_source,
        t.external_link,
        GROUP_CONCAT(DISTINCT
                     CASE
-                        WHEN a.name IS NOT NULL THEN a.name
-                        WHEN rgs.name IS NOT NULL THEN rgs.name
+                        WHEN a.name IS NOT NULL THEN CONCAT('ASSET:', a.id, ':', a.name)
+                        WHEN rgs.name IS NOT NULL THEN CONCAT('REGISTER:', rgs.id, ':', rgs.name)
                         END
                     ORDER BY
                     CASE
@@ -431,10 +431,10 @@ SELECT t.id,
           AND tc.deleted = false)                                                                                                                                    AS threat_catalogs,
        (SELECT GROUP_CONCAT(DISTINCT tg.value ORDER BY tg.value SEPARATOR ',')
         FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
-        WHERE rt.threat_assessment_id = t.id) AS tag_names,
+        WHERE rt.threat_assessment_id = t.id)                                                                                                                       AS tag_names,
        (SELECT GROUP_CONCAT(DISTINCT tg.id ORDER BY tg.value SEPARATOR ',')
         FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
-        WHERE rt.threat_assessment_id = t.id) AS tag_ids
+        WHERE rt.threat_assessment_id = t.id)                                                                                                                       AS tag_ids
 FROM threat_assessments t
          LEFT JOIN relations rel ON (
     (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)

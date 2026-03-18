@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
@@ -19,6 +20,8 @@ import lombok.Setter;
 import org.hibernate.annotations.Immutable;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 
 @Entity
 @Table(name = "view_gridjs_assessments")
@@ -90,4 +93,30 @@ public class RiskGrid  implements HasSingleResponsibleUser {
 
 	@Column
 	private Integer completedTasks;
+
+	/**
+	 * Parses the string that the view provides to DTO's
+	 */
+	public List<RelatedEntityLink> getRelatedAssetsAndRegistersDTO() {
+		if (relatedAssetsAndRegisters == null || relatedAssetsAndRegisters.isBlank()) {
+			return List.of();
+		}
+		return Arrays.stream(relatedAssetsAndRegisters.split("\\|\\|"))
+				.map(token -> {
+					String[] parts = token.split(":", 3); // limit 3 — name may theoretically contain ':'
+					return new RelatedEntityLink(RelationType.valueOf(parts[0]), Long.parseLong(parts[1]), parts[2]);
+				})
+				.toList();
+	}
+
+	public record RelatedEntityLink(RelationType type, Long id, String name) {
+
+		public String href() {
+			return switch (type) {
+				case RelationType.ASSET    -> "/assets/" + id;
+				case RelationType.REGISTER -> "/registers/" + id;
+				default         -> "";
+			};
+		}
+	}
 }

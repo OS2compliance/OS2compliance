@@ -48,7 +48,7 @@ public class RiskDTO {
 	@ExcludeFromExport
 	private Set<AllowedAction> allowedActions;
 	@ExcelColumn(headerName = "Entitet", order = 5)
-	private String relatedAssetsAndRegisters;
+	private List<RelatedEntityDTO> relatedAssetsAndRegisters;
 	@ExcelColumn(headerName = "Trusselskataloger", order = 9)
 	private String threatCatalogs;
 	@ExcludeFromExport
@@ -56,4 +56,5 @@ public class RiskDTO {
 	@ExcelColumn(headerName = "Løste opgaver", order = 10)
 	private Integer completedTasks;
 
+	public record RelatedEntityDTO(String name, String link){}
 }
