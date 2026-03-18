@@ -1,6 +1,7 @@
 package dk.digitalidentity.mapping;
 
 
+import dk.digitalidentity.model.dto.RelatedEntityDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
 import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
@@ -34,7 +35,7 @@ public interface RiskMapper {
                 .responsibleOU(nullSafe(() -> riskGrid.getResponsibleOU().getName()))
                 .responsibleUser(nullSafe(() -> riskGrid.getResponsibleUser().getName()))
 				.relatedAssetsAndRegisters(riskGrid.getRelatedAssetsAndRegistersDTO().stream()
-						.map(r -> new RiskDTO.RelatedEntityDTO(r.name(), r.href()))
+						.map(RelatedEntityDTO::toLink)
 						.toList())
                 .date(riskGrid.getDate().format(DK_DATE_FORMATTER))
                 .tasks(riskGrid.getTasks())

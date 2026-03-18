@@ -155,8 +155,7 @@ function CreateTable() {
                             return ""
                         }
 
-                        console.log(cell)
-                        const badgedata = cell.map(rel => new BadgeData(rel.name, rel.link))
+                        const badgedata = cell.map(rel => new BadgeData(rel.name, rel.link,rel.helpText, rel.color))
 
                         const badges = createBadges(badgedata)
                         return gridjs.html(badges.outerHTML);

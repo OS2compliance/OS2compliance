@@ -13,7 +13,7 @@ public enum RelationType {
 	ASSET("Aktiv"),
 	STANDARD_SECTION("Standarder"),
 	THREAT_ASSESSMENT("Risikovurdering"),
-	THREAT_ASSESSMENT_RESPONSE("Risikovurderingssvar"),
+	THREAT_ASSESSMENT_RESPONSE("Trussel"),
     PRECAUTION("Foranstaltning"),
     DBSASSET("DBSAsset"),
     DBSOVERSIGHT("DBSOversight"),

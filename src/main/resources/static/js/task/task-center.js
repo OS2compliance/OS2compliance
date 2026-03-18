@@ -2,6 +2,7 @@ import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
+import {BadgeData, createBadges} from "../component/badge.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -74,6 +75,22 @@ function initGrid() {
                 },
             },
             {
+                name: "Tilknytninger",
+                searchable: {
+                    searchKey: 'relatedEntities'
+                },
+                formatter: (cell) => {
+                    if (!Array.isArray(cell)) {
+                        return ""
+                    }
+
+                    const badgedata = cell.map(rel => new BadgeData(rel.name, rel.link, rel.helpText, rel.color))
+
+                    const badges = createBadges(badgedata)
+                    return gridjs.html(badges.outerHTML);
+                },
+            },
+            {
                 name: "Ansvarlig",
                 searchable: {
                     searchKey: 'responsibleNames',
@@ -99,7 +116,7 @@ function initGrid() {
                 },
                 width: '90px',
                 formatter: (cell, row) => {
-                    var completed = row.cells[9]['data'];
+                    var completed = row.cells[10]['data'];
                     var type = row.cells[2]['data'];
                     if (completed && type === "Opgave") {
                         return gridjs.html(`<span>${cell}</span>`);
@@ -167,21 +184,21 @@ function initGrid() {
                     let type = row.cells[2]['data'];
 
                     // if completed and task type opgave
-                    if (cell && type === "Opgave" || row.cells[10]['data'] === true) {
+                    if (cell && type === "Opgave" || row.cells[11]['data'] === true) {
                         status = '<div class="d-block badge bg-success">Udført</div>'
                     } else {
-                        let deadline = row.cells[6]['data'];
+                        let deadline = row.cells[7]['data'];
                         let dateString = deadline.replace(" ", "/");
                         dateString = dateString.replace("-", "/");
                         let dateSplit = dateString.split("/");
                         let deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
                         let diff = DateDiff.inDays(today, deadlineAsDate);
                         let statusText = 'Ikke udført';
-                        if(row.cells[8]['data'] === 'NO_ERROR') {
+                        if(row.cells[9]['data'] === 'NO_ERROR') {
                             statusText = 'Ingen fejl';
-                        } else if (row.cells[8]['data'] === 'NO_CRITICAL_ERROR') {
+                        } else if (row.cells[9]['data'] === 'NO_CRITICAL_ERROR') {
                             statusText = 'Ingen kritiske fejl';
-                        } else if (row.cells[8]['data'] === 'CRITICAL_ERROR') {
+                        } else if (row.cells[9]['data'] === 'CRITICAL_ERROR') {
                             statusText = 'Kritiske fejl';
                         }
 
@@ -219,7 +236,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(task =>
-                [ task.id, task.name, task.taskType,
+                [ task.id, task.name, task.taskType, task.relatedEntities,
                     task.responsibleNames, task.responsibleOU, task.tags, task.nextDeadline,
                     task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions ]
             ),

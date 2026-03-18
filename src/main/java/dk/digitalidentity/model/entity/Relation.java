@@ -48,6 +48,12 @@ public class Relation {
 	@Column(nullable = false, name = "relation_b_type")
 	private RelationType relationBType;
 
+	@Column(name = "relation_a_name")
+	private String relationAName;
+
+	@Column(name = "relation_b_name")
+	private String relationBName;
+
     @OneToMany(orphanRemoval = true,
         cascade = {CascadeType.ALL},
         mappedBy = "relation")
