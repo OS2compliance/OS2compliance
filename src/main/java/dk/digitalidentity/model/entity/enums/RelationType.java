@@ -27,4 +27,3 @@ public enum RelationType {
 		this.message = message;
 	}
 }
-
