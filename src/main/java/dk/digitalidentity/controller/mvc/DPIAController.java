@@ -289,9 +289,7 @@ public class DPIAController {
     public String revisionForm(final Model model, @PathVariable final long dpiaId) {
         DPIA dpia = dpiaService.find(dpiaId);
         assetService.updateNextRevisionAssociatedTask(dpia);
-        final String defaultUserUuid = dpia.getResponsibleUser() != null
-                ? dpia.getResponsibleUser().getUuid()
-                : dpia.getAssets().stream().findFirst().flatMap(a -> a.getResponsibleUsers().stream().map(User::getUuid).findFirst()).orElse(null);
+        final String defaultUserUuid = dpia.getResponsibleUser() != null ? dpia.getResponsibleUser().getUuid() : null;
         model.addAttribute("dpiaId", dpia.getId());
         model.addAttribute("users", userService.getAll());
         model.addAttribute("RevisionFormDTO", new RevisionFormDTO(dpia.getNextRevision(), dpia.getRevisionInterval(), defaultUserUuid));

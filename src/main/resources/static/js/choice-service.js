@@ -20,11 +20,14 @@ function ChoiceService() {
         fetch( `/rest/users/autocomplete?search=${search}`)
             .then(response => response.json()
                 .then(data => {
-                    targetChoice.setChoices(data.content.map(e => {
-                        return {
+                    const hasValue = targetChoice.getValue(true);
+                    targetChoice.setChoices([
+                        { value: '', label: 'Vælg ansvarlig', selected: !hasValue },
+                        ...data.content.map(e => ({
                             value: e.uuid,
-                            label: `(${e.userId}) ${e.name}`}
-                    }), 'value', 'label', true);
+                            label: `(${e.userId}) ${e.name}`
+                        }))
+                    ], 'value', 'label', true);
                 }))
             .catch(error => toastService.error(error));
     }
