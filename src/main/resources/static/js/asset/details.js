@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     assetDetailsService.init();
     assetDpiaService.init();
     assetRiskKitosService.init();
+    initTiaFragmentButtons();
 });
 
 function AssetDpiaKitosService() {
@@ -310,4 +311,29 @@ function AssetDpiaService() {
         .catch(defaultErrorHandler)
     }
 
+}
+
+function initTiaFragmentButtons() {
+    document.addEventListener('change', (e) => {
+        const target = e.target;
+
+        if (!target) {
+            return;
+        }
+
+        const btnId = target.id || target.closest('[id]')?.id;
+
+        switch (btnId) {
+            case 'setTiaOptOutCheckbox': {
+                const checkbox = target.closest('#setTiaOptOutCheckbox');
+                assetDetailsService.setTiaOptOut(checkbox);
+                break;
+            }
+            case 'tiaOptOutText': {
+                const element = target.closest('#tiaOptOutText');
+                assetDetailsService.updateTiaOptOutReason(this);
+                break;
+            }
+        }
+    })
 }

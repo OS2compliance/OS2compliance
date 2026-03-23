@@ -5,12 +5,12 @@
     <form id="tiaForm" action="#" th:action="@{/assets/tia}" th:object="${asset}" method="post" class="needs-validation" novalidate>
         <div>
             <label class="mb-2">
-                <input class="form-check-input" onchange="assetDetailsService.setTiaOptOut(this)" name="tiaOptOutReason" type="checkbox" th:checked="${asset.isTiaOptOut()}"> TIA fravalgt
+                <input class="form-check-input" id="setTiaOptOutCheckbox" name="tiaOptOutReason" type="checkbox" th:checked="${asset.isTiaOptOut()}"> TIA fravalgt
             </label>
         </div>
         <div id="tiaOptOutView" style="display: none">
             <label for="tiaOptOutText" class="mb-1">Begrundelse for fravalg:</label>
-            <textarea id="tiaOptOutText" class="form-control" onchange="assetDetailsService.updateTiaOptOutReason(this)" th:text="${asset.tiaOptOutReason}"></textarea>
+            <textarea id="tiaOptOutText" class="form-control" th:text="${asset.tiaOptOutReason}"></textarea>
         </div>
         <div class="row" id="tiaView">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
