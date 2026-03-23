@@ -474,7 +474,9 @@ public class AssetsRestController {
         if (!(fieldName.equals("threatAssessmentOptOut") ||
             fieldName.equals("threatAssessmentOptOutReason") ||
             fieldName.equals("dpiaOptOutReason") ||
-            fieldName.equals("dpiaOptOut"))) {
+            fieldName.equals("dpiaOptOut") ||
+            fieldName.equals("tiaOptOut") ||
+            fieldName.equals("tiaOptOutReason"))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }

@@ -125,7 +125,9 @@ function AssetDetailsService() {
 
     this.init = function() {
         this.updateRiskAssessmentBadge();
+        this.updateTiaBadge();
         this.setTreatAssessmentVisibility(!asset.threatAssessmentOptOut);
+        this.setTiaVisibility(!asset.tiaOptOut);
     }
 
     this.setField = function (fieldName, value) {
@@ -171,6 +173,41 @@ function AssetDetailsService() {
         this.setField('threatAssessmentOptOut', optOutBoolean);
         this.updateRiskAssessmentBadge();
         this.setTreatAssessmentVisibility(!optOut);
+    }
+
+    this.setTiaOptOut = function(checkboxElem) {
+        let optOut = checkboxElem.checked;
+        asset.tiaOptOut = optOut;
+        let optOutBoolean = optOut ? 'true' : 'false';
+        this.setField('tiaOptOut', optOutBoolean);
+        this.updateTiaBadge();
+        this.setTiaVisibility(!optOut);
+    }
+
+    this.setTiaVisibility = function(show) {
+        document.getElementById('tiaView').style.display = show ? 'block' : 'none';
+        document.getElementById('tiaOptOutView').style.display = show ? 'none' : 'block';
+    }
+
+    this.updateTiaOptOutReason = function(elem) {
+        this.setField('tiaOptOutReason', elem.value);
+    }
+
+    this.updateTiaBadge = function() {
+        let badgeElem = document.getElementById('tiaBadge');
+        badgeElem.classList.value = ''
+        ensureElementHasClass(badgeElem, 'badge');
+        if (asset.tiaOptOut === true) {
+            ensureElementHasClass(badgeElem, 'bg-gray-800');
+        } else if ('RED' === tiaAssessment) {
+            ensureElementHasClass(badgeElem, 'bg-red');
+        } else if ('YELLOW' === tiaAssessment) {
+            ensureElementHasClass(badgeElem, 'bg-yellow');
+        } else if ('GREEN' === tiaAssessment) {
+            ensureElementHasClass(badgeElem, 'bg-green');
+        } else {
+            ensureElementHasClass(badgeElem, 'bg-gray-800');
+        }
     }
 
     this.addProductLink = function() {
