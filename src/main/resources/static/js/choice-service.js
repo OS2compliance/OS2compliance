@@ -16,13 +16,16 @@ function ChoiceService() {
             .catch(error => toastService.error(error));
     }
 
-    this.updateUsers = (targetChoice, search) => {
+    this.updateUsers = (targetChoice, search, multiple = false) => {
         fetch( `/rest/users/autocomplete?search=${search}`)
             .then(response => response.json()
                 .then(data => {
                     const hasValue = targetChoice.getValue(true);
+                    const placeholder = multiple ? [] : [
+                        {value: '', label: 'Vælg ansvarlig', selected: !hasValue}
+                    ];
                     targetChoice.setChoices([
-                        { value: '', label: 'Vælg ansvarlig', selected: !hasValue },
+                        ...placeholder,
                         ...data.content.map(e => ({
                             value: e.uuid,
                             label: `(${e.userId}) ${e.name}`
@@ -86,13 +89,14 @@ function ChoiceService() {
     this.initUserSelect = (elementId, prefetch = true) => {
         let self = this;
         const userSelect = document.getElementById(elementId);
+        const multiple = userSelect.multiple;
         const userChoices = initSelect(userSelect);
         if (prefetch) {
-            this.updateUsers(userChoices, "");
+            this.updateUsers(userChoices, "", multiple);
         }
         userSelect.addEventListener("search",
             function(event) {
-                self.updateUsers(userChoices, event.detail.value);
+                self.updateUsers(userChoices, event.detail.value, multiple);
             },
             false,
         );
