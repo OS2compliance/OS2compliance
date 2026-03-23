@@ -629,12 +629,20 @@
                                                 </div>
                                             </div>
                                             <div class="card-body">
-                                                <table class="col-lg-12">
+                                                <table class="table table-striped col-lg-12">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Navn</th>
+                                                        <th>Oprettet</th>
+                                                        <th></th>
+                                                    </tr>
+                                                    </thead>
                                                     <tbody>
                                                     <tr th:each="incident : ${relatedIncidents}">
-                                                        <td class="col-lg-10">
+                                                        <td class="col-lg-5">
                                                             <a th:text="${incident.name}" th:href="@{/incidents/logs/{id}(id=${incident.id})}"></a>
                                                         </td>
+                                                        <td class="col-lg-5" th:text="${#temporals.format(incident?.createdAt, 'dd/MM-yyyy')}"></td>
                                                         <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
                                                             <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${incident.id}, data-relationtype=${incident.relationType}"></i>
                                                         </td>
