@@ -123,6 +123,13 @@ function AssetRiskKitosService() {
 }
 
 function AssetDetailsService() {
+    const CLASS_BADGE = 'badge';
+    const CLASS_RED = 'bg-red';
+    const CLASS_YELLOW = 'bg-yellow';
+    const CLASS_GREEN = 'bg-green';
+    const CLASS_LIGHT_GREEN = 'bg-green-300';
+    const CLASS_GRAY = 'bg-gray-800';
+    const CLASS_ORANGE = 'bg-orange';
 
     this.init = function() {
         this.updateRiskAssessmentBadge();
@@ -149,21 +156,21 @@ function AssetDetailsService() {
     this.updateRiskAssessmentBadge = function() {
         let badgeElem = document.getElementById('riskAssessmentBadge');
         badgeElem.classList.value = ''
-        ensureElementHasClass(badgeElem, 'badge');
+        ensureElementHasClass(badgeElem, CLASS_BADGE);
         if (asset.threatAssessmentOptOut === true) {
-            ensureElementHasClass(badgeElem, 'bg-gray-800');
+            ensureElementHasClass(badgeElem, CLASS_GRAY);
         } else if ('RED' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-red');
+            ensureElementHasClass(badgeElem, CLASS_RED);
         } else if ('YELLOW' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-yellow');
+            ensureElementHasClass(badgeElem, CLASS_YELLOW);
         } else if ('ORANGE' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-orange');
+            ensureElementHasClass(badgeElem, CLASS_ORANGE);
         } else if ('GREEN' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-green');
+            ensureElementHasClass(badgeElem, CLASS_GREEN);
         } else if ('LIGHT_GREEN' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-green-300');
+            ensureElementHasClass(badgeElem, CLASS_LIGHT_GREEN);
         } else {
-            ensureElementHasClass(badgeElem, 'bg-gray-800');
+            ensureElementHasClass(badgeElem, CLASS_GRAY);
         }
     }
 
@@ -179,15 +186,16 @@ function AssetDetailsService() {
     this.setTiaOptOut = function(checkboxElem) {
         let optOut = checkboxElem.checked;
         asset.tiaOptOut = optOut;
-        let optOutBoolean = optOut ? 'true' : 'false';
-        this.setField('tiaOptOut', optOutBoolean);
+        // Convert to string for backend
+        let optOutBooleanStr = optOut ? 'true' : 'false';
+        this.setField('tiaOptOut', optOutBooleanStr);
         this.updateTiaBadge();
         this.setTiaVisibility(!optOut);
     }
 
     this.setTiaVisibility = function(show) {
-        document.getElementById('tiaView').style.display = show ? 'block' : 'none';
-        document.getElementById('tiaOptOutView').style.display = show ? 'none' : 'block';
+        document.getElementById('tiaView').style.display = show ? '' : 'none';
+        document.getElementById('tiaOptOutView').style.display = show ? 'none' : '';
     }
 
     this.updateTiaOptOutReason = function(elem) {
@@ -197,17 +205,17 @@ function AssetDetailsService() {
     this.updateTiaBadge = function() {
         let badgeElem = document.getElementById('tiaBadge');
         badgeElem.classList.value = ''
-        ensureElementHasClass(badgeElem, 'badge');
+        ensureElementHasClass(badgeElem, CLASS_BADGE);
         if (asset.tiaOptOut === true) {
-            ensureElementHasClass(badgeElem, 'bg-gray-800');
+            ensureElementHasClass(badgeElem, CLASS_GRAY);
         } else if ('RED' === tiaAssessment) {
-            ensureElementHasClass(badgeElem, 'bg-red');
+            ensureElementHasClass(badgeElem, CLASS_RED);
         } else if ('YELLOW' === tiaAssessment) {
-            ensureElementHasClass(badgeElem, 'bg-yellow');
+            ensureElementHasClass(badgeElem, CLASS_YELLOW);
         } else if ('GREEN' === tiaAssessment) {
-            ensureElementHasClass(badgeElem, 'bg-green');
+            ensureElementHasClass(badgeElem, CLASS_GREEN);
         } else {
-            ensureElementHasClass(badgeElem, 'bg-gray-800');
+            ensureElementHasClass(badgeElem, CLASS_GRAY);
         }
     }
 
