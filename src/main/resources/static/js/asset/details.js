@@ -339,7 +339,7 @@ function initTiaFragmentButtons() {
             }
             case 'tiaOptOutText': {
                 const element = target.closest('#tiaOptOutText');
-                assetDetailsService.updateTiaOptOutReason(this);
+                assetDetailsService.updateTiaOptOutReason(element);
                 break;
             }
         }
