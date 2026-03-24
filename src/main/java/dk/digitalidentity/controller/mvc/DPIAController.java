@@ -304,8 +304,8 @@ public class DPIAController {
 
         dpia.setRevisionInterval(revisionFormDTO.revisionInterval);
         dpia.setNextRevision(revisionFormDTO.nextRevision);
-        dpia.setResponsibleUser(revisionFormDTO.responsibleUserUuid() != null ? userService.get(revisionFormDTO.responsibleUserUuid()).orElse(null) : null);
-        assetService.createOrUpdateAssociatedCheck(dpia);
+		User userOnAssociatedCheck = revisionFormDTO.responsibleUserUuid() != null ? userService.get(revisionFormDTO.responsibleUserUuid()).orElse(null) : null;
+        assetService.createOrUpdateAssociatedCheck(dpia, userOnAssociatedCheck);
         return "redirect:/dpia/" + dpia.getId();
     }
 
