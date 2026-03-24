@@ -5,7 +5,7 @@ let userChoices;
 function formReset() {
     const form = document.querySelector('form');
     form.reset();
-    choiceService.updateUsers(userChoices, "", true);
+    choiceService.updateUsers(userChoices, "");
     choiceService.updateSuppliers(supplierChoices, "");
 }
 
@@ -18,10 +18,10 @@ function formLoaded() {
 function initUserChoices() {
     const userSelect = document.getElementById('userSelect');
     userChoices = initSelect(userSelect);
-    choiceService.updateUsers(userChoices, "", true);
+    choiceService.updateUsers(userChoices, "");
     userSelect.addEventListener("search",
         function(event) {
-            choiceService.updateUsers(userChoices, event.detail.value, true);
+            choiceService.updateUsers(userChoices, event.detail.value);
         },
         false,
     );

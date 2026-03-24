@@ -18,21 +18,15 @@ function ChoiceService() {
 
     // The multiple flag is default set to false, so all single user selects have a placeholder. Multiple selects should have this flag set to true
     // because they are not supposed to have a placeholder option or else users can choose it as an option, which makes no sense.
-    this.updateUsers = (targetChoice, search, multiple = false) => {
+    this.updateUsers = (targetChoice, search) => {
         fetch( `/rest/users/autocomplete?search=${search}`)
             .then(response => response.json()
                 .then(data => {
-                    const hasValue = targetChoice.getValue(true);
-                    const placeholder = multiple ? [] : [
-                        {value: '', label: 'Vælg ansvarlig', selected: !hasValue}
-                    ];
-                    targetChoice.setChoices([
-                        ...placeholder,
-                        ...data.content.map(e => ({
+                    targetChoice.setChoices(data.content.map(e => {
+                        return {
                             value: e.uuid,
-                            label: `(${e.userId}) ${e.name}`
-                        }))
-                    ], 'value', 'label', true);
+                            label: `(${e.userId}) ${e.name}`}
+                        }), 'value', 'label', true);
                 }))
             .catch(error => toastService.error(error));
     }
@@ -91,14 +85,13 @@ function ChoiceService() {
     this.initUserSelect = (elementId, prefetch = true) => {
         let self = this;
         const userSelect = document.getElementById(elementId);
-        const multiple = userSelect.multiple;
         const userChoices = initSelect(userSelect);
         if (prefetch) {
-            this.updateUsers(userChoices, "", multiple);
+            this.updateUsers(userChoices, "");
         }
         userSelect.addEventListener("search",
             function(event) {
-                self.updateUsers(userChoices, event.detail.value, multiple);
+                self.updateUsers(userChoices, event.detail.value);
             },
             false,
         );
