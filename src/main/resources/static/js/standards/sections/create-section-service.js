@@ -77,6 +77,20 @@ function CreateSectionService() {
             .catch(error => toastService.error(error));
     }
 
+    this.openRequirementEditModal = function(element) {
+        const sectionIdentifier = element.dataset.sectionid;
+        const templateId = element.dataset.templateid;
+        fetch(`/standards/section/form/${templateId}/${sectionIdentifier}`)
+            .then(response => response.text()
+                .then(data => {
+                    this.sectionModalDialog = document.getElementById('sectionFormDialog');
+                    this.sectionModalDialog.innerHTML = data;
+                    const modal = new bootstrap.Modal(this.sectionModalDialog);
+                    modal.show();
+                }))
+            .catch(error => toastService.error(error));
+    }
+
     this.openHeaderModal = function(element, isEdit = false) {
         const id = element.dataset.id;
         let url = "/standards/section/header/form/" + id;
