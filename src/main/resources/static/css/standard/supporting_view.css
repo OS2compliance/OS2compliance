@@ -14,6 +14,18 @@ tr, td {
     cursor: pointer;
 }
 
+.draggable-section {
+    cursor: grab;
+}
+
+.draggable-section.dragging {
+    opacity: 0.4;
+}
+
+.draggable-section.drag-over {
+    outline: 2px dashed #03a9f4;
+}
+
 .editDescription {
     cursor: text;
 }

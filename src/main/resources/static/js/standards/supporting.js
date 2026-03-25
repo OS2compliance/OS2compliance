@@ -108,6 +108,20 @@ function supportingStandartsViewLoaded() {
         });
     });
 
+    document.querySelectorAll('.section-edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            createSectionService.openRequirementEditModal(btn);
+        });
+    });
+
+    document.querySelectorAll('.section-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            createSectionService.openDeleteSwal(btn, false);
+        });
+    });
+
     const addRelationBtns = document.querySelectorAll('.addRelationBtn');
     addRelationBtns.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -311,6 +325,78 @@ function customDeleteRelation(element) {
         } else {
             window.location.reload();
         }
+    });
+}
+
+function initDragAndDrop() {
+    let draggedRow = null;
+
+    document.querySelectorAll('.draggable-section').forEach(row => {
+        row.addEventListener('dragstart', (e) => {
+            draggedRow = row;
+            setTimeout(() => row.classList.add('dragging'), 0);
+        });
+
+        row.addEventListener('dragend', () => {
+            row.classList.remove('dragging');
+            document.querySelectorAll('.draggable-section').forEach(r => r.classList.remove('drag-over'));
+            draggedRow = null;
+        });
+
+        row.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!draggedRow || draggedRow === row) {
+                return;
+            }
+            if (draggedRow.dataset.parent !== row.dataset.parent) {
+                return;
+            }
+            document.querySelectorAll('.draggable-section').forEach(r => r.classList.remove('drag-over'));
+            row.classList.add('drag-over');
+        });
+
+        row.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (!draggedRow || draggedRow === row) {
+                return;
+            }
+            if (draggedRow.dataset.parent !== row.dataset.parent) {
+                return;
+            }
+
+            const tbody = row.closest('tbody');
+            const allRows = [...tbody.querySelectorAll('.draggable-section')];
+            const draggedIndex = allRows.indexOf(draggedRow);
+            const targetIndex = allRows.indexOf(row);
+
+            // Move the dragged row and its two sibling rows (hidden detail + hr) together
+            const getRowGroup = (r) => [r, r.nextElementSibling, r.nextElementSibling?.nextElementSibling].filter(Boolean);
+
+            if (draggedIndex < targetIndex) {
+                const targetGroup = getRowGroup(row);
+                targetGroup[targetGroup.length - 1].after(...getRowGroup(draggedRow));
+            } else {
+                row.before(...getRowGroup(draggedRow));
+            }
+
+            // Collect new order for this parent group and save
+            const groupRows = [...tbody.querySelectorAll(`.draggable-section[data-parent="${draggedRow.dataset.parent}"]`)];
+            const newOrder = groupRows.map(r => r.dataset.identifier);
+
+            // Optimistically update section number labels immediately
+            const parentSectionNumber = draggedRow.dataset.parentSection;
+            groupRows.forEach((r, i) => {
+                const firstTd = r.querySelector('td:first-child');
+                const description = firstTd.textContent.trim().replace(/^\S+\s*/, '');
+                firstTd.textContent = parentSectionNumber + '.' + (i + 1) + ' ' + description;
+            });
+
+            postData('/rest/standards/section/reorder', newOrder).then(response => {
+                if (!response.ok) {
+                    toastService.error('Fejl ved gemning af rækkefølge');
+                }
+            }).catch(err => toastService.error(err));
+        });
     });
 }
 

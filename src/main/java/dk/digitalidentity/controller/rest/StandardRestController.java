@@ -131,6 +131,22 @@ public class StandardRestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
+	@RequireUpdateAll
+	@Transactional
+	@PostMapping("/section/reorder")
+	public ResponseEntity<?> reorderSections(@RequestBody final List<String> identifiers) {
+		for (int i = 0; i < identifiers.size(); i++) {
+			StandardTemplateSection section = standardTemplateSectionDao.findById(identifiers.get(i))
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			String parentSection = section.getParent().getSection();
+			String newSection = parentSection + "." + (i + 1);
+			section.setSection(newSection);
+			section.setSortKey(Integer.parseInt(newSection.replace(".", "").replaceAll("[^0-9]", "")));
+			standardTemplateSectionDao.save(section);
+		}
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
 	@Transactional
 	@PostMapping("/header/delete/{identifier}")
 	public ResponseEntity<HttpStatus> deleteHeader(@PathVariable(name = "identifier") final String identifier) {
