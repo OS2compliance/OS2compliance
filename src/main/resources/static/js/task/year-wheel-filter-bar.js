@@ -43,11 +43,11 @@ export function updateFilterBar(filters) {
     });
 
     if (activeFilters.length === 0) {
-        bar.style.display = 'none';
+        bar.classList.add('yw-hidden');
         return;
     }
 
-    bar.style.display = 'flex';
+    bar.classList.remove('yw-hidden');
 
     if (!pillTemplate) {
         pillTemplate = document.getElementById('tmplFilterPill');

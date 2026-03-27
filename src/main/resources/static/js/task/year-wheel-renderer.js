@@ -19,11 +19,11 @@ function cloneTemplate(id) {
 /**
  * Returns the first element inside a cloned fragment by data-ref attribute.
  * @param {DocumentFragment|Element} root
- * @param {string} ref
+ * @param {string} refName
  * @returns {Element}
  */
-function ref(root, ref) {
-    return root.querySelector('[data-ref="' + ref + '"]');
+function ref(root, refName) {
+    return root.querySelector('[data-ref="' + refName + '"]');
 }
 
 /**
@@ -51,7 +51,6 @@ function renderLegend(tags, state) {
 
     var label = document.createElement('span');
     label.className = 'legend-label';
-    label.style.cssText = 'font-size: 0.78rem; font-weight: 600; margin-right: 0.25rem;';
     label.textContent = 'Tags:';
     legend.appendChild(label);
 
@@ -65,7 +64,7 @@ function renderLegend(tags, state) {
         var button = fragment.querySelector('.legend-filter-btn');
 
         button.dataset.tagId = tag.id;
-        button.querySelector('.legend-dot').style.backgroundColor = tag.color;
+        button.querySelector('.legend-dot').style.setProperty('--tag-color', tag.color);
         ref(fragment, 'label').textContent = tag.value;
 
         button.addEventListener('click', function () {
@@ -192,15 +191,11 @@ function createTaskChip(task, state) {
     var fragment = cloneTemplate('tmplTaskChip');
     var chip = fragment.querySelector('.task-chip');
 
-    // Use first tag color, fallback to grey
-    var tagColor = '#adb5bd';
-    if (task.tags && task.tags.length > 0) {
-        tagColor = task.tags[0].color;
+    // Set tag color via CSS custom property (fallback handled in CSS)
+    var tagColor = (task.tags && task.tags.length > 0) ? task.tags[0].color : null;
+    if (tagColor) {
+        chip.style.setProperty('--tag-color', tagColor);
     }
-
-    chip.style.borderLeftColor = tagColor;
-    chip.style.backgroundColor = hexToRgba(tagColor, 0.12);
-    chip.style.color = tagColor;
 
     chip.dataset.taskId = task.id;
     chip.dataset.name = task.name;
@@ -209,7 +204,7 @@ function createTaskChip(task, state) {
     chip.dataset.deadline = task.deadline;
     chip.dataset.responsibleNames = task.responsibleNames;
     chip.dataset.responsibleOu = task.responsibleOU;
-    chip.dataset.tagColor = tagColor;
+    chip.dataset.tagColor = tagColor || '#adb5bd';
     chip.dataset.tags = JSON.stringify(task.tags || []);
     chip.dataset.tagIds = (task.tags || []).map(function (t) { return t.id; }).join(',');
     chip.dataset.status = task.status || 'upcoming';
@@ -267,8 +262,8 @@ function showDetailPanel(chip) {
         tags.forEach(function (tag) {
             var fragment = cloneTemplate('tmplDetailTagBadge');
             var badge = ref(fragment, 'badge');
-            badge.style.backgroundColor = tag.color;
-            badge.style.color = tag.contrastColor;
+            badge.style.setProperty('--badge-bg', tag.color);
+            badge.style.setProperty('--badge-color', tag.contrastColor);
             badge.textContent = tag.value;
             tagsContainer.appendChild(fragment);
         });
@@ -289,16 +284,16 @@ function showDetailPanel(chip) {
     }
 
     // Set border color to match primary tag
-    panel.style.borderColor = chip.dataset.tagColor;
+    panel.style.setProperty('--detail-border-color', chip.dataset.tagColor);
 
-    panel.style.display = 'block';
+    panel.classList.remove('yw-hidden');
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 export function hideDetailPanel() {
     var panel = document.getElementById('detailPanel');
     if (panel) {
-        panel.style.display = 'none';
+        panel.classList.add('yw-hidden');
     }
     var prevSelected = document.querySelector('.task-chip.selected');
     if (prevSelected) {
@@ -313,16 +308,4 @@ export function initDetailPanelClose() {
             hideDetailPanel();
         });
     }
-}
-
-// --- Utility ---
-
-function hexToRgba(hex, alpha) {
-    if (!hex || hex.charAt(0) !== '#') {
-        return 'rgba(173, 181, 189, ' + alpha + ')';
-    }
-    var r = parseInt(hex.slice(1, 3), 16);
-    var g = parseInt(hex.slice(3, 5), 16);
-    var b = parseInt(hex.slice(5, 7), 16);
-    return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
 }

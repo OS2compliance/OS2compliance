@@ -6,22 +6,22 @@
 </head>
 <body>
 <th:block th:fragment="yearWheel">
-    <div id="yearWheelContent" style="display: none;">
+    <div id="yearWheelContent" class="yw-hidden">
         <!-- Active filter indicator -->
-        <div class="year-wheel-filter-bar mb-2" id="yearWheelFilterBar" style="display: none;">
+        <div class="year-wheel-filter-bar mb-2 yw-hidden" id="yearWheelFilterBar">
             <i class="pli-filter-2"></i>
             <span>Filtre fra tabellen er aktive:</span>
             <div class="filter-pills" id="yearWheelFilterPills"></div>
         </div>
 
         <div class="legend mb-3" id="yearWheelLegend">
-            <span class="legend-label" style="font-size: 0.78rem; font-weight: 600; margin-right: 0.25rem;">Tags:</span>
+            <span class="legend-label">Tags:</span>
         </div>
 
         <div class="year-grid" id="yearGrid"></div>
 
         <!-- Detail panel -->
-        <div class="detail-panel mt-3 position-relative" id="detailPanel" style="display: none;">
+        <div class="detail-panel mt-3 position-relative yw-hidden" id="detailPanel">
             <button class="detail-close" type="button" id="detailClose" title="Luk">
                 <i class="pli-close"></i>
             </button>
@@ -48,12 +48,12 @@
                     Afdeling: <strong id="detailDept"></strong>
                 </div>
                 <div class="detail-meta-item">
-                    <i class="pli-check"></i>
-                    Status: <span id="detailStatus"></span>
-                </div>
-                <div class="detail-meta-item">
                     <i class="pli-tag"></i>
                     Årshjul tags: <span id="detailTags"></span>
+                </div>
+                <div class="detail-meta-item">
+                    <i class="pli-check"></i>
+                    Status: <span id="detailStatus"></span>
                 </div>
             </div>
             <div class="detail-actions">
@@ -133,7 +133,7 @@
 
     <!-- Legend: no tags message -->
     <template id="tmplNoTags">
-        <span class="text-muted" style="font-size: 0.78rem;">Ingen årshjul-tags fundet</span>
+        <span class="legend-no-tags">Ingen årshjul-tags fundet</span>
     </template>
 
 </th:block>
@@ -148,7 +148,7 @@
         </button>
     </div>
 
-    <div class="year-nav" id="yearNav" style="display: none;">
+    <div class="year-nav yw-hidden" id="yearNav">
         <button type="button" id="yearPrev" title="Forrige år"><i class="pli-arrow-left"></i></button>
         <span class="year-label" id="yearLabel"></span>
         <button type="button" id="yearNext" title="Næste år"><i class="pli-arrow-right"></i></button>
@@ -157,7 +157,7 @@
     <!-- Only visible for admins -->
     <div th:if="${hasReadAll}" class="form-check form-switch ms-3 d-none" id="onlyMineToggleContainer">
         <input class="form-check-input" type="checkbox" role="switch" id="onlyMineToggle">
-        <label class="form-check-label small" style="margin-left: 10px;" for="onlyMineToggle">Kun mine opgaver</label>
+        <label class="form-check-label small" for="onlyMineToggle">Kun mine opgaver</label>
     </div>
 </th:block>
 </body>

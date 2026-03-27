@@ -68,6 +68,11 @@
     gap: 0.75rem;
     align-items: center;
 }
+.legend-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-right: 0.25rem;
+}
 .legend-item {
     display: flex;
     align-items: center;
@@ -80,6 +85,11 @@
     height: 11px;
     border-radius: 3px;
     flex-shrink: 0;
+    background-color: var(--tag-color, #adb5bd);
+}
+.legend-no-tags {
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color, #6c757d);
 }
 
 /* --- Year Wheel Grid --- */
@@ -134,7 +144,9 @@
     flex: 1;
 }
 
+/* --- Task Chips --- */
 .task-chip {
+    --tag-color: #adb5bd;
     display: flex;
     align-items: center;
     padding: 0.28rem 0.55rem;
@@ -143,7 +155,9 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.12s ease;
-    border-left: 3px solid transparent;
+    border-left: 3px solid var(--tag-color);
+    background-color: color-mix(in srgb, var(--tag-color) 12%, transparent);
+    color: var(--tag-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -167,7 +181,7 @@
 /* --- Detail Panel --- */
 .detail-panel {
     background: #fff;
-    border: 2px solid var(--bs-border-color, #dee2e6);
+    border: 2px solid var(--detail-border-color, var(--bs-border-color, #dee2e6));
     border-radius: 8px;
     padding: 1rem 1.25rem;
     animation: yw-slide-down 0.2s ease;
@@ -253,6 +267,8 @@
     font-size: 0.75rem;
     font-weight: 500;
     margin-right: 0.3rem;
+    background-color: var(--badge-bg, #6c757d);
+    color: var(--badge-color, #fff);
 }
 
 /* --- Active Filter Bar --- */
@@ -379,6 +395,7 @@
 #onlyMineToggleContainer .form-check-label {
     font-size: 0.8125rem;
     color: var(--bs-secondary-color, #6c757d);
+    margin-left: 10px;
 }
 
 /* --- Responsive --- */

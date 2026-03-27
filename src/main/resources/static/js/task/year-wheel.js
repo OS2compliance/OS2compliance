@@ -47,7 +47,7 @@ export function initYearWheelStandalone(yearWheelUrl, token) {
 
     var yearWheelContent = document.getElementById('yearWheelContent');
     if (yearWheelContent) {
-        yearWheelContent.style.display = '';
+        yearWheelContent.classList.remove('yw-hidden');
     }
 
     initYearNavigation(state);
@@ -74,11 +74,11 @@ function initViewToggle(state) {
     function showTableView() {
         btnTable.classList.add('active');
         btnYearWheel.classList.remove('active');
-        yearWheelContent.style.display = 'none';
-        tableViewContent.style.display = '';
-        yearNav.style.display = 'none';
+        yearWheelContent.classList.add('yw-hidden');
+        tableViewContent.classList.remove('yw-hidden');
+        yearNav.classList.add('yw-hidden');
         if (tableOptions) {
-            tableOptions.style.display = '';
+            tableOptions.classList.remove('yw-hidden');
         }
         if (onlyMineContainer) {
             onlyMineContainer.classList.add('d-none');
@@ -88,11 +88,11 @@ function initViewToggle(state) {
     function showYearWheelView() {
         btnYearWheel.classList.add('active');
         btnTable.classList.remove('active');
-        yearWheelContent.style.display = '';
-        tableViewContent.style.display = 'none';
-        yearNav.style.display = 'flex';
+        yearWheelContent.classList.remove('yw-hidden');
+        tableViewContent.classList.add('yw-hidden');
+        yearNav.classList.remove('yw-hidden');
         if (tableOptions) {
-            tableOptions.style.display = 'none';
+            tableOptions.classList.add('yw-hidden');
         }
         if (onlyMineContainer) {
             onlyMineContainer.classList.remove('d-none');
@@ -159,7 +159,7 @@ function initFilterListeners(state) {
         if (el) {
             el.addEventListener('change', function () {
                 var yearWheelContent = document.getElementById('yearWheelContent');
-                if (yearWheelContent && yearWheelContent.style.display !== 'none') {
+                if (yearWheelContent && !yearWheelContent.classList.contains('yw-hidden')) {
                     fetchAndRender(state);
                 }
             });
