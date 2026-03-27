@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
+import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.dto.enums.StatusColor;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
@@ -455,5 +456,27 @@ public class TaskService implements TagableService<Task> {
 							.anyMatch(responsibleUser -> responsibleUser.getUuid().equals(user.getUuid())))
 					.toList();
 		}
+	}
+
+	public List<TaskListDTO> convertRelatableToTaskListDTO(final List<Relatable> relatable) {
+		return relatable.stream()
+				.filter(r -> r.getRelationType() == RelationType.TASK)
+				.map(r -> {
+					Task task = ((Task) r);
+					return new TaskListDTO(
+							task.getId(),
+							task.getName(),
+							task.getResponsibleUsers().stream()
+									.map(User::getName)
+									.collect(Collectors.joining(", ")),
+							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
+							task.getTaskType().getMessage(),
+							task.getNextDeadline().toString(),
+							task.getRepetition() != null ? task.getRepetition().getMessage() : "",
+							findHtmlStatusBadgeForTask(task),
+							RelationType.TASK
+					);
+				})
+				.toList();
 	}
 }
