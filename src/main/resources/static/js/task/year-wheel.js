@@ -240,9 +240,8 @@ function fetchAndRender(state) {
 function renderError() {
     var grid = document.getElementById('yearGrid');
     if (grid) {
-        grid.innerHTML = '<div class="text-center text-muted py-5">' +
-            '<i class="pli-warning-window fs-1 mb-2 d-block"></i>' +
-            '<p>Kunne ikke hente årshjulsdata. Prøv igen senere.</p>' +
-            '</div>';
+        grid.innerHTML = '';
+        var template = document.getElementById('tmplYearWheelError');
+        grid.appendChild(template.content.cloneNode(true));
     }
 }

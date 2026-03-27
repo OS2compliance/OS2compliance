@@ -1,5 +1,31 @@
 var MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
 
+// Cached template references (populated on first use)
+var templates = {};
+
+/**
+ * Returns a cloned DocumentFragment from a <template> element.
+ * Caches the template reference for repeated use.
+ * @param {string} id - The template element ID
+ * @returns {DocumentFragment}
+ */
+function cloneTemplate(id) {
+    if (!templates[id]) {
+        templates[id] = document.getElementById(id);
+    }
+    return templates[id].content.cloneNode(true);
+}
+
+/**
+ * Returns the first element inside a cloned fragment by data-ref attribute.
+ * @param {DocumentFragment|Element} root
+ * @param {string} ref
+ * @returns {Element}
+ */
+function ref(root, ref) {
+    return root.querySelector('[data-ref="' + ref + '"]');
+}
+
 /**
  * Renders the full year wheel: legend, grid and resets detail panel.
  * @param {Object} data - Year wheel data from the backend
@@ -30,44 +56,33 @@ function renderLegend(tags, state) {
     legend.appendChild(label);
 
     if (tags.length === 0) {
-        var noTags = document.createElement('span');
-        noTags.className = 'text-muted';
-        noTags.style.fontSize = '0.78rem';
-        noTags.textContent = 'Ingen årshjul-tags fundet';
-        legend.appendChild(noTags);
+        legend.appendChild(cloneTemplate('tmplNoTags'));
         return;
     }
 
     tags.forEach(function (tag) {
-        var item = document.createElement('button');
-        item.type = 'button';
-        item.className = 'legend-filter-btn';
-        item.dataset.tagId = tag.id;
+        var fragment = cloneTemplate('tmplLegendButton');
+        var button = fragment.querySelector('.legend-filter-btn');
 
-        var dot = document.createElement('div');
-        dot.className = 'legend-dot';
-        dot.style.backgroundColor = tag.color;
+        button.dataset.tagId = tag.id;
+        button.querySelector('.legend-dot').style.backgroundColor = tag.color;
+        ref(fragment, 'label').textContent = tag.value;
 
-        var text = document.createTextNode(tag.value);
-
-        item.appendChild(dot);
-        item.appendChild(text);
-
-        item.addEventListener('click', function () {
+        button.addEventListener('click', function () {
             var tagId = String(tag.id);
 
             if (state.activeTagFilters.has(tagId)) {
                 state.activeTagFilters.delete(tagId);
-                item.classList.remove('active');
+                button.classList.remove('active');
             } else {
                 state.activeTagFilters.add(tagId);
-                item.classList.add('active');
+                button.classList.add('active');
             }
 
             applyTagFilter(state);
         });
 
-        legend.appendChild(item);
+        legend.appendChild(fragment);
     });
 }
 
@@ -104,12 +119,10 @@ function applyTagFilter(state) {
 
         if (visibleChips.length === 0) {
             if (!emptyMsg) {
-                emptyMsg = document.createElement('span');
-                emptyMsg.className = 'month-empty';
-                emptyMsg.textContent = 'Ingen aktiviteter';
-                body.appendChild(emptyMsg);
+                body.appendChild(cloneTemplate('tmplMonthEmpty'));
+            } else {
+                emptyMsg.classList.remove('yw-hidden');
             }
-            emptyMsg.classList.remove('yw-hidden');
         } else if (emptyMsg) {
             emptyMsg.classList.add('yw-hidden');
         }
@@ -143,65 +156,41 @@ function renderGrid(months, state) {
 
     for (var m = 1; m <= 12; m++) {
         var tasks = months[m] || [];
-        var card = document.createElement('div');
-        card.className = 'month-card';
+        var fragment = cloneTemplate('tmplMonthCard');
+        var card = fragment.querySelector('.month-card');
 
         var isCurrent = isCurrentYear && m === state.currentMonth;
         if (isCurrent) {
             card.classList.add('current-month');
         }
 
-        card.appendChild(createMonthHeader(m, isCurrent, tasks.length));
-        card.appendChild(createMonthBody(tasks, state));
+        // Header
+        ref(fragment, 'monthName').textContent = MONTH_NAMES[m - 1];
+        var counter = ref(fragment, 'monthCount');
+        if (tasks.length > 0) {
+            counter.textContent = tasks.length;
+            counter.classList.remove('yw-hidden');
+        }
 
-        grid.appendChild(card);
+        // Body
+        var body = ref(fragment, 'monthBody');
+        if (tasks.length === 0) {
+            body.appendChild(cloneTemplate('tmplMonthEmpty'));
+        } else {
+            tasks.forEach(function (task) {
+                body.appendChild(createTaskChip(task, state));
+            });
+        }
+
+        grid.appendChild(fragment);
     }
-}
-
-function createMonthHeader(month, isCurrent, taskCount) {
-    var header = document.createElement('div');
-    header.className = 'month-header';
-
-    var monthName = document.createElement('span');
-    monthName.className = 'month-name';
-    monthName.textContent = MONTH_NAMES[month - 1];
-    header.appendChild(monthName);
-
-    var counter = document.createElement('span');
-    counter.className = 'month-count';
-    if (taskCount > 0) {
-        counter.textContent = taskCount;
-    } else {
-        counter.classList.add('yw-hidden');
-    }
-    header.appendChild(counter);
-
-    return header;
-}
-
-function createMonthBody(tasks, state) {
-    var body = document.createElement('div');
-    body.className = 'month-body';
-
-    if (tasks.length === 0) {
-        var empty = document.createElement('span');
-        empty.className = 'month-empty';
-        empty.textContent = 'Ingen aktiviteter';
-        body.appendChild(empty);
-    } else {
-        tasks.forEach(function (task) {
-            body.appendChild(createTaskChip(task, state));
-        });
-    }
-
-    return body;
 }
 
 // --- Task Chips ---
 
 function createTaskChip(task, state) {
-    var chip = document.createElement('div');
-    chip.className = 'task-chip';
+    var fragment = cloneTemplate('tmplTaskChip');
+    var chip = fragment.querySelector('.task-chip');
 
     // Use first tag color, fallback to grey
     var tagColor = '#adb5bd';
@@ -225,23 +214,13 @@ function createTaskChip(task, state) {
     chip.dataset.tagIds = (task.tags || []).map(function (t) { return t.id; }).join(',');
     chip.dataset.status = task.status || 'upcoming';
 
-    // Task name
-    var nameSpan = document.createElement('span');
-    nameSpan.className = 'task-chip-name';
-    nameSpan.textContent = task.name;
-    chip.appendChild(nameSpan);
+    ref(fragment, 'chipName').textContent = task.name;
 
     // Status indicator icon
     if (task.status === 'completed') {
-        var completedIcon = document.createElement('i');
-        completedIcon.className = 'pli-yes yw-status-icon yw-status-completed';
-        completedIcon.title = 'Udført';
-        chip.appendChild(completedIcon);
+        chip.appendChild(cloneTemplate('tmplChipIconCompleted'));
     } else if (task.status === 'overdue') {
-        var overdueIcon = document.createElement('i');
-        overdueIcon.className = 'pli-exclamation yw-status-icon yw-status-overdue';
-        overdueIcon.title = 'Overskredet';
-        chip.appendChild(overdueIcon);
+        chip.appendChild(cloneTemplate('tmplChipIconOverdue'));
     }
 
     chip.addEventListener('click', function () {
@@ -254,10 +233,16 @@ function createTaskChip(task, state) {
         showDetailPanel(chip);
     });
 
-    return chip;
+    return fragment;
 }
 
 // --- Detail Panel ---
+
+var STATUS_CONFIG = {
+    completed: { className: 'd-inline-block badge bg-success', text: 'Udført' },
+    overdue:   { className: 'd-inline-block badge bg-danger',  text: 'Overskredet' },
+    upcoming:  { className: 'd-inline-block badge bg-secondary', text: 'Kommende' }
+};
 
 function showDetailPanel(chip) {
     var panel = document.getElementById('detailPanel');
@@ -280,12 +265,12 @@ function showDetailPanel(chip) {
 
     if (tags.length > 0) {
         tags.forEach(function (tag) {
-            var badge = document.createElement('span');
-            badge.className = 'detail-tag-badge';
+            var fragment = cloneTemplate('tmplDetailTagBadge');
+            var badge = ref(fragment, 'badge');
             badge.style.backgroundColor = tag.color;
             badge.style.color = tag.contrastColor;
             badge.textContent = tag.value;
-            tagsContainer.appendChild(badge);
+            tagsContainer.appendChild(fragment);
         });
     } else {
         tagsContainer.textContent = 'Ingen tags';
@@ -295,21 +280,12 @@ function showDetailPanel(chip) {
     var statusContainer = document.getElementById('detailStatus');
     if (statusContainer) {
         statusContainer.innerHTML = '';
-        var status = chip.dataset.status;
-        var statusBadge = document.createElement('span');
-
-        if (status === 'completed') {
-            statusBadge.className = 'd-inline-block badge bg-success';
-            statusBadge.textContent = 'Udført';
-        } else if (status === 'overdue') {
-            statusBadge.className = 'd-inline-block badge bg-danger';
-            statusBadge.textContent = 'Overskredet';
-        } else {
-            statusBadge.className = 'd-inline-block badge bg-secondary';
-            statusBadge.textContent = 'Kommende';
-        }
-
-        statusContainer.appendChild(statusBadge);
+        var config = STATUS_CONFIG[chip.dataset.status] || STATUS_CONFIG.upcoming;
+        var fragment = cloneTemplate('tmplStatusBadge');
+        var badge = ref(fragment, 'badge');
+        badge.className = config.className;
+        badge.textContent = config.text;
+        statusContainer.appendChild(fragment);
     }
 
     // Set border color to match primary tag

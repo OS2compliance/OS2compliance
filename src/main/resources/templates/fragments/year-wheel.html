@@ -48,12 +48,12 @@
                     Afdeling: <strong id="detailDept"></strong>
                 </div>
                 <div class="detail-meta-item">
-                    <i class="pli-tag"></i>
-                    Årshjul tags: <span id="detailTags"></span>
-                </div>
-                <div class="detail-meta-item">
                     <i class="pli-check"></i>
                     Status: <span id="detailStatus"></span>
+                </div>
+                <div class="detail-meta-item">
+                    <i class="pli-tag"></i>
+                    Årshjul tags: <span id="detailTags"></span>
                 </div>
             </div>
             <div class="detail-actions">
@@ -63,6 +63,79 @@
             </div>
         </div>
     </div>
+
+    <!-- ==================== Templates ==================== -->
+
+    <!-- Legend filter button -->
+    <template id="tmplLegendButton">
+        <button type="button" class="legend-filter-btn">
+            <div class="legend-dot"></div>
+            <span data-ref="label"></span>
+        </button>
+    </template>
+
+    <!-- Month card -->
+    <template id="tmplMonthCard">
+        <div class="month-card">
+            <div class="month-header">
+                <span class="month-name" data-ref="monthName"></span>
+                <span class="month-count yw-hidden" data-ref="monthCount"></span>
+            </div>
+            <div class="month-body" data-ref="monthBody"></div>
+        </div>
+    </template>
+
+    <!-- Task chip -->
+    <template id="tmplTaskChip">
+        <div class="task-chip">
+            <span class="task-chip-name" data-ref="chipName"></span>
+        </div>
+    </template>
+
+    <!-- Status icons for task chips -->
+    <template id="tmplChipIconCompleted">
+        <i class="pli-yes yw-status-icon yw-status-completed" title="Udført"></i>
+    </template>
+    <template id="tmplChipIconOverdue">
+        <i class="pli-exclamation yw-status-icon yw-status-overdue" title="Overskredet"></i>
+    </template>
+
+    <!-- Empty month message -->
+    <template id="tmplMonthEmpty">
+        <span class="month-empty">Ingen aktiviteter</span>
+    </template>
+
+    <!-- Detail panel tag badge -->
+    <template id="tmplDetailTagBadge">
+        <span class="detail-tag-badge" data-ref="badge"></span>
+    </template>
+
+    <!-- Detail panel status badge -->
+    <template id="tmplStatusBadge">
+        <span class="d-inline-block badge" data-ref="badge"></span>
+    </template>
+
+    <!-- Filter pill -->
+    <template id="tmplFilterPill">
+        <span class="filter-pill">
+            <span class="filter-pill-label" data-ref="label"></span>
+            <span data-ref="value"></span>
+        </span>
+    </template>
+
+    <!-- Error state -->
+    <template id="tmplYearWheelError">
+        <div class="text-center text-muted py-5">
+            <i class="pli-warning-window fs-1 mb-2 d-block"></i>
+            <p>Kunne ikke hente årshjulsdata. Prøv igen senere.</p>
+        </div>
+    </template>
+
+    <!-- Legend: no tags message -->
+    <template id="tmplNoTags">
+        <span class="text-muted" style="font-size: 0.78rem;">Ingen årshjul-tags fundet</span>
+    </template>
+
 </th:block>
 
 <th:block th:fragment="yearWheelToggle">

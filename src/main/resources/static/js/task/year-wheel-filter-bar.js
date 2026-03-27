@@ -21,6 +21,8 @@ var FILTER_VALUE_LABELS = {
     'EVERY_THIRD_YEAR': 'Hvert 3. år'
 };
 
+var pillTemplate = null;
+
 /**
  * Updates the filter indicator bar to show which filters are currently active.
  * Display-only — filters are managed from the table view.
@@ -47,21 +49,18 @@ export function updateFilterBar(filters) {
 
     bar.style.display = 'flex';
 
+    if (!pillTemplate) {
+        pillTemplate = document.getElementById('tmplFilterPill');
+    }
+
     activeFilters.forEach(function (entry) {
         var key = entry[0];
         var value = entry[1];
 
-        var pill = document.createElement('span');
-        pill.className = 'filter-pill';
+        var fragment = pillTemplate.content.cloneNode(true);
+        fragment.querySelector('[data-ref="label"]').textContent = FILTER_LABELS[key] || key;
+        fragment.querySelector('[data-ref="value"]').textContent = ': ' + (FILTER_VALUE_LABELS[value] || value);
 
-        var label = document.createElement('span');
-        label.className = 'filter-pill-label';
-        label.textContent = FILTER_LABELS[key] || key;
-
-        var valueText = document.createTextNode(': ' + (FILTER_VALUE_LABELS[value] || value));
-
-        pill.appendChild(label);
-        pill.appendChild(valueText);
-        pills.appendChild(pill);
+        pills.appendChild(fragment);
     });
 }
