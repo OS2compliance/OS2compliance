@@ -66,6 +66,7 @@ public class TagService {
 	public Tag update (Tag existing, Tag updated) {
 		existing.setValue(updated.getValue());
 		existing.setColor(updated.getColor());
+		existing.setYearWheel(updated.isYearWheel());
 		return tagDao.save(existing);
 	}
 

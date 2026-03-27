@@ -346,8 +346,14 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		return getTasks(sortColumn, sortDirection, filters, page, pageLimit, user, false);
+	}
+
+	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user, boolean onlyMine) {
 		Page<TaskGrid> tasks;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+
+		// if onlyMine is true - only show the tasks assigned to the user, even if read_all
+		if (!onlyMine && SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			// Logged-in user can see all
 			tasks = taskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, TaskGrid.class),

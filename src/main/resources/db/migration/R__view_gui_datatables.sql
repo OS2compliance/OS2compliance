@@ -29,6 +29,8 @@ SELECT t.id,
        t.responsible_ou_uuid,
        t.next_deadline,
        t.repetition,
+       t.include_in_report,
+       t.created_at,
        (CASE
             WHEN t.repetition = 'NONE' THEN 10
             WHEN t.repetition = 'MONTHLY' THEN 2
@@ -43,8 +45,8 @@ SELECT t.id,
        `ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE') as `completed`,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
-       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')            AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')               AS tag_ids
+       GROUP_CONCAT(DISTINCT COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
+       GROUP_CONCAT(DISTINCT COALESCE(tg.id, '')   ORDER BY tg.value SEPARATOR ',') AS tag_ids
 FROM tasks t
     LEFT JOIN task_responsible_users tru ON tru.task_id = t.id
     LEFT JOIN users u ON u.uuid = tru.user_uuid
