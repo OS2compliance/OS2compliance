@@ -549,6 +549,55 @@
                                 </div>
 
                                 <div class="row mb-3">
+                                    <div class="col-12">
+                                        <div class="card h-100 shadow-none border-1">
+                                            <div class="card-header toolbar">
+                                                <h5 class="toolbar-start m-0">Opgaver</h5>
+                                                <div class="toolbar-end">
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <table>
+                                                        <thead>
+                                                        <tr>
+                                                            <th class="col">Titel</th>
+                                                            <th class="col">Ansvarlig</th>
+                                                            <th class="col">Afdeling</th>
+                                                            <th class="col-1">Opgavetype</th>
+                                                            <th class="col-1">Deadline</th>
+                                                            <th class="col-1">Gentages</th>
+                                                            <th class="col-1">Status</th>
+                                                            <th class="col-1"></th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        <tr th:each="task : ${tasks}">
+                                                            <td>
+                                                                <a th:text="${task.title}" th:href="@{/tasks/{id}(id=${task.id})}"></a>
+                                                            </td>
+                                                            <td th:text="${task.responsibleUserName}"></td>
+                                                            <td th:text="${task.responsibleOuName}"></td>
+                                                            <td th:text="${task.taskType}"></td>
+                                                            <td th:text="${task.deadline}"></td>
+                                                            <td th:text="${task.repeats}"></td>
+                                                            <td th:utext="${task.status}"></td>
+                                                            <td class="col-1 " title="Fjern relation">
+                                                                <div class="text-end ps-3 pe-3">
+                                                                    <i class="pli-cross fs-5 me-2 deleteRelationBtn" th:attr="data-relatableid=${asset.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
                                     <div class="col-4 mb-3">
                                         <div class="card shadow-none h-100 border-1">
                                             <div class="card-header toolbar">
@@ -595,33 +644,6 @@
                                                             </td>
                                                             <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern relation" style="text-align: right;">
                                                                 <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
-                                                            </td>
-                                                        </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                         </div>
-                                    </div>
-
-                                    <div class="col-4 mb-3">
-                                        <div class="card shadow-none h-100 border-1">
-                                            <div class="card-header toolbar">
-                                                <h5 class="toolbar-start m-0">Opgaver</h5>
-                                                <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
-                                                </div>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <table>
-                                                        <tbody>
-                                                        <tr th:each="task : ${tasks}">
-                                                            <td class="col-lg-10">
-                                                                <a th:text="${task.name}" th:href="@{/tasks/{id}(id=${task.id})}"></a>
-                                                            </td>
-                                                            <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern relation" style="text-align: right;">
-                                                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
                                                             </td>
                                                         </tr>
                                                         </tbody>
