@@ -5,6 +5,7 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
+import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
@@ -31,11 +32,12 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
+import dk.digitalidentity.model.entity.enums.ColorStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
@@ -143,6 +145,7 @@ public class AssetsController {
 	private final OS2complianceConfiguration os2complianceConfiguration;
 	private final ChoiceValueService choiceValueService;
 	private final AssetSupplierMappingService assetSupplierMappingService;
+	private final DBSAssetDao dBSAssetDao;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -200,6 +203,8 @@ public class AssetsController {
 	record RiskAssessmentKitosSync(long assetId, String fillOption, boolean riskAssessmentConducted, @DateTimeFormat(pattern = "dd/MM-yyyy") Date riskAssessmentConductedDate, String result) {}
     record AssetEditDPIADTO(Long assetId, boolean optOut) {}
 	public record AssetRelatedDPIADTO(long id, String name, String responsibleUserName, String responsibleOuName, LocalDate userUpdatedDate, DPIAScreeningConclusion screeningConclusion) {}
+	record MeasureChoiceInfo(String identifier) {}
+	record MeasureForJs(String identifier, MeasureChoiceInfo choice) {}
 	@RequireReadOwnerOnly
 	@GetMapping("{id}")
     @Transactional
@@ -228,13 +233,18 @@ public class AssetsController {
 
 		// MEASURES
 
-		final List<ChoiceMeasure> choiceMeasures = choiceMeasuresDao.findAll();
+		final List<ChoiceMeasure> choiceMeasures = choiceMeasuresDao.findAllSorted();
 		final List<AssetMeasure> assetMeasures = assetMeasuresDao.findByAsset(asset);
 
 		final List<ViewMeasureDTO> measures = new ArrayList<>();
 
+		// Create a simplified list for JavaScript (no circular references)
+		final List<MeasureForJs> measuresForJs = new ArrayList<>();
+
 		for (final ChoiceMeasure choiceMeasure : choiceMeasures) {
-			final AssetMeasure assetMeasure = assetMeasures.stream().filter(m -> Objects.equals(m.getMeasure().getId(), choiceMeasure.getId())).findAny().orElse(new AssetMeasure());
+			final AssetMeasure assetMeasure = assetMeasures.stream()
+					.filter(m -> m.getMeasure() != null && Objects.equals(m.getMeasure().getId(), choiceMeasure.getId()))
+					.findAny().orElse(new AssetMeasure());
 			final ViewMeasureDTO measure = new ViewMeasureDTO();
 
 			measure.setId(assetMeasure.getId());
@@ -245,7 +255,14 @@ public class AssetsController {
 			measure.setChoice(choiceMeasure);
 
 			measures.add(measure);
+
+			// Add simplified version for JavaScript
+			measuresForJs.add(new MeasureForJs(
+					choiceMeasure.getIdentifier(),
+					new MeasureChoiceInfo(choiceMeasure.getIdentifier())
+			));
 		}
+
 		final ViewMeasuresDTO measuresForm = new ViewMeasuresDTO(0L, measures);
 
 		// DPIA
@@ -282,11 +299,19 @@ public class AssetsController {
 		model.addAttribute("dataProcessing", asset.getDataProcessing());
 		model.addAttribute("dpChoices", dataProcessingService.getChoices());
 		model.addAttribute("acceptanceBasisChoices", acceptListIdentifiers);
+		Relation relatedDbAsset = relationService.findRelatedToWithType(asset, RelationType.DBSASSET).stream().findFirst().orElse(null);
+		if (relatedDbAsset != null) {
+			Long dbsAssetId = (relatedDbAsset.getRelationAId() != null && !relatedDbAsset.getRelationAId().equals(asset.getId()) && relatedDbAsset.getRelationAType() != RelationType.ASSET)
+					? relatedDbAsset.getRelationAId()
+					: relatedDbAsset.getRelationBId();
+			dBSAssetDao.findById(dbsAssetId).ifPresent(dbsAsset -> model.addAttribute("dbsAssetLink", "https://www.dbstilsyn.dk/itsystem/" + dbsAsset.getDbsId() + "/view"));
+		}
         model.addAttribute("isKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY) || p.getKey().equals((KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY))));
         model.addAttribute("isOldKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY)));
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
+		model.addAttribute("measuresForJs", measuresForJs);
         model.addAttribute("supplier", supplierService.getAll());
 		model.addAttribute("dpiaForm", dpiaForm);
 		model.addAttribute("relatedDPIAs", relatedDPIADTOs);
@@ -323,7 +348,6 @@ public class AssetsController {
             model.addAttribute("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("riskProfiles", threatAssessmentService.buildRiskProfileDTOs(newestThreatAssessment));
-            model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
 
@@ -496,6 +520,9 @@ public class AssetsController {
         if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
+
+		asset.setAssetMeasureStatus(measuresForm.getAssetMeasureStatus());
+
         for (final SaveMeasureDTO answer : measuresForm.getMeasures()) {
             AssetMeasure existing = assetMeasuresDao.findByAssetAndMeasureIdentifier(asset, answer.getIdentifier()).orElse(null);
             if (existing == null) {
@@ -693,13 +720,20 @@ public class AssetsController {
         if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-		ChoiceValue supervisoryModel = choiceValueService.findById(body.getSupervisoryModelId())
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid supervisory model"));
-        asset.setSupervisoryModel(supervisoryModel);
+		boolean isDbs = false;
+		if (body.getSupervisoryModelId() != null) {
+			ChoiceValue supervisoryModel = choiceValueService.findById(body.getSupervisoryModelId())
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid supervisory model"));
+			asset.setSupervisoryModel(supervisoryModel);
+			isDbs = supervisoryModel.getIdentifier().startsWith("supervision-model-dbs-123456");
+		}
+		if (body.getDataProcessingAgreementStatus() != null) {
+			asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
+		}
 		asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
 		asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
         asset.setNextInspection(body.getNextInspection());
-        if (body.getNextInspectionDate() == null || supervisoryModel.getIdentifier().startsWith("supervision-model-dbs-123456")) {
+        if (body.getNextInspectionDate() == null || isDbs) {
             asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, LocalDate.now()));
         } else {
             asset.setNextInspectionDate(body.getNextInspectionDate());
@@ -710,7 +744,7 @@ public class AssetsController {
         return "redirect:/assets/" + asset.getId();
     }
 
-    record AssetOversightDTO (Long id, Set<Long> assetIds, User responsibleUser, ChoiceValue supervisionModel, Long supervisionModelId, @Size(max = 4096) String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
+    record AssetOversightDTO (Long id, Set<Long> assetIds, User responsibleUser, ChoiceValue supervisionModel, Long supervisionModelId, @Size(max = 4096) String conclusion, String dbsLink, String internalDocumentationLink, ColorStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
     }
 	@RequireUpdateOwnerOnly
     @Transactional
@@ -772,7 +806,7 @@ public class AssetsController {
 				}
 				newOversight.setNewInspectionDate(asset.getNextInspectionDate());
 				final AssetOversight attachedOversight = assetOversightService.create(newOversight);
-				assetOversightService.createAssociatedCheck(attachedOversight);
+				assetOversightService.createTaskLogForAssociatedTask(attachedOversight);
 				asset.getAssetOversights().add(attachedOversight);
 			}
 
@@ -797,17 +831,16 @@ public class AssetsController {
         if(Objects.isNull(entityId)){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id blev ikke sendt med");
         }
-
+		ChoiceList list = choiceService.findChoiceList("supervision-model").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find Supervision Model Choices"));
+		List<ChoiceValue> values = list.getValues().stream().filter(v -> v.getIdentifier().startsWith("supervision-model-")).toList();
+		model.addAttribute("supervisions", values);
         if(type.equals("asset")) {
-			ChoiceList list = choiceService.findChoiceList("supervision-model").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find Supervision Model Choices"));
-			List<ChoiceValue> values = list.getValues().stream().filter(v -> v.getIdentifier().startsWith("supervision-model-")).toList();
-			model.addAttribute("supervisions", values);
             final Asset asset = assetService.get(entityId).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det angivne id for aktiviteten findes ikke")
             );
 
             if (id == null) {
-                model.addAttribute("oversight", new AssetOversightDTO(null, Set.of(asset.getId()), asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), asset.getSupervisoryModel() != null ? asset.getSupervisoryModel().getId() : null, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
+                model.addAttribute("oversight", new AssetOversightDTO(null, Set.of(asset.getId()), asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), asset.getSupervisoryModel() != null ? asset.getSupervisoryModel().getId() : null, "", "", "", ColorStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
                 model.addAttribute("inspectionType", asset.getNextInspection());
             } else {
                 final AssetOversight assetOversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), id)).findAny().orElseThrow(() ->
@@ -824,7 +857,7 @@ public class AssetsController {
 
             if (id == null) {
 				ChoiceValue choiceValue = choiceValueService.findByIdentifier("supervision-model-sworn-statement-123456");
-				model.addAttribute("oversight", new AssetOversightDTO(null, null, new User(), choiceValue, choiceValue != null ? choiceValue.getId() : null, "", "","", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
+				model.addAttribute("oversight", new AssetOversightDTO(null, null, new User(), choiceValue, choiceValue != null ? choiceValue.getId() : null, "", "","", ColorStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
                 model.addAttribute("supplier", supplier);
                 model.addAttribute("inspectionType", null);
                 model.addAttribute("supplierAssets", supplier.getAssets());

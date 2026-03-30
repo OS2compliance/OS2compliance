@@ -61,6 +61,9 @@ public class Document extends Relatable implements HasSingleResponsibleUser, Tag
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     private LocalDate nextRevision;
 
+	@Column
+	private boolean includeInYearWheel;
+
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
 	@JoinTable(name = "document_tag", joinColumns = { @JoinColumn(name = "document_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
 	private Set<Tag> tags = new HashSet<>();

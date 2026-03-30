@@ -71,6 +71,9 @@ public class TaskService implements TagableService<Task> {
         return taskDao.findAll();
     }
 
+	public List<Task> findAllTasks() {
+		return taskDao.finAllTasks();
+	}
 
     public void saveAll(final List<Task> all) {
         taskDao.saveAll(all);
@@ -166,7 +169,8 @@ public class TaskService implements TagableService<Task> {
                     if (d.getNextRevision() == null || !d.getNextRevision().isEqual(task.getNextDeadline())) {
                         d.setNextRevision(task.getNextDeadline());
                     }
-                });
+					d.setIncludeInYearWheel(task.getIncludeInReport());
+				});
         }
         return taskDao.save(task);
     }
@@ -315,6 +319,9 @@ public class TaskService implements TagableService<Task> {
             return deadline;
         }
         return switch (repetition) {
+			case EVERY_2_MONTHS -> deadline.plusMonths(2);
+			case EVERY_3_MONTHS -> deadline.plusMonths(3);
+			case EVERY_4_MONTHS -> deadline.plusMonths(4);
             case MONTHLY -> deadline.plusMonths(1);
             case QUARTERLY -> deadline.plusMonths(3);
             case HALF_YEARLY -> deadline.plusMonths(6);
@@ -427,6 +434,26 @@ public class TaskService implements TagableService<Task> {
 	public void addRelations(final Task savedTask, final List<Relatable> relatables) {
 		for (final Relatable relatable : relatables) {
 			relationService.addRelation(savedTask, relatable);
+		}
+	}
+
+	public List<Task> findByIds(List<Long> ids, User user) {
+		if (ids == null || ids.isEmpty()) {
+			return List.of();
+		}
+
+		// Fetch all tasks by IDs
+		List<Task> tasks = taskDao.findAllById(ids);
+
+		// Apply security filtering
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			return tasks;
+		} else {
+			// User can only read tasks where they are one of the responsible users
+			return tasks.stream()
+					.filter(task -> task.getResponsibleUsers().stream()
+							.anyMatch(responsibleUser -> responsibleUser.getUuid().equals(user.getUuid())))
+					.toList();
 		}
 	}
 }

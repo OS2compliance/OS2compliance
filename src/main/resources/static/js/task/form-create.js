@@ -1,17 +1,5 @@
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
-const hasTasksTable = document.getElementById('tasksDatatable') !== null;
-let refreshTaskGrid = null;
-
-if (hasTasksTable) {
-    // Import refresh function if we are on the tasks/index page
-    import('./task-center.js').then(module => {
-        refreshTaskGrid = module.refreshTaskGrid;
-    }).catch(error => {
-        console.debug('Could not load task-center.js:', error);
-    });
-}
-
 document.addEventListener('click', async function(e) {
     if (e.target && e.target.id === 'saveAndContinueBtn') {
         e.preventDefault();
@@ -81,9 +69,7 @@ async function handleSubmit(fd, form) {
         bsModal.hide();
 
         // If we are on the tasks/index page we need to refresh the grid to show the new task
-        if (refreshTaskGrid) {
-            refreshTaskGrid();
-        }
+        await refreshTaskGridIfExists();
 
         // If we are on a threat assessment and add a task for a custom threat we need to refresh the page to show the new task
         if (riskData.taskRiskId) {
@@ -154,4 +140,20 @@ function extractRiskDataFromForm(fd, form) {
         riskCustomId: fd.get('riskCustomId') ? parseInt(fd.get('riskCustomId')) : null,
         riskCatalogIdentifier: fd.get('riskCatalogIdentifier') || null
     };
+}
+
+async function refreshTaskGridIfExists() {
+    const hasTasksTable = document.getElementById('tasksDatatable') !== null;
+
+    if (hasTasksTable) {
+        // Only import if we need to refresh, i.e. we have the table that needs to be refreshed (and not on DOM load)
+        try {
+            const module = await import('./task-center.js');
+            if (module.refreshTaskGrid) {
+                module.refreshTaskGrid();
+            }
+        } catch (error) {
+            console.debug('Could not load or execute task-center.js:', error);
+        }
+    }
 }

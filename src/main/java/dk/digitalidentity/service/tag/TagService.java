@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.entity.Tag;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -96,7 +97,7 @@ public class TagService {
 	}
 
 	public static Set<TagDTO> toTagDTO(String tagIds, Map<Long, Tag> tagsById) {
-		return tagIds.isBlank() ? Set.of() : Arrays.stream(tagIds.split(","))
+		return StringUtils.isBlank(tagIds) ? Set.of() : Arrays.stream(tagIds.split(","))
 				.map(Long::parseLong)
 				.map(id -> {
 					Tag tag = tagsById.get(id);
@@ -111,5 +112,9 @@ public class TagService {
 				})
 				.filter(Objects::nonNull)
 				.collect(Collectors.toSet());
+	}
+
+	public List<Tag> findByIds(List<Long> selectedIds) {
+		return tagDao.findAllById(selectedIds);
 	}
 }

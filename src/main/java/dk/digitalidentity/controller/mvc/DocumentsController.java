@@ -4,9 +4,7 @@ import dk.digitalidentity.model.dto.DocumentEditFormDTO;
 import dk.digitalidentity.model.dto.DocumentFormDTO;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Document;
-import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -41,7 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
 
 @Slf4j
 @Controller
@@ -58,7 +55,7 @@ public class DocumentsController {
 	@RequireReadOwnerOnly
     @GetMapping
     public String documentsList(final Model model) {
-		model.addAttribute("document", new DocumentFormDTO(null, null, null, null, null, null, null, null, null, List.of()));
+		model.addAttribute("document", new DocumentFormDTO(null, null, null, null, null, null, null, null, null, List.of(), false));
         model.addAttribute("isSuperuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 		model.addAttribute("possibleDocumentTypes", choiceService.findChoiceValuesForListIdentifier("document-type"));
         return "documents/index";
@@ -68,8 +65,7 @@ public class DocumentsController {
 	@RequireCreateOwnerOnly
 	@PostMapping("create")
 	public String formCreate(@Valid @ModelAttribute("documentForm") final DocumentFormDTO documentForm,
-			@RequestParam(name = "relations", required = false) final Set<Long> relations,
-			@RequestParam(name = "includeInYearWheel", required = false, defaultValue = "false") final Boolean includeInYearWheel) {
+			@RequestParam(name = "relations", required = false) final Set<Long> relations) {
 
 		final ChoiceValue documentType = choiceValueService.findById(documentForm.getDocumentTypeId())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid document type"));
@@ -84,12 +80,15 @@ public class DocumentsController {
 		document.setRevisionInterval(documentForm.getRevisionInterval());
 		document.setNextRevision(documentForm.getNextRevision());
 		document.setResponsibleUser(documentForm.getResponsibleUser());
-		document.setTags(new HashSet<>(documentForm.getTags()));
+		document.setIncludeInYearWheel(documentForm.isIncludeInYearWheel());
+		if (documentForm.getTags() != null && !documentForm.getTags().isEmpty()) {
+			document.setTags(new HashSet<>(documentForm.getTags()));
+		}
 
 
 		final Document savedDocument = documentService.create(document);
 		relationService.setRelationsAbsolute(savedDocument, relations);
-		documentService.createAssociatedCheck(document, includeInYearWheel);
+		documentService.createAssociatedCheck(document, documentForm.isIncludeInYearWheel());
 		return "redirect:/documents/" + savedDocument.getId();
 	}
 
@@ -102,6 +101,7 @@ public class DocumentsController {
 		if (document.getDocumentType() == null) {
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Document has no document type");
 		}
+		Task task = documentService.findRelatedCheckTask(document, relationService);
 
 		DocumentEditFormDTO editForm = new DocumentEditFormDTO(
 				document.getId(),
@@ -113,7 +113,8 @@ public class DocumentsController {
 				document.getLink(),
 				document.getRevisionInterval(),
 				document.getNextRevision(),
-				document.getResponsibleUser()
+				document.getResponsibleUser(),
+				document.isIncludeInYearWheel()
 		);
 
 		model.addAttribute("document", document);
@@ -121,12 +122,6 @@ public class DocumentsController {
 		model.addAttribute("changeableDocument", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || documentService.isResponsibleFor(document)));
 		model.addAttribute("responsibleFieldChangeable", !documentService.isResponsibleFor(document));
 		model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
-		final List<Relatable> relatedTasks = relationService.findAllRelatedTo(document);
-		final Task task = relatedTasks.stream()
-				.filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
-						.anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
-				).findFirst().map(Task.class::cast).orElse(null);
-		model.addAttribute("includeInYearWheel", task != null ? task.getIncludeInReport() : false);
 		model.addAttribute("possibleDocumentTypes", choiceService.findChoiceValuesForListIdentifier("document-type"));
 		return "documents/view";
 	}
@@ -134,8 +129,7 @@ public class DocumentsController {
 	@RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("edit")
-	public String formEdit(@Valid @ModelAttribute("documentEditForm") final DocumentEditFormDTO documentEditForm,
-			@RequestParam(name = "includeInYearWheel", required = false, defaultValue = "false") final Boolean includeInYearWheel) {
+	public String formEdit(@Valid @ModelAttribute("documentEditForm") final DocumentEditFormDTO documentEditForm) {
 		final Document existingDocument = documentService.get(documentEditForm.getId())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -155,9 +149,15 @@ public class DocumentsController {
 		existingDocument.setNextRevision(documentEditForm.getNextRevision());
 		existingDocument.setResponsibleUser(documentEditForm.getResponsibleUser());
 		existingDocument.setDocumentVersion(documentEditForm.getDocumentVersion());
+		existingDocument.setIncludeInYearWheel(documentEditForm.isIncludeInYearWheel());
 
-		documentService.update(existingDocument, includeInYearWheel);
-		documentService.updateAssociatedCheck(existingDocument, includeInYearWheel);
+		Task task = documentService.findRelatedCheckTask(existingDocument, relationService);
+
+		documentService.update(existingDocument, documentEditForm.isIncludeInYearWheel());
+		// The document did not have a revision task previously, so we now create one as there is the data for it
+		if (task == null && existingDocument.getNextRevision() != null && existingDocument.getRevisionInterval() != null) {
+			documentService.createAssociatedCheck(existingDocument, documentEditForm.isIncludeInYearWheel());
+		}
 
 		return "redirect:/documents/" + existingDocument.getId();
 	}

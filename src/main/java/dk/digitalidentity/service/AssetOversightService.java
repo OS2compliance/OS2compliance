@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ChoiceValueDao;
+import dk.digitalidentity.dao.grid.DBSOversightGridDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.ChoiceValue;
@@ -14,7 +15,11 @@ import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
+import dk.digitalidentity.model.entity.grid.DBSOversightGrid;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +42,7 @@ public class AssetOversightService {
     private final RelationService relationService;
     private final UserService userService;
 	private final ChoiceValueDao choiceValueDao;
+	private final DBSOversightGridDao dbsOversightGridDao;
 
 
     public List<AssetOversight> findByAssetOrderByCreationDateDesc(final Asset asset) {
@@ -69,24 +75,26 @@ public class AssetOversightService {
         });
     }
 
-    public void createAssociatedCheck(final AssetOversight oversight) {
-        if (oversight.getNewInspectionDate() == null) {
-            return;
-        }
+    public void createTaskLogForAssociatedTask(final AssetOversight oversight) {
         final Asset asset = oversight.getAsset();
         final Task task = findAssociatedOversightCheck(asset);
+		if (task == null) {
+			return;
+		}
         final TaskLog taskLog = new TaskLog();
         taskLog.setTask(task);
         taskLog.setName("Tilsyn udført");
         taskLog.setComment("Status: " + oversight.getStatus().getMessage());
-        taskLog.setCompleted(LocalDate.now());
+        taskLog.setCompleted(oversight.getCreationDate());
         taskLog.setDocumentationLink(samlConfiguration.getSp().getBaseUrl() + "/assets/" + oversight.getAsset().getId());
         User responsibleUser = oversight.getResponsibleUser();
         taskLog.setResponsibleUserName(responsibleUser.getName());
         taskLog.setResponsibleUserUserId(responsibleUser.getUserId());
         taskLog.setDeadline(task.getNextDeadline());
         taskService.completeTask(task, taskLog);
-        task.setNextDeadline(oversight.getNewInspectionDate());
+		if (oversight.getNewInspectionDate() != null) {
+			task.setNextDeadline(oversight.getNewInspectionDate());
+		}
     }
 
     public Optional<AssetOversight> findById(Long id) {
@@ -177,4 +185,11 @@ public class AssetOversightService {
         }
     }
 
+	public List<DBSOversightGrid> findDBSGridByIds(List<Long> ids) {
+		if (ids == null || ids.isEmpty() || !SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			return List.of();
+		}
+
+		return dbsOversightGridDao.findAllById(ids);
+	}
 }

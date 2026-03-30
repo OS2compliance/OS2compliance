@@ -49,10 +49,11 @@
     <nav th:replace="~{fragments/navbar :: main (page='incidentquestions')}"></nav>
 </div>
 
+<div th:replace="~{fragments/excel-export-modal :: excelExportModal}"></div>
+
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script type="module" src="/js/incidents/questions/index.js"></script>
-<script th:src="@{/js/export-service.js}" defer></script>
 
 </body>
 

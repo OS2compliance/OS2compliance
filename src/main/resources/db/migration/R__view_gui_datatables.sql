@@ -11,7 +11,8 @@ SELECT s.id,
         WHERE a.supplier_id = s.id)                                         AS last_oversight_date,
        prop.prop_value                                                      AS kitos_uuid,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
+       s.responsible_uuid
 FROM suppliers s
          LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
          LEFT JOIN supplier_tag rt ON rt.supplier_id = s.id
@@ -39,7 +40,7 @@ SELECT t.id,
            END)                                                                        as repetition_order,
        cv_result.caption                                                               as result,
        cv_result.id                                                                    as task_result_order,
-       (ts.id IS NOT NULL AND t.task_type = 'TASK')                                    as completed,
+       `ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE') as `completed`,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')            AS tag_names,
@@ -67,7 +68,7 @@ SELECT r.id,
        ca.assessment                                                                  as consequence,
        (CASE
             WHEN ca.assessment = 'GREEN' THEN 1
-            WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
+            WHEN ca.assessment = 'LIGHT_GREEN' THEN 2
             WHEN ca.assessment = 'YELLOW' THEN 3
             WHEN ca.assessment = 'ORANGE' THEN 4
             WHEN ca.assessment = 'RED' THEN 5
@@ -96,15 +97,106 @@ SELECT r.id,
             WHEN pr.prop_value = 'RED' THEN 5
            END)                                                                       as asset_assessment_order,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')           AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')              AS tag_ids
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')              AS tag_ids,
+       ta_calcs.avg_probability,
+       ta_calcs.avg_consequence_overall,
+       ta_calcs.avg_consequence_confidentiality_registered,
+       ta_calcs.avg_consequence_confidentiality_organisation,
+       ta_calcs.avg_consequence_confidentiality_society,
+       ta_calcs.avg_consequence_integrity_registered,
+       ta_calcs.avg_consequence_integrity_organisation,
+       ta_calcs.avg_consequence_integrity_society,
+       ta_calcs.avg_consequence_availability_registered,
+       ta_calcs.avg_consequence_availability_organisation,
+       ta_calcs.avg_consequence_availability_society,
+       ta_calcs.avg_consequence_authenticity_society,
+       threat_types.threat_type_list,
+       threat_catalogs.catalog_list,
+       (CASE
+           WHEN ta_calcs.avg_probability IS NOT NULL AND ta_calcs.avg_consequence_overall IS NOT NULL
+           THEN ROUND(ta_calcs.avg_probability * ta_calcs.avg_consequence_overall, 2)
+           ELSE NULL
+       END) as risk_score
 FROM registers r
          LEFT JOIN choice_values cv_status ON cv_status.id = r.status
          LEFT JOIN consequence_assessments ca on ca.register_id = r.id
-         LEFT JOIN threat_assessments ta ON ta.id = (SELECT MAX(tb.id)
-                                                     FROM threat_assessments tb
-                                                              JOIN relations rel ON rel.relation_a_id = r.id or rel.relation_b_id = r.id
-                                                     WHERE rel.relation_b_id = tb.id
-                                                        OR rel.relation_a_id = tb.id)
+         LEFT JOIN threat_assessments ta ON ta.id = (
+             SELECT tb.id
+             FROM threat_assessments tb
+             JOIN relations rel ON (
+                 rel.relation_a_id = r.id AND rel.relation_b_id = tb.id AND rel.relation_b_type = 'THREAT_ASSESSMENT'
+                 OR rel.relation_b_id = r.id AND rel.relation_a_id = tb.id AND rel.relation_a_type = 'THREAT_ASSESSMENT'
+             )
+             WHERE tb.deleted = false
+               AND tb.hidden = false
+             ORDER BY tb.created_at DESC
+             LIMIT 1
+         )
+         LEFT JOIN (
+             SELECT
+                 tar.threat_assessment_id,
+                 AVG(tar.probability) as avg_probability,
+                 SUM(
+                     COALESCE(tar.confidentiality_registered, 0) +
+                     COALESCE(tar.confidentiality_organisation, 0) +
+                     COALESCE(tar.confidentiality_society, 0) +
+                     COALESCE(tar.integrity_registered, 0) +
+                     COALESCE(tar.integrity_organisation, 0) +
+                     COALESCE(tar.integrity_society, 0) +
+                     COALESCE(tar.availability_registered, 0) +
+                     COALESCE(tar.availability_organisation, 0) +
+                     COALESCE(tar.availability_society, 0) +
+                     COALESCE(tar.authenticity_society, 0)
+                 ) / NULLIF(SUM(
+                     (tar.confidentiality_registered IS NOT NULL) +
+                     (tar.confidentiality_organisation IS NOT NULL) +
+                     (tar.confidentiality_society IS NOT NULL) +
+                     (tar.integrity_registered IS NOT NULL) +
+                     (tar.integrity_organisation IS NOT NULL) +
+                     (tar.integrity_society IS NOT NULL) +
+                     (tar.availability_registered IS NOT NULL) +
+                     (tar.availability_organisation IS NOT NULL) +
+                     (tar.availability_society IS NOT NULL) +
+                     (tar.authenticity_society IS NOT NULL)
+                 ), 0) as avg_consequence_overall,
+                 COALESCE(AVG(tar.confidentiality_registered), 0) as avg_consequence_confidentiality_registered,
+                 COALESCE(AVG(tar.confidentiality_organisation), 0) as avg_consequence_confidentiality_organisation,
+                 COALESCE(AVG(tar.confidentiality_society), 0) as avg_consequence_confidentiality_society,
+                 COALESCE(AVG(tar.integrity_registered), 0) as avg_consequence_integrity_registered,
+                 COALESCE(AVG(tar.integrity_organisation), 0) as avg_consequence_integrity_organisation,
+                 COALESCE(AVG(tar.integrity_society), 0) as avg_consequence_integrity_society,
+                 COALESCE(AVG(tar.availability_registered), 0) as avg_consequence_availability_registered,
+                 COALESCE(AVG(tar.availability_organisation), 0) as avg_consequence_availability_organisation,
+                 COALESCE(AVG(tar.availability_society), 0) as avg_consequence_availability_society,
+                 COALESCE(AVG(tar.authenticity_society), 0) as avg_consequence_authenticity_society
+             FROM threat_assessment_responses tar
+             WHERE tar.not_relevant = false
+             GROUP BY tar.threat_assessment_id
+         ) ta_calcs ON ta_calcs.threat_assessment_id = ta.id
+         LEFT JOIN (
+             SELECT
+                 tar.threat_assessment_id,
+                 GROUP_CONCAT(DISTINCT
+                     COALESCE(tct.threat_type, ct.threat_type)
+                     ORDER BY COALESCE(tct.threat_type, ct.threat_type)
+                     SEPARATOR ', '
+                 ) as threat_type_list
+             FROM threat_assessment_responses tar
+             LEFT JOIN threat_catalog_threats tct ON tar.threat_catalog_threat_id = tct.identifier
+             LEFT JOIN custom_threats ct ON tar.custom_threat_id = ct.id
+             WHERE tar.not_relevant = false
+               AND (tct.threat_type IS NOT NULL OR ct.threat_type IS NOT NULL)
+             GROUP BY tar.threat_assessment_id
+         ) threat_types ON threat_types.threat_assessment_id = ta.id
+         LEFT JOIN (
+             SELECT
+                 tac.threat_assessment_id,
+                 GROUP_CONCAT(DISTINCT tc.name ORDER BY tc.name SEPARATOR ', ') as catalog_list
+             FROM threat_assessment_catalogs tac
+             JOIN threat_catalogs tc ON tac.threat_catalog_identifier = tc.identifier
+             WHERE tc.deleted = false
+             GROUP BY tac.threat_assessment_id
+         ) threat_catalogs ON threat_catalogs.threat_assessment_id = ta.id
          LEFT JOIN registers_responsible_users_mapping rum ON rum.register_id = r.id
          LEFT JOIN users u ON rum.user_uuid = u.uuid
          LEFT JOIN register_custom_responsible_user_mapping crum ON crum.register_id = r.id
@@ -169,25 +261,111 @@ SELECT a.id,
                         WHERE asset_id = a.id
                           AND third_country_transfer = 'YES') THEN TRUE
            ELSE FALSE
-           END                                                              AS has_third_country_transfer,
-       (SELECT COUNT(rel.id
-               )
+       END                                                                  AS has_third_country_transfer,
+       (SELECT COUNT(rel.id)
         FROM relations rel
-        WHERE (rel.relation_a_id = a.id OR rel.relation_b_id = a.id
-            )
-          AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER'
-            ))                                                              as registers
+        WHERE (rel.relation_a_id = a.id OR rel.relation_b_id = a.id)
+          AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER')) as registers,
+       ta_calcs.avg_probability,
+       ta_calcs.avg_consequence_overall,
+       ta_calcs.avg_consequence_confidentiality_registered,
+       ta_calcs.avg_consequence_confidentiality_organisation,
+       ta_calcs.avg_consequence_confidentiality_society,
+       ta_calcs.avg_consequence_integrity_registered,
+       ta_calcs.avg_consequence_integrity_organisation,
+       ta_calcs.avg_consequence_integrity_society,
+       ta_calcs.avg_consequence_availability_registered,
+       ta_calcs.avg_consequence_availability_organisation,
+       ta_calcs.avg_consequence_availability_society,
+       ta_calcs.avg_consequence_authenticity_society,
+       threat_types.threat_type_list,
+       threat_catalogs.catalog_list,
+       (CASE
+           WHEN ta_calcs.avg_probability IS NOT NULL AND ta_calcs.avg_consequence_overall IS NOT NULL
+           THEN ROUND(ta_calcs.avg_probability * ta_calcs.avg_consequence_overall, 2)
+           ELSE NULL
+       END) as risk_score
 FROM assets a
          LEFT JOIN suppliers s on s.id = a.supplier_id
          LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
          LEFT JOIN properties old_kitos_prop ON old_kitos_prop.entity_id = a.id AND old_kitos_prop.prop_key = 'old_kitos_usage_uuid'
-         LEFT JOIN threat_assessments ta ON ta.id = (SELECT tb.id
-                                                     FROM threat_assessments tb
-                                                              JOIN relations r ON (r.relation_a_id = a.id AND r.relation_b_id = tb.id
-                                                         OR r.relation_b_id = a.id AND r.relation_a_id = tb.id
-                                                         )
-                                                     ORDER BY r.id DESC
-                                                     LIMIT 1)
+         LEFT JOIN threat_assessments ta ON ta.id = (
+             SELECT tb.id
+             FROM threat_assessments tb
+             JOIN relations r ON (
+                 r.relation_a_id = a.id AND r.relation_b_id = tb.id AND r.relation_b_type = 'THREAT_ASSESSMENT'
+                 OR r.relation_b_id = a.id AND r.relation_a_id = tb.id AND r.relation_a_type = 'THREAT_ASSESSMENT'
+             )
+             WHERE tb.deleted = false
+               AND tb.hidden = false
+             ORDER BY tb.created_at DESC
+             LIMIT 1
+         )
+         LEFT JOIN (
+             SELECT
+                 tar.threat_assessment_id,
+                 AVG(tar.probability) as avg_probability,
+                 SUM(
+                     COALESCE(tar.confidentiality_registered, 0) +
+                     COALESCE(tar.confidentiality_organisation, 0) +
+                     COALESCE(tar.confidentiality_society, 0) +
+                     COALESCE(tar.integrity_registered, 0) +
+                     COALESCE(tar.integrity_organisation, 0) +
+                     COALESCE(tar.integrity_society, 0) +
+                     COALESCE(tar.availability_registered, 0) +
+                     COALESCE(tar.availability_organisation, 0) +
+                     COALESCE(tar.availability_society, 0) +
+                     COALESCE(tar.authenticity_society, 0)
+                 ) / NULLIF(SUM(
+                     (tar.confidentiality_registered IS NOT NULL) +
+                     (tar.confidentiality_organisation IS NOT NULL) +
+                     (tar.confidentiality_society IS NOT NULL) +
+                     (tar.integrity_registered IS NOT NULL) +
+                     (tar.integrity_organisation IS NOT NULL) +
+                     (tar.integrity_society IS NOT NULL) +
+                     (tar.availability_registered IS NOT NULL) +
+                     (tar.availability_organisation IS NOT NULL) +
+                     (tar.availability_society IS NOT NULL) +
+                     (tar.authenticity_society IS NOT NULL)
+                 ), 0) as avg_consequence_overall,
+                 COALESCE(AVG(tar.confidentiality_registered), 0) as avg_consequence_confidentiality_registered,
+                 COALESCE(AVG(tar.confidentiality_organisation), 0) as avg_consequence_confidentiality_organisation,
+                 COALESCE(AVG(tar.confidentiality_society), 0) as avg_consequence_confidentiality_society,
+                 COALESCE(AVG(tar.integrity_registered), 0) as avg_consequence_integrity_registered,
+                 COALESCE(AVG(tar.integrity_organisation), 0) as avg_consequence_integrity_organisation,
+                 COALESCE(AVG(tar.integrity_society), 0) as avg_consequence_integrity_society,
+                 COALESCE(AVG(tar.availability_registered), 0) as avg_consequence_availability_registered,
+                 COALESCE(AVG(tar.availability_organisation), 0) as avg_consequence_availability_organisation,
+                 COALESCE(AVG(tar.availability_society), 0) as avg_consequence_availability_society,
+                 COALESCE(AVG(tar.authenticity_society), 0) as avg_consequence_authenticity_society
+             FROM threat_assessment_responses tar
+             WHERE tar.not_relevant = false
+             GROUP BY tar.threat_assessment_id
+         ) ta_calcs ON ta_calcs.threat_assessment_id = ta.id
+         LEFT JOIN (
+             SELECT
+                 tar.threat_assessment_id,
+                 GROUP_CONCAT(DISTINCT
+                     COALESCE(tct.threat_type, ct.threat_type)
+                     ORDER BY COALESCE(tct.threat_type, ct.threat_type)
+                     SEPARATOR ', '
+                 ) as threat_type_list
+             FROM threat_assessment_responses tar
+             LEFT JOIN threat_catalog_threats tct ON tar.threat_catalog_threat_id = tct.identifier
+             LEFT JOIN custom_threats ct ON tar.custom_threat_id = ct.id
+             WHERE tar.not_relevant = false
+               AND (tct.threat_type IS NOT NULL OR ct.threat_type IS NOT NULL)
+             GROUP BY tar.threat_assessment_id
+         ) threat_types ON threat_types.threat_assessment_id = ta.id
+         LEFT JOIN (
+             SELECT
+                 tac.threat_assessment_id,
+                 GROUP_CONCAT(DISTINCT tc.name ORDER BY tc.name SEPARATOR ', ') as catalog_list
+             FROM threat_assessment_catalogs tac
+             JOIN threat_catalogs tc ON tac.threat_catalog_identifier = tc.identifier
+             WHERE tc.deleted = false
+             GROUP BY tac.threat_assessment_id
+         ) threat_catalogs ON threat_catalogs.threat_assessment_id = ta.id
          LEFT JOIN assets_responsible_users_mapping ru ON ru.asset_id = a.id
          LEFT JOIN users u ON ru.user_uuid = u.uuid
          LEFT JOIN choice_values cv ON a.asset_type = cv.id
@@ -251,8 +429,12 @@ SELECT t.id,
                  LEFT JOIN threat_catalogs tc ON tac.threat_catalog_identifier = tc.identifier
         WHERE tac.threat_assessment_id = t.id
           AND tc.deleted = false)                                                                                                                                    AS threat_catalogs,
-       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')                                                                                          AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')                                                                                             AS tag_ids
+       (SELECT GROUP_CONCAT(DISTINCT tg.value ORDER BY tg.value SEPARATOR ',')
+        FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.threat_assessment_id = t.id) AS tag_names,
+       (SELECT GROUP_CONCAT(DISTINCT tg.id ORDER BY tg.value SEPARATOR ',')
+        FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.threat_assessment_id = t.id) AS tag_ids
 FROM threat_assessments t
          LEFT JOIN relations rel ON (
     (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
@@ -266,8 +448,6 @@ FROM threat_assessments t
     (rel.relation_a_type = 'REGISTER' AND rel.relation_a_id = rgs.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
         OR (rel.relation_b_type = 'REGISTER' AND rel.relation_b_id = rgs.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
     )
-         LEFT JOIN threat_assessment_tag rt on rt.threat_assessment_id = t.id
-         LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE t.deleted = false
 GROUP BY t.id;
 
@@ -308,7 +488,8 @@ FROM (SELECT u.uuid,
              u.active,
              t.id
       FROM users u
-               LEFT JOIN tasks t ON u.uuid = t.responsible_uuid and deleted = 0
+           LEFT JOIN task_responsible_users tru ON u.uuid = tru.user_uuid
+           LEFT JOIN tasks t ON tru.task_id = t.id AND t.deleted = 0
 
       UNION ALL
 

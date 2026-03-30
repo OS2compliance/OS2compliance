@@ -70,4 +70,36 @@ public class RegisterDTO {
 	@ExcludeFromExport
 	@Builder.Default
 	private Set<AllowedAction> allowedActions = new HashSet<>();
+
+	// Risk assessment calculated fields
+	@ExcelColumn(headerName = "Gennemsnitlig sandsynlighed", order = 12)
+	private Double avgProbability;
+	@ExcelColumn(headerName = "Gennemsnitlig Konsekvens", order = 13)
+	private Double avgConsequenceOverall;
+	@ExcelColumn(headerName = "Konsekvens for den registrerede - fortrolighed", order = 14)
+	private Double avgConsequenceConfidentialityRegistered;
+	@ExcelColumn(headerName = "Konsekvens for organisationen - fortrolighed", order = 17)
+	private Double avgConsequenceConfidentialityOrganisation;
+	@ExcelColumn(headerName = "Konsekvens for samfundet - fortrolighed", order = 20)
+	private Double avgConsequenceConfidentialitySociety;
+	@ExcelColumn(headerName = "Konsekvens for den registrerede - integritet", order = 15)
+	private Double avgConsequenceIntegrityRegistered;
+	@ExcelColumn(headerName = "Konsekvens for organisationen - integritet", order = 18)
+	private Double avgConsequenceIntegrityOrganisation;
+	@ExcelColumn(headerName = "Konsekvens for samfundet - integritet", order = 21)
+	private Double avgConsequenceIntegritySociety;
+	@ExcelColumn(headerName = "Konsekvens for den registrerede - tilgængelighed", order = 16)
+	private Double avgConsequenceAvailabilityRegistered;
+	@ExcelColumn(headerName = "Konsekvens for organisationen - tilgængelighed", order = 19)
+	private Double avgConsequenceAvailabilityOrganisation;
+	@ExcelColumn(headerName = "Konsekvens for samfundet - tilgængelighed", order = 22)
+	private Double avgConsequenceAvailabilitySociety;
+	@ExcelColumn(headerName = "Konsekvens for samfundet - autenticitet", order = 23)
+	private Double avgConsequenceAuthenticitySociety;
+	@ExcelColumn(headerName = "Trusselstyper", order = 10)
+	private String threatTypeList;
+	@ExcelColumn(headerName = "Risikokataloger", order = 11)
+	private String catalogList;
+	@ExcludeFromExport
+	private Double riskScore;
 }

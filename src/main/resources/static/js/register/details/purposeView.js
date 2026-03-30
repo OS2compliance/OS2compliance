@@ -68,7 +68,6 @@ export default class RegisterPurposeService {
         }
     }
 
-
     #onGDPRCheckboxChange(element) {
         if (this.#consentTriggeringIdentifiers.includes(element.id)) {
             this.#consentFieldChange()

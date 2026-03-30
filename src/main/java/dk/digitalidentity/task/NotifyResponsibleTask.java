@@ -45,6 +45,7 @@ public class NotifyResponsibleTask {
         } else {
             settingsService.setZonedDateTime(LAST_NOTIFY_RUN_DAY_SETTING, ZonedDateTime.now());
         }
+		log.info("Start: Notifying responsible users about deadlines");
 
         //Get notification settings
         List<Setting> notificationSettings = settingsService.getByAssociation("notification");
@@ -52,41 +53,42 @@ public class NotifyResponsibleTask {
 
         for (Setting setting : notificationSettings) {
 			try {
-				NotificationSetting notificationSetting = NotificationSetting.valueOf(setting.getSettingKey().toUpperCase());
-
-				switch (notificationSetting) {
-					case ONEMONTHBEFORE -> {
-						taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusMonths(1))
-								.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
-					}
-					case SEVENDAYSBEFORE -> {
-						taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusDays(7))
-								.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
-					}
-					case ONEDAYBEFORE -> {
-						taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusDays(1))
-								.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
-					}
-					case ONDAY -> {
-						taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now())
-								.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
-					}
-					case EVERYSEVENDAYSAFTER -> {
-						LocalDate currentDate = LocalDate.now();
-						LocalDate threeMonthsBefore = currentDate.minusMonths(3);
-						List<LocalDate> sevenMultipleDates = new ArrayList<>();
-
-						currentDate = currentDate.minusDays(7);
-						while (currentDate.isAfter(threeMonthsBefore)) {
-							sevenMultipleDates.add(currentDate);
-							currentDate = currentDate.minusDays(7);
+				NotificationSetting notificationSetting = NotificationSetting.fromValue(setting.getSettingKey());
+				if (notificationSetting != null && setting.getSettingValue().equalsIgnoreCase("true")) {
+					switch (notificationSetting) {
+						case ONEMONTHBEFORE -> {
+							taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusMonths(1))
+									.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
 						}
+						case SEVENDAYSBEFORE -> {
+							taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusDays(7))
+									.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
+						}
+						case ONEDAYBEFORE -> {
+							taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusDays(1))
+									.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
+						}
+						case ONDAY -> {
+							taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now())
+									.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
+						}
+						case EVERYSEVENDAYSAFTER -> {
+							LocalDate currentDate = LocalDate.now();
+							LocalDate threeMonthsBefore = currentDate.minusMonths(3);
+							List<LocalDate> sevenMultipleDates = new ArrayList<>();
 
-						taskService.getTasksWithDeadLineInAndTaskNotificationOverrideFalse(sevenMultipleDates)
-								.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
-					}
-					default -> {
-						log.warn("Unknown notification setting: " + setting.getSettingKey().toUpperCase());
+							currentDate = currentDate.minusDays(7);
+							while (currentDate.isAfter(threeMonthsBefore)) {
+								sevenMultipleDates.add(currentDate);
+								currentDate = currentDate.minusDays(7);
+							}
+
+							taskService.getTasksWithDeadLineInAndTaskNotificationOverrideFalse(sevenMultipleDates)
+									.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
+						}
+						default -> {
+							log.warn("Unknown notification setting: " + setting.getSettingKey().toUpperCase());
+						}
 					}
 				}
 			} catch (IllegalArgumentException e) {
@@ -134,5 +136,6 @@ public class NotifyResponsibleTask {
 			}
 			tasksToNotify.forEach(task -> notifyService.notifyTask(task.getId()));
 		}
+		log.info("Done: Notifying responsible users about deadlines");
 	}
 }

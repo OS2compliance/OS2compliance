@@ -2,7 +2,6 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.PrecautionDao;
 import dk.digitalidentity.model.entity.Precaution;
-import dk.digitalidentity.model.entity.ThreatCatalog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,4 +32,8 @@ public class PrecautionService {
 		relationService.deleteRelatedTo(precaution.getId());
         precautionDao.delete(precaution);
     }
+
+	public List<Precaution> findByIds(List<Long> ids) {
+		return precautionDao.findAllById(ids);
+	}
 }

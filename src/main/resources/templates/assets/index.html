@@ -3,8 +3,9 @@
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/asset/form.js}" defer></script>
-<script th:src="@{/js/export-service.js}" defer></script>
+<script type="module" th:src="@{/js/risk-tooltip-position.js}"></script>
 <link rel="stylesheet" th:href="@{/css/assets.css}" />
+<link rel="stylesheet" th:href="@{/css/risk_assessment_table_formatter.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -74,6 +75,8 @@
     <nav th:replace="~{fragments/navbar :: main (page='aktiver')}"></nav>
 </div>
 <div sec:authorize="hasRole('ROLE_create_all')" class="modal fade" id="formDialog" aria-labelledby="assetLabel" aria-hidden="true"></div>
+<div th:replace="~{fragments/risk-assessment-formatter-templates :: body}"></div>
+<div th:replace="~{fragments/excel-export-modal :: excelExportModal}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">

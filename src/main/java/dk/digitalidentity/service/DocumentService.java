@@ -92,12 +92,8 @@ public class DocumentService implements TagableService<Document> {
 
     @Transactional
     public void updateAssociatedCheck(final Document document, boolean includeInYearWheel) {
-        final List<Relatable> relatedTasks = relationService.findAllRelatedTo(document);
-        final Task task = relatedTasks.stream()
-            .filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
-                .anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
-            ).findFirst().map(Task.class::cast).orElse(null);
-        if (task != null) {
+		Task task = findRelatedCheckTask(document, relationService);
+		if (task != null) {
 			task.setIncludeInReport(includeInYearWheel);
             if (document.getNextRevision() != null) {
                 task.setNextDeadline(document.getNextRevision());
@@ -108,7 +104,15 @@ public class DocumentService implements TagableService<Document> {
         }
     }
 
-    @Transactional
+	public Task findRelatedCheckTask(Document document, RelationService relationService) {
+		final List<Relatable> relatedTasks = relationService.findAllRelatedTo(document);
+		return relatedTasks.stream()
+			.filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
+				.anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
+			).findFirst().map(Task.class::cast).orElse(null);
+	}
+
+	@Transactional
     public void createAssociatedCheck(final Document document, boolean includeInYearWheel) {
         if (document.getNextRevision() == null) {
             return;
@@ -207,4 +211,26 @@ public class DocumentService implements TagableService<Document> {
 	public boolean isInUseOnDocument(Long id) {
 		return documentDao.existsByDocumentTypeId(id);
 	}
+
+	public List<Document> findByIds(List<Long> ids, User user) {
+		if (ids == null || ids.isEmpty()) {
+			return List.of();
+		}
+
+		// Fetch all documents by IDs
+		List<Document> documents = documentDao.findAllById(ids);
+
+		// Apply same security filtering as in the grid
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// User can read all documents
+			return documents;
+		} else {
+			// User can only read documents where they are responsible
+			return documents.stream()
+					.filter(doc -> doc.getResponsibleUser() != null &&
+							doc.getResponsibleUser().getUuid().equals(user.getUuid()))
+					.toList();
+		}
+	}
+
 }

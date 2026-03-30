@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<th:block th:fragment="measuresTemplateFragment">
+    <table id="measuresSchema" style="width: 100%">
+        <tbody>
+        <th:block th:each="category : ${categories}">
+            <tr class="measuresSchemaCategoryTr" th:data-categoryid="${category.id}">
+                <th class="dpiaSchemaTh">
+                    <em class="pli-arrow-up fs-4" th:id="'categoryIcon' + ${category.id}"></em> &nbsp;
+                    <span th:text="${category.name}"></span>
+                    <span style="float:right;">
+                        <button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 editCategory" th:data-categoryid="${category.id}">
+                            <i class="pli-pencil fs-5"></i>
+                        </button>
+                        <button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 deleteCategory" th:data-categoryid="${category.id}">
+                            <i class="pli-trash fs-5"></i>
+                        </button>
+                        <button th:if="${category.sortOrder != minCategorySortOrder}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortCategoryHigherBtn" th:data-categoryid="${category.id}">
+                            <i class="pli-up fs-5"></i>
+                        </button>
+                        <button th:if="${category.sortOrder != maxCategorySortOrder}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortCategoryLowerBtn" th:data-categoryid="${category.id}">
+                            <i class="pli-down fs-5"></i>
+                        </button>
+                    </span>
+                </th>
+            </tr>
+            <tr th:classappend="'categoryRow' + ${category.id}" style="border: 0.5px solid #E8E8E8;">
+                <td style="padding: 30px;">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Spørgsmål</th>
+                            <th style="width: 200px;">Handlinger</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(category.measures)}">
+                            <td colspan="3" class="text-muted">Ingen spørgsmål i denne kategori endnu</td>
+                        </tr>
+                        <tr th:each="measure : ${category.measures}">
+                            <td th:text="${measure.name}"></td>
+                            <td>
+                                <button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 editMeasure" th:data-measureid="${measure.id}">
+                                    <i class="pli-pencil fs-5"></i>
+                                </button>
+                                <button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 deleteMeasure" th:data-measureid="${measure.id}">
+                                    <i class="pli-trash fs-5"></i>
+                                </button>
+                                <button th:unless="${measure.isFirst}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortMeasureHigherBtn" th:data-measureid="${measure.id}">
+                                    <i class="pli-up fs-5"></i>
+                                </button>
+                                <button th:unless="${measure.isLast}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortMeasureLowerBtn" th:data-measureid="${measure.id}">
+                                    <i class="pli-down fs-5"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </th:block>
+        </tbody>
+    </table>
+</th:block>
+</body>
+</html>

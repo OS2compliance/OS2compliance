@@ -27,7 +27,9 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -107,7 +109,8 @@ public interface DocumentMapper {
 			@Mapping(target = "tags", ignore = true),
 			@Mapping(target = "deleted", ignore = true),
 			@Mapping(target = "localizedEnums", ignore = true),
-			@Mapping(target = "documentType", ignore = true)
+			@Mapping(target = "documentType", ignore = true),
+			@Mapping(target = "includeInYearWheel", ignore = true)
 	})
 	Document fromEO(DocumentCreateEO documentCreateEO);
 
@@ -132,6 +135,23 @@ public interface DocumentMapper {
 				yield DocumentEO.DocumentType.OTHER;
 			}
 		};
+	}
+
+	default DocumentDTO toDTOForExport(final Document document) {
+		return DocumentDTO.builder()
+				.id(document.getId())
+				.name(document.getName())
+				.documentType(nullSafe(() -> document.getDocumentType().getCaption(), ""))
+				.responsibleUser(nullSafe(() -> document.getResponsibleUser().getName(), ""))
+				.nextRevision(nullSafe(() -> document.getNextRevision().format(DK_DATE_FORMATTER)))
+				.status(nullSafe(() -> document.getStatus().getMessage()))
+				.build();
+	}
+
+	default List<DocumentDTO> toDTOForExportFromDocuments(List<Document> documents) {
+		List<DocumentDTO> documentDTOS = new ArrayList<>();
+		documents.forEach(doc -> documentDTOS.add(toDTOForExport(doc)));
+		return documentDTOS;
 	}
 
 }

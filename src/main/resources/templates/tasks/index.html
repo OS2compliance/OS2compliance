@@ -64,6 +64,7 @@
 
 <div id="copyTaskContainer"></div>
 <div class="modal fade" id="editTaskDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
+<div th:replace="~{fragments/excel-export-modal :: excelExportModal}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, statistic = true)}"></div>
 
 <script th:inline="javascript">
@@ -79,7 +80,6 @@
     /*]]>*/
 </script>
 <script th:src="@{/js/task/form.js}" defer></script>
-<script th:src="@{/js/export-service.js}" defer></script>
 <script type="module" th:src="@{/js/task/task-center.js}" defer></script>
 </body>
 

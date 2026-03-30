@@ -17,7 +17,7 @@
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
                 <div class="d-md-flex">
-                    <div class="me-auto">
+                    <div class="col me-auto">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/documents}">Dokumenter</a></li>
@@ -27,7 +27,7 @@
                         <h1 class="page-title mb-0 mt-2" th:text="${document.name}"></h1>
                         <p class="lead"></p>
                     </div>
-                    <div class="align-self-center d-inline-flex">
+                    <div class="align-self-center d-inline-flex justify-content-end">
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
@@ -129,9 +129,9 @@
                                 <div class="row mb-3">
                                     <label for="includeInYearWheel" class="col-sm-2 col-form-label">Indgås i årshjulet</label>
                                     <div class="col-sm-10">
-                                        <select class="form-control form-select editField" name="includeInYearWheel" id="includeInYearWheel" disabled>
-                                            <option value="true" th:selected="${includeInYearWheel == true}">Ja</option>
-                                            <option value="false" th:selected="${includeInYearWheel == false}">Nej</option>
+                                        <select class="form-control form-select editField" th:field="*{includeInYearWheel}" id="includeInYearWheel" disabled>
+                                            <option value="true">Ja</option>
+                                            <option value="false">Nej</option>
                                         </select>
                                     </div>
                                 </div>

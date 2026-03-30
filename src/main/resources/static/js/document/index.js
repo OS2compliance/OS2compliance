@@ -1,6 +1,7 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import initTagSelect from "../tags/tag-selector.js";
 import formatTags from "../tags/tag-grid-formatter.js";
+import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 
 let userChoicesEditSelect
 
@@ -177,9 +178,9 @@ function initGrid() {
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
 
     //Enables custom column search, serverside sorting and pagination
-    const customGridFunctions = new CustomGridFunctions(grid, gridDocumentsUrl, exportDocumentsUrl, datatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridDocumentsUrl, datatableId);
 
-    initSaveAsExcelButton(customGridFunctions, 'Dokumenter')
+    initSaveAsExcelButton(customGridFunctions, 'document', 'documents', 'Dokumenter');
 
     new ColumnOptions(
         datatableId,

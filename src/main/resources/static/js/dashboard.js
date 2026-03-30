@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 },
                 {
                     name: "Ansvarlig",
-                    searchable: {searchKey: 'responsibleUser.name'},
+                    searchable: {searchKey: 'responsibleNames'},
                     hidden: true
                 },
                 {
@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(task =>
-                    [task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags]
+                    [task.id, task.name, task.taskType, task.responsibleNames, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags]
                 ),
                 total: data => data.totalCount ? data.totalCount : 0
             },

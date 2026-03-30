@@ -79,8 +79,24 @@ public interface AssetMapper {
 			.oldKitos(assetGrid.isOldKitos())
 			.active(assetGrid.isActive())
 			.lastOversightDate(assetGrid.getLastOversightDate())
-				.tags(tags)
-            .build();
+			.tags(tags)
+			// Risk assessment fields
+			.avgProbability(assetGrid.getAvgProbability())
+			.avgConsequenceOverall(assetGrid.getAvgConsequenceOverall())
+			.avgConsequenceConfidentialityRegistered(assetGrid.getAvgConsequenceConfidentialityRegistered())
+			.avgConsequenceConfidentialityOrganisation(assetGrid.getAvgConsequenceConfidentialityOrganisation())
+			.avgConsequenceConfidentialitySociety(assetGrid.getAvgConsequenceConfidentialitySociety())
+			.avgConsequenceIntegrityRegistered(assetGrid.getAvgConsequenceIntegrityRegistered())
+			.avgConsequenceIntegrityOrganisation(assetGrid.getAvgConsequenceIntegrityOrganisation())
+			.avgConsequenceIntegritySociety(assetGrid.getAvgConsequenceIntegritySociety())
+			.avgConsequenceAvailabilityRegistered(assetGrid.getAvgConsequenceAvailabilityRegistered())
+			.avgConsequenceAvailabilityOrganisation(assetGrid.getAvgConsequenceAvailabilityOrganisation())
+			.avgConsequenceAvailabilitySociety(assetGrid.getAvgConsequenceAvailabilitySociety())
+			.avgConsequenceAuthenticitySociety(assetGrid.getAvgConsequenceAuthenticitySociety())
+			.threatTypeList(assetGrid.getThreatTypeList())
+			.catalogList(assetGrid.getCatalogList())
+			.riskScore(assetGrid.getRiskScore())
+			.build();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();
 		boolean isResponsible =	(assetGrid.getResponsibleUserNames() != null && assetGrid.getResponsibleUserUuids().contains(SecurityUtil.getPrincipalUuid()))
@@ -216,7 +232,8 @@ public interface AssetMapper {
 		@Mapping(target = "threatAssessmentCompletionStatus", ignore = true),
 		@Mapping(target = "tags", ignore = true),
 		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks"),
-		@Mapping(target = "departments", source = "departments")
+		@Mapping(target = "departments", source = "departments"),
+		@Mapping(target = "assetMeasureStatus", ignore = true)
 	})
     Asset fromEO(AssetCreateEO assetCreateEO);
 

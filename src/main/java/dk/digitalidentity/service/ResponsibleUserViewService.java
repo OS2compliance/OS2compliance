@@ -33,6 +33,18 @@ public class ResponsibleUserViewService {
         return result;
     }
 
+	public List<ResponsibleUserTableDTO> findInactiveResponsibleUsersByIds(List<String> selectedIds) {
+		List<ResponsibleUserTableDTO> result = new ArrayList<>();
+		List<ResponsibleUserView> users = responsibleUserViewDao.findByActiveFalseAndUuidIn(selectedIds);
+		for (ResponsibleUserView user : users) {
+			List<Long> ids = user.getResponsibleRelatableIds().stream().map(Long::parseLong).collect(Collectors.toList());
+			List<Relatable> relatables = relatableService.findAllById(ids);
+			List<RelatableDTO> relatableDTOS = relatableMapper.toDTO(relatables);
+			result.add(new ResponsibleUserTableDTO(user.getUuid(), user.getName(), user.getUserId(), relatableDTOS));
+		}
+		return result;
+	}
+
     public ResponsibleUserView findByUserUuid(String uuid) {
         return responsibleUserViewDao.findByUuid(uuid);
     }

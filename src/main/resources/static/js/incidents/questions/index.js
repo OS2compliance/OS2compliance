@@ -1,5 +1,6 @@
 import IncidentQuestionService from "../incident-question-service.js";
 import ColumnOptions from "../../grid-js-extension/column-options.js";
+import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 
 const formUrl = "/incidents/questionForm"
 const restUrl = "/rest/incidents/questions"
@@ -72,6 +73,22 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 return data.map(field => [ field.id, field.indexColumnName, field.question, field.incidentType ]);
             },
             total: data => data.totalCount
+        },
+        language: {
+            'noRecordsFound': "Ingen data fundet",
+            'search': {
+                'placeholder': 'Søg'
+            },
+            'pagination': {
+                'previous': 'Forrige',
+                'next': 'Næste',
+                'showing': 'Viser',
+                'results': 'Opgaver',
+                'of': 'af',
+                'to': 'til',
+                'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                'page': (page) => `Side ${page}`
+            }
         }
     });
     incidentGrid.render(document.getElementById("incidentFieldsTable"));
@@ -85,5 +102,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     window.incidentGrid = incidentGrid; // TODO - compatibility for onclicks in list - remove when they are replaced with proper listeners
 
-    initSaveAsExcelButtonWithDefaultGrid('incidentFieldsTable', 'Hændelse_Opsætning')
+    const customGridFunctions = new CustomGridFunctions(incidentGrid, restUrl, 'incidentFieldsTable');
+
+    initSaveAsExcelButton(customGridFunctions, 'incidentField', 'incidents/fields', 'Hændelse_Opsætning')
 });

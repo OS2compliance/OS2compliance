@@ -7,6 +7,10 @@ import dk.digitalidentity.model.dto.SubTaskDTO;
 import dk.digitalidentity.model.dto.TaskCreateRequestDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.dto.TaskLinkDTO;
+import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
+import dk.digitalidentity.model.dto.excel.EntityListRequest;
+import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
+import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.SubTask;
@@ -20,14 +24,14 @@ import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.ChoiceValueService;
-import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.ExcelExportHelperService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SecurityUserService;
-import dk.digitalidentity.service.ThreatAssessmentService;
-import dk.digitalidentity.service.tag.TagService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.service.tag.TagService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +41,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -66,7 +71,6 @@ public class TaskRestController {
     private final UserService userService;
     private final TaskGridDao taskGridDao;
     private final TaskMapper mapper;
-	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
 	private final TaskService taskService;
 	private final TagService tagService;
@@ -75,6 +79,7 @@ public class TaskRestController {
 	private final TaskMapper taskMapper;
 	private final OrganisationService organisationService;
 	private final ChoiceValueService choiceValueService;
+	private final ExcelExportHelperService excelExportHelperService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -96,28 +101,6 @@ public class TaskRestController {
 		assert tasks != null;
         return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), tagsById));
     }
-
-	@RequireReadOwnerOnly
-	@PostMapping("export")
-	public void export(
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
-			HttpServletResponse response
-	) throws IOException {
-		User user = securityUserService.getCurrentUserOrThrow();
-
-		// Fetch all records (no pagination)
-		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
-
-		Map<Long, Tag> tagsById = tagService.findAll().stream()
-				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
-
-		assert tasks != null;
-		List<TaskDTO> allData = mapper.toDTO(tasks.getContent(), tagsById);
-		excelExportService.exportToExcel(allData, TaskDTO.class, fileName, response);
-	}
 
 	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
@@ -256,6 +239,57 @@ public class TaskRestController {
 	private ChoiceValue fetchTaskDescriptionTemplate(Long id) {
 		return choiceValueService.findById(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TaskDescriptionTemplate not found with ID: " + id));
+	}
+
+	@GetMapping("export-metadata")
+	@RequireReadOwnerOnly
+	public ExportMetadataDTO getExportMetadata() {
+		return excelExportHelperService.getMetadata(TaskDTO.class);
+	}
+
+	@PostMapping("export-entities")
+	@RequireReadOwnerOnly
+	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		Page<TaskGrid> tasks = taskService.getTasks(
+				null,
+				"ASC",
+				request.getFilters(),
+				0,
+				Integer.MAX_VALUE,
+				user
+		);
+
+		return excelExportHelperService.toEntityListItems(
+				tasks.getContent(),
+				TaskGrid::getId,
+				TaskGrid::getName
+		);
+	}
+
+	@PostMapping("export-custom")
+	@RequireReadOwnerOnly
+	public void exportCustom(
+			@RequestBody ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<Task> tasks = taskService.findByIds(ids, user);
+
+		excelExportHelperService.exportEntitiesWithTags(
+				tasks,
+				TaskDTO.class,
+				mapper::toDTOForExportFromTasks,
+				taskService::findTagsByEntityIds,
+				Task::getId,
+				request,
+				response
+		);
 	}
 
 }

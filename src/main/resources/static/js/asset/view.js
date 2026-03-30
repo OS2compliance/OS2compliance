@@ -316,6 +316,7 @@ function editMode(enabled, responsibleFieldChangeable) {
     const aiStatus = document.getElementById('aiStatus');
     const active = document.getElementById('activeAsset');
     const aiRiskFactor = document.getElementById('riskFactor');
+    const responsibleUsers = document.getElementById('responsibleUsers');
     if (enabled) {
         rootElement.querySelectorAll('.editField').forEach(elem => {
             elem.disabled = false;
@@ -348,11 +349,15 @@ function editMode(enabled, responsibleFieldChangeable) {
             document.getElementById("productLinksViewContainer").hidden = true;
             document.getElementById("productLinksEditContainer").hidden = false;
             document.getElementById("addProductLinkBtn").hidden = false;
+            suppliersChoicesEditSelect.enable();
         }
-
-        suppliersChoicesEditSelect.enable();
-        if (responsibleFieldChangeable === 'true') {
-            responsibleChoicesEditSelect.enable();
+        else {
+            suppliersChoicesEditSelect.disable();
+            responsibleChoicesEditSelect.disable();
+            let descriptionInput = document.getElementById("description");
+            if (descriptionInput) {
+                descriptionInput.disabled = true;
+            }
         }
 
         departmentChoices.enable();
@@ -402,5 +407,9 @@ function editMode(enabled, responsibleFieldChangeable) {
     if (isKitos) {
         aiStatus.disabled = true;
         aiRiskFactor.disabled = true;
+        let descriptionInput = document.getElementById("description");
+        if (descriptionInput) {
+            descriptionInput.disabled = true;
+        }
     }
 }

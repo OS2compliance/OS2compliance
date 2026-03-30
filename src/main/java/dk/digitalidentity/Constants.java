@@ -36,6 +36,8 @@ public interface Constants {
     String ARTICLE_30_REPORT_TEMPLATE_DOC = "reports/article30/main.docx";
 	String STANDARD_TEMPLATE_DOC = "reports/default/default.docx";
 
+	String RISK_ASSESSMENT_USE_RESIDUAL = "riskAssessmentUseResidual";
+	String RISK_MATRIX_USE_RESIDUAL = "riskMatrixUseResidual";
     String RISK_SCALE_PROPERTY_NAME = "riskScale";
     String LAST_NOTIFY_RUN_DAY_SETTING = "lastNotifyRunDay";
 	String ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS = "allowMultipleResponsibleOnTasks";
@@ -43,6 +45,8 @@ public interface Constants {
     String CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID = "asset-type-it-system-123456";
     String CHOICE_LIST_TASK_RESULT_NO_ERROR_ID = "control-result-no-error-123456";
     String CHOICE_LIST_REGISTER_STATUS_NOT_STARTED_ID = "register-status-not-started-123456";
+
+	String CHOICE_MEASURE_VALUE_IDENTIFIERS = "relevance-yes,relevance-no,relevance-needs-clarification,relevance-not-relevant,operation-1,operation-2,operation-3,operation-4,cloud-1,cloud-2,cloud-3,cloud-4,cloud-5,frequency-1,frequency-2,frequency-3,frequency-4,duration-1,duration-2,duration-3,duration-4";
 
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()

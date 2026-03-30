@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="da">
+<head></head>
+<body>
+
+<div th:fragment="excelExportModal">
+    <!-- Modal -->
+    <div class="modal fade" id="excelExportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div id="modalLoadingState" class="text-center p-5" style="display: none;">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Indlæser...</span>
+                    </div>
+                    <p>Henter data...</p>
+                </div>
+                <div id="modalMainContent">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Eksporter til Excel</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Luk"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-4">
+                            <label for="entitySelect" class="form-label fw-bold">
+                                Vælg objekter
+                                <small class="text-muted" id="entityCountLabel"></small>
+                            </label>
+                            <select id="entitySelect" multiple></select>
+                            <small class="text-muted d-block mt-1">
+                                Objekterne der matcher dine filtre er valgt som standard.
+                                Du kan tilføje eller fjerne objekter efter behov.
+                            </small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Vælg kolonner</label>
+                            <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="selectAllColumns" checked>
+                                    <label class="form-check-label fw-bold" for="selectAllColumns">
+                                        Vælg alle
+                                    </label>
+                                </div>
+                                <hr>
+                                <div id="columnCheckboxes"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="excelFileName" class="form-label fw-bold">Filnavn</label>
+                            <input type="text" class="form-control" id="excelFileName" placeholder="Filnavn">
+                            <small class="text-muted">Dato tilføjes automatisk</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Annuller
+                        </button>
+                        <button type="button" class="btn btn-primary" id="exportButton">
+                            <i class="fa fa-download me-1"></i>
+                            <span id="exportButtonText">Eksporter</span>
+                            <span id="exportButtonSpinner" class="spinner-border spinner-border-sm ms-1" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template for column checkbox -->
+    <template id="columnCheckboxTemplate">
+        <div class="form-check mb-2">
+            <input class="form-check-input column-checkbox" type="checkbox">
+            <label class="form-check-label"></label>
+        </div>
+    </template>
+</div>
+
+</body>
+</html>
