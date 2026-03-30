@@ -487,38 +487,42 @@
                                         </div>
                                     </div>
                                 </form>
-                                <div class="row mb-3">
 
-                                    <div class="col-12">
-                                        <div class="card shadow-none h-100 border-2">
+                                <div class="row mb-3">
+                                    <div class="col-12 mb-3">
+                                        <div class="card h-100 shadow-none border-1">
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Behandlingsaktivitet</h5>
                                                 <div class="toolbar-end">
                                                     <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
-                                                            data-bs-toggle="modal" data-bs-target="#RegisterRelationModal">Tilføj</button>
+                                                            data-bs-toggle="modal" data-bs-target="#RegisterRelationModal">
+                                                        Tilføj
+                                                    </button>
                                                 </div>
                                             </div>
                                             <div class="card-body">
-                                                <table class="col-lg-12">
-                                                    <tbody>
-                                                    <tr th:each="register : ${registers}">
-                                                        <td class="col-lg-10">
-                                                            <a th:text="${register.name}" th:href="@{/registers/{id}(id=${register.id})}"></a>
-                                                        </td>
-                                                        <td class="col-lg-2" title="Fjern Behandlingsaktivitet" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${register.id}, data-relationtype=${register.relationType}"></i>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
+                                                <div class="row">
+                                                    <table>
+                                                        <tbody>
+                                                        <tr th:each="register : ${registers}">
+                                                            <td class="col-lg-10">
+                                                                <a th:text="${register.name}" th:href="@{/registers/{id}(id=${register.id})}"></a>
+                                                            </td>
+                                                            <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern Behandlingsaktivitet">
+                                                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${register.id}, data-relationtype=${register.relationType}"></i>
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="row mb-3">
-                                    <div class="col-12">
-                                        <div class="card shadow-none h-100 border-2">
+                                    <div class="col-12 mb-3">
+                                        <div class="card shadow-none h-100 border-1">
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Foranstaltninger</h5>
                                                 <div class="toolbar-end">
@@ -527,24 +531,26 @@
                                                 </div>
                                             </div>
                                             <div class="card-body">
-                                                <table class="col-lg-12">
-                                                    <tbody>
-                                                    <tr th:each="precaution : ${precautions}">
-                                                        <td class="col-lg-10" th:text="${precaution.name}"></td>
-                                                        <td class="col-lg-2" title="Fjern foranstaltning" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${precaution.id}, data-relationtype=${precaution.relationType}"></i>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
+                                                <div class="row">
+                                                    <table>
+                                                        <tbody>
+                                                        <tr th:each="precaution : ${precautions}">
+                                                            <td class="col-lg-10" th:text="${precaution.name}"></td>
+                                                            <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern foranstaltning">
+                                                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${precaution.id}, data-relationtype=${precaution.relationType}"></i>
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <div class="card shadow-none h-100 border-2">
+                                    <div class="col-4 mb-3">
+                                        <div class="card shadow-none h-100 border-1">
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Relaterede aktiver</h5>
                                                 <div class="toolbar-end">
@@ -553,24 +559,26 @@
                                                 </div>
                                             </div>
                                             <div class="card-body">
-                                                <table class="col-lg-12">
-                                                    <tbody>
-                                                    <tr th:each="currentAsset : ${relatedAssets}">
-                                                        <td class="col-lg-10">
-                                                            <a th:text="${currentAsset.name}" th:href="@{/assets/{id}(id=${currentAsset.id})}"></a>
-                                                        </td>
-                                                        <td class="col-lg-2" title="Fjern relateret aktivitet" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${currentAsset.id}, data-relationtype=${currentAsset.relationType}"></i>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
+                                                <div class="row">
+                                                    <table>
+                                                        <tbody>
+                                                        <tr th:each="currentAsset : ${relatedAssets}">
+                                                            <td class="col-lg-10">
+                                                                <a th:text="${currentAsset.name}" th:href="@{/assets/{id}(id=${currentAsset.id})}"></a>
+                                                            </td>
+                                                            <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern relateret aktivitet">
+                                                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${currentAsset.id}, data-relationtype=${currentAsset.relationType}"></i>
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="col-md-4">
-                                        <div class="card shadow-none h-100 border-2">
+                                    <div class="col-4 mb-3">
+                                        <div class="card shadow-none h-100 border-1">
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Dokumenter</h5>
                                                 <div class="toolbar-end">
@@ -578,24 +586,26 @@
                                                 </div>
                                             </div>
                                             <div class="card-body">
-                                                <table class="col-lg-12">
-                                                    <tbody>
-                                                    <tr th:each="document : ${documents}">
-                                                        <td class="col-lg-10">
-                                                            <a th:text="${document.name}" th:href="@{/documents/{id}(id=${document.id})}"></a>
-                                                        </td>
-                                                        <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
+                                                <div class="row">
+                                                    <table>
+                                                        <tbody>
+                                                        <tr th:each="document : ${documents}">
+                                                            <td class="col-lg-10">
+                                                                <a th:text="${document.name}" th:href="@{/documents/{id}(id=${document.id})}"></a>
+                                                            </td>
+                                                            <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern relation" style="text-align: right;">
+                                                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                          </div>
                                     </div>
 
-                                    <div class="col-md-4">
-                                        <div class="card shadow-none h-100 border-2">
+                                    <div class="col-4 mb-3">
+                                        <div class="card shadow-none h-100 border-1">
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Opgaver</h5>
                                                 <div class="toolbar-end">
@@ -603,25 +613,27 @@
                                                 </div>
                                             </div>
                                             <div class="card-body">
-                                                <table class="col-lg-12">
-                                                    <tbody>
-                                                    <tr th:each="task : ${tasks}">
-                                                        <td class="col-lg-10">
-                                                            <a th:text="${task.name}" th:href="@{/tasks/{id}(id=${task.id})}"></a>
-                                                        </td>
-                                                        <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
+                                                <div class="row">
+                                                    <table>
+                                                        <tbody>
+                                                        <tr th:each="task : ${tasks}">
+                                                            <td class="col-lg-10">
+                                                                <a th:text="${task.name}" th:href="@{/tasks/{id}(id=${task.id})}"></a>
+                                                            </td>
+                                                            <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern relation" style="text-align: right;">
+                                                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <div class="card shadow-none h-100 border-2">
+                                    <div class="col-4 mb-3">
+                                        <div class="card shadow-none h-100 border-1">
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Hændelser</h5>
                                                 <div class="toolbar-end">
@@ -629,32 +641,33 @@
                                                 </div>
                                             </div>
                                             <div class="card-body">
-                                                <table class="table table-striped col-lg-12">
-                                                    <thead>
-                                                    <tr>
-                                                        <th>Navn</th>
-                                                        <th>Oprettet</th>
-                                                        <th></th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    <tr th:each="incident : ${relatedIncidents}">
-                                                        <td class="col-lg-5">
-                                                            <a th:text="${incident.name}" th:href="@{/incidents/logs/{id}(id=${incident.id})}"></a>
-                                                        </td>
-                                                        <td class="col-lg-5" th:text="${#temporals.format(incident?.createdAt, 'dd/MM-yyyy')}"></td>
-                                                        <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${incident.id}, data-relationtype=${incident.relationType}"></i>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
+                                                <div class="row">
+                                                    <table>
+                                                        <thead>
+                                                        <tr>
+                                                            <th class="col-5">Navn</th>
+                                                            <th class="col-5">Oprettet</th>
+                                                            <th class="col-2"></th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        <tr th:each="incident : ${relatedIncidents}">
+                                                            <td class="col-lg-5">
+                                                                <a th:text="${incident.name}" th:href="@{/incidents/logs/{id}(id=${incident.id})}"></a>
+                                                            </td>
+                                                            <td class="col-lg-5" th:text="${#temporals.format(incident?.createdAt, 'dd/MM-yyyy')}"></td>
+                                                            <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern relation" style="text-align: right;">
+                                                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${incident.id}, data-relationtype=${incident.relationType}"></i>
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
+
+                                    <div class="col-4 mb-3">
                                         <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (
                                         tags=${asset.tags}, parentId=${asset.id}, parentType='asset',
                                         allowAdd=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')},
