@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -459,10 +460,21 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public List<TaskListDTO> convertRelatableToTaskListDTO(final List<Relatable> relatable) {
-		return relatable.stream()
+		// We need the taskIds to fetch Task with the responsible relations (A little inefficient, but best case without refactoring relationService)
+		final List<Long> taskIds = relatable.stream()
 				.filter(r -> r.getRelationType() == RelationType.TASK)
-				.map(r -> {
-					Task task = ((Task) r);
+				.map(Relatable::getId)
+				.toList();
+		// Fetch responsibleUser and responsibleOu in the same call to avoid N+1 queries
+		final Map<Long, Task> tasksById = taskDao.findAllByIdInWithResponsible(taskIds).stream()
+				.collect(Collectors.toMap(Task::getId, t -> t));
+
+		return taskIds.stream()
+				.map(id -> {
+					Task task = tasksById.get(id);
+					if (task == null) {
+						return null;
+					}
 					return new TaskListDTO(
 							task.getId(),
 							task.getName(),
@@ -477,6 +489,7 @@ public class TaskService implements TagableService<Task> {
 							RelationType.TASK
 					);
 				})
+				.filter(Objects::nonNull)
 				.toList();
 	}
 }
