@@ -6,6 +6,10 @@ import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
+import dk.digitalidentity.model.dto.excel.EntityListRequest;
+import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
+import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -33,7 +37,7 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
-import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.ExcelExportHelperService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
@@ -95,8 +99,8 @@ public class AssetsRestController {
 	private final DPIAService dPIAService;
 	private final ApplicationEventPublisher eventPublisher;
 	private final RelationService relationService;
-	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
+	private final ExcelExportHelperService excelExportHelperService;
 
 	@RequireReadOwnerOnly
 	@PostMapping("list")
@@ -118,30 +122,6 @@ public class AssetsRestController {
 
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), tagsById));
     }
-
-	@RequireReadOwnerOnly
-	@PostMapping("export")
-	public void export(
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
-			HttpServletResponse response
-	) throws IOException {
-		User user = securityUserService.getCurrentUserOrThrow();
-
-		int pageLimit = Integer.MAX_VALUE;
-
-		// Fetch all records (no pagination)
-		Page<AssetGrid> assets = assetService.getAssets(sortColumn, sortDirection, filters, 0, pageLimit, user);
-
-		Set<Long> entityIds = assets.getContent().stream().map(AssetGrid::getId).collect(Collectors.toSet());
-		Map<Long, Tag> tagsById = assetService.findTagsByEntityIds(entityIds).stream()
-				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
-
-		List<AssetDTO> allData = mapper.toDTO(assets.getContent(), tagsById);
-		excelExportService.exportToExcel(allData, AssetDTO.class, fileName, response);
-	}
 
 	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
@@ -511,5 +491,59 @@ public class AssetsRestController {
 								.map(User::getUuid))
 				.toList()
 				.contains(SecurityUtil.getPrincipalUuid());
+	}
+
+	@GetMapping("export-metadata")
+	@RequireReadOwnerOnly
+	public ExportMetadataDTO getExportMetadata() {
+		return excelExportHelperService.getMetadata(AssetDTO.class);
+	}
+
+	@PostMapping("export-entities")
+	@RequireReadOwnerOnly
+	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
+		User user = securityUserService.getCurrentUserOrThrow();
+		Page<AssetGrid> assets = assetService.getAssets(
+				null,
+				"ASC",
+				request.getFilters(),
+				0,
+				Integer.MAX_VALUE,
+				user
+		);
+
+		return excelExportHelperService.toEntityListItems(
+				assets.getContent(),
+				AssetGrid::getId,
+				AssetGrid::getName
+		);
+	}
+
+	@PostMapping("export-custom")
+	@RequireReadOwnerOnly
+	public void exportCustom(
+			@RequestBody ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<AssetGrid> assetGrids = assetService.findByIds(ids, user);
+
+		if (assetGrids.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		excelExportHelperService.exportEntitiesWithTags(
+				assetGrids,
+				AssetDTO.class,
+				mapper::toDTO,
+				assetService::findTagsByEntityIds,
+				AssetGrid::getId,
+				request,
+				response
+		);
 	}
 }

@@ -180,7 +180,6 @@ public class StandardController {
         model.addAttribute("template", template);
         model.addAttribute("relationMap", buildRelationsMap(template));
         model.addAttribute("isNSIS", template.getIdentifier().toLowerCase().startsWith("nsis"));
-        model.addAttribute("standardTemplateSectionComparator", Comparator.comparing(StandardTemplateSection::getSortKey));
         model.addAttribute("statusFilter", status);
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         model.addAttribute("today", LocalDate.now().format(formatter));
@@ -302,7 +301,7 @@ public class StandardController {
 		model.addAttribute("header", header);
 		model.addAttribute("standard", template);
 		model.addAttribute("action", "/standards/headers/update/" + id);
-		model.addAttribute("formTitle", "Ny gruppe");
+		model.addAttribute("formTitle", "Rediger gruppe");
 		model.addAttribute("formId", "headerForm");
 
 		return "standards/sections/create_header_form";
@@ -318,6 +317,7 @@ public class StandardController {
 
 		StandardTemplateSection header = standardTemplateSectionDao.findByStandardTemplate(template).stream()
 				.filter(section -> section.getParent() == null)
+				.filter(section -> section.getIdentifier().equals(standardTemplateSection.getIdentifier()))
 				.findAny()
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 
@@ -325,7 +325,8 @@ public class StandardController {
 		String newSection = standardTemplateSection.getSection().trim();
 
 		if (!Objects.equals(oldSection, newSection)) {
-			boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
+			boolean existsAlready = template.getStandardTemplateSections().stream()
+					.anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
 
 			if (existsAlready) {
 				result.rejectValue("section", "section.duplicate", "Du skal angive et unikt sektionsnummer");

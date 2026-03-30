@@ -1,6 +1,7 @@
 import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
+import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -166,7 +167,7 @@ function initGrid() {
                     let type = row.cells[2]['data'];
 
                     // if completed and task type opgave
-                    if (cell && type === "Opgave") {
+                    if (cell && type === "Opgave" || row.cells[10]['data'] === true) {
                         status = '<div class="d-block badge bg-success">Udført</div>'
                     } else {
                         let deadline = row.cells[6]['data'];
@@ -244,7 +245,7 @@ function initGrid() {
     grid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
 
     //Enables custom column search, serverside sorting and pagination
-    const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, exportTasksUrl, datatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, datatableId);
 
     new ColumnOptions(
         datatableId,
@@ -255,7 +256,7 @@ function initGrid() {
 
     initGridActions()
 
-    initSaveAsExcelButton(customGridFunctions, 'Opgavecenter')
+    initSaveAsExcelButton(customGridFunctions, 'task', 'tasks', 'Opgavecenter')
 }
 
 function initGridActions() {

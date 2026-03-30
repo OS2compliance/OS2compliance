@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -30,8 +31,9 @@ public class AssetMeasure {
     @JsonIgnore
     private Asset asset;
 
-    @OneToOne
+	@ManyToOne
     @JoinColumn(name = "choice_id")
+	@JsonIgnore
     private ChoiceMeasure measure;
 
     @Column

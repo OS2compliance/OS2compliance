@@ -3,7 +3,6 @@
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 <body class="jumping">
 <script type="module" th:src="@{/js/document/index.js}" defer></script>
-<script th:src="@{/js/export-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/documents.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -63,6 +62,7 @@
 </div>
 
 <div th:replace="~{documents/create :: createDocumentFragment}"></div>
+<div th:replace="~{fragments/excel-export-modal :: excelExportModal}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">

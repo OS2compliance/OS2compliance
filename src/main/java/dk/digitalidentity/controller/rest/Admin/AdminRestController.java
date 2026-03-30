@@ -114,7 +114,7 @@ public class AdminRestController {
 	@RequireUpdateAll
     @Transactional
     @PostMapping("transferresponsibility")
-    public ResponseEntity<?> mailReportToSystemOwner(@RequestBody final TransferResponsibilityDTO dto) {
+    public ResponseEntity<?> transferResponsibility(@RequestBody final TransferResponsibilityDTO dto) {
         User userTo = userService.findByUuid(dto.transferTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ResponsibleUserView userFrom = responsibleUserViewService.findByUserUuid(dto.transferFrom);
 
@@ -164,9 +164,10 @@ public class AdminRestController {
                     supplierService.save(supplier);
                     break;
                 case TASK:
-                    Task task = (Task) responsibleFor;
-                    task.setResponsibleUsers(Set.of(userTo));
-                    taskService.saveTask(task);
+					Task task = (Task) responsibleFor;
+					task.getResponsibleUsers().clear();
+					task.getResponsibleUsers().add(userTo);
+					taskService.saveTask(task);
                     break;
                 case THREAT_ASSESSMENT:
                     ThreatAssessment threatAssessment = (ThreatAssessment) responsibleFor;

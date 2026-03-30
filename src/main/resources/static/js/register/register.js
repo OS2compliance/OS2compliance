@@ -1,5 +1,7 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
+import { formatThreatTypes, formatThreatCatalogs, formatRiskAssessment } from "../risk-assessment-formatter.js";
+import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 
 let grid = null;
 
@@ -199,6 +201,44 @@ function initGrid() {
                 formatter: (cell, row) => formatTags(cell, row),
             },
             {
+                name: "Trusselstyper",
+                hidden: true,
+                searchable: {
+                    searchKey: 'threatTypeList'
+                },
+                width: '200px',
+                formatter: (cell, row) => formatThreatTypes(cell)
+            },
+            {
+                name: "Risikokataloger",
+                hidden: true,
+                searchable: {
+                    searchKey: 'catalogList'
+                },
+                width: '200px',
+                formatter: (cell, row) => formatThreatCatalogs(cell)
+            },
+            {
+                name: "riskScore",
+                hidden: true
+            },
+            {
+                name: "Gennemsnitlig risiko",
+                hidden: true,
+                width: '150px',
+                searchable: {
+                    sortKey: 'riskScore'
+                },
+                formatter: (cell, row) => {
+                    const riskData = row.cells[16]['data'];
+                    return formatRiskAssessment(cell, row, riskData);
+                }
+            },
+            {
+                name: "riskData",
+                hidden: true
+            },
+            {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
@@ -219,9 +259,47 @@ function initGrid() {
             headers: {
                 'X-CSRF-TOKEN': token
             },
-            then: data => data.content.map(register =>
-                [register.id, register.name, register.responsibleOUs, register.departments, register.responsibleUsers, register.updatedAt, register.consequence, register.risk, register.assetAssessment, register.status, register.assetCount, register.tags, register.allowedActions]
-            ),
+            then: data => data.content.map(register => {
+                const riskData = {
+                    avgProbability: register.avgProbability,
+                    avgConsequenceOverall: register.avgConsequenceOverall,
+                    avgConsequenceConfidentialityRegistered: register.avgConsequenceConfidentialityRegistered,
+                    avgConsequenceConfidentialityOrganisation: register.avgConsequenceConfidentialityOrganisation,
+                    avgConsequenceConfidentialitySociety: register.avgConsequenceConfidentialitySociety,
+                    avgConsequenceIntegrityRegistered: register.avgConsequenceIntegrityRegistered,
+                    avgConsequenceIntegrityOrganisation: register.avgConsequenceIntegrityOrganisation,
+                    avgConsequenceIntegritySociety: register.avgConsequenceIntegritySociety,
+                    avgConsequenceAvailabilityRegistered: register.avgConsequenceAvailabilityRegistered,
+                    avgConsequenceAvailabilityOrganisation: register.avgConsequenceAvailabilityOrganisation,
+                    avgConsequenceAvailabilitySociety: register.avgConsequenceAvailabilitySociety,
+                    avgConsequenceAuthenticitySociety: register.avgConsequenceAuthenticitySociety
+                };
+
+                const riskScore = (register.avgProbability && register.avgConsequenceOverall)
+                    ? (register.avgProbability * register.avgConsequenceOverall).toFixed(2)
+                    : null;
+
+                return [
+                    register.id,
+                    register.name,
+                    register.responsibleOUs,
+                    register.departments,
+                    register.responsibleUsers,
+                    register.updatedAt,
+                    register.consequence,
+                    register.risk,
+                    register.assetAssessment,
+                    register.status,
+                    register.assetCount,
+                    register.tags,
+                    register.threatTypeList,
+                    register.catalogList,
+                    riskScore,
+                    null, // placeholder for risk assessment formatter
+                    riskData, // hidden column with all risk data
+                    register.allowedActions
+                ];
+            }),
             total: data => data.totalCount
         },
         language: {
@@ -243,15 +321,15 @@ function initGrid() {
     const registerDatatableId = 'registersDatatable';
     grid = new gridjs.Grid(gridConfig).render(document.getElementById(registerDatatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, exportRegistersUrl, registerDatatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, registerDatatableId);
 
     new ColumnOptions(
         registerDatatableId,
         grid,
         ['titel', 'allowedActions'],
         ['titel','risikoVurdering','status', 'aktiver'],
-        ['id'])
+        ['id', 'riskScore', 'riskData'])
 
-    initSaveAsExcelButton(customGridFunctions, 'Fortegnelse')
+    initSaveAsExcelButton(customGridFunctions, 'register', 'registers', 'Fortegnelse')
 
 }

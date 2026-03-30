@@ -1,6 +1,6 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.dao.grid.RiskGridDao;
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
 import dk.digitalidentity.mapping.RiskMapper;
@@ -8,6 +8,10 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
 import dk.digitalidentity.model.dto.enums.ReportFormat;
 import dk.digitalidentity.model.dto.enums.SetFieldType;
+import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
+import dk.digitalidentity.model.dto.excel.EntityListRequest;
+import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
+import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.EmailTemplate;
@@ -41,7 +45,7 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRisk;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.EmailTemplateService;
-import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.ExcelExportHelperService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
@@ -49,6 +53,7 @@ import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.SecurityUserService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -90,8 +95,6 @@ import java.util.stream.Collectors;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
-import static dk.digitalidentity.service.FilterService.buildPageable;
-import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
@@ -106,7 +109,6 @@ public class RiskRestController {
     private final ThreatAssessmentService threatAssessmentService;
     private final DocsReportGeneratorComponent docsReportGeneratorComponent;
     private final RelationService relationService;
-    private final RiskGridDao riskGridDao;
     private final RiskMapper mapper;
     private final UserService userService;
     private final PrecautionService precautionService;
@@ -115,8 +117,9 @@ public class RiskRestController {
     private final Environment environment;
     private final EmailTemplateService emailTemplateService;
 	private final OrganisationService organisationService;
-	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
+	private final SettingsService settingsService;
+	private final ExcelExportHelperService excelExportHelperService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -146,7 +149,7 @@ public class RiskRestController {
 				.map(Relatable::getName)
 				.collect(Collectors.toSet());
 
-		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, page, limit, user);
+		Page<RiskGrid> risks = threatAssessmentService.getRisks(sortColumn, sortDirection, filters, page, limit, user);
 
 		Set<Long> entityIds = risks.getContent().stream().map(RiskGrid::getId).collect(Collectors.toSet());
 		Map<Long, Tag> tagsById = threatAssessmentService.findTagsByEntityIds(entityIds).stream()
@@ -156,60 +159,6 @@ public class RiskRestController {
 
 		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid, tagsById));
     }
-
-	@RequireReadOwnerOnly
-	@PostMapping("export")
-	public void export(
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
-			HttpServletResponse response
-	) throws IOException {
-		User user = securityUserService.getCurrentUserOrThrow();
-		String uuid = user.getUuid();
-
-		int pageLimit = Integer.MAX_VALUE;
-
-		// Assets user is responsible for
-		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(uuid).stream()
-				.map(Relatable::getName)
-				.collect(Collectors.toSet());
-
-		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, 0, pageLimit, user);
-
-		Set<Long> entityIds = risks.getContent().stream().map(RiskGrid::getId).collect(Collectors.toSet());
-		Map<Long, Tag> tagsById = registerService.findTagsByEntityIds(entityIds).stream()
-				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
-
-		assert risks != null;
-
-		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid, tagsById);
-		excelExportService.exportToExcel(allData, RiskDTO.class, fileName, response);
-	}
-
-	// Should be in Service class but risks doesn't have one???
-	private Page<RiskGrid> getRisks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
-		Page<RiskGrid> risks = null;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			risks = riskGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, RiskGrid.class),
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					RiskGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			risks = riskGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, RiskGrid.class),
-					user,
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					RiskGrid.class
-			);
-		}
-		return risks;
-	}
 
 	record ResponsibleUserDTO(String uuid, String name, String userId) {}
     record ResponsibleUsersWithElementNameDTO(String elementName, List<ResponsibleUserDTO> users) {}
@@ -403,8 +352,10 @@ public class RiskRestController {
     }
 
 	private void checkUpdateAccess(ThreatAssessment threatAssessment) {
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) &&
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		boolean canUpdateAll = SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL);
+		boolean canUpdateOwn = SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)
+				&& threatAssessmentService.isResponsibleFor(threatAssessment);
+		if (!canUpdateAll && !canUpdateOwn) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}
@@ -635,19 +586,19 @@ public class RiskRestController {
 			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
 
 		if (types == null || types.isEmpty()) {
-			return ResponseEntity.ok(new ArrayList<RiskMatrixItem>());
+			return ResponseEntity.ok(new ArrayList<>());
 		}
-
+		boolean useResidualRisk = settingsService.getBoolean(Constants.RISK_MATRIX_USE_RESIDUAL, true);
 		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
 
-		return ResponseEntity.ok(calculateRiskMatrix(threatAssessments));
+		return ResponseEntity.ok(calculateRiskMatrix(threatAssessments, useResidualRisk));
 	}
 
-	public List<RiskMatrixItem> calculateRiskMatrix(List<ThreatAssessment> threatAssessments) {
+	public List<RiskMatrixItem> calculateRiskMatrix(List<ThreatAssessment> threatAssessments, boolean useResidual) {
 		Map<String, Integer> riskCounts = new HashMap<>();
 
 		for (ThreatAssessment assessment : threatAssessments) {
-			RiskLevel riskLevel = calculateRiskLevel(assessment);
+			RiskLevel riskLevel = calculateRiskLevel(assessment, useResidual);
 
 			if (riskLevel.probability() > 0 && riskLevel.consequence() > 0) {
 				String key = riskLevel.probability() + "," + riskLevel.consequence();
@@ -666,7 +617,7 @@ public class RiskRestController {
 	}
 
 	public record RiskLevel(int probability, int consequence) {}
-	public RiskLevel calculateRiskLevel(ThreatAssessment threatAssessment) {
+	public RiskLevel calculateRiskLevel(ThreatAssessment threatAssessment, boolean useResidualRisk) {
 		List<ThreatAssessmentResponse> responses = threatAssessment.getThreatAssessmentResponses();
 
 		if (responses == null || responses.isEmpty()) {
@@ -674,7 +625,7 @@ public class RiskRestController {
 		}
 
 		// calculate the highest scores the same way its calculated when setting the threatAssessment.assessment
-		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment, true);
+		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment, useResidualRisk);
 
 		return new RiskLevel(result.globalHighestprobability(), result.globalHighestConsequence());
 	}
@@ -687,16 +638,17 @@ public class RiskRestController {
 			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
 
 		if (types == null || types.isEmpty()) {
-			return ResponseEntity.ok(new ArrayList<RiskDetailItem>());
+			return ResponseEntity.ok(new ArrayList<>());
 		}
 
 		// Fetch threat assessments filtered by types
 		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
+		boolean residualValues = settingsService.getBoolean(Constants.RISK_MATRIX_USE_RESIDUAL, true);
 
 		// Filter assessments that match the requested probability and consequence
 		List<RiskDetailItem> details = threatAssessments.stream()
 				.filter(assessment -> {
-					RiskLevel riskLevel = calculateRiskLevel(assessment);
+					RiskLevel riskLevel = calculateRiskLevel(assessment, residualValues);
 					return riskLevel.probability() == probability && riskLevel.consequence() == consequence;
 				})
 				.map(assessment -> new RiskDetailItem(
@@ -815,6 +767,60 @@ public class RiskRestController {
 		threatAssessmentService.save(assessment);
 
 		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping("export-metadata")
+	@RequireReadOwnerOnly
+	public ExportMetadataDTO getExportMetadata() {
+		return excelExportHelperService.getMetadata(RiskDTO.class);
+	}
+
+	@PostMapping("export-entities")
+	@RequireReadOwnerOnly
+	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
+		User user = securityUserService.getCurrentUserOrThrow();
+		Page<RiskGrid> risks = threatAssessmentService.getRisks(
+				null,
+				"ASC",
+				request.getFilters(),
+				0,
+				Integer.MAX_VALUE,
+				user
+		);
+
+		return excelExportHelperService.toEntityListItems(
+				risks.getContent(),
+				RiskGrid::getId,
+				RiskGrid::getName
+		);
+	}
+
+	@PostMapping("export-custom")
+	@RequireReadOwnerOnly
+	public void exportCustom(
+			@RequestBody ExcelExportRequest request,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+		List<Long> ids = request.getSelectedIds().stream()
+				.map(Long::parseLong)
+				.toList();
+		List<RiskGrid> riskGrids = threatAssessmentService.findByIds(ids, user);
+
+		if (riskGrids.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		excelExportHelperService.exportEntitiesWithTags(
+				riskGrids,
+				RiskDTO.class,
+				mapper::toDTO,
+				threatAssessmentService::findTagsByEntityIds,
+				RiskGrid::getId,
+				request,
+				response
+		);
 	}
 
 }

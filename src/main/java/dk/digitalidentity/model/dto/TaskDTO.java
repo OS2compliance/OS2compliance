@@ -22,7 +22,7 @@ public class TaskDTO {
 	@ExcelColumn(headerName = "Opgave type", order = 2)
     private String taskType;
 	@ExcelColumn(headerName = "Ansvarlig", order = 3)
-    private String responsibleUser;
+    private String responsibleNames;
 	@ExcelColumn(headerName = "Afdeling", order = 4)
     private String responsibleOU;
 	@ExcelColumn(headerName = "Deadline", order = 6)

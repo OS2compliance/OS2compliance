@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.event.RiskCalculationChangedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.dto.SettingsDTO;
 import dk.digitalidentity.model.dto.enums.KitosField;
@@ -12,6 +13,7 @@ import dk.digitalidentity.service.SettingsService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -35,6 +37,7 @@ public class SettingsController {
     private final HttpServletRequest httpServletRequest;
     private final KitosService kitosService;
     private final OS2complianceConfiguration configuration;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@RequireUpdateAll
     @Transactional
@@ -70,7 +73,8 @@ public class SettingsController {
         //For notifications, change null values to "false", to ensure changes are not dropped
         settings.getSettingsList()
             .forEach(setting -> {
-                if (setting.getSettingValue() == null && setting.getAssociation() != null && setting.getAssociation().equals("notification")) {
+                if (setting.getSettingValue() == null && setting.getAssociation() != null
+						&& (setting.getAssociation().equals("notification") || setting.getAssociation().equals("risk"))) {
                     setting.setSettingValue("false");
                 }
 				if (setting.getSettingKey() != null && setting.getSettingKey().equals(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS) && setting.getSettingValue() != null) {
@@ -79,9 +83,17 @@ public class SettingsController {
 					}
 				}
             });
-
             settings.settingsList.removeIf(x -> Objects.isNull(x.getSettingValue()) || x.getSettingValue().isEmpty());
-            final var res = settingsService.saveAll(settings.settingsList);
+			boolean riskSettingsChanged = settings.settingsList.stream()
+					.filter(s -> Constants.RISK_MATRIX_USE_RESIDUAL.equals(s.getSettingKey())
+							|| Constants.RISK_ASSESSMENT_USE_RESIDUAL.equals(s.getSettingKey())
+							|| "scale".equals(s.getSettingKey())
+					)
+					.anyMatch(s -> settingsService.settingChanged(s.getSettingKey(), s.getSettingValue()));
+			final var res = settingsService.saveAll(settings.settingsList);
+			if (riskSettingsChanged) {
+				eventPublisher.publishEvent(new RiskCalculationChangedEvent());
+			}
         }
         return "redirect:" + httpServletRequest.getHeader("Referer");
     }

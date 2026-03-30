@@ -1,5 +1,3 @@
-
-
 export default class KLESelectionService {
     mainGroupSelectId = 'mainGroupSelector'
     groupSelectId = 'groupSelector'
@@ -40,6 +38,9 @@ export default class KLESelectionService {
         // fetch groupSelectOptions
         const url = `/kle/maingroup/groups?mainGroupNumbers=${selectedMainGroups}&selectedGroups=${selectedGroups}`;
         await fetchHtml(url, this.groupSelectId);
+
+        // Re-initialize Choices.js after HTML has been loaded
+        this.initGroupSelect();
     }
 
     initGroupSelect() {
@@ -51,7 +52,6 @@ export default class KLESelectionService {
         const subjectSelect = document.getElementById(this.subjectSelectId)
         this.subjectSelectorInstance = initSelect(subjectSelect, 'form-control', {searchChoices: true});
     }
-
 
     initLegalReferenceSelect() {
         if (this.legalReferenceSelectorInstance) {

@@ -9,7 +9,7 @@
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
                 <div class="d-md-flex">
-                    <div class="me-auto">
+                    <div class="col me-auto">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/standards}">Standarder</a></li>
@@ -19,7 +19,7 @@
                         </nav>
                         <h1 class="page-title mb-0 mt-2 mb-2" th:text="${template.name}"></h1>
                     </div>
-                    <div class="align-self-center d-inline-flex gap-2 mb-2">
+                    <div class="align-self-center d-inline-flex gap-2 mb-2 justify-content-end">
                         <a id="exportStandardToWord" th:href="@{/reports/word(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv standard</a>
                         <a th:if="${template.identifier == 'iso27002_2022' || template.identifier == 'iso27002_2017'}" id="exportStandardToExcel" th:href="@{/reports/sheet(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv SoA</a>
                         <div th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}">
@@ -85,7 +85,7 @@
                                                     </span>
                                                 </td>
                                             </tr>
-                                            <th:block th:if="${statusFilter == null || section.standardSection.status == statusFilter}" th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
+                                            <th:block th:if="${statusFilter == null || section.standardSection.status == statusFilter}" th:each="section, statSection : ${sectionParent.children}">
                                                 <tr class="foldable" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
                                                     <td style="border-right: 1px solid black; font-weight: bold; color: black;" th:text="${section.section} + ' ' + ${section.description}"></td>
                                                     <td th:unless="${isNSIS}" th:id="'selectedTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.selected} ? 'Tilvalgt' : 'Fravalgt'" style="font-weight: bold;"></td>

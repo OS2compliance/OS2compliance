@@ -93,7 +93,7 @@
                         <select class="form-control form-select" data-trigger="" name="oversightStatusSelect"
                             id="oversightStatusSelect" th:field="*{status}">
                             <option
-                                th:each="status : ${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).values()}"
+                                th:each="status : ${T(dk.digitalidentity.model.entity.enums.ColorStatus).values()}"
                                 th:value="${status}"
                                 th:text="${status.getMessage()}">
                             </option>

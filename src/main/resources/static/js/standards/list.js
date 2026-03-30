@@ -80,6 +80,7 @@ function initTable() {
         ],
         data: data,
         language: {
+            'noRecordsFound': "Ingen data fundet",
             'search': {
                 'placeholder': 'Søg'
             },

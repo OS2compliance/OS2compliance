@@ -1,9 +1,43 @@
-
 function truncateString(str, num) {
     if (str.length <= num) {
         return str
     }
     return str.slice(0, num) + '...'
+}
+
+/**
+ * Truncates the MIDDLE part of a string, replacing the cut part with an elipsis.
+ * Will attempt to cut at spaces to avoid breaking up words, without going over the set limits.
+ * @param str String to truncate
+ * @param length Max total length of the resulting string (excluding elipsis)
+ * @param startLength Max character length of the start segment
+ * @param endLength Max character length of the end segment
+ * @returns {*|string} Truncated string
+ */
+function truncateMiddleString(str, length, startLength = 30, endLength = 50) {
+    if (!length || length === 0 || str.length <= length) {
+        return str;
+    }
+
+    // Find word boundary for start (don't break mid-word)
+    let startEnd = startLength;
+    while (startEnd > 0 && str[startEnd] !== ' ') {
+        startEnd--;
+    }
+    if (startEnd === 0) {
+        startEnd = startLength; // fallback if no space found
+    }
+
+    // Find word boundary for end
+    let endStart = str.length - endLength;
+    while (endStart < str.length && str[endStart] !== ' ') {
+        endStart++;
+    }
+    if (endStart === str.length) {
+        endStart = str.length - endLength; // fallback if no space found
+    }
+
+    return str.slice(0, startEnd).trim() + " ... " + str.slice(endStart).trim();
 }
 
 const initSelect = (element, containerInner = 'form-control', extraOptions = {}) => {
@@ -28,13 +62,13 @@ const initSelect = (element, containerInner = 'form-control', extraOptions = {})
         };
         defaultOptions.classNames.disabledState = 'choices-readonly';
     }
-    const options = { ...defaultOptions, ...extraOptions };
+    const options = {...defaultOptions, ...extraOptions};
     const choices = new Choices(element, options);
     if (extraOptions.readOnly) {
         choices.disable();
     }
     element.addEventListener("change",
-        function(event) {
+        function (event) {
             choices.hideDropdown();
         },
         false,
@@ -57,7 +91,7 @@ const initSelectWithConfirmation = (element, containerInner = 'form-control') =>
         duplicateItemsAllowed: false,
     });
 
-    element.addEventListener("removeItem", function(event) {
+    element.addEventListener("removeItem", function (event) {
         event.preventDefault(); // Stop the removal temporarily
 
         const removedItem = event.detail;
@@ -83,7 +117,7 @@ const initSelectWithConfirmation = (element, containerInner = 'form-control') =>
         });
     }, false);
 
-    element.addEventListener("change", function(event) {
+    element.addEventListener("change", function (event) {
         choices.hideDropdown();
     }, false);
 
@@ -103,7 +137,7 @@ function initDatepicker(elementQuerySelector, inputField) {
         customClearBTN: "Ryd",
         customCancelBTN: "Annuller"
     });
-    document.querySelector(elementQuerySelector).addEventListener( "click", () => {
+    document.querySelector(elementQuerySelector).addEventListener("click", () => {
         datePicker.open();
     });
     return datePicker;
@@ -122,14 +156,14 @@ function isValidDateDMY(dateStr) {
     // d/MM-yyyy or dd/MM-yyyy
     const regex = /^(\d{1,2})\/(\d{2})-(\d{4})$/;
     const match = dateStr.match(regex);
-    if(!match) return false;
+    if (!match) return false;
 
     const day = parseInt(match[1], 10);
     const month = parseInt(match[2], 10);
     const year = parseInt(match[3], 10);
 
     const date = new Date(year, month - 1, day);
-    if(date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
         return false;
     }
     return true;
@@ -168,8 +202,7 @@ function validateInputFieldLength(inputFieldId, maxLength) {
         noNameInputFeedback.style.display = "block";
         nameInput.classList.add("is-invalid");
         return false;
-    }
-    else if (nameInput.value.length > maxLength) {
+    } else if (nameInput.value.length > maxLength) {
         tooLongFeedback.style.display = "block";
         nameInput.classList.add("is-invalid");
         return false;
@@ -198,7 +231,7 @@ const defaultResponseHandler = function (response) {
     toastService.info("Info", "Dine ændringer er blevet gemt");
 }
 
-const defaultErrorHandler = function(error) {
+const defaultErrorHandler = function (error) {
     toastService.error(error);
     console.error(error);
 }
@@ -240,18 +273,18 @@ function asIntOrDefault(value, def) {
 function fetchHtml(url, targetId) {
     return fetch(url)
         .then(response => {
-            if (response.status === 403) {
-                sessionExpiredHandler();
-                return;
+                if (response.status === 403) {
+                    sessionExpiredHandler();
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error(`${response.status} ${response.statusText}`);
+                }
+                return response.text().then(data => {
+                    document.getElementById(targetId).innerHTML = data;
+                });
             }
-            if (!response.ok) {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
-            return response.text().then(data => {
-                document.getElementById(targetId).innerHTML = data;
-            });
-        }
-    ).catch(defaultErrorHandler);
+        ).catch(defaultErrorHandler);
 }
 
 function javaFormatDate(date) {
@@ -262,7 +295,7 @@ function javaFormatDate(date) {
     if (dd.length === 1) {
         dd = "0" + dd;
     }
-    let mm = "" + (date.getMonth()+1);
+    let mm = "" + (date.getMonth() + 1);
     if (mm.length === 1) {
         mm = "0" + mm;
     }
@@ -274,9 +307,9 @@ function foregroundColorForHex(rrggbb) {
     if (rrggbb == null) {
         return "";
     }
-    const red = parseInt(rrggbb.substring(1,3), 16);
-    const green = parseInt(rrggbb.substring(3,5), 16);
-    const blue = parseInt(rrggbb.substring(5,7), 16);
+    const red = parseInt(rrggbb.substring(1, 3), 16);
+    const green = parseInt(rrggbb.substring(3, 5), 16);
+    const blue = parseInt(rrggbb.substring(5, 7), 16);
     const avg = (red + green + blue) / 3;
     return avg > 150 ? "black" : "white";
 }
@@ -298,22 +331,22 @@ class InputTimer {
     #callback
     #timerId
 
-    constructor(inputElement, timeout = 1000, callback){
+    constructor(inputElement, timeout = 1000, callback) {
         this.#inputElement = inputElement,
-        this.#timeout = timeout  ,
-        this.#callback = callback
+            this.#timeout = timeout  ,
+            this.#callback = callback
 
-        if(this.#inputElement && this.#callback) {
+        if (this.#inputElement && this.#callback) {
             this.#initInput()
         } else {
-            console.error('Could not initialize InputTimer on element '+inputElement+' with callback '+callback)
+            console.error('Could not initialize InputTimer on element ' + inputElement + ' with callback ' + callback)
         }
     }
 
     #initInput() {
         this.#inputElement.addEventListener('keyup', () => {
             clearTimeout(this.#timerId);
-                this.#timerId = setTimeout(this.#callback, this.#timeout);
+            this.#timerId = setTimeout(this.#callback, this.#timeout);
         });
     }
 
@@ -327,12 +360,12 @@ class NetworkService {
     #loadingElement
 
     /**
-    * Creates a new NetworkService instance
-    * @param {string} XCSRFToken the X-CSRF token to use for requests. If not defined, will attempt to use any accessable variable called 'token'
-    * @param {string} loadingMessage The message shown while fragment loads
-    * @param {string} loadingClass the class applied to the loading div while a fragment loads
-    */
-    constructor(XCSRFToken = token, loadingMessage = 'Henter...', loadingClass = 'loading'){
+     * Creates a new NetworkService instance
+     * @param {string} XCSRFToken the X-CSRF token to use for requests. If not defined, will attempt to use any accessable variable called 'token'
+     * @param {string} loadingMessage The message shown while fragment loads
+     * @param {string} loadingClass the class applied to the loading div while a fragment loads
+     */
+    constructor(XCSRFToken = token, loadingMessage = 'Henter...', loadingClass = 'loading') {
         this.XCSRFToken = XCSRFToken
         this.loadingMessage = loadingMessage
         this.loadingClass = loadingClass
@@ -345,11 +378,11 @@ class NetworkService {
     }
 
     /**
-    * Fetches a fragment from the provided url and inserts it into the provided container, meanwhile showing a loading message
-    * @param {string} url
-    * @param {HTMLElement} containerElement
-    * @returns the response ok status
-    */
+     * Fetches a fragment from the provided url and inserts it into the provided container, meanwhile showing a loading message
+     * @param {string} url
+     * @param {HTMLElement} containerElement
+     * @returns the response ok status
+     */
     async GetFragment(url, containerElement) {
         if (!this.XCSRFToken || !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
@@ -360,7 +393,7 @@ class NetworkService {
 
         containerElement.appendChild(this.#loadingElement)
 
-        const response = await fetch (url, {
+        const response = await fetch(url, {
             headers: {
                 'X-CSRF-TOKEN': this.XCSRFToken || token,
             }
@@ -376,16 +409,16 @@ class NetworkService {
     }
 
     /**
-    * Fetch GET's from a url, parsing the result from json to JS object
-    * @param {string} url
-    * @returns the response as JS object
-    */
+     * Fetch GET's from a url, parsing the result from json to JS object
+     * @param {string} url
+     * @returns the response as JS object
+     */
     async Get(url) {
         if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
 
-        const response = await fetch (url, {
+        const response = await fetch(url, {
             headers: {
                 'X-CSRF-TOKEN': this.XCSRFToken || token,
             }
@@ -399,17 +432,17 @@ class NetworkService {
     }
 
     /**
-    * Fetch POST's data to the provided url as json, returning the parsed response as JS object
-    * @param {string} url
-    * @param {Object} data
-    * @returns response as JS object
-    */
-    async Post (url, data) {
+     * Fetch POST's data to the provided url as json, returning the parsed response as JS object
+     * @param {string} url
+     * @param {Object} data
+     * @returns response as JS object
+     */
+    async Post(url, data) {
         if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
 
-        const response = await fetch (url, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': this.XCSRFToken || token,
@@ -426,16 +459,16 @@ class NetworkService {
     }
 
     /**
-    * Fetch PUT's the data to the provided url as json, returning the parsed response as JS object
-    * @param {string} url
-    * @param {Object} data
-    * @returns response as JS object
-    */
-    async Put (url, data){
+     * Fetch PUT's the data to the provided url as json, returning the parsed response as JS object
+     * @param {string} url
+     * @param {Object} data
+     * @returns response as JS object
+     */
+    async Put(url, data) {
         if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
-        const response = await fetch (url, {
+        const response = await fetch(url, {
             method: 'PUT',
             headers: {
                 'X-CSRF-TOKEN': this.XCSRFToken || token,
@@ -461,15 +494,15 @@ class NetworkService {
     }
 
     /**
-    * Fetch DELETE's to the provided url, returning the parsed response as JS object
-    * @returns response as JS object
-    */
-    async Delete (url) {
+     * Fetch DELETE's to the provided url, returning the parsed response as JS object
+     * @returns response as JS object
+     */
+    async Delete(url) {
         if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
 
-        const response = await fetch (url, {
+        const response = await fetch(url, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': this.XCSRFToken || token,
@@ -483,14 +516,4 @@ class NetworkService {
         return await response.json()
     }
 
-}
-
-function initSaveAsExcelButton(customGridFunctions, filename) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton?.addEventListener("click",  () => exportGridServerSide(customGridFunctions, filename))
-}
-
-function initSaveAsExcelButtonWithDefaultGrid(tableId, filename) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click", () => exportHtmlTableToExcel(tableId, filename))
 }

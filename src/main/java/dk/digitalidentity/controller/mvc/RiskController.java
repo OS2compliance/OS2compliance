@@ -8,7 +8,6 @@ import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
-import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
@@ -151,6 +150,10 @@ public class RiskController {
 			final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
 			model.addAttribute("relatedAssets", assetService.findAllByRelations(assetRelations));
 		}
+		if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.REGISTER) {
+			final List<Relation> registerRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER);
+			model.addAttribute("relatedRegisters", registerService.findAllByRelations(registerRelations));
+		}
 
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("risk", threatAssessment);
@@ -164,19 +167,26 @@ public class RiskController {
     public String performEdit(@PathVariable("id") final long id,
                               @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
-								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets
+								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets,
+								@RequestParam(name = "selectedRegister", required = false) final Long selectedRegister
 	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
 				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
+		if (editedAssessment.getThreatAssessmentType() != assessment.getThreatAssessmentType()) {
+			editedAssessment.setThreatAssessmentType(assessment.getThreatAssessmentType());
+		}
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
 		}
 
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
 			relationService.setRelationsAbsolute(editedAssessment, selectedAssets);
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
+			relateRegister(selectedRegister, editedAssessment);
 		}
         editedAssessment.setName(assessment.getName());
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
@@ -287,7 +297,12 @@ public class RiskController {
 	@RequireReadOwnerOnly
     @GetMapping("{id}")
     public String risk(final Model model, @PathVariable final long id) {
-        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		if (!(SecurityUtil.isOperationAllowed(Roles.READ_ALL) ||
+				(SecurityUtil.isOperationAllowed(Roles.READ_OWNER_ONLY) &&
+						threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
         model.addAttribute("risk", threatAssessment);
 
 		Map<String, List<SimpleThreatDTO>> threatsDto = new LinkedHashMap<>();

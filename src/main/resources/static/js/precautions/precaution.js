@@ -1,11 +1,10 @@
+import { initSaveAsExcelButtonClientside } from "/js/excel-export/excel-export-init.js";
 const precaution = new PrecautionService();
 
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener("DOMContentLoaded", function (event) {
     initGrid()
-    initSaveAsExcelButtonWithDefaultGrid('precautionsDatatable', 'Foranstaltninger')
-
 });
 
 function initGrid() {
@@ -71,6 +70,7 @@ function initGrid() {
         ],
         data: data,
         language: {
+            'noRecordsFound': "Ingen data fundet",
             'search': {
                 'placeholder': 'Søg'
             },
@@ -86,6 +86,13 @@ function initGrid() {
             }
         }
     }).render(document.getElementById("precautionsDatatable"));
+
+    initSaveAsExcelButtonClientside('precautionsDatatable', 'precaution', 'precautions', 'Foranstaltninger', () => {
+        return data.map(item => ({
+            id: String(item.id),
+            name: item.name
+        }));
+    });
 }
 
 function PrecautionService() {

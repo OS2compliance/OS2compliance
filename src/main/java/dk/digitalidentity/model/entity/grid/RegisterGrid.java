@@ -84,4 +84,50 @@ public class RegisterGrid implements HasMultipleResponsibleUsers, HasCustomRespo
 
 	@Column
 	private String tagIds;
+
+	// Risk assessment calculated fields
+	@Column
+	private Double avgProbability;
+
+	@Column
+	private Double avgConsequenceOverall;
+
+	@Column
+	private Double avgConsequenceConfidentialityRegistered;
+
+	@Column
+	private Double avgConsequenceConfidentialityOrganisation;
+
+	@Column
+	private Double avgConsequenceConfidentialitySociety;
+
+	@Column
+	private Double avgConsequenceIntegrityRegistered;
+
+	@Column
+	private Double avgConsequenceIntegrityOrganisation;
+
+	@Column
+	private Double avgConsequenceIntegritySociety;
+
+	@Column
+	private Double avgConsequenceAvailabilityRegistered;
+
+	@Column
+	private Double avgConsequenceAvailabilityOrganisation;
+
+	@Column
+	private Double avgConsequenceAvailabilitySociety;
+
+	@Column
+	private Double avgConsequenceAuthenticitySociety;
+
+	@Column
+	private String threatTypeList;
+
+	@Column
+	private String catalogList;
+
+	@Column
+	private Double riskScore;
 }

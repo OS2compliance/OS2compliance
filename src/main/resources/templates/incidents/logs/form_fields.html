@@ -72,7 +72,7 @@
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
         <select class="form-control form-select userSelect" th:classappend="${response != null && response.IncidentField != null && response.IncidentField.obligatoryAnswer ? 'fvs-not-empty' : ''}" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|">
-            <option th:if="${response.answerElementIds != null}" th:each="userUuid : ${response.answerElementIds}" th:value="${userUuid}" th:text="${responseUsers.get(userUuid).name}" selected></option>
+            <option th:if="${response.answerElementIds != null}" th:each="userUuid : ${response.answerElementIds}" th:value="${userUuid}" th:text="${responseUsers.get(userUuid)?.name ?: 'Ukendt'}" selected></option>
         </select>
     </div>
 </th:block>
@@ -81,7 +81,7 @@
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
         <select class="form-control form-select userSelect" th:classappend="${response != null && response.IncidentField != null && response.IncidentField.obligatoryAnswer ? 'fvs-not-empty' : ''}" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|" multiple>
-            <option th:if="${response.answerElementIds != null}" th:each="userUuid : ${response.answerElementIds}" th:value="${userUuid}" th:text="${responseUsers.get(userUuid).name}" selected></option>
+            <option th:if="${response.answerElementIds != null}" th:each="userUuid : ${response.answerElementIds}" th:value="${userUuid}" th:text="${responseUsers.get(userUuid)?.name ?: 'Ukendt'}" selected></option>
         </select>
     </div>
 </th:block>

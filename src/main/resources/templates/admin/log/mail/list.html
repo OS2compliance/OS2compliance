@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
-<script th:src="@{/js/export-service.js}" defer></script>
 <body class="jumping">
 
 <div id="root" class="root mn--max hd--expanded">
@@ -55,6 +54,8 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='maillog')}"></nav>
 </div>
+
+<div th:replace="~{fragments/excel-export-modal :: excelExportModal}"></div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 

@@ -185,21 +185,18 @@
                         Risiko
                     </a>
                     <div class="collapse" id="riskPart" th:classappend="${page} == 'risks' ? 'show' : ''">
-                        <div class="card card-body">
-                            <div th:each="setting, itemStat :  *{settingsList}">
-                                <div th:if="${setting.association} == 'risk'" class="row mt-3">
+                        <div class="card card-body gap-3">
+                            <div th:each="setting, itemStat :  *{settingsList}" th:if="${setting.association} == 'risk'" >
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
+
+                                <div th:if="${setting.settingKey} == 'scale'" class="row">
                                     <label for="riskScaleSelect" class="col-sm-4 col-form-label" th:text="Skala"
                                            style="color: black;"></label>
                                     <div th:if="${setting.settingKey} == 'scale'">
-                                        <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
-                                        <input type="hidden"
-                                               th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
-                                        <input type="hidden"
-                                               th:field="*{settingsList[__${itemStat.index}__].editable}"/>
-                                        <input type="hidden"
-                                               th:field="*{settingsList[__${itemStat.index}__].association}"/>
-                                        <input type="hidden"
-                                               th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
                                         <select style="color:black;" class="form-control form-select" data-trigger=""
                                                 name="riskScale" id="riskScaleSelect"
                                                 tabindex="-1"
@@ -211,6 +208,20 @@
                                         </select>
                                     </div>
                                 </div>
+                                <span class="col-1" th:if="${setting.settingKey} != 'scale'" th:class="mt-2">
+                                        <input type="checkbox" th:value="true"
+                                               th:name="${'settingsList['+__${itemStat.index}__+'].settingKey'}"
+                                               th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'"
+                                               style="color:black;" class="form-check-input "
+                                               th:id="${setting.settingKey + '_input'}"
+                                               th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                </span>
+                                <label th:if="${setting.settingKey} == 'riskAssessmentUseResidual'"
+                                       th:for="${setting.settingKey + '_input'}" class="col form-check-label"
+                                       style="color: black;">Beregn risikofarve ud fra residual risiko</label>
+                                <label th:if="${setting.settingKey} == 'riskMatrixUseResidual'"
+                                       th:for="${setting.settingKey + '_input'}" class="col form-check-label"
+                                       style="color: black;">Vis residuale værdier i risikobilledet</label>
                             </div>
                         </div>
                     </div>
@@ -370,7 +381,7 @@
                                     <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_ENABLE_SYNC_ITSYSTEMS}">
                                         <div class="row mt-1" style="padding: 0px 8px;">
                                             <label for="stopSyncItSystems" class="col-sm-10 col-form-label"
-                                                   style="color: black;padding: 10px 0px;">Stop synkronisering af IT-Systemer</label>
+                                                   style="color: black;padding: 10px 0px;">Skal OS2compliance synkronisere med KITOS?</label>
                                             <select class="form-control form-select" id="stopSyncItSystems" th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                                 <option value="true" th:selected="${setting.settingValue == 'true'}">Ja</option>
                                                 <option value="false" th:selected="${setting.settingValue == 'false'}">Nej</option>

@@ -11,7 +11,7 @@
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
                 <div class="d-md-flex">
-                    <div class="me-auto">
+                    <div class="col me-auto">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/suppliers}">Leverandører</a></li>
@@ -22,7 +22,7 @@
                             <h1 class="page-title mb-0" th:text="${supplier.name}"></h1>
                         </div>
                     </div>
-                    <div class="align-self-center d-inline-flex">
+                    <div class="align-self-center d-inline-flex justify-content-end gap-2">
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>

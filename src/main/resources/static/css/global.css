@@ -22,6 +22,10 @@
     z-index: 1060 !important;
 }
 
+#manualIcon {
+    color: inherit;
+}
+
 .cursor-hand {
     cursor: pointer;
 }
@@ -219,4 +223,9 @@ html {
     vertical-align: baseline;
     border-radius: .5rem;
     outline: lightgray solid 1px;
+}
+.editable-page-title {
+    overflow: hidden;
+    resize: none;
+    field-sizing:content;
 }

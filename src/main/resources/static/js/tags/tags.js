@@ -1,4 +1,5 @@
 import {initColorPickerListener} from "./tag-color-picker.js";
+import { initSaveAsExcelButtonClientside } from "/js/excel-export/excel-export-init.js";
 
 const tags = new TagService()
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -88,6 +89,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
         ],
         data: data,
         language: {
+            'noRecordsFound': "Ingen data fundet",
             'search': {
                 'placeholder': 'Søg'
             },
@@ -125,7 +127,13 @@ document.addEventListener("DOMContentLoaded", function (event) {
         }
     });
 
-    initSaveAsExcelButtonWithDefaultGrid('tagsDatatable', 'Tags')
+    initSaveAsExcelButtonClientside('tagsDatatable', 'tag', 'tags', 'Tags', () => {
+        // data variable is available from Thymeleaf
+        return data.map(item => ({
+            id: String(item.id),
+            name: item.title
+        }));
+    });
 });
 
 

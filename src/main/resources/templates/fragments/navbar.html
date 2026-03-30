@@ -32,7 +32,7 @@
                     </li>
                     <li class="nav-item has-sub" sec:authorize="@accessEvaluator.asset()">
                         <a href="#" class="nav-link mininav-toggle collapsed"
-                           th:classappend="${page == 'aktiver' || page == 'dbs_oversight' || page == 'dbs_aktiver'  ? 'active' : ''}">
+                           th:classappend="${page == 'aktiver' || page == 'dbs_oversight' || page == 'dbs_aktiver' || page == 'asset.security'  ? 'active' : ''}">
                             <i class="pli-crane fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Aktiver</span>
                         </a>
                         <ul class="mininav-content nav collapse">
@@ -47,6 +47,10 @@
                             <li class="nav-item" sec:authorize="@accessEvaluator.dbs()">
                                 <a th:href="@{/dbs/oversight}" class="nav-link"
                                    th:classappend="${page} == 'dbs_oversight' ? 'active' : ''">DBS tilsyn</a>
+                            </li>
+                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
+                                <a th:href="@{/assets/measures/schema}" class="nav-link"
+                                   th:classappend="${page} == 'asset.security' ? 'active' : ''">Sikkerhed</a>
                             </li>
                         </ul>
                     </li>

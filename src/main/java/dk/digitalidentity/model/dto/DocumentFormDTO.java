@@ -45,4 +45,7 @@ public class DocumentFormDTO {
 	private User responsibleUser;
 
 	private List<Tag> tags;
+
+	@NotNull
+	private boolean includeInYearWheel;
 }

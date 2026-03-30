@@ -17,4 +17,14 @@ public enum NotificationSetting {
 		this.value = value;
 		this.message = message;
 	}
+
+	public static NotificationSetting fromValue(String value) {
+		final  NotificationSetting[] values = NotificationSetting.values();
+		for (NotificationSetting setting : values) {
+			if (setting.getValue().equals(value)) {
+				return setting;
+			}
+		}
+		return null;
+	}
 }

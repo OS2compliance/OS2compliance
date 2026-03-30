@@ -28,6 +28,26 @@ let DataProcessingComponent = function () {
         this.informationChoices2 = informationChoices2;
 
         this.initInfoPassedOnFunctionality()
+
+        this.initDateSelection();
+    }
+
+    this.initDateSelection = function() {
+        const dataProcessingAgreementDatePicker = MCDatepicker.create({
+            el: '#dataProcessingAgreementDateInput',
+            autoClose: true,
+            dateFormat: 'dd/mm-yyyy',
+            //minDate: new Date(),
+            closeOnBlur: true,
+            firstWeekday: 1,
+            customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+            customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+            customClearBTN: "Ryd",
+            customCancelBTN: "Annuller"
+        });
+        document.querySelector( "#dataProcessingAgreementDateBtn" ).addEventListener( "click", () => {
+            dataProcessingAgreementDatePicker.open();
+        });
     }
 
     this.addModalListeners = function (modalContainer) {

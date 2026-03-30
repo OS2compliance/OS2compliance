@@ -1,3 +1,12 @@
+import { initSaveAsExcelButtonClientside } from "/js/excel-export/excel-export-init.js";
+
+let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+let customChoiceListService;
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    customChoiceListService = new CustomChoiceListService()
+});
+
 class CustomChoiceListService {
     #tableIdentifier = "customChoiceListTable"
     #defaultClassName = {
@@ -9,7 +18,6 @@ class CustomChoiceListService {
 
     constructor() {
         this.initGrid()
-        initSaveAsExcelButtonWithDefaultGrid('customChoiceListTable', 'Valglister');
     }
 
     initGrid() {
@@ -36,6 +44,7 @@ class CustomChoiceListService {
             ],
             data: data,
             language: {
+                'noRecordsFound': "Ingen data fundet",
                 'search': {
                     'placeholder': 'Søg'
                 },
@@ -53,6 +62,13 @@ class CustomChoiceListService {
         };
 
         const grid = new gridjs.Grid(gridConfig).render(document.getElementById(this.#tableIdentifier));
+
+        initSaveAsExcelButtonClientside('customChoiceListTable', 'choiceList', 'choicelists/custom', 'Valglister', () => {
+            return data.map(item => ({
+                id: String(item.id),
+                name: item.name
+            }));
+        });
     }
 }
 

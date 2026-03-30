@@ -33,9 +33,9 @@
                 </td>
                 <td th:text="${oversight.conclusion}"></td>
                 <td>
-                    <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).RED == oversight.status}" class="d-block badge bg-danger" style="width: 60px">Rød</div>
-                    <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).GREEN == oversight.status}" class="d-block badge bg-success" style="width: 60px">Grøn</div>
-                    <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).YELLOW == oversight.status}" class="d-block badge bg-yellow" style="width: 60px">Gul</div>
+                    <div th:if="${T(dk.digitalidentity.model.entity.enums.ColorStatus).RED == oversight.status}" class="d-block badge bg-danger" style="width: 60px">Rød</div>
+                    <div th:if="${T(dk.digitalidentity.model.entity.enums.ColorStatus).GREEN == oversight.status}" class="d-block badge bg-success" style="width: 60px">Grøn</div>
+                    <div th:if="${T(dk.digitalidentity.model.entity.enums.ColorStatus).YELLOW == oversight.status}" class="d-block badge bg-yellow" style="width: 60px">Gul</div>
                 </td>
                 <td>
                     <button onclick="oversightService.editOversight(this)" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-primary btn-sm" type="button" aria-label="Edit oversight">

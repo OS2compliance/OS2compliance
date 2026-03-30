@@ -3,14 +3,13 @@ package dk.digitalidentity.model.entity.grid;
 import java.time.LocalDate;
 import java.util.Set;
 
-import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Task;
 import org.hibernate.annotations.Immutable;
 
 import dk.digitalidentity.config.DBSAssetSetConverter;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
+import dk.digitalidentity.model.entity.enums.ColorStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -60,7 +59,7 @@ public class DBSOversightGrid {
 
 	@Column
 	@Enumerated(EnumType.STRING)
-	private AssetOversightStatus lastInspectionStatus;
+	private ColorStatus lastInspectionStatus;
 
     @ManyToOne
     @JoinColumn(name = "outstanding_task_id")

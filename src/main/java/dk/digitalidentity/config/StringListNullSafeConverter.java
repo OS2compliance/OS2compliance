@@ -3,6 +3,7 @@ package dk.digitalidentity.config;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -24,8 +25,8 @@ public class StringListNullSafeConverter implements AttributeConverter<List<Stri
 	@Override
 	public List<String> convertToEntityAttribute(final String joined) {
 		if (joined == null || joined.isEmpty()) {
-			return Collections.emptyList();
+			return new ArrayList<>();
 		}
-		return Arrays.asList(joined.split(","));
+		return new ArrayList<>(Arrays.asList(joined.split(",")));
 	}
 }

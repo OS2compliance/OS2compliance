@@ -5,43 +5,47 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.event.RiskCalculationChangedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Incident;
-import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.model.entity.enums.ReportSetting;
+import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SettingsService;
+import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.kle.KLEService;
 import dk.digitalidentity.statistic.StatisticService;
+import dk.digitalidentity.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.statistic.enumerable.ChartType;
 import dk.digitalidentity.statistic.enumerable.DateTimePreset;
+import dk.digitalidentity.statistic.enumerable.Period;
 import dk.digitalidentity.statistic.enumerable.SelectableAxis;
 import dk.digitalidentity.statistic.enumerable.SelectablePeriod;
 import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfiguration;
 import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfigurationService;
-import dk.digitalidentity.statistic.enumerable.AggregationMethod;
-import dk.digitalidentity.statistic.enumerable.ChartType;
-import dk.digitalidentity.statistic.enumerable.Period;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.Resource;
@@ -57,9 +61,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Optional;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
@@ -68,6 +72,8 @@ import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
  * Since OS2compliance comes with a lot of data baked in, we need some way of updating it when we make a new release,
  * this class does that by keeping track of what data version is the current one and then updating the data incrementally.
  * Much like flyway but for the actual database content and not structure.
+ *
+ * NOTE this file has grown in size, and is probably ripe for splitting up into smaller classes (maybe using flyway java migrations).
  */
 @Slf4j
 @Order(100)
@@ -92,6 +98,9 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private final ChartConfigurationService chartConfigurationService;
 	private final StatisticService statisticService;
 	private final ThreatAssessmentService threatAssessmentService;
+	private final ApplicationEventPublisher eventPublisher;
+	private final TaskService taskService;
+	private final AssetOversightService assetOversightService;
 
 	@Value("classpath:data/registers/*.json")
 	private Resource[] registers;
@@ -139,6 +148,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(35, this::seedV35);
 		incrementAndPerformIfVersion(36, this::seedV36);
 		incrementAndPerformIfVersion(37, this::seedV37);
+		incrementAndPerformIfVersion(38, this::seedV38);
+		incrementAndPerformIfVersion(39, this::seedV39);
+		incrementAndPerformIfVersion(40, this::seedV40);
+		incrementAndPerformIfVersion(41, this::seedV41);
+		incrementAndPerformIfVersion(42, this::seedV42);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -153,8 +167,63 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		});
 	}
 
+	private void seedV42() {
+		List<ChartConfiguration> toSave = new ArrayList<>();
+
+		ChartConfiguration taskDashboardChart = chartConfigurationService.findByName("Fordeling af opgaver").orElse(null);
+		if (taskDashboardChart != null) {
+			taskDashboardChart.setSelectablePeriod(SelectablePeriod.NONE);
+			toSave.add(taskDashboardChart);
+		}
+		ChartConfiguration incidentStackedBarChart = chartConfigurationService.findByName("Hændelser (Søjlediagram)").orElse(null);
+		if (incidentStackedBarChart != null) {
+			incidentStackedBarChart.setSelectablePeriod(SelectablePeriod.NONE);
+			toSave.add(incidentStackedBarChart);
+		}
+
+		chartConfigurationService.saveAll(toSave);
+	}
+
+	private void seedV41() {
+		// Find open tasks where dead-line is passed, for each task check if they are associated with an oversight that has been performed
+		// and in that case finish the task.
+		taskService.findAllTasks()
+				.forEach(t -> {
+					taskService.findOversightAsset(t).stream()
+							.filter(a -> a instanceof Asset)
+							.map(a -> (Asset) a)
+							.filter(a -> a.getAssetOversights() != null
+									&& a.getSupervisoryModel() != null
+									&& "supervision-model-dbs-123456".equals(a.getSupervisoryModel().getIdentifier()))
+							.forEach(a -> a.getAssetOversights()
+									.forEach(assetOversightService::createTaskLogForAssociatedTask));
+				});
+	}
+
+	private void seedV40() {
+		settingsService.setString(Constants.RISK_MATRIX_USE_RESIDUAL, "false");
+		settingsService.setString(Constants.RISK_ASSESSMENT_USE_RESIDUAL, "false");
+		settingsService.flush();
+		eventPublisher.publishEvent(new RiskCalculationChangedEvent());
+	}
+
+	private void seedV39() {
+		settingsService.createSetting(Constants.RISK_ASSESSMENT_USE_RESIDUAL, "true", "risk", true);
+		settingsService.createSetting(Constants.RISK_MATRIX_USE_RESIDUAL, "true", "risk", true);
+	}
+
 	private void seedV35() {
 		settingsService.createSetting(KitosConstants.KITOS_ENABLE_SYNC_ITSYSTEMS, "true", "kitos", true);
+	}
+
+	private void seedV38() {
+		Optional<ChartConfiguration> overdueTaskConfig = chartConfigurationService.findByName("Overskredne opgaver");
+		if (overdueTaskConfig.isPresent()) {
+			List<String> allowedXFields = overdueTaskConfig.get().getAllowedXFieldChoices();
+			allowedXFields.clear();
+			allowedXFields.addAll(Arrays.asList("responsibleUsers.name", "responsibleOu"));
+			chartConfigurationService.saveAll(List.of(overdueTaskConfig.get()));
+		}
 	}
 
 	private void seedV37() {
@@ -171,6 +240,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private void seedV34() {
 		threatAssessmentService.findAll().forEach(threatAssessmentService::setThreatAssessmentColor);
 	}
+
 	private void seedV36() {
 		settingsService.createSetting(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS, String.valueOf(true), "general", true);
 	}
@@ -568,7 +638,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.aggregation(AggregationMethod.COUNT)
 						.ownerOnly(false)
 						.selectableAxis(SelectableAxis.X_ONLY)
-						.allowedXFieldChoices(List.of("responsibleUser", "responsibleOu"))
+						.allowedXFieldChoices(List.of("responsibleUsers.name", "responsibleOu"))
 						.allowedYFieldChoices(new ArrayList<>())
 						.selectablePeriod(SelectablePeriod.NONE)
 						.selectableDateField(false)

@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,7 @@ public class StandardTemplate {
     @Column
     private boolean supporting;
 
+	@OrderBy("sortKey ASC")
     @OneToMany(mappedBy = "standardTemplate", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<StandardTemplateSection> standardTemplateSections;
 

@@ -20,7 +20,7 @@ function AssetDpiaService() {
     this.screeningRed = false;
     this.screeningYellow = false;
 
-    this.init = function() {
+    this.init = function () {
 
         this.screeningBadgeElem = document.getElementById("dpiaBadge2");
         this.recommendationElem = document.getElementById("recommendation");
@@ -34,16 +34,16 @@ function AssetDpiaService() {
     this.initSetRevisionInterval = () => {
         const button = document.getElementById("setRevisionIntervalButton");
         if (button) {
-            button.addEventListener("click", () =>{
+            button.addEventListener("click", () => {
                 const dpiaId = button.dataset.dpiaId
-                this.setRevisionInterval((dpiaId))
+                this.setRevisionInterval(dpiaId)
             })
         }
     }
 
-    this.initCommentField = ()=> {
+    this.initCommentField = () => {
         const commentFieldElement = document.getElementById('dpiaCommentArea')
-        commentFieldElement.addEventListener('change', async (event)=> {
+        commentFieldElement.addEventListener('change', async (event) => {
             if (commentFieldElement !== null) {
                 this.onCommentEdit(commentFieldElement.value)
             }
@@ -66,7 +66,7 @@ function AssetDpiaService() {
             body: JSON.stringify(data)
         })
 
-        if (!response.ok)  {
+        if (!response.ok) {
             toastService.error(response.statusText)
         }
 
@@ -74,17 +74,17 @@ function AssetDpiaService() {
     }
 
 
-    this.updateStatistics = function() {
+    this.updateStatistics = function () {
         this.screeningStats = Array.from(document.querySelectorAll("select[id^='dpia-']"))
-        .map(e => {
-            return {
-                id: e.id,
-                value: this.getElementValue(e),
-                answered: e.value !== '',
-                category: e.dataset.category
-            }
-        });
-        this.screeeningAnsweredCount = this.screeningStats.reduce((acc, e) => e.answered ? acc+1 : acc, 0);
+            .map(e => {
+                return {
+                    id: e.id,
+                    value: this.getElementValue(e),
+                    answered: e.value !== '',
+                    category: e.dataset.category
+                }
+            });
+        this.screeeningAnsweredCount = this.screeningStats.reduce((acc, e) => e.answered ? acc + 1 : acc, 0);
         this.screeningCategoryStats = this.screeningStats.reduce((acc, e) => {
             acc[e.category] = !!acc[e.category] || e.value;
             return acc;
@@ -127,8 +127,8 @@ function AssetDpiaService() {
 
     this.setFieldScreening = function (fieldName, value) {
         putData(`/rest/assets/${dpiaId}/dpiascreening/setfield?name=${fieldName}&value=${value}`)
-        .then(defaultResponseHandler)
-        .catch(defaultErrorHandler)
+            .then(defaultResponseHandler)
+            .catch(defaultErrorHandler)
     }
 
     this.handleAnswerChange = function (event) {
@@ -144,7 +144,7 @@ function AssetDpiaService() {
     }
 
     this.updateRecommendation = function () {
-        this.recommendationCardElem.classList.remove("border-danger","border-warning","border-light");
+        this.recommendationCardElem.classList.remove("border-danger", "border-warning", "border-light");
         if (this.screeningRed) {
             this.recommendationElem.textContent = "Du skal udføre konsekvensanalyse da behandlingen sandsynligvis indebærer en høj risiko for de registrerede (se røde bekymringer)";
             this.recommendationCardElem.classList.add("border-danger");
@@ -157,7 +157,7 @@ function AssetDpiaService() {
         }
     }
 
-    this.getElementValue = function(element) {
+    this.getElementValue = function (element) {
         if (element.value) {
             return element.value === 'dpia-yes' || element.value === 'dpia-partially' || element.value === 'dpia-dont-know';
         } else {
@@ -165,7 +165,7 @@ function AssetDpiaService() {
         }
     }
 
-    this.setBadge = function(screeningStatus, maxForYellowExceeded) {
+    this.setBadge = function (screeningStatus, maxForYellowExceeded) {
         let element = document.getElementById(screeningStatus.id);
         if (screeningStatus.value === false) {
             element.parentElement.nextElementSibling.innerHTML = '<div class="d-block mx-auto badge bg-gray-800">Blank</div>';
@@ -178,8 +178,10 @@ function AssetDpiaService() {
         }
     }
 
-    this.saveScreeningChanges = async (event)=> {
-        if (!event) {return;}
+    this.saveScreeningChanges = async (event) => {
+        if (!event) {
+            return;
+        }
         const target = event.target
         const choiceIdentifier = target.id
         const selectedOption = target.selectedOptions[0]
@@ -199,7 +201,7 @@ function AssetDpiaService() {
             body: JSON.stringify(data)
         })
 
-        if (!response.ok)  {
+        if (!response.ok) {
             toastService.error(response.statusText)
         }
 
@@ -207,12 +209,12 @@ function AssetDpiaService() {
     }
 
 
-    this.initDpia = ()=> {
+    this.initDpia = () => {
         const readOnly = document.getElementById('changeableInput');
         let editors = document.querySelectorAll('.responses');
         for (let i = 0; i < editors.length; ++i) {
             const textarea = editors[i];
-            window.CreateImageCkEditor(`/rest/file/img/upload`,editors[i], editor => {
+            window.CreateImageCkEditor(`/rest/file/img/upload`, editors[i], editor => {
                 if (readOnly && readOnly.value === 'true') {
                     editor.enableReadOnlyMode('no-permissions')
                 }
@@ -257,19 +259,19 @@ function AssetDpiaService() {
 
         // init send to select
         let responsibleSelect = document.getElementById('sendReportTo');
-        if(responsibleSelect !== null) {
+        if (responsibleSelect !== null) {
             choiceService.initUserSelect('sendReportTo');
         }
     }
 
-    this.initQualityAssuranceCheckboxes = ()=> {
+    this.initQualityAssuranceCheckboxes = () => {
         const container = document.getElementById('qualityCheckboxesContainer')
-        container.addEventListener('change', async (event)=>{
+        container.addEventListener('change', async (event) => {
             const target = event.target
-            if (target.type==="checkbox" && target.classList.contains('qualityCheck')) {
+            if (target.type === "checkbox" && target.classList.contains('qualityCheck')) {
                 const checkedBoxValues = [...container.querySelectorAll('.qualityCheck')]
-                    .filter( (checkboxInput)=> checkboxInput.checked)
-                    .map( (checkboxInput) => checkboxInput.value)
+                    .filter((checkboxInput) => checkboxInput.checked)
+                    .map((checkboxInput) => checkboxInput.value)
                 const data = {
                     "dpiaId": dpiaId,
                     "dpiaQualityCheckValues": checkedBoxValues
@@ -285,7 +287,7 @@ function AssetDpiaService() {
                     body: JSON.stringify(data)
                 })
 
-                if (!response.ok)  {
+                if (!response.ok) {
                     toastService.error(response.statusText)
                 }
 
@@ -294,18 +296,36 @@ function AssetDpiaService() {
         })
     }
 
-        this.setRevisionInterval = function(dpiaId) {
-            fetch( `/dpia/${dpiaId}/revision`)
-                .then(response => response.text()
-                    .then(data => {
-                        let dialog = document.getElementById('revisionIntervalDialog');
-                        dialog.innerHTML = data;
-                        revisionDialog = new bootstrap.Modal(document.getElementById('revisionIntervalDialog'));
-                        revisionDialog.show();
-                        initDatepicker("#nextRevisionBtn", "#nextRevision");
-                    }))
-                .catch(error => toastService.error(error));
+    this.setRevisionInterval = async function (dpiaId) {
+        try {
+            const response = await fetch(`/dpia/${dpiaId}/revision`)
+
+            if (!response.ok) {
+                console.error(response.statusText)
+                return;
+            }
+
+            const data = await response.text()
+
+            let dialog = document.getElementById('revisionIntervalDialog');
+            if (!dialog || !data) {
+                console.error("Missing dialog element or missing data")
+                return;
+            }
+            dialog.innerHTML = data;
+            const revisionContainer = document.getElementById('revisionIntervalDialog')
+            if (!revisionContainer) {
+                console.error("missing container")
+                return;
+            }
+            let revisionDialog = new bootstrap.Modal(revisionContainer);
+            revisionDialog.show();
+            initDatepicker("#nextRevisionBtn", "#nextRevision");
+        } catch (error) {
+            toastService.error("Kan ikke finde dialog")
+            console.error(error);
         }
+    }
 }
 
 function handleSectionRow(sectionId) {
@@ -389,10 +409,10 @@ function mailReport() {
     let selectedValues = [...alsoSendTo.selectedOptions].map(option => option.value);
 
     var data = {
-                 "sendTo": sendReportTo,
-                 "message": reportMessage,
-                 "sign": signReport,
-                  "alsoSendTo": selectedValues
+        "sendTo": sendReportTo,
+        "message": reportMessage,
+        "sign": signReport,
+        "alsoSendTo": selectedValues
     };
 
     postData(`/rest/dpia/${dpiaId}/mailReport`, data).then((response) => {
@@ -401,5 +421,7 @@ function mailReport() {
         }
         toastService.info("Sendt");
         document.querySelector('#sendReportModal .btn-close').click();
-    }).catch(error => {toastService.error(error)});
+    }).catch(error => {
+        toastService.error(error)
+    });
 }

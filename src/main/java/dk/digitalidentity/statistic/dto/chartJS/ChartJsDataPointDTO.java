@@ -13,4 +13,5 @@ public class ChartJsDataPointDTO {
 	private String x;
 	private Object y;
 	private List<String> entityIds;
+	private String color;
 }
