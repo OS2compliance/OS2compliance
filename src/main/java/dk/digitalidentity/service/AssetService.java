@@ -279,7 +279,7 @@ public class AssetService implements TagableService<Asset> {
     }
 
 	@Transactional
-	public Task createOrUpdateAssociatedCheck(DPIA dpia) {
+	public Task createOrUpdateAssociatedCheck(DPIA dpia, User updatedUser) {
 		final LocalDate deadline = dpia.getNextRevision();
 		if (deadline != null && dpia.getRevisionInterval() != null) {
 			final Task task = findAssociatedCheck(dpia).orElseGet(() -> createAssociatedCheck(dpia));
@@ -287,7 +287,7 @@ public class AssetService implements TagableService<Asset> {
 			name += (dpia.getAssets().size() > 1) ? " med flere" : "";
 			task.setName(name);
 			task.setNextDeadline(dpia.getNextRevision());
-			task.setResponsibleUsers(dpia.getResponsibleUser() != null ? Set.of(dpia.getResponsibleUser()) : Collections.emptySet());
+			task.setResponsibleUsers(updatedUser != null ? Set.of(updatedUser) : Collections.emptySet());
 			task.setDescription("Revider DPIA for " + String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList()));
 			setTaskRevisionInterval(dpia, task);
 			return task;

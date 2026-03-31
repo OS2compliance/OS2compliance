@@ -5,9 +5,42 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [2.6.0] - 2026-03-24
+### Added
+- (Ad-hoc) Ændringer til aktiv-fanen Foranstaltninger
+- (Ad-hoc) Tilføj link til manual
+- (Ad-hoc) Til drift og fejlsøgning: Task der sørger efter duplikedere id'er i relatebar tabeller
+- (Gentofte 2.1) Udregnede felter på aktiver og behandlingsaktiver
+- (Gentofte 2.2) Udvidelse af ”Gem som Excel”
+- (Gentofte 2.3) Udvidelser til aktiver og behandlingsaktiviteternes listevisning
+- (https://os2web.atlassian.net/browse/COMPLY-249) (Risikostyring/Forside) Administrator skal kunne ændre "udgangspunkt" for en risikovurdering eksempelvis fra scenarie til it-system
+- (https://os2web.atlassian.net/browse/COMPLY-297) (Aktiver/DBS Tilsyn) Under opgaver skal skal også være link til systemforsiden
+- (https://os2web.atlassian.net/browse/COMPLY-307) Flere ting står på engelsk og ikke dansk
+- (https://os2web.atlassian.net/browse/COMPLY-294) (Aktiver/Generelt) På listen over hændelser skal dato for oprettelsen vises
+- (https://os2web.atlassian.net/browse/COMPLY-340) (Trusselskatalog) mulighed for at skifte linje i beskrivelsesfeltet
+
 ### Fixed
 - (Ad-hoc) Sorteringsfejl i standarder
+- (Ad-hoc) Fejl i statistikvisningen for hændelser
+- (Ad-hoc) Kan ikke vælge databehandleraftale dato
+- (Ad-hoc) Behandlingsaktiviteter -> KLE valg, broken
+- (Ad-hoc) Fixed print report error 500
+- (Ad-hoc) Adgang til redigering af Risikovurdering - Man kan åbne en risikovurdering, selvom man ikke har lov til det.
+- (Ad-hoc) Gør fortegnelses dropdown mere læsbar
+- (Ad-hoc) <br> tags i risiko pdf
+- (Ad-hoc) DPIA Pdf, rettet fejl, hvor tabellen løber over, når et link er for langt til at passe ind i cellen
+- (Ad-hoc) Risikovurdering dropdowns virker ikke i firefox
+- (Ad-hoc) Konsekvensanalyse, fejl i revisionsinterval (javascript)
+- (Ad-hoc) Fejl i overfør ansvar
+- (Ad-hoc) OS2kitos ikoner mangler
+- (Ad-hoc) Dokumenter med uden tags skaber en fejl
+- (Ad-hoc) Dokumenter, fejl i inkluder i årshjul
+- (Ad-hoc) Statistik, fejl i farver
+- (Ad-hoc) Truslerne mangler når man henter en Excel rapport for en risikovurdering
+- (Ad-hoc) Lange titler på risikovurderinger ødelægger knapper
+- (Ad-hoc) Signerings fejlbesked
+- (Ad-hoc) Mærkelige kolonnestørrelser på risikovurderinger
+- (Ad-hoc) Fejl i behandlingsaktivitet overskrift
 
 ## [2.5.0] - 2025-11-14
 ### Added
