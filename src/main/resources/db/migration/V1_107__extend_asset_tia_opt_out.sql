@@ -1,0 +1,2 @@
+ALTER TABLE assets ADD COLUMN tia_opt_out BIT NOT NULL DEFAULT b'0';
+ALTER TABLE assets ADD COLUMN tia_opt_out_reason TEXT DEFAULT NULL;
