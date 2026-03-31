@@ -110,8 +110,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -292,6 +294,7 @@ public class AssetsController {
 		model.addAttribute("asset", asset);
         model.addAttribute("changeableAsset", assetService.isEditable(asset));
 		model.addAttribute("relatedAssets", relatedAssets);
+        model.addAttribute("relatedAssetsRiskMap", assetService.getLatestRiskColorMap(relatedAssets));
 		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);
 		model.addAttribute("documents", documents);

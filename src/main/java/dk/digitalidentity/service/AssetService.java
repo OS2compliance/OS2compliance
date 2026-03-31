@@ -845,4 +845,17 @@ public class AssetService implements TagableService<Asset> {
 					.toList();
 		}
 	}
+
+	public Map<Long, RiskAssessment> getLatestRiskColorMap(List<Relatable> relatedAssets) {
+		final Map<Long, RiskAssessment> relatedAssetsRiskMap = new HashMap<>();
+		for (final Relatable relatedAsset : relatedAssets) {
+			relationService.findAllRelatedTo(relatedAsset).stream()
+					.filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
+					.map(ThreatAssessment.class::cast)
+					.filter(ta -> ta.getAssessment() != null)
+					.max(Comparator.comparing(Relatable::getCreatedAt))
+					.ifPresent(ta -> relatedAssetsRiskMap.put(relatedAsset.getId(), ta.getAssessment()));
+		}
+		return relatedAssetsRiskMap;
+	}
 }
