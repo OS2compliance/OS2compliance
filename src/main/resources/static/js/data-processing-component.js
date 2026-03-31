@@ -45,9 +45,12 @@ let DataProcessingComponent = function () {
             customClearBTN: "Ryd",
             customCancelBTN: "Annuller"
         });
-        document.querySelector( "#dataProcessingAgreementDateBtn" ).addEventListener( "click", () => {
-            dataProcessingAgreementDatePicker.open();
-        });
+        const btn = document.querySelector( "#dataProcessingAgreementDateBtn" );
+        if (btn) {
+            btn.addEventListener( "click", () => {
+                dataProcessingAgreementDatePicker.open();
+            });
+        }
     }
 
     this.addModalListeners = function (modalContainer) {
