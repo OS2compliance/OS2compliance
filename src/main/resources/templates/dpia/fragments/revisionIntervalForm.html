@@ -28,6 +28,16 @@
                         <div class="invalid-feedback">Der skal vælges en revideringsfrekvens</div>
                     </div>
                 </div>
+                <div class="row mt-3">
+                    <label for="responsibleUserUuid" class="col-lg-4 col-form-label">Ansvarlig</label>
+                    <div class="col-lg-8">
+                        <select class="form-control form-select" th:field="*{responsibleUserUuid}" id="responsibleUserUuid">
+                            <option selected value="">Vælg ansvarlig</option>
+                            <option th:each="user : ${users}"
+                                    th:value="${user.uuid}" th:text="${user.name}"></option>
+                        </select>
+                    </div>
+                </div>
             </form>
         </div>
         <div class="modal-footer">
