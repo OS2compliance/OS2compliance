@@ -6,6 +6,7 @@ import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
+import dk.digitalidentity.dao.grid.RiskGridDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -126,6 +127,8 @@ public class DocxServiceTest {
     private SettingsService settingsServiceMock;
     @MockitoBean
     private UserService userService;
+    @MockitoBean
+    private RiskGridDao riskGridDaoMock;
 
     @BeforeEach
     public void setup() {

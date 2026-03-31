@@ -9,6 +9,7 @@ import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.dto.SelectionChoiceDTO;
 import dk.digitalidentity.model.dto.SelectionDTO;
+import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -519,26 +520,7 @@ public class RegisterController {
                 .filter(r -> r.getRelationType() == RelationType.DOCUMENT)
 				.toList());
 
-		record TaskListDTO(long id, String title, String responsibleUserName, String responsibleOuName, String taskType, String deadline, String repeats, String status, RelationType relationType){}
-		model.addAttribute("relatedTasks", allRelatedTo.stream()
-				.filter(r -> r.getRelationType() == RelationType.TASK)
-				.map(r -> {
-					Task task = ((Task) r);
-					return new TaskListDTO(
-							task.getId(),
-							task.getName(),
-							task.getResponsibleUsers().stream()
-									.map(User::getName)
-									.collect(Collectors.joining(", ")),
-							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
-							task.getTaskType().getMessage(),
-							task.getNextDeadline().toString(),
-							task.getRepetition() != null ? task.getRepetition().getMessage() : "",
-							taskService.findHtmlStatusBadgeForTask(task),
-							RelationType.TASK
-					);
-				})
-				.toList());
+		model.addAttribute("relatedTasks", taskService.convertRelatableToTaskListDTO(allRelatedTo));
         model.addAttribute("relatedAssets", relatedAssets);
         model.addAttribute("threatAssessments", allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)

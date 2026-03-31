@@ -16,6 +16,8 @@ function ChoiceService() {
             .catch(error => toastService.error(error));
     }
 
+    // The multiple flag is default set to false, so all single user selects have a placeholder. Multiple selects should have this flag set to true
+    // because they are not supposed to have a placeholder option or else users can choose it as an option, which makes no sense.
     this.updateUsers = (targetChoice, search) => {
         fetch( `/rest/users/autocomplete?search=${search}`)
             .then(response => response.json()
@@ -24,7 +26,7 @@ function ChoiceService() {
                         return {
                             value: e.uuid,
                             label: `(${e.userId}) ${e.name}`}
-                    }), 'value', 'label', true);
+                        }), 'value', 'label', true);
                 }))
             .catch(error => toastService.error(error));
     }
