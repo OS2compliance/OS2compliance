@@ -1,7 +1,7 @@
 CREATE OR REPLACE VIEW view_gridjs_suppliers AS
 SELECT s.id,
        TRIM(s.name)                                                         AS name,
-       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id)           AS solution_count,
+       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false)           AS solution_count,
        s.updated_at                                                         AS updated,
        s.status,
        s.localized_enums,
