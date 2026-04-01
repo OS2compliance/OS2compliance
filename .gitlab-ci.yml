@@ -1,0 +1,10 @@
+variables:
+  IMAGE_NAME: "os2compliance"
+
+include:
+  - project: 'Internal/devops/ci-templates'
+    ref: '1.0.14'
+    file: '/workflows/review.yml'
+  - project: 'Internal/devops/ci-templates'
+    ref: '1.0.14'
+    file: '/workflows/java21-spotless.yml'
