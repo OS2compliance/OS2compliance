@@ -8,6 +8,7 @@ import dk.digitalidentity.model.entity.SubTask;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.TaskLog;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
