@@ -1,0 +1,31 @@
+variables:
+  IMAGE_NAME: "os2compliance"
+  GIT_DEPTH: 0
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: unix:///var/run/docker.sock
+  TESTCONTAINERS_RYUK_CONTAINER_IP: "host-gateway"
+
+include:
+  - project: 'internal/devops/ci-templates'
+    ref: '1.0.14'
+    file: '/workflows/review.yml'
+
+stages:
+  - test
+  - review
+
+test-job:
+  image: amazoncorretto:25-alpine
+  stage: test
+  script:
+    - apk add --no-cache fontconfig ttf-dejavu tar
+    - ./mvnw -q test
+    - ./mvnw -q spotless:check -pl ui
+  cache:
+    key: "$CI_PROJECT_ID-maven"
+    paths:
+      - .m2/repository
+  only:
+    - merge_requests
+    - master
+    - develop
