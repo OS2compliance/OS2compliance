@@ -44,6 +44,17 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 }
             },
             {
+                id: "yearWheel",
+                name: "Årshjul",
+                width: '80px',
+                formatter: (cell) => {
+                    if (cell) {
+                        return gridjs.html('<i class="pli-yes fs-5"></i>');
+                    }
+                    return gridjs.html('<span class="text-muted">-</span>');
+                }
+            },
+            {
                 id: "actions",
                 name: "Handlinger",
                 sort: 0,
@@ -51,6 +62,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 formatter: (cell, row) => {
                     const id = row.cells[0]['data'];
                     const tag = row.cells[1]['data'];
+                    const yearWheel = row.cells[3]['data'];
 
                     // Create container
                     const container = document.createElement('div');
@@ -62,6 +74,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     editBtn.dataset.action = 'edit';
                     editBtn.dataset.id = id;
                     editBtn.dataset.tag = tag;
+                    editBtn.dataset.yearWheel = yearWheel;
 
                     const editIcon = document.createElement('i');
                     editIcon.className = 'pli-pencil fs-5';
@@ -79,7 +92,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     deleteIcon.className = 'pli-trash fs-5';
                     deleteBtn.appendChild(deleteIcon);
 
-                    // Append buttons to container
                     container.appendChild(editBtn);
                     container.appendChild(deleteBtn);
 
@@ -121,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
         const tag = button.dataset.tag;
 
         if (action === 'edit') {
-            tags.editTag(id, tag);
+            tags.editTag(id, tag, button.dataset.yearWheel);
         } else if (action === 'delete') {
             tags.deleteTag(id, tag);
         }
@@ -157,8 +169,7 @@ function TagService() {
         });
     }
 
-    this.editTag = async (id, value) => {
-
+    this.editTag = async (id, value, yearWheel) => {
         const container = document.getElementById("editTagModalContainer");
 
         const networkService = new NetworkService();
@@ -166,6 +177,7 @@ function TagService() {
 
         document.getElementById('editIdentifier').value = id;
         document.getElementById('redigerNavn').value = value;
+        document.getElementById('editYearWheel').checked = yearWheel === 'true';
 
         initColorPickerListener('editTagColorPicker')
 

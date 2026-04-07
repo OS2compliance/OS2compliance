@@ -30,4 +30,7 @@ public class Tag {
 	@Convert(converter = TagColorConverter.class)
 	@Column(name = "color_hex_code", nullable = false)
 	private TagColor color = TagColor.GREY;
+
+	@Column(name = "year_wheel")
+	private boolean yearWheel = false;
 }
