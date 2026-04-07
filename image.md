@@ -1,5 +1,9 @@
 # Docker image vejledning
 
+## Digital-identity
+### Til produktion
+Brug os2compliance-deploy repo
+
 ## Via pipeline
 
 Pipelinen bygger og pusher automatisk et Docker image til ECR når du opretter et git tag.
@@ -13,12 +17,12 @@ git push origin 2026-03-07
 
 Pipelinen bruger tagget som image-tag, så det færdige image bliver:
 ```
-711926434486.dkr.ecr.eu-west-1.amazonaws.com/os2compliance:2026-03-07
+${AWS_ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/os2compliance:2026-03-07
 ```
 
 ---
 
-## Lokalt
+## Andre
 
 ### Krav
 - Java 21 (Amazon Corretto anbefales)
@@ -33,17 +37,17 @@ Pipelinen bruger tagget som image-tag, så det færdige image bliver:
 
 ### 2. Log ind i ECR
 ```bash
-aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 711926434486.dkr.ecr.eu-west-1.amazonaws.com
+aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com
 ```
 
 ### 3. Byg Docker image
 ```bash
-docker build . -t 711926434486.dkr.ecr.eu-west-1.amazonaws.com/os2compliance:2026-03-07
+docker build . -t ${AWS_ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/os2compliance:2026-03-07
 ```
 
 ### 4. Push til ECR
 ```bash
-docker push 711926434486.dkr.ecr.eu-west-1.amazonaws.com/os2compliance:2026-03-07
+docker push ${AWS_ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/os2compliance:2026-03-07
 ```
 
 > Udskift datoen `2026-03-07` med dags dato i formatet `YYYY-MM-DD`.
