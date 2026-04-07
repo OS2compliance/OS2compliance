@@ -89,6 +89,7 @@ public class TasksController {
     public String tasksList(Model model) {
 
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
+        model.addAttribute("hasReadAll", SecurityUtil.isOperationAllowed(Roles.READ_ALL));
         return "tasks/index";
     }
 
