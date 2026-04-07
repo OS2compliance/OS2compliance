@@ -66,7 +66,7 @@ public class SupplierRestController {
 			long id,
 			@ExcelColumn(headerName = "Navn", order = 1)
 			String name,
-			@ExcelColumn(headerName = "Antal løsninger", order = 2)
+			@ExcelColumn(headerName = "Antal aktiver", order = 2)
 			int solutionCount,
 			@ExcelColumn(headerName = "Opdateret", order = 3)
 			String updated,
