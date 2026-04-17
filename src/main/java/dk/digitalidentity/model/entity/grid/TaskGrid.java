@@ -79,6 +79,12 @@ public class TaskGrid implements HasMultipleResponsibleUsers {
 	@Column
 	private LocalDate lastCompletionDate;
 
+	@Column
+	private boolean includeInReport;
+
+	@Column(name = "created_at")
+	private LocalDateTime createdAt;
+
 	public Set<String> getResponsibleUserUuidsAsSet() {
 		return Arrays.stream(responsibleUserUuids.split(",")).collect(Collectors.toSet());
 	}

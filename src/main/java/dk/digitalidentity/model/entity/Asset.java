@@ -209,6 +209,12 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
     @Column
     private String threatAssessmentOptOutReason;
 
+	@Column
+	private boolean tiaOptOut = false;
+
+	@Column
+	private String tiaOptOutReason;
+
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
 	@ManyToMany(mappedBy = "assets", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)

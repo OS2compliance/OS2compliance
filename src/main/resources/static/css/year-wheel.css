@@ -1,0 +1,410 @@
+/* --- View Toggle --- */
+.view-toggle-group {
+    display: inline-flex;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    background: #fff;
+}
+.view-toggle-group .toggle-btn {
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border: none;
+    background: #fff;
+    color: var(--bs-secondary-color, #6c757d);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.15s ease;
+}
+.view-toggle-group .toggle-btn:not(:last-child) {
+    border-right: 1px solid var(--bs-border-color, #dee2e6);
+}
+.view-toggle-group .toggle-btn.active {
+    background: var(--bs-primary, #0d6efd);
+    color: #fff;
+}
+.view-toggle-group .toggle-btn:hover:not(.active) {
+    background: #f8f9fa;
+    color: var(--bs-body-color, #212529);
+}
+
+/* --- Year Navigation --- */
+.year-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.year-nav .year-label {
+    font-size: 1.05rem;
+    font-weight: 600;
+    min-width: 3rem;
+    text-align: center;
+}
+.year-nav button {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.year-nav button:hover {
+    background: var(--bs-primary, #0d6efd);
+    color: #fff;
+    border-color: var(--bs-primary, #0d6efd);
+}
+
+/* --- Legend --- */
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+.legend-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-right: 0.25rem;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color, #6c757d);
+}
+.legend-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    background-color: var(--tag-color, #adb5bd);
+}
+.legend-no-tags {
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+/* --- Year Wheel Grid --- */
+.year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.month-card {
+    background: #fff;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 8px;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.15s ease;
+}
+.month-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.month-card.current-month {
+    border-color: var(--bs-primary, #0d6efd);
+    border-width: 2px;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.month-header {
+    padding: 0.55rem 0.75rem 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.month-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+.month-badge-now {
+    font-size: 0.65rem;
+    font-weight: 600;
+    background: var(--bs-primary, #0d6efd);
+    color: #fff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 10px;
+}
+
+.month-body {
+    padding: 0.2rem 0.75rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+}
+
+/* --- Task Chips --- */
+.task-chip {
+    --tag-color: #adb5bd;
+    display: flex;
+    align-items: center;
+    padding: 0.28rem 0.55rem;
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    border-left: 3px solid var(--tag-color);
+    background-color: color-mix(in srgb, var(--tag-color) 12%, transparent);
+    color: var(--tag-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.task-chip:hover {
+    filter: brightness(0.95);
+    transform: translateX(2px);
+}
+.task-chip.selected {
+    outline: 2px solid var(--bs-primary, #0d6efd);
+    outline-offset: 1px;
+}
+
+.month-empty {
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color, #6c757d);
+    font-style: italic;
+    padding: 0.3rem 0;
+}
+
+/* --- Detail Panel --- */
+.detail-panel {
+    background: #fff;
+    border: 2px solid var(--detail-border-color, var(--bs-border-color, #dee2e6));
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    animation: yw-slide-down 0.2s ease;
+}
+
+@keyframes yw-slide-down {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.detail-panel .detail-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.detail-panel .detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--bs-secondary-color, #6c757d);
+}
+.detail-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.detail-meta-item i { font-size: 0.85rem; }
+.detail-meta-item strong {
+    font-weight: 600;
+    color: var(--bs-body-color, #212529);
+}
+
+.detail-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: var(--bs-secondary-color, #6c757d);
+    cursor: pointer;
+}
+.detail-close:hover {
+    color: var(--bs-body-color, #212529);
+}
+
+.detail-actions {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+/* --- Legend Filter Buttons --- */
+.legend-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color, #6c757d);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.legend-filter-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+.legend-filter-btn.active {
+    border-color: var(--bs-primary, #0d6efd);
+    background: rgba(13, 110, 253, 0.06);
+    color: var(--bs-body-color, #212529);
+    font-weight: 600;
+}
+
+/* --- Detail Tag Badges --- */
+.detail-tag-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-right: 0.3rem;
+    background-color: var(--badge-bg, #6c757d);
+    color: var(--badge-color, #fff);
+}
+
+/* --- Active Filter Bar --- */
+.year-wheel-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    background: #f0f5ff;
+    border: 1px solid #c7d9f5;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #4a6fa5;
+    flex-wrap: wrap;
+}
+.year-wheel-filter-bar i {
+    font-size: 0.9rem;
+}
+.year-wheel-filter-bar > span {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.5rem;
+    background: #fff;
+    border: 1px solid #c7d9f5;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #334155;
+}
+.filter-pill .filter-pill-label {
+    font-weight: 600;
+    color: #4a6fa5;
+}
+.filter-pill .filter-pill-remove {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    line-height: 1;
+}
+.filter-pill .filter-pill-remove:hover {
+    color: #dc3545;
+}
+
+.filter-clear-all {
+    background: none;
+    border: none;
+    font-size: 0.75rem;
+    color: #4a6fa5;
+    cursor: pointer;
+    text-decoration: underline;
+    white-space: nowrap;
+    padding: 0;
+    margin-left: auto;
+}
+.filter-clear-all:hover {
+    color: #dc3545;
+}
+
+/* Utility class for hiding elements via tag filter */
+.yw-hidden {
+    display: none !important;
+}
+
+/* --- Status Icons on Chips --- */
+.task-chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.yw-status-icon {
+    flex-shrink: 0;
+    margin-left: 0.3rem;
+    font-size: 0.7rem;
+}
+.yw-status-completed {
+    color: #198754;
+}
+.yw-status-overdue {
+    color: #dc3545;
+}
+
+/* --- Month Count --- */
+.month-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 0.35rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: var(--bs-light, #f8f9fa);
+    color: var(--bs-secondary-color, #6c757d);
+    margin-left: 0.3rem;
+    vertical-align: middle;
+}
+.current-month .month-count {
+    background: rgba(13, 110, 253, 0.12);
+    color: var(--bs-primary, #0d6efd);
+}
+
+/* --- Only Mine Toggle --- */
+#onlyMineToggleContainer {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+#onlyMineToggleContainer .form-check-label {
+    font-size: 0.8125rem;
+    color: var(--bs-secondary-color, #6c757d);
+    margin-left: 10px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 992px) {
+    .year-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+    .year-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    .year-grid { grid-template-columns: 1fr; }
+}
