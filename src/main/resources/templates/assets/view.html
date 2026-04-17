@@ -624,11 +624,7 @@
                                                             </td>
                                                             <td class="col-lg-4">
                                                                 <div th:with="risk=${relatedAssetsRiskMap[currentAsset.id]}">
-                                                                    <div th:if="${risk == T(dk.digitalidentity.model.entity.enums.RiskAssessment).GREEN}" class="d-block badge bg-green" th:text="${risk.message}"></div>
-                                                                    <div th:if="${risk == T(dk.digitalidentity.model.entity.enums.RiskAssessment).LIGHT_GREEN}" class="d-block badge bg-green-300" th:text="${risk.message}"></div>
-                                                                    <div th:if="${risk == T(dk.digitalidentity.model.entity.enums.RiskAssessment).YELLOW}" class="d-block badge bg-yellow" th:text="${risk.message}"></div>
-                                                                    <div th:if="${risk == T(dk.digitalidentity.model.entity.enums.RiskAssessment).ORANGE}" class="d-block badge bg-orange" th:text="${risk.message}"></div>
-                                                                    <div th:if="${risk == T(dk.digitalidentity.model.entity.enums.RiskAssessment).RED}" class="d-block badge bg-danger" th:text="${risk.message}"></div>
+                                                                    <div th:if="${risk != null}" th:class="'d-block badge ' + ${risk.badgeClass}" th:text="${risk.message}"></div>
                                                                 </div>
                                                             </td>
                                                             <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern relateret aktivitet">

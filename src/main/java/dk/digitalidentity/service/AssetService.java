@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.DataProcessingDao;
+import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.dao.grid.DBSAssetGridDao;
 import dk.digitalidentity.model.entity.Asset;
@@ -104,6 +105,7 @@ public class AssetService implements TagableService<Asset> {
 	private final AssetGridDao assetGridDao;
 	private final AssetOversightDao assetOversightDao;
 	private final RelationService relationService;
+	private final ThreatAssessmentDao threatAssessmentDao;
 	private final DataProcessingDao dataProcessingDao;
 	private final TaskService taskService;
 	private final UserService userService;
@@ -844,16 +846,34 @@ public class AssetService implements TagableService<Asset> {
 		}
 	}
 
-	public Map<Long, RiskAssessment> getLatestRiskColorMap(List<Relatable> relatedAssets) {
-		final Map<Long, RiskAssessment> relatedAssetsRiskMap = new HashMap<>();
-		for (final Relatable relatedAsset : relatedAssets) {
-			relationService.findAllRelatedTo(relatedAsset).stream()
-					.filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
-					.map(ThreatAssessment.class::cast)
-					.filter(ta -> ta.getAssessment() != null)
-					.max(Comparator.comparing(Relatable::getCreatedAt))
-					.ifPresent(ta -> relatedAssetsRiskMap.put(relatedAsset.getId(), ta.getAssessment()));
+	public Map<Long, RiskAssessment> getLatestRiskAssessment(List<Relatable> relatedAssets) {
+		if (relatedAssets.isEmpty()) {
+			return Map.of();
 		}
-		return relatedAssetsRiskMap;
+
+		final List<Long> assetIds = relatedAssets.stream().map(Relatable::getId).toList();
+		final List<Relation> relations = relationService.findRelatedToWithType(assetIds, RelationType.THREAT_ASSESSMENT);
+		if (relations.isEmpty()) {
+			return Map.of();
+		}
+
+		final Set<Long> threatAssessmentIds = relations.stream()
+				.map(r -> r.getRelationAType() == RelationType.THREAT_ASSESSMENT ? r.getRelationAId() : r.getRelationBId())
+				.collect(Collectors.toSet());
+		final Map<Long, ThreatAssessment> threatAssessmentsById = threatAssessmentDao.findAllById(threatAssessmentIds).stream()
+				.collect(Collectors.toMap(ThreatAssessment::getId, ta -> ta));
+
+		final Map<Long, List<Relation>> relationsByAssetId = relations.stream()
+				.collect(groupingBy(r -> r.getRelationAType() == RelationType.THREAT_ASSESSMENT ? r.getRelationBId() : r.getRelationAId()));
+
+		final Map<Long, RiskAssessment> result = new HashMap<>();
+		relationsByAssetId.forEach((assetId, rels) -> rels.stream()
+				.map(r -> r.getRelationAType() == RelationType.THREAT_ASSESSMENT ? r.getRelationAId() : r.getRelationBId())
+				.map(threatAssessmentsById::get)
+				.filter(Objects::nonNull)
+				.filter(ta -> ta.getAssessment() != null)
+				.max(Comparator.comparing(Relatable::getCreatedAt))
+				.ifPresent(ta -> result.put(assetId, ta.getAssessment())));
+		return result;
 	}
 }
