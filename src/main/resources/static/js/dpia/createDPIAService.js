@@ -49,7 +49,10 @@ class CreateDPIAService {
                 }
             }
             if (selected.length > 0) {
-                document.getElementById('assetError').style.display = '';
+                const errorElement = document.getElementById('assetError')
+                if (errorElement) {
+                    errorElement.style.display = '';
+                }
             }
         })
 
