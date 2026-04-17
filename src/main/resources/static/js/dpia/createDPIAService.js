@@ -90,7 +90,10 @@ class CreateDPIAService {
 
         const assetIds = assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : [];
         if (assetIds.length === 0) {
-            document.getElementById('assetError').style.display = 'block';
+            const errorElement = document.getElementById('assetError');
+            if (errorElement) {
+                errorElement.style.display = 'block';
+            }
             return;
         }
 
