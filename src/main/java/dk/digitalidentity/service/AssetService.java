@@ -39,8 +39,6 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
-import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
