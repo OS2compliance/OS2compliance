@@ -847,13 +847,13 @@ public class AssetService implements TagableService<Asset> {
 	}
 
 	public Map<Long, RiskAssessment> getLatestRiskAssessment(List<Relatable> relatedAssets) {
-		if (relatedAssets.isEmpty()) {
+		if (relatedAssets == null || relatedAssets.isEmpty()) {
 			return Map.of();
 		}
 
 		final List<Long> assetIds = relatedAssets.stream().map(Relatable::getId).toList();
 		final List<Relation> relations = relationService.findRelatedToWithType(assetIds, RelationType.THREAT_ASSESSMENT);
-		if (relations.isEmpty()) {
+		if (relations == null || relations.isEmpty()) {
 			return Map.of();
 		}
 
