@@ -20,7 +20,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -78,6 +77,39 @@ public class NotifyService {
 			log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
 		}
 	}
+
+    public void notifyTaskResponsible(final Task task) {
+        if (task.getNotifyResponsible() == null || !task.getNotifyResponsible() || task.getResponsibleUsers().isEmpty()) {
+            return;
+        }
+        EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_RESPONSIBLE);
+        if (!template.isEnabled()) {
+            log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
+            return;
+        }
+        final String url = diSamlConfiguration.getSp().getBaseUrl() + "/tasks/" + task.getId();
+        final String objectName = task.getName();
+        final String link = "<a href=\"" + url + "\">" + url + "</a>";
+        for (User responsibleUser : task.getResponsibleUsers()) {
+            if (!StringUtils.hasLength(responsibleUser.getEmail())) {
+                continue;
+            }
+            String title = template.getTitle()
+                    .replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), responsibleUser.getName())
+                    .replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName)
+                    .replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+            String message = template.getMessage()
+                    .replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), responsibleUser.getName())
+                    .replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName)
+                    .replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+            eventPublisher.publishEvent(EmailEvent.builder()
+                    .message(message)
+                    .subject(title)
+                    .email(responsibleUser.getEmail())
+                    .templateType(template.getTemplateType())
+                    .build());
+        }
+    }
 
     public void notifyAboutInactiveUsers(Set<String> newlyInactiveUuids) {
         if (!newlyInactiveUuids.isEmpty()) {

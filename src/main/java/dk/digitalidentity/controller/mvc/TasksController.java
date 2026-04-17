@@ -1,18 +1,14 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.Constants;
-import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.SubTask;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
-import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -25,7 +21,7 @@ import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DocumentService;
-import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.NotifyService;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
@@ -36,8 +32,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.env.Environment;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -78,9 +72,7 @@ public class TasksController {
     private final DocumentService documentService;
     private final ThreatAssessmentService threatAssessmentService;
     private final TaskService taskService;
-    private final Environment environment;
-    private final ApplicationEventPublisher eventPublisher;
-    private final EmailTemplateService emailTemplateService;
+    private final NotifyService notifyService;
 	private final ChoiceValueService choiceValueService;
 	private final ChoiceService choiceService;
 
@@ -178,6 +170,8 @@ public class TasksController {
         if (riskId != null) {
             threatAssessmentService.handleTaskRiskAssociation(savedTask, riskId, riskCustomId, riskCatalogIdentifier);
         }
+
+        notifyService.notifyTaskResponsible(savedTask);
 
         return "redirect:/tasks/"+savedTask.getId();
     }
@@ -436,40 +430,7 @@ public class TasksController {
 		}
 		taskService.saveTask(task);
 
-		if (!task.getResponsibleUsers().isEmpty() && task.getNotifyResponsible()) {
-			EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_RESPONSIBLE);
-			if (template.isEnabled()) {
-				final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" + task.getId();
-				final String objectName = task.getName();
-				final String link = "<a href=\"" + url + "\">" + url + "</a>";
-
-				// Send email to each responsible user
-				for (User responsibleUser : task.getResponsibleUsers()) {
-					if (!StringUtils.isEmpty(responsibleUser.getEmail())) {
-						final String recipient = responsibleUser.getName();
-
-						String title = template.getTitle();
-						title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-						title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-						title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-
-						String message = template.getMessage();
-						message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-						message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-						message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-
-						eventPublisher.publishEvent(EmailEvent.builder()
-								.message(message)
-								.subject(title)
-								.email(responsibleUser.getEmail())
-								.templateType(template.getTemplateType())
-								.build());
-					}
-				}
-			} else {
-				log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
-			}
-		}
+		notifyService.notifyTaskResponsible(task);
 		return "redirect:/tasks/" + task.getId();
 	}
 
