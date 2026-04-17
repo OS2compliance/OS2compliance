@@ -2,6 +2,7 @@ import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
+import { initYearWheel } from "./year-wheel.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -12,6 +13,8 @@ document.addEventListener("DOMContentLoaded", function() {
     initGrid()
 
     initStatisticView('task')
+
+    initYearWheel(yearWheelUrl, token);
 
 });
 
