@@ -98,7 +98,7 @@ function initGrid() {
                 width: '40%'
             },
             {
-                name: "Antal løsninger",
+                name: "Antal aktiver",
                 width: '20%',
                 searchable: {
                     sortKey: 'solutionCount'
