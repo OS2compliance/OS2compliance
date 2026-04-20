@@ -625,6 +625,7 @@
                                                             <td class="col-lg-4">
                                                                 <div th:with="risk=${relatedAssetsRiskMap[currentAsset.id]}">
                                                                     <div th:if="${risk != null}" th:class="'d-block badge ' + ${risk.badgeClass}" th:text="${risk.message}"></div>
+                                                                    <div th:unless="${risk != null}">Ikke udfyldt</div>
                                                                 </div>
                                                             </td>
                                                             <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern relateret aktivitet">
