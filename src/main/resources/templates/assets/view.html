@@ -610,10 +610,23 @@
                                             <div class="card-body">
                                                 <div class="row">
                                                     <table>
+                                                        <thead>
+                                                        <tr>
+                                                            <th class="col-lg-6">Navn</th>
+                                                            <th class="col-lg-4">Seneste Risikovurdering</th>
+                                                            <th class="col-lg-2"></th>
+                                                        </tr>
+                                                        </thead>
                                                         <tbody>
                                                         <tr th:each="currentAsset : ${relatedAssets}">
-                                                            <td class="col-lg-10">
+                                                            <td class="col-lg-6">
                                                                 <a th:text="${currentAsset.name}" th:href="@{/assets/{id}(id=${currentAsset.id})}"></a>
+                                                            </td>
+                                                            <td class="col-lg-4">
+                                                                <div th:with="risk=${relatedAssetsRiskMap[currentAsset.id]}">
+                                                                    <div th:if="${risk != null}" th:class="'d-block badge ' + ${risk.badgeClass}" th:text="${risk.message}"></div>
+                                                                    <div th:unless="${risk != null}">Ikke udfyldt</div>
+                                                                </div>
                                                             </td>
                                                             <td class="col-lg-2 text-end ps-3 pe-3" title="Fjern relateret aktivitet">
                                                                 <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${currentAsset.id}, data-relationtype=${currentAsset.relationType}"></i>

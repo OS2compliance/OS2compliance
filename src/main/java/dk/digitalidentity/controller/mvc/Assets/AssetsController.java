@@ -15,7 +15,6 @@ import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
 import dk.digitalidentity.model.dto.SaveMeasureDTO;
 import dk.digitalidentity.model.dto.SaveMeasuresDTO;
-import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.dto.ViewMeasureDTO;
 import dk.digitalidentity.model.dto.ViewMeasuresDTO;
 import dk.digitalidentity.model.entity.Asset;
@@ -292,6 +291,7 @@ public class AssetsController {
 		model.addAttribute("asset", asset);
         model.addAttribute("changeableAsset", assetService.isEditable(asset));
 		model.addAttribute("relatedAssets", relatedAssets);
+        model.addAttribute("relatedAssetsRiskMap", assetService.getLatestRiskAssessment(relatedAssets));
 		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);
 		model.addAttribute("documents", documents);
