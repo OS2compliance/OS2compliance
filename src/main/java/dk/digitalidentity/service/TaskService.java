@@ -194,10 +194,13 @@ public class TaskService implements TagableService<Task> {
     }
 
     public boolean isTaskDone(final Task task) {
-        if (task.getLogs().isEmpty()) {
+		boolean emptyLog = task.getLogs().isEmpty();
+        if (emptyLog) {
             return false;
         }
-        return task.getTaskType() == TaskType.TASK;
+		// OneShot tasks and checks are completed if logs exists
+		return task.getTaskType() == TaskType.TASK
+				|| (task.getTaskType() == TaskType.CHECK && (task.getRepetition() == null || task.getRepetition().equals(TaskRepetition.NONE)));
     }
 
     public List<TaskDTO> buildRelatedTasks(final List<ThreatAssessment> threatAssessments, final boolean onlyNotCompleted) {
@@ -211,7 +214,7 @@ public class TaskService implements TagableService<Task> {
         final List<Relatable> tasks = relationService.findAllRelatedTo(threatAssessment).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
         for (final Relatable taskAsRelatable : tasks) {
             final Task task = (Task) taskAsRelatable;
-            if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+            if (onlyNotCompleted && !isTaskDone(task)) {
                 continue;
             }
             relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
@@ -223,7 +226,7 @@ public class TaskService implements TagableService<Task> {
         final List<TaskDTO> relatedTasks = new ArrayList<>();
         final List<Task> tasks = findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + dpiaId);
         for (final Task task : tasks) {
-            if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+            if (onlyNotCompleted && !isTaskDone(task)) {
                 continue;
             }
             relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
@@ -232,7 +235,7 @@ public class TaskService implements TagableService<Task> {
     }
 
     public String findHtmlStatusBadgeForTask(Task task) {
-        if (task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+        if (isTaskDone(task)) {
             return "<div class=\"d-block badge bg-success\">Udført</div>";
         } else {
             LocalDate deadline = task.getNextDeadline();
@@ -263,7 +266,7 @@ public class TaskService implements TagableService<Task> {
 
 
 	public StatusCombination calculateStatus(final Task task) {
-		if (task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+		if (isTaskDone(task)) {
 			return new StatusCombination("Udført", StatusColor.GREEN);
 		} else {
 			LocalDate deadline = task.getNextDeadline();
