@@ -15,15 +15,7 @@ tr, td {
 }
 
 .draggable-section {
-    cursor: default;
-}
-
-.drag-handle {
     cursor: grab;
-}
-
-.drag-handle:active {
-    cursor: grabbing;
 }
 
 .draggable-section.dragging {
