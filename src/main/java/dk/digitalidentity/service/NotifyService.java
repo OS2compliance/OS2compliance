@@ -6,7 +6,6 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
-import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +35,9 @@ public class NotifyService {
 	public void notifyTask(final Long taskId) {
 		final Task task = taskService.findById(taskId)
 				.orElseThrow(() -> new IllegalArgumentException("Task with id: " + taskId + " not found"));
-		if (task.getTaskType() == TaskType.TASK && !task.getLogs().isEmpty()) {
-			// Do not notify task already done
+
+		if (taskService.isTaskDone(task)) {
+			// Do not notify, task already done
 			return;
 		}
 
