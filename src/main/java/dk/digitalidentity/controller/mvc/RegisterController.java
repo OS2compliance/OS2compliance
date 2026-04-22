@@ -9,7 +9,6 @@ import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.dto.SelectionChoiceDTO;
 import dk.digitalidentity.model.dto.SelectionDTO;
-import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -421,6 +420,8 @@ public class RegisterController {
         }
 		if(relevantLegalReferences != null && !relevantLegalReferences.isEmpty()) {
 			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(relevantLegalReferences));
+		} else {
+			register.setRelevantKLELegalReferences(new HashSet<>());
 		}
 
 		registerService.save(register);
