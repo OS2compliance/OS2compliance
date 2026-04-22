@@ -349,7 +349,7 @@ function CreateTaskService() {
                         this.taskModalDialog.querySelector('#taskCreateFormRiskCatalogIdentifier').value = null;
                     }
 
-                    const createTaskModal = new bootstrap.Modal(this.taskModalDialog);
+                    const createTaskModal = new bootstrap.Modal(this.taskModalDialog, { backdrop: 'static' });
                     createTaskModal.show();
                 }))
             .catch(error => toastService.error(error));
