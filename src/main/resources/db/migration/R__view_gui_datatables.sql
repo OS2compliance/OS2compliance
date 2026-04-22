@@ -46,7 +46,19 @@ SELECT t.id,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
        GROUP_CONCAT(DISTINCT COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
-       GROUP_CONCAT(DISTINCT COALESCE(tg.id, '')   ORDER BY tg.value SEPARATOR ',') AS tag_ids
+       GROUP_CONCAT(DISTINCT COALESCE(tg.id, '')   ORDER BY tg.value SEPARATOR ',') AS tag_ids,
+       GROUP_CONCAT(DISTINCT
+                    CASE
+                        WHEN rel.relation_a_type = 'TASK' THEN CONCAT(rel.relation_b_type, ':', rel.relation_b_id, ':', rel.relation_b_name)
+                        WHEN rel.relation_b_type = 'TASK' THEN CONCAT(rel.relation_a_type, ':', rel.relation_a_id, ':', rel.relation_a_name)
+                        END
+                    ORDER BY
+                    CASE
+                        WHEN rel.relation_a_type = 'TASK' THEN rel.relation_b_name
+                        WHEN rel.relation_b_type = 'TASK' THEN rel.relation_a_name
+                        END ASC
+                    SEPARATOR '||'
+       )                                                                             AS related_entities
 FROM tasks t
     LEFT JOIN task_responsible_users tru ON tru.task_id = t.id
     LEFT JOIN users u ON u.uuid = tru.user_uuid
@@ -54,6 +66,8 @@ FROM tasks t
     LEFT JOIN choice_values cv_result ON cv_result.id = ts.task_result
     LEFT JOIN task_tag rt on rt.task_id = t.id
     LEFT JOIN tags tg on rt.tag_id = tg.id
+    LEFT JOIN relations rel ON (rel.relation_a_id = t.id AND rel.relation_a_type = 'TASK')
+                            OR (rel.relation_b_id = t.id AND rel.relation_b_type = 'TASK')
 WHERE t.deleted = false
   AND (ts.id IS NULL OR ts.id = (SELECT MAX(id) FROM task_logs WHERE task_id = t.id))
 GROUP BY t.id;
@@ -382,13 +396,13 @@ GROUP BY a.id;
 
 CREATE OR REPLACE VIEW view_gridjs_assessments AS
 SELECT t.id,
-       TRIM(t.name)                                                                                                                                                  as name,
+       TRIM(t.name)                                                                                                                                                  AS name,
        t.responsible_uuid,
        t.responsible_ou_uuid,
-       t.threat_assessment_type                                                                                                                                      as type,
-       t.threat_assessment_report_user_uuid                                                                                                                          as signer_uuid,
+       t.threat_assessment_type                                                                                                                                      AS type,
+       t.threat_assessment_report_user_uuid                                                                                                                          AS signer_uuid,
        t.threat_assessment_report_approval_status,
-       t.updated_at                                                                                                                                                  as date,
+       t.updated_at                                                                                                                                                  AS date,
        t.assessment,
        t.hidden,
        t.localized_enums,
@@ -398,31 +412,33 @@ SELECT t.id,
             WHEN t.assessment = 'YELLOW' THEN 3
             WHEN t.assessment = 'ORANGE' THEN 4
             WHEN t.assessment = 'RED' THEN 5
-           END)                                                                                                                                                      as assessment_order,
+           END)                                                                                                                                                      AS assessment_order,
        (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks,
        (SELECT COUNT(r.id)
         FROM relations r
-        JOIN tasks task ON (
+                 JOIN tasks task ON (
             (r.relation_a_id = task.id AND r.relation_a_type = 'TASK' AND r.relation_b_id = t.id) OR
             (r.relation_b_id = task.id AND r.relation_b_type = 'TASK' AND r.relation_a_id = t.id)
             )
         WHERE (SELECT CASE
-                    WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = task.id) THEN 'COMPLETED'
-                    WHEN task.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
-                    ELSE 'EXCEEDED'
-                    END) = 'COMPLETED'
-        ) AS completed_tasks,
+                          WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = task.id) THEN 'COMPLETED'
+                          WHEN task.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
+                          ELSE 'EXCEEDED'
+                          END) = 'COMPLETED'
+       )                                                                                                                                                            AS completed_tasks,
        t.from_external_source,
        t.external_link,
        GROUP_CONCAT(DISTINCT
                     CASE
-                        WHEN a.name IS NOT NULL THEN a.name
-                        WHEN rgs.name IS NOT NULL THEN rgs.name
+                        WHEN rel.relation_a_type = 'ASSET' AND rel.relation_b_type = 'THREAT_ASSESSMENT' THEN CONCAT('ASSET:', rel.relation_a_id, ':', rel.relation_a_name)
+                        WHEN rel.relation_b_type = 'ASSET' AND rel.relation_a_type = 'THREAT_ASSESSMENT' THEN CONCAT('ASSET:', rel.relation_b_id, ':', rel.relation_b_name)
+                        WHEN rel.relation_a_type = 'REGISTER' AND rel.relation_b_type = 'THREAT_ASSESSMENT' THEN CONCAT('REGISTER:', rel.relation_a_id, ':', rel.relation_a_name)
+                        WHEN rel.relation_b_type = 'REGISTER' AND rel.relation_a_type = 'THREAT_ASSESSMENT' THEN CONCAT('REGISTER:', rel.relation_b_id, ':', rel.relation_b_name)
                         END
                     ORDER BY
                     CASE
-                        WHEN a.name IS NOT NULL THEN a.name
-                        WHEN rgs.name IS NOT NULL THEN rgs.name
+                        WHEN rel.relation_a_type IN ('ASSET', 'REGISTER') AND rel.relation_b_type = 'THREAT_ASSESSMENT' THEN rel.relation_a_name
+                        WHEN rel.relation_b_type IN ('ASSET', 'REGISTER') AND rel.relation_a_type = 'THREAT_ASSESSMENT' THEN rel.relation_b_name
                         END ASC
                     SEPARATOR '||'
        )                                                                                                                                                             AS related_assets_and_registers,
@@ -433,22 +449,14 @@ SELECT t.id,
           AND tc.deleted = false)                                                                                                                                    AS threat_catalogs,
        (SELECT GROUP_CONCAT(DISTINCT tg.value ORDER BY tg.value SEPARATOR ',')
         FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
-        WHERE rt.threat_assessment_id = t.id) AS tag_names,
+        WHERE rt.threat_assessment_id = t.id)                                                                                                                       AS tag_names,
        (SELECT GROUP_CONCAT(DISTINCT tg.id ORDER BY tg.value SEPARATOR ',')
         FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
-        WHERE rt.threat_assessment_id = t.id) AS tag_ids
+        WHERE rt.threat_assessment_id = t.id)                                                                                                                       AS tag_ids
 FROM threat_assessments t
          LEFT JOIN relations rel ON (
-    (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
-        OR (rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
-    )
-         LEFT JOIN assets a ON (
-    (rel.relation_a_type = 'ASSET' AND rel.relation_a_id = a.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
-        OR (rel.relation_b_type = 'ASSET' AND rel.relation_b_id = a.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
-    )
-         LEFT JOIN registers rgs ON (
-    (rel.relation_a_type = 'REGISTER' AND rel.relation_a_id = rgs.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
-        OR (rel.relation_b_type = 'REGISTER' AND rel.relation_b_id = rgs.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
+    (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id AND rel.relation_b_type IN ('ASSET', 'REGISTER'))
+        OR (rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id AND rel.relation_a_type IN ('ASSET', 'REGISTER'))
     )
 WHERE t.deleted = false
 GROUP BY t.id;

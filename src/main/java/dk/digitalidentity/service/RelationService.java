@@ -139,8 +139,10 @@ public class RelationService {
 				.forEach(r -> relationDao.save(Relation.builder()
 						.relationAId(relatable.getId())
 						.relationAType(relatable.getRelationType())
+						.relationAName(relatable.getName())
 						.relationBId(r.getId())
 						.relationBType(r.getRelationType())
+						.relationBName(r.getName())
 						.build()));
 	}
 
@@ -149,19 +151,10 @@ public class RelationService {
 		final Relation relation = new Relation();
 		relation.setRelationAId(a.getId());
 		relation.setRelationAType(a.getRelationType());
+		relation.setRelationAName(a.getName());
 		relation.setRelationBId(b.getId());
 		relation.setRelationBType(b.getRelationType());
-		return relationDao.save(relation);
-	}
-
-	@Transactional
-	public Relation addRelation(final Long relationAId, final RelationType relationAType,
-			final Long relationBId, final RelationType relationBType) {
-		final Relation relation = new Relation();
-		relation.setRelationAId(relationAId);
-		relation.setRelationAType(relationAType);
-		relation.setRelationBId(relationBId);
-		relation.setRelationBType(relationBType);
+		relation.setRelationBName(b.getName());
 		return relationDao.save(relation);
 	}
 

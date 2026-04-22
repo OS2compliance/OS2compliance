@@ -1,5 +1,6 @@
 package dk.digitalidentity.mapping;
 
+import dk.digitalidentity.model.dto.RelatedEntityDTO;
 import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.TaskCreateDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
@@ -54,6 +55,7 @@ public interface TaskMapper {
 				.completed(nullSafe(taskGrid::isCompleted))
 				.tags(tags)
 				.lastCompletionDate(nullSafe(() -> taskGrid.getLastCompletionDate().format(DK_DATE_FORMATTER)))
+				.relatedEntities(taskGrid.getRelatedEntitiesDTO().stream().map(RelatedEntityDTO::toLink).toList())
 				.build();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();
