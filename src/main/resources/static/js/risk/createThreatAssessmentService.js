@@ -80,8 +80,8 @@ export class CreateThreatAssessmentService {
     }
 
     initSendEmail() {
-        this.getScopedElementById('sendEmailcheckbox').addEventListener('change', () => {
-            this.sendEmailChanged(this.checked);
+        this.getScopedElementById('sendEmailcheckbox').addEventListener('change', (event) => {
+            this.sendEmailChanged(event.target.checked);
         });
     }
 

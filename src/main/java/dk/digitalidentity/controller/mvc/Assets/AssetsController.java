@@ -222,7 +222,7 @@ public class AssetsController {
             .map(ThreatAssessment.class::cast)
             .collect(Collectors.toList());
         threatAssessments.sort(Comparator.comparing(Relatable::getCreatedAt).reversed());
-		final List<Relatable> tasks = relationService.findAllRelatedTo(asset).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
+		final List<Relatable> relatedTasks = relationService.findAllRelatedTo(asset);
 
 		final ChoiceList acceptListIdentifiers = choiceService.findChoiceList("dp-supplier-accept-list")
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -291,11 +291,12 @@ public class AssetsController {
 		model.addAttribute("asset", asset);
         model.addAttribute("changeableAsset", assetService.isEditable(asset));
 		model.addAttribute("relatedAssets", relatedAssets);
+        model.addAttribute("relatedAssetsRiskMap", assetService.getLatestRiskAssessment(relatedAssets));
 		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);
 		model.addAttribute("documents", documents);
 		model.addAttribute("precautions", precautions);
-		model.addAttribute("tasks", tasks);
+		model.addAttribute("tasks", taskService.convertRelatableToTaskListDTO(relatedTasks));
 		model.addAttribute("dataProcessing", asset.getDataProcessing());
 		model.addAttribute("dpChoices", dataProcessingService.getChoices());
 		model.addAttribute("acceptanceBasisChoices", acceptListIdentifiers);

@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     addRelationFormLoaded();
     initTabs();
     rememberSelectedTab();
+    initRelatedButtons();
 
 
     if (threatExists) {
@@ -412,4 +413,13 @@ function editMode(enabled, responsibleFieldChangeable) {
             descriptionInput.disabled = true;
         }
     }
+}
+
+function initRelatedButtons() {
+    document.addEventListener("click", function (e) {
+        const btn = e.target.closest(".deleteRelationBtn");
+        if (!btn) return;
+
+        relationService.deleteRelation(btn);
+    });
 }

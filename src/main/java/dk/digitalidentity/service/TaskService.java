@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
+import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.dto.enums.StatusColor;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
@@ -38,6 +39,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -346,8 +348,14 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		return getTasks(sortColumn, sortDirection, filters, page, pageLimit, user, false);
+	}
+
+	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user, boolean onlyMine) {
 		Page<TaskGrid> tasks;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+
+		// if onlyMine is true - only show the tasks assigned to the user, even if read_all
+		if (!onlyMine && SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			// Logged-in user can see all
 			tasks = taskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, TaskGrid.class),
@@ -455,5 +463,39 @@ public class TaskService implements TagableService<Task> {
 							.anyMatch(responsibleUser -> responsibleUser.getUuid().equals(user.getUuid())))
 					.toList();
 		}
+	}
+
+	public List<TaskListDTO> convertRelatableToTaskListDTO(final List<Relatable> relatable) {
+		// We need the taskIds to fetch Task with the responsible relations (A little inefficient, but best case without refactoring relationService)
+		final List<Long> taskIds = relatable.stream()
+				.filter(r -> r.getRelationType() == RelationType.TASK)
+				.map(Relatable::getId)
+				.toList();
+		// Fetch responsibleUser and responsibleOu in the same call to avoid N+1 queries
+		final Map<Long, Task> tasksById = taskDao.findAllByIdInWithResponsible(taskIds).stream()
+				.collect(Collectors.toMap(Task::getId, t -> t));
+
+		return taskIds.stream()
+				.map(id -> {
+					Task task = tasksById.get(id);
+					if (task == null) {
+						return null;
+					}
+					return new TaskListDTO(
+							task.getId(),
+							task.getName(),
+							task.getResponsibleUsers().stream()
+									.map(User::getName)
+									.collect(Collectors.joining(", ")),
+							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
+							task.getTaskType().getMessage(),
+							task.getNextDeadline().toString(),
+							task.getRepetition() != null ? task.getRepetition().getMessage() : "",
+							findHtmlStatusBadgeForTask(task),
+							RelationType.TASK
+					);
+				})
+				.filter(Objects::nonNull)
+				.toList();
 	}
 }
