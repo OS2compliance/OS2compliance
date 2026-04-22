@@ -158,11 +158,6 @@ public class RelationService {
 		return relationDao.save(relation);
 	}
 
-	@Transactional
-	public void syncNamesFor(final Relatable entity) {
-		relationDao.updateRelationNames(entity.getId(), entity.getRelationType().name(), entity.getName());
-	}
-
 	public void deleteRelatedTo(final Long lid) {
 		relationDao.deleteRelatedTo(lid);
 	}

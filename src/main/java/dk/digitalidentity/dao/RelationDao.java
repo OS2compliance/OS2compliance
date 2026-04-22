@@ -36,18 +36,4 @@ public interface RelationDao extends JpaRepository<Relation, Long>, JpaSpecifica
     @Transactional
     @Query("delete from Relation r where r.relationBId=:relationId or r.relationAId=:relationId")
     int deleteRelatedTo(@Param("relationId") final Long relationId);
-
-	@Modifying
-	@Query("delete from Relation r where (r.relationAId=:entity1Id and r.relationBId=:entity2Id) or (r.relationAId=:entity2Id and r.relationBId=:entity1Id)")
-	void deleteRelationByEntityIds(Long entity1Id, Long entity2Id);
-
-	@Modifying
-	@Query(value = """
-			UPDATE relations SET
-			    relation_a_name = CASE WHEN relation_a_id = :id AND relation_a_type = :type THEN :name ELSE relation_a_name END,
-			    relation_b_name = CASE WHEN relation_b_id = :id AND relation_b_type = :type THEN :name ELSE relation_b_name END
-			WHERE relation_a_id = :id AND relation_a_type = :type
-			   OR relation_b_id = :id AND relation_b_type = :type
-			""", nativeQuery = true)
-	void updateRelationNames(@Param("id") Long id, @Param("type") String type, @Param("name") String name);
 }
