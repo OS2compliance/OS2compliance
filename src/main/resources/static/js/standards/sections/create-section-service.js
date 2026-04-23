@@ -74,7 +74,10 @@ function CreateSectionService() {
                         form.submit();
                     });
                 }))
-            .catch(error => toastService.error(error));
+            .catch(error => {
+                console.error(error);
+                toastService.error('Der skete en fejl. Prøv igen.');
+            });
     }
 
     this.openRequirementEditModal = function(element) {
@@ -88,7 +91,10 @@ function CreateSectionService() {
                     const modal = new bootstrap.Modal(this.sectionModalDialog);
                     modal.show();
                 }))
-            .catch(error => toastService.error(error));
+            .catch(error => {
+                console.error(error);
+                toastService.error('Der skete en fejl. Prøv igen.');
+            });
     }
 
     this.openHeaderModal = function(element, isEdit = false) {
@@ -106,7 +112,10 @@ function CreateSectionService() {
                     const headerModal = new bootstrap.Modal(this.headerModalDialog);
                     headerModal.show();
                 }))
-            .catch(error => toastService.error(error));
+            .catch(error => {
+                console.error(error);
+                toastService.error('Der skete en fejl. Prøv igen.');
+            });
     }
 
     this.openDeleteSwal = function (element, isheader=true) {
@@ -130,7 +139,10 @@ function CreateSectionService() {
                             window.location.reload();
                         }, 250);
                     })
-                .catch(error => toastService.error(error));
+                .catch(error => {
+                    console.error(error);
+                    toastService.error('Der skete en fejl. Prøv igen.');
+                });
             }
         })
     }

@@ -34,6 +34,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -135,15 +136,28 @@ public class StandardRestController {
 	@Transactional
 	@PostMapping("/section/reorder")
 	public ResponseEntity<?> reorderSections(@RequestBody final List<String> identifiers) {
-		for (int i = 0; i < identifiers.size(); i++) {
-			StandardTemplateSection section = standardTemplateSectionDao.findById(identifiers.get(i))
-					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			String parentSection = section.getParent().getSection();
-			String newSection = parentSection + "." + (i + 1);
-			section.setSection(newSection);
-			section.setSortKey(Integer.parseInt(newSection.replace(".", "").replaceAll("[^0-9]", "")));
-			standardTemplateSectionDao.save(section);
+		if (identifiers == null || identifiers.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
+		List<StandardTemplateSection> sections = standardTemplateSectionDao.findAllById(identifiers);
+		if (sections.size() != identifiers.size()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		StandardTemplateSection parent = sections.get(0).getParent();
+		long siblingCount = standardTemplateSectionDao.findByParentOrderBySortKey(parent).size();
+		if (sections.stream().anyMatch(s -> !s.getParent().getIdentifier().equals(parent.getIdentifier()))
+				|| identifiers.size() != siblingCount) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+		Map<String, StandardTemplateSection> byId = sections.stream()
+				.collect(java.util.stream.Collectors.toMap(StandardTemplateSection::getIdentifier, s -> s));
+		for (int i = 0; i < identifiers.size(); i++) {
+			StandardTemplateSection section = byId.get(identifiers.get(i));
+			String newSection = parent.getSection() + "." + (i + 1);
+			section.setSection(newSection);
+			section.setSortKey(Integer.parseInt(parent.getSection().replace(".", "") + (i + 1)));
+		}
+		standardTemplateSectionDao.saveAll(sections);
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 

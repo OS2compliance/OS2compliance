@@ -343,9 +343,13 @@ function initDragAndDrop() {
 
             postData('/rest/standards/section/reorder', identifiers).then(response => {
                 if (!response.ok) {
+                    console.error('Reorder failed:', response.statusText);
                     toastService.error('Fejl ved gemning af rækkefølge');
                 }
-            }).catch(() => toastService.error('Fejl ved gemning af rækkefølge'));
+            }).catch(error => {
+                console.error(error);
+                toastService.error('Fejl ved gemning af rækkefølge');
+            });
         }
     });
 }

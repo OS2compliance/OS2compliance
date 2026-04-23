@@ -22,8 +22,12 @@ tr, td {
     opacity: 0.4;
 }
 
-.draggable-section.drag-over {
-    outline: 2px dashed #03a9f4;
+.draggable-section.drag-over-above {
+    box-shadow: 0 -2px 0 0 #03a9f4;
+}
+
+.draggable-section.drag-over-below {
+    box-shadow: 0 2px 0 0 #03a9f4;
 }
 
 .editDescription {

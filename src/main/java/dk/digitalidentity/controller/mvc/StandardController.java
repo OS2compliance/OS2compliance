@@ -328,6 +328,9 @@ public class StandardController {
 	public String editSection(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable final String identifier, RedirectAttributes redirectAttributes) {
 		StandardTemplateSection section = standardTemplateSectionDao.findById(standardTemplateSection.getIdentifier())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		if (section.getParent() == null || !section.getParent().getStandardTemplate().getIdentifier().equals(identifier)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
 		section.setDescription(standardTemplateSection.getDescription());
 		standardTemplateSectionDao.save(section);
 		redirectAttributes.addFlashAttribute("successMessage", "Krav opdateret!");

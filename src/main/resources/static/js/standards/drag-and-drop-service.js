@@ -1,46 +1,10 @@
 /**
- * Reusable drag-and-drop row reordering service for grouped tables.
- *
- * ## How to use
- *
- * 1. Mark each draggable row with the CSS class passed as `rowClass` and set:
- *      - `draggable="true"` on the <tr>
- *      - `data-parent="<groupKey>"` — rows with the same value can be reordered
- *        relative to each other; rows in different groups cannot be swapped
- *      - `data-identifier="<id>"` — the value sent to the server for each row
- *
- * 2. Each draggable row must be followed immediately by exactly two sibling rows
- *    that move with it (e.g. a detail/expand row and a divider row). These are
- *    picked up automatically — no extra markup needed.
- *
- * 3. Call `dragAndDropService.init(options)` once after the DOM is ready.
- *
- * ## Options
- *
- * @param {object}   options
- * @param {string}   options.rowClass   CSS class on each draggable <tr> (without the dot)
- * @param {function} options.onReorder  Called after a successful DOM reorder.
- *                                      Receives `(identifiers, draggedRow)` where
- *                                      `identifiers` is the ordered array of
- *                                      `data-identifier` values for the affected group.
- *
- * ## Minimal example
- *
- * HTML:
- *   <tr class="my-row" draggable="true" data-parent="group-1" data-identifier="42">
- *     <td>Row label</td>
- *     ...
- *   </tr>
- *
- * JS:
- *   dragAndDropService.init({
- *     rowClass: 'my-row',
- *     onReorder: (identifiers, draggedRow) => {
- *       postData('/api/reorder', identifiers).then(r => {
- *         if (!r.ok) toastService.error('Could not save order');
- *       }).catch(() => toastService.error('Could not save order'));
- *     }
- *   });
+ * Reusable drag-and-drop row reordering for grouped tables.
+ * Rows need: draggable="true", data-parent="<groupKey>", data-identifier="<id>".
+ * Each draggable row must be followed by exactly two sibling rows that move with it.
+ * Call dragAndDropService.init({ rowClass, onReorder }) once after DOMContentLoaded.
+ * onReorder receives (identifiers, draggedRow) where identifiers is the new ordered
+ * array of data-identifier values for the affected group.
  */
 const dragAndDropService = (() => {
     function init({ rowClass, onReorder }) {
@@ -48,22 +12,31 @@ const dragAndDropService = (() => {
 
         document.addEventListener('dragstart', (e) => {
             const row = e.target.closest('.' + rowClass);
-            if (!row) return;
+            if (!row) {
+                return;
+            }
             draggedRow = row;
             setTimeout(() => row.classList.add('dragging'), 0);
         });
 
         document.addEventListener('dragend', (e) => {
             const row = e.target.closest('.' + rowClass);
-            if (!row) return;
+            if (!row) {
+                return;
+            }
             row.classList.remove('dragging');
-            document.querySelectorAll('.' + rowClass).forEach(r => r.classList.remove('drag-over'));
+            document.querySelectorAll('.' + rowClass).forEach(r => {
+                r.classList.remove('drag-over-above');
+                r.classList.remove('drag-over-below');
+            });
             draggedRow = null;
         });
 
         document.addEventListener('dragover', (e) => {
             const row = e.target.closest('.' + rowClass);
-            if (!row || !draggedRow || draggedRow === row) return;
+            if (!row || !draggedRow || draggedRow === row) {
+                return;
+            }
 
             if (draggedRow.dataset.parent !== row.dataset.parent) {
                 e.dataTransfer.dropEffect = 'none';
@@ -71,19 +44,39 @@ const dragAndDropService = (() => {
             }
 
             e.preventDefault();
-            document.querySelectorAll('.' + rowClass).forEach(r => r.classList.remove('drag-over'));
-            row.classList.add('drag-over');
+            document.querySelectorAll('.' + rowClass).forEach(r => {
+                r.classList.remove('drag-over-above');
+                r.classList.remove('drag-over-below');
+            });
+
+            const allRows = [...row.closest('tbody').querySelectorAll('.' + rowClass)];
+            const draggedIndex = allRows.indexOf(draggedRow);
+            const targetIndex = allRows.indexOf(row);
+
+            if (draggedIndex < targetIndex) {
+                row.classList.add('drag-over-below');
+            } else {
+                row.classList.add('drag-over-above');
+            }
         });
 
         document.addEventListener('drop', (e) => {
             const row = e.target.closest('.' + rowClass);
-            if (!row) return;
+            if (!row) {
+                return;
+            }
             e.preventDefault();
-            if (!draggedRow || draggedRow === row) return;
-            if (draggedRow.dataset.parent !== row.dataset.parent) return;
+            if (!draggedRow || draggedRow === row) {
+                return;
+            }
+            if (draggedRow.dataset.parent !== row.dataset.parent) {
+                return;
+            }
 
             const tbody = row.closest('tbody');
-            if (!tbody) return;
+            if (!tbody) {
+                return;
+            }
 
             const allRows = [...tbody.querySelectorAll('.' + rowClass)];
             const draggedIndex = allRows.indexOf(draggedRow);
