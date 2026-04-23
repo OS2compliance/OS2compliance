@@ -78,6 +78,9 @@ public class TransferImpactAssessment {
     @Column
     private String conclusion;
 
+	@Column
+	private String link;
+
     @Column
     @Enumerated(EnumType.STRING)
     private TiaAssessment assessment;
