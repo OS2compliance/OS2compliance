@@ -308,6 +308,36 @@ public class StandardController {
 	}
 
 	@RequireUpdateAll
+	@GetMapping("/section/form/{templateId}/{sectionIdentifier}")
+	public String editSectionForm(final Model model, @PathVariable final String templateId, @PathVariable final String sectionIdentifier) {
+		StandardTemplate template = supportingStandardService.lookup(templateId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		StandardTemplateSection section = standardTemplateSectionDao.findById(sectionIdentifier)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		model.addAttribute("standard", template);
+		model.addAttribute("section", section);
+		model.addAttribute("action", "/standards/sections/update/" + templateId);
+		model.addAttribute("formTitle", "Rediger krav");
+		model.addAttribute("formId", "sectionEditForm");
+		return "standards/sections/edit_section_form";
+	}
+
+	@RequireUpdateAll
+	@Transactional
+	@PostMapping("/sections/update/{identifier}")
+	public String editSection(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable final String identifier, RedirectAttributes redirectAttributes) {
+		StandardTemplateSection section = standardTemplateSectionDao.findById(standardTemplateSection.getIdentifier())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		if (section.getParent() == null || !section.getParent().getStandardTemplate().getIdentifier().equals(identifier)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+		section.setDescription(standardTemplateSection.getDescription());
+		standardTemplateSectionDao.save(section);
+		redirectAttributes.addFlashAttribute("successMessage", "Krav opdateret!");
+		return "redirect:/standards/supporting/" + identifier;
+	}
+
+	@RequireUpdateAll
 	@Transactional
 	@PostMapping("/headers/update/{identifier}")
 	public String editHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
