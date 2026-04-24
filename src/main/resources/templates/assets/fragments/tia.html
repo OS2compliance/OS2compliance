@@ -206,9 +206,7 @@
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-        /*[+
-        var changeableAsset = [[${changeableAsset}]]
-        +]*/
+        const changeableAsset = /*[[${changeableAsset}]]*/ [];
         const registeredCategories = /*[[${dbChoices.personCategoriesRegisteredIdentifiers.values}]]*/ [];
         const informationChoices1 = /*[[${dbChoices.personCategoriesInformationIdentifiers1.values}]]*/ [];
         const informationChoices2 = /*[[${dbChoices.personCategoriesInformationIdentifiers2.values}]]*/ [];
