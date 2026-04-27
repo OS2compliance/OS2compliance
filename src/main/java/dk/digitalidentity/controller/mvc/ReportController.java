@@ -392,7 +392,7 @@ public class ReportController {
         DPIA dpia = dpiaService.find(dpiaId);
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAPdf(dpia);
-            response.addHeader("Content-disposition", "attachment;filename=konsekvensanalyse vedr " + dpia.getName() + ".pdf");
+            response.setHeader("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".pdf\"");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
             response.flushBuffer();
@@ -446,7 +446,7 @@ public class ReportController {
         DPIA dpia = dpiaService.find(dpiaId);
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAScreeningPdf(dpia);
-            response.addHeader("Content-disposition", "attachment;filename=screening vedr " + dpia.getName() + ".pdf");
+            response.setHeader("Content-Disposition", "attachment; filename=\"screening vedr " + dpia.getName() + ".pdf\"");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
             response.flushBuffer();
@@ -541,13 +541,13 @@ public class ReportController {
             if (toPDF) {
                 ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "ThreatAssessment not found"));
                 byte[] byteData = threatAssessmentService.getThreatAssessmentPdf(threatAssessment);
-                response.addHeader("Content-disposition", "attachment;filename=" + outputFilename);
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + outputFilename + "\"");
                 response.setContentType("application/pdf");
                 response.getOutputStream().write(byteData);
                 response.flushBuffer();
             } else {
 				try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters, template)) {
-                    response.addHeader("Content-disposition", "attachment;filename=" + outputFilename);
+                    response.setHeader("Content-Disposition", "attachment; filename=\"" + outputFilename + "\"");
                     response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
                     myDocument.write(response.getOutputStream());
                     response.flushBuffer();
