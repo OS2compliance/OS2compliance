@@ -102,6 +102,7 @@ public class NotifyServiceTest {
         dummyTask.setTaskType(TaskType.TASK);
         dummyTask.getLogs().add(new TaskLog());
         doReturn(Optional.of(dummyTask)).when(taskService).findById(any());
+        doReturn(true).when(taskService).isTaskDone(any());
 
         // When
         notifyService.notifyTask(dummyTask.getId());
