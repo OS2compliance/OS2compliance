@@ -392,18 +392,18 @@ public class ReportController {
         DPIA dpia = dpiaService.find(dpiaId);
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAPdf(dpia);
-            response.setHeader("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".pdf\"");
+            response.setHeader("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".pdf\"");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
             response.flushBuffer();
         } else if (type.equals("ZIP")) {
-            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".zip\"")
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".zip\"")
                 .body(out -> {
                         var zipOutputStream = new ZipOutputStream(out);
 
                         // add dpia pdf
                         try {
-                            ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + dpia.getName() + ".pdf");
+                            ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".pdf");
                             zipOutputStream.putNextEntry(dpiaFile);
                             zipOutputStream.write(assetService.getDPIAPdf(dpia));
                         } catch (DocumentException e) {
@@ -419,7 +419,7 @@ public class ReportController {
                                 ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);
                                 if (threatAssessment != null) {
                                     try {
-                                        ZipEntry file = new ZipEntry("risikovurdering " + threatAssessment.getName() + ".pdf");
+                                        ZipEntry file = new ZipEntry("risikovurdering " + sanitizeFileName(threatAssessment.getName()) + ".pdf");
                                         zipOutputStream.putNextEntry(file);
                                         zipOutputStream.write(threatAssessmentService.getThreatAssessmentPdf(threatAssessment));
                                     } catch (DocumentException e) {
@@ -446,18 +446,18 @@ public class ReportController {
         DPIA dpia = dpiaService.find(dpiaId);
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAScreeningPdf(dpia);
-            response.setHeader("Content-Disposition", "attachment; filename=\"screening vedr " + dpia.getName() + ".pdf\"");
+            response.setHeader("Content-Disposition", "attachment; filename=\"screening vedr " + sanitizeFileName(dpia.getName()) + ".pdf\"");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
             response.flushBuffer();
         } else if (type.equals("ZIP")) {
-            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".zip\"")
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".zip\"")
                 .body(out -> {
                         var zipOutputStream = new ZipOutputStream(out);
 
                         // add dpia pdf
                         try {
-                            ZipEntry dpiaFile = new ZipEntry("screening vedr " + dpia.getName() + ".pdf");
+                            ZipEntry dpiaFile = new ZipEntry("screening vedr " + sanitizeFileName(dpia.getName()) + ".pdf");
                             zipOutputStream.putNextEntry(dpiaFile);
                             zipOutputStream.write(assetService.getDPIAScreeningPdf(dpia));
                         } catch (DocumentException e) {
@@ -473,7 +473,7 @@ public class ReportController {
                                 ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);
                                 if (threatAssessment != null) {
                                     try {
-                                        ZipEntry file = new ZipEntry("risikovurdering " + threatAssessment.getName() + ".pdf");
+                                        ZipEntry file = new ZipEntry("risikovurdering " + sanitizeFileName(threatAssessment.getName()) + ".pdf");
                                         zipOutputStream.putNextEntry(file);
                                         zipOutputStream.write(threatAssessmentService.getThreatAssessmentPdf(threatAssessment));
                                     } catch (DocumentException e) {
@@ -583,6 +583,23 @@ public class ReportController {
 				})
 				.filter(Objects::nonNull)
 				.collect(Collectors.joining(" : "));
+	}
+
+	private String sanitizeFileName(String fileName) {
+		if (fileName == null || fileName.isBlank()) {
+			return "";
+		}
+
+		String sanitized = fileName
+				.replaceAll("[^\\w\\s()\\-]", "_")
+				.trim();
+
+		if (sanitized.isBlank()) {
+			return "";
+		}
+
+		return sanitized;
+
 	}
 
 }
