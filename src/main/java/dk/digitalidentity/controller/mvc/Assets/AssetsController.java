@@ -148,6 +148,9 @@ public class AssetsController {
 	private final AssetSupplierMappingService assetSupplierMappingService;
 	private final DBSAssetDao dBSAssetDao;
 
+
+	private final List<DateTimeFormatter> dateTimeFormatters = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
+
 	@RequireReadOwnerOnly
 	@GetMapping
 	public String assetsList() {
@@ -491,7 +494,7 @@ public class AssetsController {
 		if (body.getDataProcessingAgreementDate() != null && !body.getDataProcessingAgreementDate().trim().isEmpty()) {
 			String dateStr = body.getDataProcessingAgreementDate().trim().replaceFirst("^[,\\s]+", "");
 			LocalDate parsedDate = null;
-			for (DateTimeFormatter formatter : List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"))) {
+			for (DateTimeFormatter formatter : dateTimeFormatters) {
 				try {
 					parsedDate = LocalDate.parse(dateStr, formatter);
 					break;
