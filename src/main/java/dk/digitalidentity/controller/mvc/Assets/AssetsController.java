@@ -149,7 +149,7 @@ public class AssetsController {
 	private final DBSAssetDao dBSAssetDao;
 
 
-	private final List<DateTimeFormatter> dateTimeFormatters = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
+	private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -494,11 +494,14 @@ public class AssetsController {
 		if (body.getDataProcessingAgreementDate() != null && !body.getDataProcessingAgreementDate().trim().isEmpty()) {
 			String dateStr = body.getDataProcessingAgreementDate().trim().replaceFirst("^[,\\s]+", "");
 			LocalDate parsedDate = null;
-			for (DateTimeFormatter formatter : dateTimeFormatters) {
+			for (DateTimeFormatter formatter : DATE_TIME_FORMATTERS) {
 				try {
 					parsedDate = LocalDate.parse(dateStr, formatter);
 					break;
 				} catch (DateTimeParseException ignored) {}
+			}
+			if (parsedDate == null) {
+				throw new DateTimeParseException("Ugyldigt datoformat: " + dateStr, dateStr, 0);
 			}
 			asset.setDataProcessingAgreementDate(parsedDate);
 		} else {
