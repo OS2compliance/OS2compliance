@@ -898,6 +898,7 @@ public class AssetsController {
         existingAsset.getTia().setAccessType(asset.getTia().getAccessType());
         existingAsset.getTia().setAssessment(asset.getTia().getAssessment());
         existingAsset.getTia().setConclusion(asset.getTia().getConclusion());
+		existingAsset.getTia().setLink(asset.getTia().getLink());
         existingAsset.getTia().setExpectedTransferDuration(asset.getTia().getExpectedTransferDuration());
         existingAsset.getTia().setContractualSecurityMeasures(asset.getTia().getContractualSecurityMeasures());
         existingAsset.getTia().setTechnicalSecurityMeasures(asset.getTia().getTechnicalSecurityMeasures());

@@ -1,5 +1,6 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 import initRelatedTagList from "../tags/related-tag-list.js";
+import { initTia } from "./tia.js";
 
 let managersChoicesEditSelect = null;
 let suppliersChoicesEditSelect = null;
@@ -52,7 +53,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     initEditButtons();
 
-    initRelatedTagList('#assetTab')
+    initRelatedTagList('#assetTab');
+    initTia();
 });
 
 function initEditButtons() {
