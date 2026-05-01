@@ -105,6 +105,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -487,12 +488,16 @@ public class AssetsController {
 
 		asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
 
-		// Parse date with proper format and null handling
 		if (body.getDataProcessingAgreementDate() != null && !body.getDataProcessingAgreementDate().trim().isEmpty()) {
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
-			String dateStr = body.getDataProcessingAgreementDate().trim();
-			dateStr = dateStr.replaceFirst("^[,\\s]+", "");
-			asset.setDataProcessingAgreementDate(LocalDate.parse(dateStr, formatter));
+			String dateStr = body.getDataProcessingAgreementDate().trim().replaceFirst("^[,\\s]+", "");
+			LocalDate parsedDate = null;
+			for (DateTimeFormatter formatter : List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"))) {
+				try {
+					parsedDate = LocalDate.parse(dateStr, formatter);
+					break;
+				} catch (DateTimeParseException ignored) {}
+			}
+			asset.setDataProcessingAgreementDate(parsedDate);
 		} else {
 			asset.setDataProcessingAgreementDate(null);
 		}
