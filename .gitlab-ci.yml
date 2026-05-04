@@ -3,7 +3,6 @@ variables:
 
 include:
   - project: 'Internal/devops/ci-templates'
-    ref: '1.0.14'
     file: '/workflows/review.yml'
   - project: 'Internal/devops/ci-templates'
     ref: '1.0.14'
