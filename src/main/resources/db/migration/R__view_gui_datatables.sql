@@ -269,8 +269,12 @@ SELECT a.id,
        IF(properties.prop_value IS null, 0, 1)                              AS kitos,
        IF(old_kitos_prop.prop_value IS NULL, 0, 1)                          AS old_kitos,
        MAX(ao.creation_date)                                                AS last_oversight_date,
-       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
+       (SELECT GROUP_CONCAT(DISTINCT tg.value ORDER BY tg.value SEPARATOR ',')
+        FROM asset_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.asset_id = a.id)                                           AS tag_names,
+       (SELECT GROUP_CONCAT(DISTINCT tg.id ORDER BY tg.value SEPARATOR ',')
+        FROM asset_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.asset_id = a.id)                                           AS tag_ids,
        CASE
            WHEN EXISTS (SELECT 1
                         FROM assets_suppliers
@@ -388,8 +392,6 @@ FROM assets a
          LEFT JOIN assets_users_mapping aum ON aum.asset_id = a.id
          LEFT JOIN users mu ON aum.user_uuid = mu.uuid
          LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
-         LEFT JOIN asset_tag rt on rt.asset_id = a.id
-         LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE a.deleted = false
 GROUP BY a.id;
 
