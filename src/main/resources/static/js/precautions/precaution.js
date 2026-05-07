@@ -63,8 +63,8 @@ function initGrid() {
                 formatter: (cell, row) => {
                     const id = row.cells[0]['data'];
                     const name = row.cells[1]['data'];
-                    const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" data-action="edit" data-id="${id}"><i class="pli-pencil fs-5"></i></button>`;
-                    const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" data-action="delete" data-id="${id}" data-name="${name}"><i class="pli-trash fs-5"></i></button>`;
+                    const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 btn-precaution-edit" data-id="${id}"><i class="pli-pencil fs-5"></i></button>`;
+                    const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 btn-precaution-delete" data-id="${id}" data-name="${name}"><i class="pli-trash fs-5"></i></button>`;
                     return gridjs.html(editButton + deleteButton);
                 }
             }
@@ -89,15 +89,13 @@ function initGrid() {
     }).render(document.getElementById("precautionsDatatable"));
 
     document.getElementById("precautionsDatatable").addEventListener("click", (e) => {
-        const btn = e.target.closest("[data-action]");
-        if (!btn) {
-            return;
+        const editBtn = e.target?.closest("button.btn-precaution-edit");
+        const deleteBtn = e.target?.closest("button.btn-precaution-delete");
+        if (editBtn) {
+            precaution.editPrecaution(editBtn.dataset.id);
         }
-        if (btn.dataset.action === "edit") {
-            precaution.editPrecaution(btn.dataset.id);
-        }
-        if (btn.dataset.action === "delete") {
-            precaution.deletePrecaution(btn.dataset.id, btn.dataset.name);
+        if (deleteBtn) {
+            precaution.deletePrecaution(deleteBtn.dataset.id, deleteBtn.dataset.name);
         }
     });
 
