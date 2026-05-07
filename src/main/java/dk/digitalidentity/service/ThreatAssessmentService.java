@@ -127,6 +127,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return threatAssessmentDao.save(assessment);
     }
 
+    @Transactional
     public ThreatAssessment copy(final long sourceId) {
         final ThreatAssessment sourceAssessment = threatAssessmentDao.findById(sourceId).orElseThrow();
         final ThreatAssessment targetAssessment = new ThreatAssessment();
@@ -205,9 +206,12 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
     }
 
 	private void copyPrecautions(final ThreatAssessmentResponse source, final ThreatAssessmentResponse target) {
-		relationService.findAllRelatedTo(source).stream()
+		final List<Relatable> precautions = relationService.findAllRelatedTo(source).stream()
 			.filter(r -> r.getRelationType().equals(RelationType.PRECAUTION))
-			.forEach(precaution -> relationService.addRelation(target, precaution));
+			.toList();
+		if (!precautions.isEmpty()) {
+			relationService.addRelations(target, precautions);
+		}
 	}
 
     @Transactional
