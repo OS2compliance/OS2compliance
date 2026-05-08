@@ -216,7 +216,7 @@ public class ReportController {
 		Setting customOperationSetting = settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
 		model.put("customOwnerName", customOwnerSetting != null ? customOwnerSetting.getSettingValue() : null);
 		model.put("customResponsibleName", customResponsibleSetting != null ? customResponsibleSetting.getSettingValue() : null);
-		model.put("customOperationName", customResponsibleSetting != null ? customOperationSetting.getSettingValue() : null);
+		model.put("customOperationName", customOperationSetting != null ? customOperationSetting.getSettingValue() : null);
 		Asset riskAsset = relations.stream()
 				.filter(r -> r.getRelationType() == RelationType.ASSET)
 				.map(Asset.class::cast)
