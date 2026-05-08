@@ -158,6 +158,21 @@ public class RelationService {
 		return relationDao.save(relation);
 	}
 
+	@Transactional
+	public void addRelations(final Relatable a, final List<Relatable> bs) {
+		final List<Relation> relations = bs.stream().map(b -> {
+			final Relation relation = new Relation();
+			relation.setRelationAId(a.getId());
+			relation.setRelationAType(a.getRelationType());
+			relation.setRelationAName(a.getName());
+			relation.setRelationBId(b.getId());
+			relation.setRelationBType(b.getRelationType());
+			relation.setRelationBName(b.getName());
+			return relation;
+		}).toList();
+		relationDao.saveAll(relations);
+	}
+
 	public void deleteRelatedTo(final Long lid) {
 		relationDao.deleteRelatedTo(lid);
 	}

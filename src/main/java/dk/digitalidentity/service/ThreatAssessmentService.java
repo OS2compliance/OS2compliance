@@ -30,7 +30,6 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -128,6 +127,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return threatAssessmentDao.save(assessment);
     }
 
+    @Transactional
     public ThreatAssessment copy(final long sourceId) {
         final ThreatAssessment sourceAssessment = threatAssessmentDao.findById(sourceId).orElseThrow();
         final ThreatAssessment targetAssessment = new ThreatAssessment();
@@ -157,10 +157,12 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
             .map(c -> copyCustomThreat(savedAssessment, c))
             .toList();
         savedAssessment.getCustomThreats().addAll(customThreats);
-        final List<ThreatAssessmentResponse> responses = sourceAssessment.getThreatAssessmentResponses().stream()
-            .map(r -> copyResponse(savedAssessment, customThreats, r))
-            .toList();
-        savedAssessment.getThreatAssessmentResponses().addAll(responses);
+        sourceAssessment.getThreatAssessmentResponses().forEach(sourceResponse -> {
+            final ThreatAssessmentResponse copied = copyResponse(savedAssessment, customThreats, sourceResponse);
+            final ThreatAssessmentResponse savedResponse = threatAssessmentResponseDao.save(copied);
+            savedAssessment.getThreatAssessmentResponses().add(savedResponse);
+            copyPrecautions(sourceResponse, savedResponse);
+        });
         return savedAssessment;
     }
 
@@ -172,10 +174,10 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return target;
     }
 
-    private static ThreatAssessmentResponse copyResponse(final ThreatAssessment assessment, final List<CustomThreat> customThreats,
+    private ThreatAssessmentResponse copyResponse(final ThreatAssessment assessment, final List<CustomThreat> customThreats,
                                                          final ThreatAssessmentResponse sourceResponse) {
         final ThreatAssessmentResponse t = new ThreatAssessmentResponse();
-        t.setNotRelevant(sourceResponse.isNotRelevant());
+		t.setNotRelevant(sourceResponse.isNotRelevant());
         t.setProbability(sourceResponse.getProbability());
         t.setConfidentialityRegistered(sourceResponse.getConfidentialityRegistered());
         t.setConfidentialityOrganisation(sourceResponse.getConfidentialityOrganisation());
@@ -200,8 +202,17 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                 .findFirst().orElse(null);
             t.setCustomThreat(customThreat);
         }
-        return t;
+		return t;
     }
+
+	private void copyPrecautions(final ThreatAssessmentResponse source, final ThreatAssessmentResponse target) {
+		final List<Relatable> precautions = relationService.findAllRelatedTo(source).stream()
+			.filter(r -> r.getRelationType().equals(RelationType.PRECAUTION))
+			.toList();
+		if (!precautions.isEmpty()) {
+			relationService.addRelations(target, precautions);
+		}
+	}
 
     @Transactional
     public void deleteById(final Long threatAssessmentId) {
