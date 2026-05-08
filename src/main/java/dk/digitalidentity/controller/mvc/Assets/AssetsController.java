@@ -478,7 +478,7 @@ public class AssetsController {
 	public String dataprocessing(@Valid @ModelAttribute final DataProcessingDTO body) {
 		final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+		if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 		if (body != null && asset.getDataProcessing() != null) {
@@ -518,7 +518,7 @@ public class AssetsController {
     @PostMapping("measures")
     public String measures(@ModelAttribute final SaveMeasuresDTO measuresForm) {
         final Asset asset = assetService.get(measuresForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -544,7 +544,7 @@ public class AssetsController {
     @PostMapping("dpia")
     public String dpia(@ModelAttribute final AssetDPIAPageDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDpiaOptOut(dpiaForm.isOptOut());
@@ -585,7 +585,7 @@ public class AssetsController {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -676,7 +676,7 @@ public class AssetsController {
 		if (subSupplier.isPresent()) {
 			//Edit
 			if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-					(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && assetService.isResponsibleFor(asset)))) {
+					(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && assetService.isOwning(asset)))) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 			subSupplier.get().setSupplier(supplier);
@@ -686,7 +686,7 @@ public class AssetsController {
 		} else {
 			//Create
 			if (!(SecurityUtil.isOperationAllowed(Roles.CREATE_ALL) ||
-					(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && assetService.isResponsibleFor(asset)))) {
+					(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && assetService.isOwning(asset)))) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 			final AssetSupplierMapping newSubsupplier = new AssetSupplierMapping();
@@ -718,7 +718,7 @@ public class AssetsController {
     public String oversightSettings(@Valid @ModelAttribute final DataProcessingOversightDTO body) {
         final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		boolean isDbs = false;
@@ -765,7 +765,7 @@ public class AssetsController {
 		Long redirectId = 0L;
 		for (Long assetId : dto.assetIds) {
 			final Asset asset = assetService.get(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+			if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 			final Optional<AssetOversight> oversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), dto.id)).findAny();
@@ -884,7 +884,7 @@ public class AssetsController {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
