@@ -19,6 +19,7 @@ public class DocsReportGeneratorComponent {
         final XWPFDocument document = docxService.readDocument(inputFileName);
         docxService.replacePlaceHolders(document, parameters, template);
         document.enforceUpdateFields();
+        DocxUtil.markTocFieldsDirty(document);
         return document;
     }
 
