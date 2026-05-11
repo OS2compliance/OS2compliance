@@ -8,6 +8,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
     pageLoaded()
 });
 
+// Exposed for inline onclick handlers in inactive_users.html and the grid action button below.
+// Required because this file is loaded as type="module", so top-level functions are not on window.
+window.transferResponsibility = transferResponsibility;
+window.initModalWithDefaultTransferFrom = initModalWithDefaultTransferFrom;
+
 function transferResponsibility() {
     let transferFrom = transferFromSelect.value;
     let transferTo = transferToSelect.value;
