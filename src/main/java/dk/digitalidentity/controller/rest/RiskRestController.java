@@ -451,8 +451,8 @@ public class RiskRestController {
     public ResponseEntity<HttpStatus> deleteCustomThread(@PathVariable final long id, @PathVariable final long threatId) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if (!SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		if (!(SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) ||
+				(SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -556,7 +556,7 @@ public class RiskRestController {
 		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
-				|| (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment)))) {
+				|| (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
