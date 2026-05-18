@@ -172,7 +172,7 @@ public class RiskController {
 	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
+				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		if (editedAssessment.getThreatAssessmentType() != assessment.getThreatAssessmentType()) {
@@ -422,7 +422,7 @@ public class RiskController {
     public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment)))) {
+		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
         threatAssessment.setRevisionInterval(assessment.getRevisionInterval());
