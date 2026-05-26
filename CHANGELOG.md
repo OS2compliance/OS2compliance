@@ -5,6 +5,38 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-41) (Aktiver/Generelt) Visning af resultatet for senest gennemførte kontroller, deadline og opgavetype
+- (https://os2web.atlassian.net/browse/COMPLY-57) (Aktiver/generelt) Markering af integrationer mellem systemer
+- (https://os2web.atlassian.net/browse/COMPLY-149) (Aktiver/TIA) Mulighed for at notere at der ikke skal udarbejdes en TIA
+- (https://os2web.atlassian.net/browse/COMPLY-150) (Aktiver/TIA) Mulighed for at indsætte link til TIA
+- (https://os2web.atlassian.net/browse/COMPLY-292) (Aktiver/DPIA) Ved oprettelse af en påmindelse om at genbesøge DPIA skal det være systemansvarlig i stedet for systemejer, der default står som ansvarlig på opgaven
+- (https://os2web.atlassian.net/browse/COMPLY-324) (Opgavecenter/Ny fane) Dynamisk og brugerrettet årshjul
+- (https://os2web.atlassian.net/browse/COMPLY-350) (Opgavecenter) Kolonne der viser tilknyttet risikovurdering
+
+### Fixed
+- (gitlab #1) Fejl i antal løsninger
+- (gitlab #2) Forkert terminologi
+- (gitlab #3) Manglende download af DPIA
+- (gitlab #13) Kan ikke fjerne lovhenvisninger fra "Relevante lovhenvisninger" på Fortegnelse
+- (gitlab #14) Dialog for oprettelse af ny opgave lukker og mister data ved klik udenfor
+- (gitlab #15) Notifikation om kommende deadline sendes selvom kontrol er udført
+- (gitlab #18) NullPointerException i task-grid når task har NULL task_type eller repetition
+- (gitlab #19) Datofelt på databehandleraftale fejler ved manuel indtastning uden ledende nul
+- (gitlab #20) Kopiering af risikovurdering medtager ikke tilknyttede foranstaltninger
+- (gitlab #21) Systemroller (Driftsansvarlig/Systemansvarlig) vises forkert i risikorapport (PDF/DOCX/Excel)
+- (gitlab #23) Man kan ikke redigere/slette eksisterende foranstaltninger
+- (Ad-hoc) Manglende redigeringsmulighed i standarder
+- (Ad-hoc) Man kan oprette en konsekvensanalyse uden værdier
+- (Ad-hoc) JS-fejl i fortegnelse view
+- (Ad-hoc) Forskellig styling på card bodies på fortegnelser og aktiver
+- (Ad-hoc) Duplikerede tags vist på aktiv-oversigt
+- (Ad-hoc) Samlet rettelse af notifikationslogik (notify-fix)
+- (Ad-hoc) Sanitering af filnavne på downloads (header-parsing)
+- (Ad-hoc) Diverse bugfixes i trusselsvurderings-rapport
+- (Ad-hoc) CI: anvend seneste version af review-workflow
+
 ## [2.6.0] - 2026-03-24
 ### Added
 - (Ad-hoc) Ændringer til aktiv-fanen Foranstaltninger
