@@ -22,7 +22,6 @@ import java.util.Optional;
 @Component
 @EnableScheduling
 @RequiredArgsConstructor
-@ConditionalOnMissingBean(AuditsApi.class)
 public class DBSSyncTask {
     private final DBSClientService dbsClientService;
 	private final DBSService dbsService;
