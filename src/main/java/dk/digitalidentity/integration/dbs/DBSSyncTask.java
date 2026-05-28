@@ -1,5 +1,6 @@
 package dk.digitalidentity.integration.dbs;
 
+import dk.dbs.api.AuditsApi;
 import dk.dbs.api.model.Document;
 import dk.dbs.api.model.ItSystem;
 import dk.dbs.api.model.Supplier;
@@ -8,6 +9,7 @@ import dk.digitalidentity.integration.dbs.exception.DBSSynchronizationException;
 import dk.digitalidentity.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,7 @@ import java.util.Optional;
 @Component
 @EnableScheduling
 @RequiredArgsConstructor
+@ConditionalOnMissingBean(AuditsApi.class)
 public class DBSSyncTask {
     private final DBSClientService dbsClientService;
 	private final DBSService dbsService;
