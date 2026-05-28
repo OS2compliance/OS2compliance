@@ -16,6 +16,18 @@ function CreateStandardService() {
                     this.standardModalDialog = document.getElementById('standardFormDialog');
                     this.standardModalDialog.innerHTML = data;
                     const createTaskModal = new bootstrap.Modal(this.standardModalDialog);
+
+                    const form = document.getElementById('standardCreateForm');
+                    if (form) {
+                        form.addEventListener('submit', function (e) {
+                            if (!form.checkValidity()) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                form.classList.add('was-validated');
+                            }
+                        });
+                    }
+
                     createTaskModal.show();
                 }))
             .catch(error => toastService.error(error));

@@ -190,7 +190,6 @@ public class StandardController {
 	@Transactional
 	@PostMapping("/create")
 	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard, RedirectAttributes redirectAttributes) {
-		standard.setIdentifier(standard.getIdentifier().replaceAll("[.,\\s/-]", "_"));
 		standard.setSupporting(true);
 		standardTemplateDao.save(standard);
 		redirectAttributes.addFlashAttribute("successMessage", "Standard gemt!");
@@ -200,8 +199,8 @@ public class StandardController {
 
 	@RequireReadOwnerOnly
 	@Transactional(readOnly = true)
-	@GetMapping("supporting/progress")
-	public String standardProgress(final Model model, @RequestParam final String id) {
+	@GetMapping("supporting/{id}/progress")
+	public String standardProgress(final Model model, @PathVariable final String id) {
 		final StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		Map<StandardSectionStatus, Integer> progressBarValues = getProgressBarValues(template);

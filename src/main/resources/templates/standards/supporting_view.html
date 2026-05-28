@@ -144,7 +144,7 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
-        const progressUrl = [[@{/standards/supporting/progress(id=${template.identifier})}]];
+        const progressUrl = [[@{/standards/supporting/__${template.identifier}__/progress}]];
         var viewUrl = [[@{/standards/supporting/}]];
         var today = [[${today}]];
         var success = [[${successMessage}]];

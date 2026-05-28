@@ -104,7 +104,7 @@ function initTable() {
             td.dataset.loaded = '1';
             if (cache.has(id)) { td.innerHTML = cache.get(id); return; }
 
-            const r = await fetch(`${viewUrl}progress?id=${encodeURIComponent(id)}`);
+            const r = await fetch(`${viewUrl}${encodeURIComponent(id)}/progress`);
             let html = r.ok ? await r.text() : '';
             html = `<div class="progress flex-grow-1" style="height: 1.2rem;">${html}</div>`
             cache.set(id, html);
