@@ -189,7 +189,10 @@ public class StandardController {
 	@RequireCreateAll
 	@Transactional
 	@PostMapping("/create")
-	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard, RedirectAttributes redirectAttributes) {
+	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+		if (bindingResult.hasErrors()) {
+			return "redirect:/standards";
+		}
 		standard.setSupporting(true);
 		standardTemplateDao.save(standard);
 		redirectAttributes.addFlashAttribute("successMessage", "Standard gemt!");
