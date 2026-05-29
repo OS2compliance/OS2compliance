@@ -153,6 +153,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(40, this::seedV40);
 		incrementAndPerformIfVersion(41, this::seedV41);
 		incrementAndPerformIfVersion(42, this::seedV42);
+		incrementAndPerformIfVersion(43, this::seedV43);
+	}
+
+	private void seedV43() {
+		settingsService.createSetting(Constants.DBS_OVERSIGHT_RECIPIENT_SETTING, "", "dbs", true);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
