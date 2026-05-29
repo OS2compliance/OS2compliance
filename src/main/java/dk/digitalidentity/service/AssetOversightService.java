@@ -84,7 +84,11 @@ public class AssetOversightService {
         final TaskLog taskLog = new TaskLog();
         taskLog.setTask(task);
         taskLog.setName("Tilsyn udført");
-        taskLog.setComment("Status: " + oversight.getStatus().getMessage());
+		String comment = "Status: " + oversight.getStatus().getMessage();
+		if (oversight.getConclusion() != null && !oversight.getConclusion().isBlank()) {
+			comment += "\nKonklusion: " + oversight.getConclusion();
+		}
+		taskLog.setComment(comment);
         taskLog.setCompleted(oversight.getCreationDate());
         taskLog.setDocumentationLink(samlConfiguration.getSp().getBaseUrl() + "/assets/" + oversight.getAsset().getId());
         User responsibleUser = oversight.getResponsibleUser();
