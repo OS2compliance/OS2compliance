@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.StandardSectionDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.model.dto.RelatedDTO;
+import dk.digitalidentity.model.dto.StandardTemplateDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
@@ -189,13 +190,17 @@ public class StandardController {
 	@RequireCreateAll
 	@Transactional
 	@PostMapping("/create")
-	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+	public String newStandard(@Valid @ModelAttribute final StandardTemplateDTO standard, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 		if (bindingResult.hasErrors()) {
 			redirectAttributes.addFlashAttribute("errorMessage", "Standard ID må kun indeholde bogstaver, tal, underscore, punktum og bindestreg");
 			return "redirect:/standards";
 		}
-		standard.setSupporting(true);
-		standardTemplateDao.save(standard);
+		StandardTemplate entity = StandardTemplate.builder()
+				.identifier(standard.getIdentifier())
+				.name(standard.getName())
+				.supporting(true)
+				.build();
+		standardTemplateDao.save(entity);
 		redirectAttributes.addFlashAttribute("successMessage", "Standard gemt!");
 
 		return "redirect:/standards";
@@ -229,7 +234,7 @@ public class StandardController {
 	@RequireUpdateAll
 	@Transactional
 	@PostMapping("/update")
-	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard, RedirectAttributes redirectAttributes) {
+	public String updateStandard(@Valid @ModelAttribute final StandardTemplateDTO standard, RedirectAttributes redirectAttributes) {
 		StandardTemplate template = supportingStandardService.lookup(standard.getIdentifier())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		template.setName(standard.getName());
@@ -243,7 +248,7 @@ public class StandardController {
 	@GetMapping("/form")
 	public String createStandardForm(final Model model) {
 		model.addAttribute("action", "standards/create");
-		model.addAttribute("standard", new StandardTemplate());
+		model.addAttribute("standard", new StandardTemplateDTO());
 		model.addAttribute("formTitle", "Ny standard");
 		model.addAttribute("formId", "standardCreateForm");
 		model.addAttribute("edit", false);
@@ -256,7 +261,10 @@ public class StandardController {
 		StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 		model.addAttribute("action", "standards/update");
-		model.addAttribute("standard", template);
+		model.addAttribute("standard", StandardTemplateDTO.builder()
+				.identifier(template.getIdentifier())
+				.name(template.getName())
+				.build());
 		model.addAttribute("formTitle", "Rediger standard");
 		model.addAttribute("formId", "standardCreateForm");
 		model.addAttribute("edit", true);
