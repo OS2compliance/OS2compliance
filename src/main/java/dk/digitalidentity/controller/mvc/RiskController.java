@@ -202,11 +202,15 @@ public class RiskController {
         return "redirect:/risks";
     }
 
-	@RequireCreateAll
+	@RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("{id}/update-catalogs")
 	public String updateThreatCatalogs(@PathVariable("id") final long id, @RequestParam(name = "threatCatalogs", required = false) final Set<String> catalogIdentifiers) {
 		final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(editedAssessment)))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
 
 		// Find selected catalogs
 		List<ThreatCatalog> selectedCatalogs = new ArrayList<>();
