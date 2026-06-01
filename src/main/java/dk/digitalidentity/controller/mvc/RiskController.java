@@ -27,7 +27,6 @@ import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
