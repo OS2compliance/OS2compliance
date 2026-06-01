@@ -150,7 +150,12 @@ export function initTia() {
     const cancelTIABtn = document.getElementById('cancelTIABtn');
 
     if (editTIABtn) {
-        editTIABtn.addEventListener('click', () => setTIAEditState(true));
+        editTIABtn.addEventListener('click', () => {
+            if (tiaAccepted && !confirm('TIA er godkendt. Hvis du redigerer, vil godkendelsen blive fjernet. Vil du fortsætte?')) {
+                return;
+            }
+            setTIAEditState(true);
+        });
     }
     if (cancelTIABtn) {
         cancelTIABtn.addEventListener('click', () => setTIAEditState(false));
