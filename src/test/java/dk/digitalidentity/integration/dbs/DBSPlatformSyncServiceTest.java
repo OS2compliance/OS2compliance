@@ -22,7 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -367,7 +366,9 @@ class DBSPlatformSyncServiceTest {
 
 		// Then
 		assertThat(result).isPresent();
-		assertThat(result.get().toLocalDateTime()).isEqualTo(LocalDateTime.of(2026, 6, 15, 12, 0));
+		assertThat(result.get().toInstant()).isEqualTo(
+				OffsetDateTime.of(2026, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC).toInstant()
+		);
 	}
 
 	@Test
