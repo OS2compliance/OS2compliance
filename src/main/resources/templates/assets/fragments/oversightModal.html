@@ -13,8 +13,8 @@
                 <div th:if="*{assetIds == null}" class="row mt-3">
                     <label class="col-sm-4 col-form-label" for="multipleAssetSelect">Aktiver</label>
                     <div class="col-sm-8">
-                        <select class="form-control form-select choices__input" name="assetSelect" id="multipleAssetSelect" th:field="*{assetIds}" multiple="multiple">
-                            <option th:each="supAsset : ${supplierAssets}" th:value="${supAsset.id}" th:text="${supAsset.name}"></option>
+                        <select class="form-control form-select choices__input" name="assetIds" id="multipleAssetSelect" multiple="multiple">
+                            <option th:each="supAsset : ${supplierAssets}" th:value="${supAsset.id}" th:text="${supAsset.name}" selected="selected"></option>
                         </select>
                     </div>
                 </div>
