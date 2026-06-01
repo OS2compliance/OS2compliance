@@ -191,6 +191,7 @@ public class StandardController {
 	@PostMapping("/create")
 	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 		if (bindingResult.hasErrors()) {
+			redirectAttributes.addFlashAttribute("errorMessage", "Standard ID må kun indeholde bogstaver, tal, underscore, punktum og bindestreg");
 			return "redirect:/standards";
 		}
 		standard.setSupporting(true);

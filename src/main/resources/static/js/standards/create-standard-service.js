@@ -18,15 +18,18 @@ function CreateStandardService() {
                     const createTaskModal = new bootstrap.Modal(this.standardModalDialog);
 
                     const form = document.getElementById('standardCreateForm');
-                    if (form) {
-                        form.addEventListener('submit', function (e) {
-                            if (!form.checkValidity()) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                form.classList.add('was-validated');
-                            }
-                        });
+                    if (!form) {
+                        toastService.error("Formularen kunne ikke indlæses");
+                        return;
                     }
+
+                    form.addEventListener('submit', function (e) {
+                        if (!form.checkValidity()) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            form.classList.add('was-validated');
+                        }
+                    });
 
                     createTaskModal.show();
                 }))
