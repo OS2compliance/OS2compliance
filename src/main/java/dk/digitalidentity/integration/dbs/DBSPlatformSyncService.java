@@ -1,10 +1,10 @@
 package dk.digitalidentity.integration.dbs;
 
-import dk.dbs.api.AuditsApi;
-import dk.dbs.api.model.AuditDto;
-import dk.dbs.api.model.AuditDtoListPagedResponse;
-import dk.dbs.api.model.AuditSupplierDto;
-import dk.dbs.api.model.AuditSystemDto;
+import dk.dbs.platform.api.AuditsApi;
+import dk.dbs.platform.api.model.AuditDto;
+import dk.dbs.platform.api.model.AuditDtoListPagedResponse;
+import dk.dbs.platform.api.model.AuditSupplierDto;
+import dk.dbs.platform.api.model.AuditSystemDto;
 import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.dao.DBSSupplierDao;
@@ -18,11 +18,10 @@ import dk.digitalidentity.service.RelationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -40,7 +39,6 @@ import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PRO
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBean(AuditsApi.class)
 public class DBSPlatformSyncService {
 	private static final int PAGE_SIZE = 50;
 
@@ -56,7 +54,7 @@ public class DBSPlatformSyncService {
 	 * Fetches all audits from the DBS Platform API, handling pagination.
 	 * Kept outside @Transactional so API calls don't hold a DB transaction open.
 	 */
-	public List<AuditDto> fetchAllAudits(LocalDateTime publishedAfter) {
+	public List<AuditDto> fetchAllAudits(OffsetDateTime publishedAfter) {
 		List<AuditDto> allAudits = new ArrayList<>();
 		int page = 1;
 		boolean hasNext = true;
@@ -75,7 +73,7 @@ public class DBSPlatformSyncService {
 		return audits.stream()
 				.filter(a -> a.getPublishedDate() != null)
 				.max(Comparator.comparing(AuditDto::getPublishedDate))
-				.map(a -> a.getPublishedDate().atZone(LOCAL_TZ_ID));
+				.map(a -> a.getPublishedDate().atZoneSameInstant(LOCAL_TZ_ID));
 	}
 
 	@Transactional
@@ -150,6 +148,9 @@ public class DBSPlatformSyncService {
 				asset.setSupplier(supplier.get());
 				asset.setLastSync(today);
 
+				// TODO: do we have a status field? Can't find it. Set status to published manually or syncs won't work
+				asset.setStatus("published");
+
 				// Only map if no relations exist yet (idempotent)
 				if (relationService.findAllRelatedTo(asset).isEmpty()) {
 					if (mapKitosAssetsToDBS(entry.kitosUuid(), asset)) {
@@ -164,6 +165,10 @@ public class DBSPlatformSyncService {
 				newAsset.setName(entry.system().getName());
 				newAsset.setSupplier(supplier.get());
 				newAsset.setLastSync(today);
+
+				// TODO: do we have a status field? Can't find it. Set status to published manually or syncs won't work
+				newAsset.setStatus("published");
+
 				dbsAssetDao.save(newAsset);
 				created++;
 
@@ -211,7 +216,7 @@ public class DBSPlatformSyncService {
 				DBSOversight oversight = new DBSOversight();
 				oversight.setDbsId(auditId);
 				oversight.setName(audit.getName());
-				oversight.setCreated(audit.getPublishedDate());
+				oversight.setCreated(audit.getPublishedDate().toLocalDateTime());
 				oversight.setLocked(false);
 				oversight.setSupplier(supplier.get());
 				oversight.setTaskCreated(false);

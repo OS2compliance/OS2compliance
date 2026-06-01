@@ -1,18 +1,17 @@
 package dk.digitalidentity.integration.dbs;
 
-import dk.dbs.api.AuditsApi;
-import dk.dbs.api.model.AuditDto;
+import dk.dbs.platform.api.model.AuditDto;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +19,6 @@ import java.util.Optional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBean(AuditsApi.class)
 public class DBSPlatformSyncTask {
 	static final String LAST_SYNC_SETTING = "dbs_platform_last_sync";
 
@@ -29,6 +27,7 @@ public class DBSPlatformSyncTask {
 	private final SettingsService settingsService;
 
 	@Scheduled(cron = "${os2compliance.integrations.dbs.platform.cron:0 0 3 * * *}")
+//	@Scheduled(fixedRate = 1000 * 60 * 10)
 	public void syncTask() {
 		if (!configuration.isSchedulingEnabled()) {
 			log.debug("Scheduling disabled, skipping DBS Platform sync");
@@ -51,9 +50,9 @@ public class DBSPlatformSyncTask {
 				return;
 			}
 
-			LocalDateTime publishedAfter = lastSync != null
-					? lastSync.toLocalDateTime()
-					: (backfillFrom != null ? backfillFrom.atStartOfDay() : null);
+			OffsetDateTime publishedAfter = lastSync != null
+					? lastSync.toOffsetDateTime()
+					: (backfillFrom != null ? backfillFrom.atStartOfDay().atOffset(ZoneOffset.UTC) : null);
 			List<AuditDto> audits = syncService.fetchAllAudits(publishedAfter);
 
 			if (lastSync == null) {

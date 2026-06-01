@@ -1,6 +1,6 @@
 package dk.digitalidentity.integration.dbs;
 
-import dk.dbs.api.model.AuditDto;
+import dk.dbs.platform.api.model.AuditDto;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.config.property.DBS;
 import dk.digitalidentity.config.property.Integration;
@@ -15,7 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -78,9 +79,9 @@ class DBSPlatformSyncTaskTest {
 		syncTask.syncTask();
 
 		// Then
-		ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
+		ArgumentCaptor<OffsetDateTime> captor = ArgumentCaptor.forClass(OffsetDateTime.class);
 		verify(syncService).fetchAllAudits(captor.capture());
-		assertThat(captor.getValue()).isEqualTo(backfillFrom.atStartOfDay());
+		assertThat(captor.getValue()).isEqualTo(backfillFrom.atStartOfDay().atOffset(ZoneOffset.UTC));
 	}
 
 	@Test
@@ -95,9 +96,9 @@ class DBSPlatformSyncTaskTest {
 		syncTask.syncTask();
 
 		// Then
-		ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
+		ArgumentCaptor<OffsetDateTime> captor = ArgumentCaptor.forClass(OffsetDateTime.class);
 		verify(syncService).fetchAllAudits(captor.capture());
-		assertThat(captor.getValue()).isEqualTo(lastSync.toLocalDateTime());
+		assertThat(captor.getValue()).isEqualTo(lastSync.toOffsetDateTime());
 	}
 
 	@Test

@@ -1,10 +1,10 @@
 package dk.digitalidentity.integration.dbs;
 
-import dk.dbs.api.AuditsApi;
-import dk.dbs.api.model.AuditDto;
-import dk.dbs.api.model.AuditDtoListPagedResponse;
-import dk.dbs.api.model.AuditSupplierDto;
-import dk.dbs.api.model.AuditSystemDto;
+import dk.dbs.platform.api.AuditsApi;
+import dk.dbs.platform.api.model.AuditDto;
+import dk.dbs.platform.api.model.AuditDtoListPagedResponse;
+import dk.dbs.platform.api.model.AuditSupplierDto;
+import dk.dbs.platform.api.model.AuditSystemDto;
 import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.dao.DBSSupplierDao;
@@ -23,6 +23,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,7 +78,7 @@ class DBSPlatformSyncServiceTest {
 		when(auditsApi.getAudits(any(), eq(3), eq(50))).thenReturn(page3);
 
 		// When
-		List<AuditDto> result = syncService.fetchAllAudits(LocalDateTime.now().minusDays(1));
+		List<AuditDto> result = syncService.fetchAllAudits(OffsetDateTime.now().minusDays(1));
 
 		// Then
 		assertThat(result).hasSize(3);
@@ -205,7 +207,7 @@ class DBSPlatformSyncServiceTest {
 	void synchronize_createsNewOversight() {
 		// Given
 		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
-		LocalDateTime publishedDate = LocalDateTime.of(2026, 3, 15, 10, 0);
+		OffsetDateTime publishedDate = OffsetDateTime.of(2026, 3, 15, 10, 0, 0, 0, ZoneOffset.UTC);
 		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport 2026", 100, "Supplier", 200, "System", null);
 		audit.setPublishedDate(publishedDate);
 
@@ -222,7 +224,7 @@ class DBSPlatformSyncServiceTest {
 		DBSOversight saved = captor.getValue();
 		assertThat(saved.getDbsId()).isEqualTo(1L);
 		assertThat(saved.getName()).isEqualTo("Tilsynsrapport 2026");
-		assertThat(saved.getCreated()).isEqualTo(publishedDate);
+		assertThat(saved.getCreated()).isEqualTo(publishedDate.toLocalDateTime());
 		assertThat(saved.isLocked()).isFalse();
 		assertThat(saved.isTaskCreated()).isFalse();
 		assertThat(saved.getSupplier()).isEqualTo(supplier);
@@ -356,9 +358,9 @@ class DBSPlatformSyncServiceTest {
 	void findNewestPublishedDate_returnsNewest() {
 		// Given
 		AuditDto older = createAudit(1, "Old");
-		older.setPublishedDate(LocalDateTime.of(2026, 1, 1, 0, 0));
+		older.setPublishedDate(OffsetDateTime.of(2026, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC));
 		AuditDto newer = createAudit(2, "New");
-		newer.setPublishedDate(LocalDateTime.of(2026, 6, 15, 12, 0));
+		newer.setPublishedDate(OffsetDateTime.of(2026, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC));
 
 		// When
 		Optional<ZonedDateTime> result = syncService.findNewestPublishedDate(List.of(older, newer));
@@ -379,7 +381,7 @@ class DBSPlatformSyncServiceTest {
 		AuditDto audit = new AuditDto();
 		audit.setId(id);
 		audit.setName(name);
-		audit.setPublishedDate(LocalDateTime.now());
+		audit.setPublishedDate(OffsetDateTime.now());
 		return audit;
 	}
 
@@ -399,7 +401,7 @@ class DBSPlatformSyncServiceTest {
 		AuditDto audit = new AuditDto();
 		audit.setId(auditId);
 		audit.setName(auditName);
-		audit.setPublishedDate(LocalDateTime.now());
+		audit.setPublishedDate(OffsetDateTime.now());
 		audit.setSupplier(supplier);
 		audit.setSystems(List.of(system));
 

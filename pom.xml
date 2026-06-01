@@ -250,7 +250,7 @@
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>
 			<artifactId>dbs-platfom-client</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.4</version>
 		</dependency>
     </dependencies>
 
