@@ -36,6 +36,7 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.TransferImpactAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ColorStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
@@ -70,6 +71,7 @@ import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.simple_queue.QueueMessage;
 import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -150,6 +152,7 @@ public class AssetsController {
 
 
 	private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
+	private final UserService userService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -899,25 +902,53 @@ public class AssetsController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        existingAsset.getTia().setForwardInformationToOtherSuppliers(asset.getTia().getForwardInformationToOtherSuppliers());
-        existingAsset.getTia().setForwardInformationToOtherSuppliersDetail(asset.getTia().getForwardInformationToOtherSuppliersDetail());
+		TransferImpactAssessment existingTia = existingAsset.getTia();
+		if (existingTia == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		}
 
-        if (existingAsset.getTia().getForwardInformationToOtherSuppliers() != ForwardInformationToOtherSuppliers.YES) {
-            existingAsset.getTia().setForwardInformationToOtherSuppliersDetail(null);
+		TransferImpactAssessment newTia = asset.getTia();
+		if (newTia == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		}
+
+		existingTia.setForwardInformationToOtherSuppliers(newTia.getForwardInformationToOtherSuppliers());
+		existingTia.setForwardInformationToOtherSuppliersDetail(newTia.getForwardInformationToOtherSuppliersDetail());
+
+        if (existingTia.getForwardInformationToOtherSuppliers() != ForwardInformationToOtherSuppliers.YES) {
+			existingTia.setForwardInformationToOtherSuppliersDetail(null);
         }
 
-        existingAsset.getTia().setAccessType(asset.getTia().getAccessType());
-        existingAsset.getTia().setAssessment(asset.getTia().getAssessment());
-        existingAsset.getTia().setConclusion(asset.getTia().getConclusion());
-		existingAsset.getTia().setLink(asset.getTia().getLink());
-        existingAsset.getTia().setExpectedTransferDuration(asset.getTia().getExpectedTransferDuration());
-        existingAsset.getTia().setContractualSecurityMeasures(asset.getTia().getContractualSecurityMeasures());
-        existingAsset.getTia().setTechnicalSecurityMeasures(asset.getTia().getTechnicalSecurityMeasures());
-        existingAsset.getTia().setOrganizationalSecurityMeasures(asset.getTia().getOrganizationalSecurityMeasures());
-        existingAsset.getTia().setRegisteredCategories(asset.getTia().getRegisteredCategories());
-        existingAsset.getTia().setInformationTypes(asset.getTia().getInformationTypes());
+		existingTia.setAccessType(newTia.getAccessType());
+		existingTia.setAssessment(newTia.getAssessment());
+		existingTia.setConclusion(newTia.getConclusion());
+		existingTia.setLink(newTia.getLink());
+		existingTia.setExpectedTransferDuration(newTia.getExpectedTransferDuration());
+		existingTia.setContractualSecurityMeasures(newTia.getContractualSecurityMeasures());
+        existingTia.setTechnicalSecurityMeasures(newTia.getTechnicalSecurityMeasures());
+		existingTia.setOrganizationalSecurityMeasures(newTia.getOrganizationalSecurityMeasures());
+		existingTia.setRegisteredCategories(newTia.getRegisteredCategories());
+		existingTia.setInformationTypes(newTia.getInformationTypes());
 
-        existingAsset.getTia().setTransferCaseDescription(asset.getTia().getTransferCaseDescription());
+		if (!existingTia.isAccepted() && newTia.isAccepted()) {
+			existingTia.setAccepted(true);
+			existingTia.setAcceptedDate(LocalDate.now());
+			existingTia.setAcceptedComment(newTia.getAcceptedComment());
+
+			Optional<User> loggedInUser = userService.findByUuid(SecurityUtil.getLoggedInUserUuid());
+			if (loggedInUser.isPresent()) {
+				existingTia.setAcceptedByUuid(loggedInUser.get().getUuid());
+				existingTia.setAcceptedByName(loggedInUser.get().getName());
+			}
+		} else if (existingTia.isAccepted() && !newTia.isAccepted()) {
+			existingTia.setAccepted(false);
+			existingTia.setAcceptedDate(null);
+			existingTia.setAcceptedComment(null);
+			existingTia.setAcceptedByUuid(null);
+			existingTia.setAcceptedByName(null);
+		}
+
+        existingTia.setTransferCaseDescription(newTia.getTransferCaseDescription());
         return "redirect:/assets/" + existingAsset.getId();
     }
 

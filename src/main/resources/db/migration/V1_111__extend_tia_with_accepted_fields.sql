@@ -1,0 +1,6 @@
+ALTER TABLE tia
+    ADD COLUMN accepted BOOLEAN DEFAULT FALSE,
+    ADD COLUMN accepted_comment TEXT DEFAULT NULL,
+    ADD COLUMN accepted_by_name VARCHAR(255) DEFAULT NULL,
+    ADD COLUMN accepted_by_uuid VARCHAR(36) DEFAULT NULL,
+    ADD COLUMN accepted_date DATE DEFAULT NULL;

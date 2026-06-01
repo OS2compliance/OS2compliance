@@ -175,6 +175,28 @@
                                 <td></td>
                             </tr>
                          </tbody>
+                        <thead>
+                        <tr>
+                            <th colspan="3">Accept</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td><label for="acceptCheckbox">TIA gennemgået og accepteret</label></td>
+                            <td><input id="acceptCheckbox" name="acceptCheckbox" type="checkbox" class="form-check-input editField" th:field="*{tia.accepted}" /></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><label for="acceptComment">Bemærkning</label></td>
+                            <td><textarea id="acceptComment" name="acceptComment" rows="8" class="form-control editField" th:field="*{tia.acceptedComment}"></textarea></td>
+                            <td></td>
+                        </tr>
+                        <tr th:if="*{tia.accepted}">
+                            <td></td>
+                            <td><input type="text" rows="8" class="form-control" th:value="${'Accepteret af ' + asset.tia.acceptedByName + ' d. ' + #temporals.format(asset.tia.acceptedDate, 'dd-MM-yyyy')}" readonly /></td>
+                            <td></td>
+                        </tr>
+                        </tbody>
                          <thead>
                             <tr>
                                 <th colspan="2">Konklusion</th>
