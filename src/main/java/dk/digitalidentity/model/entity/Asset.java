@@ -101,6 +101,16 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 	@JoinColumn(name = "supervisory_model")
 	private ChoiceValue supervisoryModel;
 
+	@ManyToMany
+	@JoinTable(
+			name = "assets_additional_supervisory_models",
+			joinColumns = { @JoinColumn(name = "asset_id") },
+			inverseJoinColumns = { @JoinColumn(name = "choice_value_id") }
+	)
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<ChoiceValue> additionalSupervisoryModels = new HashSet<>();
+
     @Column
     @Enumerated(EnumType.STRING)
     private NextInspection nextInspection;

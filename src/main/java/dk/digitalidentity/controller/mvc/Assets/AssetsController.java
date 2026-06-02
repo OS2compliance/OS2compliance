@@ -738,6 +738,17 @@ public class AssetsController {
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid supervisory model"));
 			asset.setSupervisoryModel(supervisoryModel);
 			isDbs = supervisoryModel.getIdentifier().startsWith("supervision-model-dbs-123456");
+
+			if (body.getAdditionalSupervisoryModelIds() != null) {
+				Set<ChoiceValue> additionalModels = body.getAdditionalSupervisoryModelIds().stream()
+						.map(choiceValueService::findById)
+						.filter(Optional::isPresent)
+						.map(Optional::get)
+						.collect(Collectors.toSet());
+				asset.setAdditionalSupervisoryModels(additionalModels);
+			} else {
+				asset.getAdditionalSupervisoryModels().clear();
+			}
 		}
 		if (body.getDataProcessingAgreementStatus() != null) {
 			asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
