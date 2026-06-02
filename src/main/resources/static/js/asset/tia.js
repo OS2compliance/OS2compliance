@@ -1,3 +1,5 @@
+import { confirm } from "../dialog-service.js";
+
 let bsCollapse;
 let tiaChoiceElements = [];
 
@@ -150,9 +152,13 @@ export function initTia() {
     const cancelTIABtn = document.getElementById('cancelTIABtn');
 
     if (editTIABtn) {
-        editTIABtn.addEventListener('click', () => {
-            if (tiaAccepted && !confirm('TIA er godkendt. Hvis du redigerer, vil godkendelsen blive fjernet. Vil du fortsætte?')) {
-                return;
+        editTIABtn.addEventListener('click', async () => {
+            if (tiaAccepted) {
+                const result = await confirm({
+                    text: 'TIA er godkendt. Hvis du redigerer, vil godkendelsen blive fjernet. Vil du fortsætte?',
+                    icon: 'warning',
+                });
+                if (!result.isConfirmed) return;
             }
             setTIAEditState(true);
         });
