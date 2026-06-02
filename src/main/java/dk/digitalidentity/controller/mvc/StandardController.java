@@ -24,7 +24,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -190,10 +192,10 @@ public class StandardController {
 	@RequireCreateAll
 	@Transactional
 	@PostMapping("/create")
-	public String newStandard(@Valid @ModelAttribute final StandardTemplateDTO standard, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+	@ResponseBody
+	public ResponseEntity<String> newStandard(@Valid @ModelAttribute final StandardTemplateDTO standard, BindingResult bindingResult) {
 		if (bindingResult.hasErrors()) {
-			redirectAttributes.addFlashAttribute("errorMessage", "Standard ID må kun indeholde bogstaver, tal, underscore, punktum og bindestreg");
-			return "redirect:/standards";
+			return ResponseEntity.badRequest().body("Standard ID må kun indeholde bogstaver, tal, underscore, punktum og bindestreg");
 		}
 		StandardTemplate entity = StandardTemplate.builder()
 				.identifier(standard.getIdentifier())
@@ -201,9 +203,7 @@ public class StandardController {
 				.supporting(true)
 				.build();
 		standardTemplateDao.save(entity);
-		redirectAttributes.addFlashAttribute("successMessage", "Standard gemt!");
-
-		return "redirect:/standards";
+		return ResponseEntity.ok().build();
 	}
 
 	@RequireReadOwnerOnly

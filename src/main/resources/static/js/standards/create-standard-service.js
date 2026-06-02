@@ -24,11 +24,26 @@ function CreateStandardService() {
                     }
 
                     form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
                         if (!form.checkValidity()) {
-                            e.preventDefault();
-                            e.stopPropagation();
                             form.classList.add('was-validated');
+                            return;
                         }
+
+                        fetch(form.action, {
+                            method: 'POST',
+                            body: new FormData(form),
+                            headers: { 'X-CSRF-TOKEN': token }
+                        }).then(response => {
+                            if (response.ok) {
+                                toastService.info('Standard gemt!');
+                                setTimeout(() => window.location.reload(), 250);
+                            } else {
+                                response.text().then(msg => toastService.error(msg || 'Der skete en fejl. Prøv igen.'));
+                            }
+                        }).catch(error => toastService.error(error));
                     });
 
                     createTaskModal.show();
