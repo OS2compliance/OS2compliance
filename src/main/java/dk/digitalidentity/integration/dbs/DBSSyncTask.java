@@ -1,10 +1,8 @@
 package dk.digitalidentity.integration.dbs;
 
-import dk.dbs.api.model.Document;
 import dk.dbs.api.model.ItSystem;
 import dk.dbs.api.model.Supplier;
 import dk.digitalidentity.config.OS2complianceConfiguration;
-import dk.digitalidentity.integration.dbs.exception.DBSSynchronizationException;
 import dk.digitalidentity.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,9 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Component
@@ -45,27 +41,6 @@ public class DBSSyncTask {
 
         dbsService.sync(allDbsSuppliers, allDbsItSystems, configuration.getMunicipal().getCvr());
 		log.info("Finished: DBS Sync");
-	}
-
-	@Scheduled(cron = "${os2compliance.integrations.dbs.oversight.cron}")
-//	@Scheduled(fixedRate = 1000000000L, initialDelay = 1000)
-	public void oversightTask() {
-		if (taskDisabled()) {
-			return;
-		}
-
-		try {
-			final ZonedDateTime lastTimestamp = settingsService.getZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, null);
-			final List<Document> recentDocuments = dbsClientService.getAllDocuments(lastTimestamp != null ? lastTimestamp.toLocalDateTime() : null);
-
-			log.info("Started: DBS Oversight Task");
-			final Optional<ZonedDateTime> newestUpdatedTime = dbsService.findNewestUpdatedTime(recentDocuments);
-			dbsService.syncOversight(recentDocuments);
-			newestUpdatedTime.ifPresent(zonedDateTime -> settingsService.setZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, zonedDateTime));
-			log.info("Finished: DBS Oversight Task");
-		} catch (DBSSynchronizationException e) {
-			log.warn("Error during DBS Oversight Task", e);
-		}
 	}
 
   @Scheduled(cron = "${os2compliance.integrations.dbs.responsible.cron}")
