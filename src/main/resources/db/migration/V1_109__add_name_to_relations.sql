@@ -1,6 +1,12 @@
+-- IF NOT EXISTS + MODIFY: migrationen kan have fejlet halvvejs (DDL kan ikke rulles tilbage i MariaDB),
+-- saa kolonnerne kan allerede findes - evt. som VARCHAR(255), der er for smal til kilder med VARCHAR(768)-navne.
 ALTER TABLE relations
-    ADD COLUMN relation_a_name VARCHAR(255) NULL,
-    ADD COLUMN relation_b_name VARCHAR(255) NULL;
+    ADD COLUMN IF NOT EXISTS relation_a_name VARCHAR(768) NULL,
+    ADD COLUMN IF NOT EXISTS relation_b_name VARCHAR(768) NULL;
+
+ALTER TABLE relations
+    MODIFY COLUMN relation_a_name VARCHAR(768) NULL,
+    MODIFY COLUMN relation_b_name VARCHAR(768) NULL;
 
 -- Migrate existing data by joining each type to its respective table.
 -- All Relatable subclasses have a `name` column in their own table.
