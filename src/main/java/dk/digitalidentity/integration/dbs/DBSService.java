@@ -1,6 +1,7 @@
 package dk.digitalidentity.integration.dbs;
 
 import dk.digitalidentity.Constants;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
@@ -41,6 +42,7 @@ public class DBSService {
     private final TaskService taskService;
 	private final SettingsService settingsService;
 	private final NotifyService notifyService;
+	private final OS2complianceConfiguration configuration;
 
 	@Transactional
 	public void oversightResponsible() {
@@ -49,9 +51,15 @@ public class DBSService {
 		final String recipientSetting = settingsService.getString(
 				Constants.DBS_OVERSIGHT_RECIPIENT_SETTING, "");
 
-		// Only look back 10 days so we do not create task for everything the first time we activate DBS integration
+		// Look back to backfillFrom when configured (oversights synced from the DBS platform carry their
+		// original publish date as created). Fall back to 10 days so we do not create tasks for everything
+		// the first time we activate DBS integration without a configured backfill.
+		final LocalDate backfillFrom = configuration.getIntegrations().getDbs().getBackfillFrom();
+		final LocalDateTime taskWindowStart = backfillFrom != null
+				? backfillFrom.atStartOfDay()
+				: LocalDateTime.now().minusDays(10);
 		final List<DBSOversight> oversights = dbsOversightDao
-				.findByCreatedGreaterThanAndTaskCreatedFalse(LocalDateTime.now().minusDays(10));
+				.findByCreatedGreaterThanAndTaskCreatedFalse(taskWindowStart);
 		log.debug("Found {} oversights that need a task.", oversights.size());
 
 		for (DBSOversight dbsOversight : oversights) {
