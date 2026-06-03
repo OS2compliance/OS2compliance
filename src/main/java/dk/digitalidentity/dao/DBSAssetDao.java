@@ -12,6 +12,8 @@ public interface DBSAssetDao extends JpaRepository<DBSAsset, Long> {
 
     Optional<DBSAsset> findByDbsId(final String dbsId);
 
+    List<DBSAsset> findByName(final String name);
+
     @Query("select a.dbsId from DBSAsset a")
     List<String> findAllDbsIds();
 

@@ -26,6 +26,7 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,10 +102,21 @@ public class DBSPlatformSyncService {
 		}
 
 		int created = 0;
+		// Rows already matched or adopted in this run must not be adopted again by a later
+		// same-named entry - that would overwrite the dbsId just assigned.
+		Set<Long> claimedSupplierIds = new HashSet<>();
 		for (AuditSupplierDto supplierDto : uniqueSuppliers.values()) {
 			long dbsId = supplierDto.getId().longValue();
 			Optional<DBSSupplier> existing = dbsSupplierDao.findByDbsId(dbsId);
+			if (existing.isEmpty()) {
+				// Cutover from the old DBS integration: ids are not shared between the old and new API,
+				// so adopt an existing supplier with the same name instead of creating a duplicate.
+				existing = findSupplierByNameForCutover(supplierDto.getName())
+						.filter(s -> !claimedSupplierIds.contains(s.getId()));
+				existing.ifPresent(s -> s.setDbsId(dbsId));
+			}
 			if (existing.isPresent()) {
+				claimedSupplierIds.add(existing.get().getId());
 				existing.get().setName(supplierDto.getName());
 			} else {
 				DBSSupplier newSupplier = new DBSSupplier();
@@ -134,6 +146,9 @@ public class DBSPlatformSyncService {
 		int created = 0;
 		int matched = 0;
 		int unmatched = 0;
+		// Rows already matched or adopted in this run must not be adopted again by a later
+		// same-named entry - that would overwrite the dbsId just assigned.
+		Set<Long> claimedAssetIds = new HashSet<>();
 		for (SystemWithSupplier entry : uniqueSystems.values()) {
 			String dbsId = String.valueOf(entry.system().getId());
 			Optional<DBSSupplier> supplier = dbsSupplierDao.findByDbsId(entry.supplier().getId().longValue());
@@ -143,8 +158,16 @@ public class DBSPlatformSyncService {
 			}
 
 			Optional<DBSAsset> existing = dbsAssetDao.findByDbsId(dbsId);
+			if (existing.isEmpty()) {
+				// Cutover from the old DBS integration: ids are not shared between the old and new API,
+				// so adopt an existing asset with the same name (keeping its mappings) instead of duplicating.
+				existing = findAssetByNameForCutover(entry.system().getName(), supplier.get())
+						.filter(a -> !claimedAssetIds.contains(a.getId()));
+				existing.ifPresent(a -> a.setDbsId(dbsId));
+			}
 			if (existing.isPresent()) {
 				DBSAsset asset = existing.get();
+				claimedAssetIds.add(asset.getId());
 				asset.setName(entry.system().getName());
 				asset.setSupplier(supplier.get());
 				asset.setLastSync(today);
@@ -189,6 +212,9 @@ public class DBSPlatformSyncService {
 		List<DBSOversight> existingOversights = dbsOversightDao.findAll();
 		int created = 0;
 		int updated = 0;
+		// Rows already matched or adopted in this run must not be adopted again by a later
+		// same-named audit - that would overwrite the dbsId just assigned.
+		Set<Long> claimedOversightIds = new HashSet<>();
 
 		for (AuditDto audit : audits) {
 			if (audit.getSupplier() == null) {
@@ -199,9 +225,22 @@ public class DBSPlatformSyncService {
 			Optional<DBSOversight> existing = existingOversights.stream()
 					.filter(o -> Objects.equals(o.getDbsId(), auditId))
 					.findFirst();
+			if (existing.isEmpty()) {
+				// Cutover from the old DBS integration: ids are not shared between the old and new API,
+				// so adopt an existing oversight with the same name and supplier instead of duplicating
+				// (a duplicate would also trigger a duplicate task).
+				existing = existingOversights.stream()
+						.filter(o -> !claimedOversightIds.contains(o.getId())
+								&& Objects.equals(o.getName(), audit.getName())
+								&& o.getSupplier() != null
+								&& Objects.equals(o.getSupplier().getName(), audit.getSupplier().getName()))
+						.findFirst();
+				existing.ifPresent(o -> o.setDbsId(auditId));
+			}
 
 			if (existing.isPresent()) {
 				DBSOversight oversight = existing.get();
+				claimedOversightIds.add(oversight.getId());
 				if (!Objects.equals(oversight.getName(), audit.getName())) {
 					oversight.setName(audit.getName());
 					dbsOversightDao.save(oversight);
@@ -230,6 +269,32 @@ public class DBSPlatformSyncService {
 	}
 
 	private record SystemWithSupplier(AuditSystemDto system, AuditSupplierDto supplier, String kitosUuid) {}
+
+	private Optional<DBSSupplier> findSupplierByNameForCutover(String name) {
+		List<DBSSupplier> candidates = dbsSupplierDao.findByName(name);
+		if (candidates.size() == 1) {
+			return Optional.of(candidates.get(0));
+		}
+		if (candidates.size() > 1) {
+			log.warn("Cutover: {} existing DBS suppliers named '{}', cannot adopt unambiguously - creating new", candidates.size(), name);
+		}
+		return Optional.empty();
+	}
+
+	private Optional<DBSAsset> findAssetByNameForCutover(String name, DBSSupplier supplier) {
+		// Require matching supplier name - adopting a same-named asset under another supplier would
+		// silently re-point that asset (and its mappings) to the wrong supplier.
+		List<DBSAsset> candidates = dbsAssetDao.findByName(name).stream()
+				.filter(a -> a.getSupplier() != null && Objects.equals(a.getSupplier().getName(), supplier.getName()))
+				.toList();
+		if (candidates.size() == 1) {
+			return Optional.of(candidates.get(0));
+		}
+		if (candidates.size() > 1) {
+			log.warn("Cutover: {} existing DBS assets named '{}', cannot adopt unambiguously - creating new", candidates.size(), name);
+		}
+		return Optional.empty();
+	}
 
 	/**
 	 * Maps a DBSAsset to existing Assets via kitos_uuid.
