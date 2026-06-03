@@ -234,7 +234,8 @@ public interface AssetMapper {
 		@Mapping(target = "tags", ignore = true),
 		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks"),
 		@Mapping(target = "departments", source = "departments"),
-		@Mapping(target = "assetMeasureStatus", ignore = true)
+		@Mapping(target = "assetMeasureStatus", ignore = true),
+		@Mapping(target = "additionalSupervisoryModels", ignore = true)
 	})
     Asset fromEO(AssetCreateEO assetCreateEO);
 

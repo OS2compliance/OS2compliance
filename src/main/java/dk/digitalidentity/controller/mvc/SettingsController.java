@@ -52,6 +52,7 @@ public class SettingsController {
 		model.addAttribute("customSystemOperationResponsibleInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
 		boolean kitosEnabled = configuration.getIntegrations().getKitos().isEnabled();
 		model.addAttribute("kitosEnabled", kitosEnabled);
+		model.addAttribute("dbsEnabled", configuration.getIntegrations().getDbs().isEnabled());
 		if (kitosEnabled) {
 			model.addAttribute("kitosRoles", kitosService.kitosRoles());
 

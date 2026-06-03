@@ -41,12 +41,10 @@ import lombok.ToString;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -100,6 +98,16 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 	@ManyToOne
 	@JoinColumn(name = "supervisory_model")
 	private ChoiceValue supervisoryModel;
+
+	@ManyToMany
+	@JoinTable(
+			name = "assets_additional_supervisory_models",
+			joinColumns = { @JoinColumn(name = "asset_id") },
+			inverseJoinColumns = { @JoinColumn(name = "choice_value_id") }
+	)
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<ChoiceValue> additionalSupervisoryModels = new HashSet<>();
 
     @Column
     @Enumerated(EnumType.STRING)

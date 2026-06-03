@@ -48,6 +48,8 @@ public interface Constants {
 
 	String CHOICE_MEASURE_VALUE_IDENTIFIERS = "relevance-yes,relevance-no,relevance-needs-clarification,relevance-not-relevant,operation-1,operation-2,operation-3,operation-4,cloud-1,cloud-2,cloud-3,cloud-4,cloud-5,frequency-1,frequency-2,frequency-3,frequency-4,duration-1,duration-2,duration-3,duration-4";
 
+	String DBS_OVERSIGHT_RECIPIENT_SETTING = "dbsOversightRecipient";
+
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendValue(DAY_OF_MONTH, 2)

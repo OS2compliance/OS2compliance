@@ -190,7 +190,7 @@ function DBSOversightService() {
 
         const customGridFunctions = new CustomGridFunctions(grid, gridDBSOversightUrl, 'assetsDatatable');
 
-        initSaveAsExcelButton(customGridFunctions, 'dbsOversight', 'dbs/oversight' 'DBS_tilsyn');
+        initSaveAsExcelButton(customGridFunctions, 'dbsOversight', 'dbs/oversight', 'DBS_tilsyn');
 
         new ColumnOptions(
             'assetsDatatable',
