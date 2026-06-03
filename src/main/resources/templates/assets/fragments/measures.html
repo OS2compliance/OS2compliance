@@ -77,8 +77,6 @@
                     toggle: false
                 });
             });
-            measureStateChanged();
-
             // Add event listeners to buttons
             const editBtn = document.getElementById('editMeasureBtn');
             const cancelBtn = document.getElementById('cancelMeasureBtn');
@@ -99,7 +97,18 @@
             document.querySelectorAll('select[id^="measureSelect"]').forEach(select => {
                 select.addEventListener('change', measureStateChanged);
             });
+
+            measureStateChanged();
         });
+
+        function getMeasureRowCollapse(identifier) {
+            // The measure schema is customizable per municipality, so a referenced row may have been removed
+            const row = document.getElementById('measureRow_' + identifier);
+            if (row == null) {
+                return null;
+            }
+            return bootstrap.Collapse.getOrCreateInstance(row);
+        }
 
         function measureStateChanged() {
             // Update visuals when choices have changed
@@ -115,26 +124,26 @@
                     // "measure-8" => "Hvis ja, Hvor ofte foretages backup?"
                     // "measure-9" => "Hvis ja, hvor længe gemmes backup?"
                     // "measure-10" => "Hvis ja, er der defineret retningslinjer for Recovery Time Objective (RTO), Recovery Point Objective (RPO) og test heraf?"
-                    const backupHowOften = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-8');
-                    const backupHowLong = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-9');
-                    const backupGuidelines = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-10');
+                    const backupHowOften = getMeasureRowCollapse('measure-8');
+                    const backupHowLong = getMeasureRowCollapse('measure-9');
+                    const backupGuidelines = getMeasureRowCollapse('measure-10');
                     if (enable) {
-                        backupHowOften.show();
-                        backupHowLong.show();
-                        backupGuidelines.show();
+                        backupHowOften?.show();
+                        backupHowLong?.show();
+                        backupGuidelines?.show();
                     } else {
-                        backupHowOften.hide();
-                        backupHowLong.hide();
-                        backupGuidelines.hide();
+                        backupHowOften?.hide();
+                        backupHowLong?.hide();
+                        backupGuidelines?.hide();
                     }
                 }
                 if (questionIdentifier === "measure-20") {
                     const enable = selectedValue === "operation-3";
-                    const whichCloud = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-21');
+                    const whichCloud = getMeasureRowCollapse('measure-21');
                     if (enable) {
-                        whichCloud.show();
+                        whichCloud?.show();
                     } else {
-                        whichCloud.hide();
+                        whichCloud?.hide();
                     }
                 }
             });
