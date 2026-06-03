@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -216,7 +217,7 @@ public class DBSPlatformSyncService {
 				DBSOversight oversight = new DBSOversight();
 				oversight.setDbsId(auditId);
 				oversight.setName(audit.getName());
-				oversight.setCreated(audit.getPublishedDate().toLocalDateTime());
+				oversight.setCreated(audit.getPublishedDate() != null ? audit.getPublishedDate().toLocalDateTime() : LocalDateTime.now());
 				oversight.setLocked(false);
 				oversight.setSupplier(supplier.get());
 				oversight.setTaskCreated(false);
