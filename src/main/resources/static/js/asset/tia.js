@@ -154,11 +154,19 @@ export function initTia() {
     if (editTIABtn) {
         editTIABtn.addEventListener('click', async () => {
             if (tiaAccepted) {
-                const result = await confirm({
+                const confirmed = await confirm({
                     text: 'TIA er godkendt. Hvis du redigerer, vil godkendelsen blive fjernet. Vil du fortsætte?',
                     icon: 'warning',
                 });
-                if (!result.isConfirmed) return;
+                
+                if (!confirmed) {
+                    return;
+                }
+                await putData(`/rest/assets/${assetId}/tia/acceptance/reset`);
+                setTIAEditState(true);
+                document.getElementById('acceptCheckbox').checked = false;
+                document.getElementById('acceptComment').value = '';
+                return;
             }
             setTIAEditState(true);
         });

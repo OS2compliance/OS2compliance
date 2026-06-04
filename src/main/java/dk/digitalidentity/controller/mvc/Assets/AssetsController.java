@@ -929,11 +929,11 @@ public class AssetsController {
 		existingTia.setOrganizationalSecurityMeasures(newTia.getOrganizationalSecurityMeasures());
 		existingTia.setRegisteredCategories(newTia.getRegisteredCategories());
 		existingTia.setInformationTypes(newTia.getInformationTypes());
+		existingTia.setAcceptedComment(newTia.getAcceptedComment());
 
 		if (!existingTia.isAccepted() && newTia.isAccepted()) {
 			existingTia.setAccepted(true);
 			existingTia.setAcceptedDate(LocalDate.now());
-			existingTia.setAcceptedComment(newTia.getAcceptedComment());
 
 			Optional<User> loggedInUser = userService.findByUuid(SecurityUtil.getLoggedInUserUuid());
 			if (loggedInUser.isPresent()) {

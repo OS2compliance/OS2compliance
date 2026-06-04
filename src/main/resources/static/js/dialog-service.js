@@ -23,7 +23,9 @@ let dialogEl = null;
 let contentEl = null;
 
 function init() {
-    if (dialogEl) return;
+    if (dialogEl) {
+        return;
+    }
 
     const style = document.createElement('style');
     style.textContent = STYLES;
@@ -123,7 +125,7 @@ async function submitData(
 
 // Use confirm if the intention is to warn the user of something and allow them to either continue or cancel
 export async function confirm(options = {}) {
-    return showStatic({
+    const result = await showStatic({
         title: options.title,
         text: options.text,
         icon: options.icon,
@@ -131,11 +133,15 @@ export async function confirm(options = {}) {
         cancelButtonText: options.cancelButtonText || 'Nej',
         showCancel: true,
     });
+    return result.isConfirmed;
 }
 
 // Use alert if the intention is to inform the user of something without them needing to take any actions
 export async function alert(options = {}) {
-    if (typeof options === 'string') options = { text: options };
+    if (typeof options === 'string') {
+        options = { text: options };
+    }
+
     return showStatic({
         title: options.title,
         text: options.text,
@@ -150,7 +156,9 @@ function showStatic({ title, text, icon, confirmButtonText, cancelButtonText, sh
 
     const iconEl = document.createElement('div');
     iconEl.className = 'mb-3';
-    if (icon === 'warning') iconEl.insertAdjacentHTML('afterbegin', WARNING_ICON);
+    if (icon === 'warning') {
+        iconEl.insertAdjacentHTML('afterbegin', WARNING_ICON);
+    }
     iconEl.hidden = !icon;
 
     const titleEl = document.createElement('p');
@@ -164,13 +172,13 @@ function showStatic({ title, text, icon, confirmButtonText, cancelButtonText, sh
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.className = 'btn btn-danger';
+    cancelBtn.className = 'btn btn-success';
     cancelBtn.textContent = cancelButtonText || 'Annuller';
     cancelBtn.hidden = !showCancel;
 
     const confirmBtn = document.createElement('button');
     confirmBtn.type = 'button';
-    confirmBtn.className = 'btn btn-primary';
+    confirmBtn.className = 'btn btn-danger';
     confirmBtn.textContent = confirmButtonText || 'OK';
 
     const actions = document.createElement('div');
