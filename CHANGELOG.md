@@ -14,6 +14,13 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-292) (Aktiver/DPIA) Ved oprettelse af en påmindelse om at genbesøge DPIA skal det være systemansvarlig i stedet for systemejer, der default står som ansvarlig på opgaven
 - (https://os2web.atlassian.net/browse/COMPLY-324) (Opgavecenter/Ny fane) Dynamisk og brugerrettet årshjul
 - (https://os2web.atlassian.net/browse/COMPLY-350) (Opgavecenter) Kolonne der viser tilknyttet risikovurdering
+- (gitlab #24) DBS-integration v2: migrering til DBS' nye API — ny API-klient (dbs-platform-client), samlet synkronisering, cutover via kitos_uuid og backfill pr. kommune
+- (https://os2web.atlassian.net/browse/COMPLY-344) (Opgaver) Arbejdsgang for registrering af tilsyn og udførelse af den tilhørende opgave
+- (https://os2web.atlassian.net/browse/COMPLY-336) (DBS tilsyn) Mulighed for at definere hvem der er ansvarlig
+- (https://os2web.atlassian.net/browse/COMPLY-338) (DBS tilsyn) Aktiver uden tilsyn markeres med "ingen dba"
+- (https://os2web.atlassian.net/browse/COMPLY-392) (Aktiver/DBS tilsyn) Navneændring fra "DBS tilsyn" til "Tilsyn"
+- (https://os2web.atlassian.net/browse/COMPLY-263) (Aktiver/Generelt) Mulighed for at vælge flere tilsynsmodeller
+- (https://os2web.atlassian.net/browse/COMPLY-121) (Aktiver/DBS tilsyn) Ved oprettelse af tilsyn via leverandøren foreslås tilknyttede systemer
 
 ### Fixed
 - (gitlab #1) Fejl i antal løsninger
@@ -26,7 +33,11 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (gitlab #19) Datofelt på databehandleraftale fejler ved manuel indtastning uden ledende nul
 - (gitlab #20) Kopiering af risikovurdering medtager ikke tilknyttede foranstaltninger
 - (gitlab #21) Systemroller (Driftsansvarlig/Systemansvarlig) vises forkert i risikorapport (PDF/DOCX/Excel)
+- (gitlab #22) Standard-ID med skråstreger ødelagde URL og gjorde standarden utilgængelig (input-validering på ID ved oprettelse + robust håndtering af 404 på progress-endpoint)
 - (gitlab #23) Man kan ikke redigere/slette eksisterende foranstaltninger
+- (gitlab #35) StandardController eksponerede entitet i stedet for DTO mod frontend
+- (gitlab !469) Owner-brugere kunne ikke administrere trusler (tilføj/ret/slet samt vælg trusselskataloger) på egne risikovurderinger — frontend var gated til *_all-roller, mens backend tillod *_owner
+- (gitlab !473) Død Rediger-knap på aktivets Sikkerhedsfane ved tilpasset sikkerhedsskema (JS-fejl når et betinget opfølgningsspørgsmål var fjernet fra kommunens skema)
 - (Ad-hoc) Manglende redigeringsmulighed i standarder
 - (Ad-hoc) Man kan oprette en konsekvensanalyse uden værdier
 - (Ad-hoc) JS-fejl i fortegnelse view
