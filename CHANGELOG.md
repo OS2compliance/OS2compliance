@@ -38,6 +38,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (gitlab #35) StandardController eksponerede entitet i stedet for DTO mod frontend
 - (gitlab !469) Owner-brugere kunne ikke administrere trusler (tilføj/ret/slet samt vælg trusselskataloger) på egne risikovurderinger — frontend var gated til *_all-roller, mens backend tillod *_owner
 - (gitlab !473) Død Rediger-knap på aktivets Sikkerhedsfane ved tilpasset sikkerhedsskema (JS-fejl når et betinget opfølgningsspørgsmål var fjernet fra kommunens skema)
+- (gitlab !464) Signeringslink forblev aktivt efter sletning af en risikovurdering — en slettet/tilbagetrukket vurdering (eller DPIA) kunne stadig signeres og PDF'en blev signeret og uploadet pga. manglende else-gren i SigningController; viser nu en "trukket tilbage"-side
 - (Ad-hoc) Manglende redigeringsmulighed i standarder
 - (Ad-hoc) Man kan oprette en konsekvensanalyse uden værdier
 - (Ad-hoc) JS-fejl i fortegnelse view
