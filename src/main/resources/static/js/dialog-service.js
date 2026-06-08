@@ -185,13 +185,13 @@ function showStatic({ title, text, icon, confirmButtonText, cancelButtonText, sh
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.className = 'btn btn-success btn-lg';
+    cancelBtn.className = 'btn btn-danger btn-lg';
     cancelBtn.textContent = cancelButtonText || 'Annuller';
     cancelBtn.hidden = !showCancel;
 
     const confirmBtn = document.createElement('button');
     confirmBtn.type = 'button';
-    confirmBtn.className = 'btn btn-danger btn-lg';
+    confirmBtn.className = 'btn btn-success btn-lg';
     confirmBtn.textContent = confirmButtonText || 'OK';
 
     const actions = document.createElement('div');
