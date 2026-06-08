@@ -191,6 +191,17 @@
                             <td><input id="acceptDate" type="text" class="form-control" th:value="*{tia.accepted} ? ${'Accepteret af ' + asset.tia.acceptedByName + ' d. ' + #temporals.format(asset.tia.acceptedDate, 'dd-MM-yyyy')} : ''" readonly /></td>
                             <td></td>
                         </tr>
+                        <tr id="removeAcceptanceRow" th:hidden="not *{tia.accepted}">
+                            <td></td>
+                            <td>
+                                <button id="removeAcceptanceBtn" type="button" class="btn btn-warning btn-lg hstack gap-2">
+                                    <i class="pli-pencil"></i>
+                                    <span class="vr"></span>
+                                    Fjern godkendelse for at redigere
+                                </button>
+                            </td>
+                            <td></td>
+                        </tr>
                         </tbody>
                          <thead>
                             <tr>
