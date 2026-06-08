@@ -172,22 +172,6 @@ public class AssetsRestController {
     }
 
 	@RequireUpdateOwnerOnly
-	@Transactional
-	@PutMapping("{id}/tia/acceptance/reset")
-	public void resetTiaAcceptance(@PathVariable("id") final Long id) {
-		final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		if (!assetService.isEditable(asset)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
-		final var tia = asset.getTia();
-		tia.setAccepted(false);
-		tia.setAcceptedDate(null);
-		tia.setAcceptedComment(null);
-		tia.setAcceptedByUuid(null);
-		tia.setAcceptedByName(null);
-	}
-
-	@RequireUpdateOwnerOnly
     @PutMapping("{id}/dpiascreening/setfield")
     public void setDpiaScreeningField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                                       @RequestParam(value = "value", required = false) final String value) {

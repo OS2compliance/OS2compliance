@@ -4,7 +4,13 @@ const WARNING_ICON = `<svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.
     <rect x="23.5" y="35" width="5" height="5" rx="2.5" fill="#fff"/>
 </svg>`;
 
-// Only what Bootstrap cannot do: reset <dialog> defaults and style the backdrop
+const INFO_ICON = `<svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="width:52px;height:52px">
+    <circle cx="26" cy="26" r="22" fill="#5b9bd5" stroke="#3a7abf" stroke-width="2.5"/>
+    <rect x="23.5" y="22" width="5" height="13" rx="2.5" fill="#fff"/>
+    <rect x="23.5" y="14" width="5" height="5" rx="2.5" fill="#fff"/>
+</svg>`;
+
+// reset defaults and backdrop styles
 const STYLES = `
     #dsDialog {
         border: none;
@@ -142,7 +148,7 @@ export async function alert(options = {}) {
         options = { text: options };
     }
 
-    return showStatic({
+    return await showStatic({
         title: options.title,
         text: options.text,
         icon: options.icon,
@@ -156,8 +162,15 @@ function showStatic({ title, text, icon, confirmButtonText, cancelButtonText, sh
 
     const iconEl = document.createElement('div');
     iconEl.className = 'mb-3';
-    if (icon === 'warning') {
-        iconEl.insertAdjacentHTML('afterbegin', WARNING_ICON);
+    switch (icon) {
+        case 'warning': {
+            iconEl.insertAdjacentHTML('afterbegin', WARNING_ICON);
+            break;
+        }
+        case 'info': {
+            iconEl.insertAdjacentHTML('afterbegin', INFO_ICON);
+            break;
+        }
     }
     iconEl.hidden = !icon;
 
@@ -200,7 +213,7 @@ function showStatic({ title, text, icon, confirmButtonText, cancelButtonText, sh
         confirmBtn.addEventListener('click', () => done(true));
         cancelBtn.addEventListener('click', () => done(false));
 
-        // Native ESC fires 'cancel' on the <dialog> element
+        // Native ESC fires cancel on the dialog element
         dialogEl.addEventListener('cancel', () => resolve({ isConfirmed: false }), { once: true });
 
         dialogEl.showModal();

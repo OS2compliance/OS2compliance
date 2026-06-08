@@ -28,11 +28,6 @@
         </div>
         <div class="row" id="tiaView">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
-                <div class="row mb-3 gap-1">
-                    <button id="editTIABtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right">Rediger TIA</button>
-                    <button id="cancelTIABtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" hidden>Annuller</button>
-                    <button id="saveTIABtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right"  hidden>Gem</button>
-                </div>
                 <input th:field="${asset.id}" hidden>
 
                 <div class="row mb-3">
@@ -92,7 +87,7 @@
                             <tr>
                                 <td>Sendes oplysningerne sendes videre til andre leverandører?</td>
                                 <td>
-                                    <select class="form-control form-select editField" th:field="*{tia.forwardInformationToOtherSuppliers}" tabindex="-1" disabled>
+                                    <select class="form-control form-select" th:field="*{tia.forwardInformationToOtherSuppliers}" tabindex="-1">
                                         <option value=""></option>
                                          <option th:each="fitos : ${T(dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers).values()}"
                                                  th:value="${fitos.name}" th:text="${fitos.message}"></option>
@@ -102,7 +97,7 @@
                             </tr>
                             <tr id="details" class="collapse" th:classappend="*{tia.forwardInformationToOtherSuppliers == T(dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers).YES} ? 'show' : ''">
                                 <td></td>
-                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.forwardInformationToOtherSuppliersDetail}"></textarea></td>
+                                <td><textarea rows="8" class="form-control" th:field="*{tia.forwardInformationToOtherSuppliersDetail}"></textarea></td>
                                 <td></td>
                             </tr>
                          </tbody>
@@ -114,18 +109,18 @@
                         <tbody>
                             <tr>
                                 <td>Hvor længe påregnes overførelsen at finde sted?</td>
-                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.expectedTransferDuration}"></textarea></td>
+                                <td><textarea rows="8" class="form-control" th:field="*{tia.expectedTransferDuration}"></textarea></td>
                                 <td></td>
                             </tr>
                             <tr>
                                 <td>I hvilke tilfælde sker overførsel af data?</td>
-                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.transferCaseDescription}"></textarea></td>
+                                <td><textarea rows="8" class="form-control" th:field="*{tia.transferCaseDescription}"></textarea></td>
                                 <td></td>
                             </tr>
                             <tr>
                                 <td>Hvilken adgang gives til data</td>
                                 <td>
-                                    <select class="form-control form-select editField" th:field="*{tia.accessType}" tabindex="-1" disabled>
+                                    <select class="form-control form-select" th:field="*{tia.accessType}" tabindex="-1">
                                         <option value=""></option>
                                          <option th:each="fitos : ${T(dk.digitalidentity.model.entity.enums.AccessType).values()}"
                                                  th:value="${fitos.name}" th:text="${fitos.message}"></option>
@@ -142,17 +137,17 @@
                         <tbody id="measures">
                             <tr>
                                 <td>Tekniske sikkerhedsforanstaltninger</td>
-                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.technicalSecurityMeasures}"></textarea></td>
+                                <td><textarea rows="8" class="form-control" th:field="*{tia.technicalSecurityMeasures}"></textarea></td>
                                 <td></td>
                             </tr>
                             <tr>
                                 <td>Organisatoriske sikkerhedsforanstaltninger</td>
-                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.organizationalSecurityMeasures}"></textarea></td>
+                                <td><textarea rows="8" class="form-control" th:field="*{tia.organizationalSecurityMeasures}"></textarea></td>
                                 <td></td>
                             </tr>
                             <tr>
                                 <td>Kontraktuelle sikkerhedsforanstaltninger</td>
-                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.contractualSecurityMeasures}"></textarea></td>
+                                <td><textarea rows="8" class="form-control" th:field="*{tia.contractualSecurityMeasures}"></textarea></td>
                                 <td></td>
                             </tr>
                          </tbody>
@@ -183,17 +178,17 @@
                         <tbody>
                         <tr>
                             <td><label for="acceptCheckbox">TIA gennemgået og accepteret</label></td>
-                            <td><input id="acceptCheckbox" name="acceptCheckbox" type="checkbox" class="form-check-input editField" th:field="*{tia.accepted}" /></td>
+                            <td><input id="acceptCheckbox" name="acceptCheckbox" type="checkbox" class="form-check-input" th:field="*{tia.accepted}" /></td>
                             <td></td>
                         </tr>
                         <tr>
                             <td><label for="acceptComment">Bemærkning</label></td>
-                            <td><textarea id="acceptComment" name="acceptComment" rows="8" class="form-control editField" th:field="*{tia.acceptedComment}"></textarea></td>
+                            <td><textarea id="acceptComment" name="acceptComment" rows="8" class="form-control" th:field="*{tia.acceptedComment}"></textarea></td>
                             <td></td>
                         </tr>
-                        <tr th:if="*{tia.accepted}">
+                        <tr id="acceptDateRow" th:hidden="not *{tia.accepted}">
                             <td></td>
-                            <td><input type="text" rows="8" class="form-control" th:value="${'Accepteret af ' + asset.tia.acceptedByName + ' d. ' + #temporals.format(asset.tia.acceptedDate, 'dd-MM-yyyy')}" readonly /></td>
+                            <td><input id="acceptDate" type="text" class="form-control" th:value="*{tia.accepted} ? ${'Accepteret af ' + asset.tia.acceptedByName + ' d. ' + #temporals.format(asset.tia.acceptedDate, 'dd-MM-yyyy')} : ''" readonly /></td>
                             <td></td>
                         </tr>
                         </tbody>
@@ -206,15 +201,15 @@
                         <tbody>
                             <tr>
                                 <td colspan="2">
-                                    <textarea rows="8" class="form-control editField" th:field="*{tia.conclusion}"></textarea>
+                                    <textarea rows="8" class="form-control" th:field="*{tia.conclusion}"></textarea>
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group" aria-label="Vurdering">
-                                      <input type="radio" class="btn-check editField" name="btnradio" id="btnRed" value="RED" th:field="*{tia.assessment}" autocomplete="off" required >
+                                      <input type="radio" class="btn-check" name="btnradio" id="btnRed" value="RED" th:field="*{tia.assessment}" autocomplete="off" required >
                                       <label class="btn btn-outline-danger" for="btnRed">Rød</label>
-                                      <input type="radio" class="btn-check editField" name="btnradio" id="btnYellow" value="YELLOW" th:field="*{tia.assessment}" autocomplete="off" required >
+                                      <input type="radio" class="btn-check" name="btnradio" id="btnYellow" value="YELLOW" th:field="*{tia.assessment}" autocomplete="off" required >
                                       <label class="btn btn-outline-warning" for="btnYellow">Gul</label>
-                                      <input type="radio" class="btn-check editField" name="btnradio" id="btnGreen" value="GREEN" th:field="*{tia.assessment}" autocomplete="off" required >
+                                      <input type="radio" class="btn-check" name="btnradio" id="btnGreen" value="GREEN" th:field="*{tia.assessment}" autocomplete="off" required >
                                       <label class="btn btn-outline-success" for="btnGreen">Grøn</label>
                                     </div>
                                 </td>

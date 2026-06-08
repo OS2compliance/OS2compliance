@@ -1,7 +1,11 @@
+import { debounce } from "../debounce-service.js";
 import { confirm } from "../dialog-service.js";
 
 let bsCollapse;
 let tiaChoiceElements = [];
+let currentTiaAccepted = tiaAccepted;
+let isConfirmingTiaReset = false;
+const SAVE_DEBOUNCE_MS = 800;
 
 function initRegisteredCategoriesChoices(values) {
     const select = document.getElementById('tia.registeredCategories');
@@ -36,61 +40,53 @@ function handleSendDataToOtherSuppliers() {
     }
 }
 
-export function setTIAEditState(enabled) {
-    const rootElement = document.getElementById('tiaTab');
+async function saveTia(skipConfirm = false) {
+    const form = document.getElementById('tiaForm');
+    if (!form) {
+        return;
+    }
 
-    if (enabled) {
-        rootElement.querySelectorAll('.editField').forEach(elem => {
-            elem.disabled = false;
-
-            if (elem.tagName === "A") {
-                elem.hidden = true;
-                if (elem.nextElementSibling) {
-                    elem.nextElementSibling.hidden = false;
-                }
-            }
-
-            if (elem.classList.contains("datepicker")) {
-                elem.parentElement.hidden = false;
-                if (elem.parentElement.nextElementSibling) {
-                    elem.parentElement.nextElementSibling.hidden = true;
-                }
-            }
-        });
-
-        tiaChoiceElements.forEach((e) => e.enable());
-
-        if (changeableAsset) {
-            document.getElementById('saveTIABtn').hidden = false;
-            document.getElementById('editTIABtn').hidden = true;
-            document.getElementById('cancelTIABtn').hidden = false;
+    if (currentTiaAccepted && !skipConfirm) {
+        if (isConfirmingTiaReset) {
+            return;
         }
-    } else {
-        rootElement.querySelectorAll('.editField').forEach(elem => {
-            elem.disabled = true;
-
-            if (elem.tagName === "A") {
-                elem.hidden = false;
-                elem.nextElementSibling.hidden = true;
-            }
-
-            if (elem.classList.contains("datepicker")) {
-                if (elem.value == null || elem.value === "") {
-                    elem.parentElement.hidden = true;
-                    elem.parentElement.nextElementSibling.hidden = false;
-                }
-            }
+        isConfirmingTiaReset = true;
+        const confirmed = await confirm({
+            text: 'TIA er godkendt. Redigering vil fjerne godkendelsen. Vil du fortsætte?',
+            icon: 'warning',
         });
-
-        tiaChoiceElements.forEach((e) => e.disable());
-
-        if (changeableAsset) {
-            document.getElementById('saveTIABtn').hidden = true;
-            document.getElementById('editTIABtn').hidden = false;
-            document.getElementById('cancelTIABtn').hidden = true;
+        isConfirmingTiaReset = false;
+        if (!confirmed) {
+            location.reload();
+            return;
         }
+        currentTiaAccepted = false;
+        const acceptedCheckbox = form.querySelector('input[name="tia.accepted"][type="checkbox"]');
+        if (acceptedCheckbox) {
+            acceptedCheckbox.checked = false;
+        }
+        const acceptComment = form.querySelector('[name="tia.acceptedComment"]');
+        if (acceptComment) {
+            acceptComment.value = '';
+        }
+        const acceptDateRow = document.getElementById('acceptDateRow');
+        if (acceptDateRow) {
+            acceptDateRow.hidden = true;
+        }
+    }
 
-        document.getElementById("tiaForm").reset();
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form)
+        });
+        if (response.ok){
+            toastService.info('Gemt');
+        } else {
+            toastService.error('Kunne ikke gemme');
+        }
+    } catch {
+        toastService.error('Kunne ikke gemme');
     }
 }
 
@@ -133,7 +129,46 @@ export function initTia() {
     initInformationTypeChoices(informationChoices1.concat(informationChoices2));
 
     handleSendDataToOtherSuppliers();
-    setTIAEditState(false);
+
+    if (!changeableAsset) {
+        document.getElementById('tiaTab').querySelectorAll('select, textarea, input:not([type="hidden"])').forEach(e => { e.disabled = true; });
+        tiaChoiceElements.forEach(e => e.disable());
+        return;
+    }
+
+    const form = document.getElementById('tiaForm');
+    const debouncedSave = debounce(() => saveTia(), SAVE_DEBOUNCE_MS);
+
+    const acceptCommentElem = form.querySelector('[name="tia.acceptedComment"]');
+    const initialAcceptedComment = acceptCommentElem?.value ?? '';
+    const debouncedCommentSave = debounce(() => saveTia(initialAcceptedComment === ''), SAVE_DEBOUNCE_MS);
+
+    for (const elem of form.elements) {
+        if (elem.type === 'hidden' || elem.tagName === 'BUTTON' || !elem.name) {
+            continue;
+        }
+        if (elem.name === 'tia.accepted') {
+            continue;
+        }
+        if (elem.id === 'setTiaOptOutCheckbox') {
+            continue;
+        }
+
+        if (elem.tagName === 'TEXTAREA') {
+            const saveHandler = elem.name === 'tia.acceptedComment' ? debouncedCommentSave : debouncedSave;
+            elem.addEventListener('input', saveHandler);
+        } else {
+            elem.addEventListener('change', () => saveTia());
+        }
+    }
+
+    const acceptedCheckbox = form.querySelector('input[name="tia.accepted"][type="checkbox"]');
+    if (acceptedCheckbox) {
+        acceptedCheckbox.addEventListener('change', async () => {
+            await saveTia();
+            location.reload();
+        });
+    }
 
     document.getElementById('tia.forwardInformationToOtherSuppliers')
         .addEventListener('change', handleSendDataToOtherSuppliers);
@@ -147,33 +182,6 @@ export function initTia() {
         .addEventListener('change', function () {
             assetDetailsService.updateTiaOptOutReason(this);
         });
-
-    const editTIABtn = document.getElementById('editTIABtn');
-    const cancelTIABtn = document.getElementById('cancelTIABtn');
-
-    if (editTIABtn) {
-        editTIABtn.addEventListener('click', async () => {
-            if (tiaAccepted) {
-                const confirmed = await confirm({
-                    text: 'TIA er godkendt. Hvis du redigerer, vil godkendelsen blive fjernet. Vil du fortsætte?',
-                    icon: 'warning',
-                });
-                
-                if (!confirmed) {
-                    return;
-                }
-                await putData(`/rest/assets/${assetId}/tia/acceptance/reset`);
-                setTIAEditState(true);
-                document.getElementById('acceptCheckbox').checked = false;
-                document.getElementById('acceptComment').value = '';
-                return;
-            }
-            setTIAEditState(true);
-        });
-    }
-    if (cancelTIABtn) {
-        cancelTIABtn.addEventListener('click', () => setTIAEditState(false));
-    }
 
     const tiaLinkEditBtn = document.getElementById('tiaLinkEditBtn');
     const tiaLinkSaveBtn = document.getElementById('tiaLinkSaveBtn');
