@@ -50,7 +50,7 @@ async function saveTia() {
             body: new FormData(form)
         });
         if (response.ok) {
-            toastService.info('info', 'Dine ændringer er gemt');
+            toastService.info('Info', 'Dine ændringer er gemt');
             return true;
         }
         toastService.error('Kunne ikke gemme');
@@ -163,12 +163,15 @@ export function initTia() {
             if (acceptComment) {
                 acceptComment.value = '';
             }
-            document.getElementById('acceptDateRow').hidden = true;
+            const acceptDateRow = document.getElementById('acceptDateRow');
+            acceptDateRow.hidden = true;
 
             setTiaLocked(false);
             const saved = await saveTia();
             if (!saved) {
+                // lock the fields if acceptance could not be removed
                 setTiaLocked(true);
+                acceptDateRow.hidden = false;
             }
         });
     }

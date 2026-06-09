@@ -197,6 +197,7 @@ function showStatic({ title, text, icon, confirmButtonText, confirmButtonClass, 
     const textEl = document.createElement('p');
     textEl.className = 'text-body mb-4 h4';
     textEl.textContent = text || '';
+    textEl.hidden = !text;
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
