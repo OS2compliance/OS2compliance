@@ -51,9 +51,8 @@ async function saveTia() {
         });
         if (response.ok) {
             toastService.info('Gemt');
-        } else {
-            toastService.error('Kunne ikke gemme');
         }
+        toastService.error('Kunne ikke gemme');
     } catch {
         toastService.error('Kunne ikke gemme');
     }
@@ -125,13 +124,7 @@ export function initTia() {
     const debouncedSave = debounce(() => saveTia(), SAVE_DEBOUNCE_MS);
 
     for (const elem of form.elements) {
-        if (elem.type === 'hidden' || elem.tagName === 'BUTTON' || !elem.name) {
-            continue;
-        }
-        if (elem.name === 'tia.accepted') {
-            continue;
-        }
-        if (elem.id === 'setTiaOptOutCheckbox') {
+        if (elem.type === 'hidden' || elem.tagName === 'BUTTON' || !elem.name || elem.name === 'tia.accepted' || elem.id === 'setTiaOptOutCheckbox') {
             continue;
         }
 

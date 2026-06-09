@@ -929,17 +929,18 @@ public class AssetsController {
 		existingTia.setOrganizationalSecurityMeasures(newTia.getOrganizationalSecurityMeasures());
 		existingTia.setRegisteredCategories(newTia.getRegisteredCategories());
 		existingTia.setInformationTypes(newTia.getInformationTypes());
-		existingTia.setAcceptedComment(newTia.getAcceptedComment());
 
 		if (!existingTia.isAccepted() && newTia.isAccepted()) {
+			Optional<User> loggedInUser = userService.findByUuid(SecurityUtil.getLoggedInUserUuid());
+			if (loggedInUser.isEmpty()) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Logged in user not found");
+			}
+
 			existingTia.setAccepted(true);
 			existingTia.setAcceptedDate(LocalDate.now());
-
-			Optional<User> loggedInUser = userService.findByUuid(SecurityUtil.getLoggedInUserUuid());
-			if (loggedInUser.isPresent()) {
-				existingTia.setAcceptedByUuid(loggedInUser.get().getUuid());
-				existingTia.setAcceptedByName(loggedInUser.get().getName());
-			}
+			existingTia.setAcceptedByUuid(loggedInUser.get().getUuid());
+			existingTia.setAcceptedByName(loggedInUser.get().getName());
+			existingTia.setAcceptedComment(newTia.getAcceptedComment());
 		} else if (existingTia.isAccepted() && !newTia.isAccepted()) {
 			existingTia.setAccepted(false);
 			existingTia.setAcceptedDate(null);
