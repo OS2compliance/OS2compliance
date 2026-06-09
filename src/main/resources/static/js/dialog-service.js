@@ -144,9 +144,9 @@ export async function confirm(options = {}) {
         text: options.text,
         icon: options.icon,
         confirmButtonText: options.confirmButtonText || 'Ja',
-        confirmButtonClass: options.confirmButtonClass || 'btn-success',
+        confirmButtonClass: options.confirmButtonClass || 'btn-danger',
         cancelButtonText: options.cancelButtonText || 'Nej',
-        cancelButtonClass: options.cancelButtonClass || 'btn-danger',
+        cancelButtonClass: options.cancelButtonClass || 'btn-success',
         showCancel: true,
     });
     return result.isConfirmed;

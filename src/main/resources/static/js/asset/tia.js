@@ -60,7 +60,7 @@ async function saveTia() {
     return false;
 }
 
-function setTiaFormLocked(locked) {
+function setTiaAcceptedState(locked) {
     document.getElementById('tiaView').querySelectorAll('select, textarea, input:not([type="hidden"])').forEach(e => {
         e.disabled = locked;
     });
@@ -74,11 +74,11 @@ function setTiaFormLocked(locked) {
 }
 
 function lockTiaForm() {
-    setTiaFormLocked(true);
+    setTiaAcceptedState(true);
 }
 
 function unlockTiaForm() {
-    setTiaFormLocked(false);
+    setTiaAcceptedState(false);
 }
 
 function tiaLinkEditStart() {
