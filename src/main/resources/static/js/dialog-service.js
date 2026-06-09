@@ -138,7 +138,7 @@ async function submitData(
 }
 
 // Use confirm if the intention is to warn the user of something and allow them to either continue or cancel
-export async function confirm(options = {}) {
+export async function showConfirm(options = {}) {
     const result = await showStatic({
         title: options.title,
         text: options.text,
@@ -153,7 +153,7 @@ export async function confirm(options = {}) {
 }
 
 // Use alert if the intention is to inform the user of something without them needing to take any actions
-export async function alert(options = {}) {
+export async function showAlert(options = {}) {
     if (typeof options === 'string') {
         options = { text: options };
     }

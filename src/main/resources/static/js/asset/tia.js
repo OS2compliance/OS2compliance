@@ -1,5 +1,5 @@
 import { debounce } from "../debounce-service.js";
-import { confirm } from "../dialog-service.js";
+import { showConfirm } from "../dialog-service.js";
 
 let bsCollapse;
 let tiaChoiceElements = [];
@@ -131,6 +131,7 @@ export function initTia() {
     const debouncedSave = debounce(() => saveTia(), SAVE_DEBOUNCE_MS);
 
     for (const elem of form.elements) {
+        // We do not want event listeners on these elements (these are elements that are not included in the save of a TIA)
         if (elem.type === 'hidden' || elem.tagName === 'BUTTON' || !elem.name || elem.name === 'tia.accepted' || elem.id === 'setTiaOptOutCheckbox') {
             continue;
         }
@@ -155,7 +156,7 @@ export function initTia() {
     const removeAcceptanceBtn = document.getElementById('removeAcceptanceBtn');
     if (removeAcceptanceBtn) {
         removeAcceptanceBtn.addEventListener('click', async () => {
-            const confirmed = await confirm({
+            const confirmed = await showConfirm({
                 text: 'Er du sikker på, at du vil fjerne godkendelsen?',
                 icon: 'warning',
             });
