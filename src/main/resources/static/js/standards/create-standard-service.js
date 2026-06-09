@@ -16,6 +16,36 @@ function CreateStandardService() {
                     this.standardModalDialog = document.getElementById('standardFormDialog');
                     this.standardModalDialog.innerHTML = data;
                     const createTaskModal = new bootstrap.Modal(this.standardModalDialog);
+
+                    const form = document.getElementById('standardCreateForm');
+                    if (!form) {
+                        toastService.error("Formularen kunne ikke indlæses");
+                        return;
+                    }
+
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        if (!form.checkValidity()) {
+                            form.classList.add('was-validated');
+                            return;
+                        }
+
+                        fetch(form.action, {
+                            method: 'POST',
+                            body: new FormData(form),
+                            headers: { 'X-CSRF-TOKEN': token }
+                        }).then(response => {
+                            if (response.ok) {
+                                toastService.info('Standard gemt!');
+                                setTimeout(() => window.location.reload(), 250);
+                            } else {
+                                response.text().then(msg => toastService.error(msg || 'Der skete en fejl. Prøv igen.'));
+                            }
+                        }).catch(error => toastService.error(error));
+                    });
+
                     createTaskModal.show();
                 }))
             .catch(error => toastService.error(error));
