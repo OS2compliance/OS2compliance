@@ -892,15 +892,15 @@ public class AssetsController {
     }
 
 	@RequireUpdateOwnerOnly
-    @Transactional
-    @PostMapping("tia")
-    public String tia(@ModelAttribute final Asset asset) {
-        final Asset existingAsset = assetService.get(asset.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+	@Transactional
+	@PostMapping("tia")
+	public String tia(@ModelAttribute final Asset asset) {
+		final Asset existingAsset = assetService.get(asset.getId())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
 
 		TransferImpactAssessment existingTia = existingAsset.getTia();
 		if (existingTia == null) {
@@ -915,9 +915,9 @@ public class AssetsController {
 		existingTia.setForwardInformationToOtherSuppliers(newTia.getForwardInformationToOtherSuppliers());
 		existingTia.setForwardInformationToOtherSuppliersDetail(newTia.getForwardInformationToOtherSuppliersDetail());
 
-        if (existingTia.getForwardInformationToOtherSuppliers() != ForwardInformationToOtherSuppliers.YES) {
+		if (existingTia.getForwardInformationToOtherSuppliers() != ForwardInformationToOtherSuppliers.YES) {
 			existingTia.setForwardInformationToOtherSuppliersDetail(null);
-        }
+		}
 
 		existingTia.setAccessType(newTia.getAccessType());
 		existingTia.setAssessment(newTia.getAssessment());
@@ -925,7 +925,7 @@ public class AssetsController {
 		existingTia.setLink(newTia.getLink());
 		existingTia.setExpectedTransferDuration(newTia.getExpectedTransferDuration());
 		existingTia.setContractualSecurityMeasures(newTia.getContractualSecurityMeasures());
-        existingTia.setTechnicalSecurityMeasures(newTia.getTechnicalSecurityMeasures());
+		existingTia.setTechnicalSecurityMeasures(newTia.getTechnicalSecurityMeasures());
 		existingTia.setOrganizationalSecurityMeasures(newTia.getOrganizationalSecurityMeasures());
 		existingTia.setRegisteredCategories(newTia.getRegisteredCategories());
 		existingTia.setInformationTypes(newTia.getInformationTypes());
@@ -951,9 +951,9 @@ public class AssetsController {
 			existingTia.setAcceptedComment(newTia.getAcceptedComment());
 		}
 
-        existingTia.setTransferCaseDescription(newTia.getTransferCaseDescription());
-        return "redirect:/assets/" + existingAsset.getId();
-    }
+		existingTia.setTransferCaseDescription(newTia.getTransferCaseDescription());
+		return "redirect:/assets/" + existingAsset.getId();
+	}
 
 	@RequireReadOwnerOnly
     @GetMapping("dpia/schema")
