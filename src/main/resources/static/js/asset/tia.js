@@ -51,27 +51,34 @@ async function saveTia() {
         });
         if (response.ok) {
             toastService.info('Gemt');
+            return true;
         }
         toastService.error('Kunne ikke gemme');
     } catch {
         toastService.error('Kunne ikke gemme');
     }
+    return false;
+}
+
+function setTiaFormLocked(locked) {
+    document.getElementById('tiaView').querySelectorAll('select, textarea, input:not([type="hidden"])').forEach(e => {
+        e.disabled = locked;
+    });
+    tiaChoiceElements.forEach(e => locked ? e.disable() : e.enable());
+    document.getElementById('removeAcceptanceRow').hidden = !locked;
+
+    const tiaLinkEditBtn = document.getElementById('tiaLinkEditBtn');
+    if (tiaLinkEditBtn) {
+        tiaLinkEditBtn.disabled = locked;
+    }
 }
 
 function lockTiaForm() {
-    document.getElementById('tiaView').querySelectorAll('select, textarea, input:not([type="hidden"])').forEach(e => {
-        e.disabled = true;
-    });
-    tiaChoiceElements.forEach(e => e.disable());
-    document.getElementById('removeAcceptanceRow').hidden = false;
+    setTiaFormLocked(true);
 }
 
 function unlockTiaForm() {
-    document.getElementById('tiaView').querySelectorAll('select, textarea, input:not([type="hidden"])').forEach(e => {
-        e.disabled = false;
-    });
-    tiaChoiceElements.forEach(e => e.enable());
-    document.getElementById('removeAcceptanceRow').hidden = true;
+    setTiaFormLocked(false);
 }
 
 function tiaLinkEditStart() {
@@ -138,8 +145,10 @@ export function initTia() {
     const acceptedCheckbox = form.querySelector('input[name="tia.accepted"][type="checkbox"]');
     if (acceptedCheckbox) {
         acceptedCheckbox.addEventListener('change', async () => {
-            await saveTia();
-            location.reload();
+            const saved = await saveTia();
+            if (saved) {
+                location.reload();
+            }
         });
     }
 

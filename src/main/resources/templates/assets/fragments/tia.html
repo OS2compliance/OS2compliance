@@ -177,13 +177,13 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td><label for="acceptCheckbox">TIA gennemgået og accepteret</label></td>
-                            <td><input id="acceptCheckbox" name="acceptCheckbox" type="checkbox" class="form-check-input" th:field="*{tia.accepted}" /></td>
+                            <td><label for="tia.accepted">TIA gennemgået og accepteret</label></td>
+                            <td><input type="checkbox" class="form-check-input" th:field="*{tia.accepted}" /></td>
                             <td></td>
                         </tr>
                         <tr>
-                            <td><label for="acceptComment">Bemærkning</label></td>
-                            <td><textarea id="acceptComment" name="acceptComment" rows="8" class="form-control" th:field="*{tia.acceptedComment}"></textarea></td>
+                            <td><label for="tia.acceptedComment">Bemærkning</label></td>
+                            <td><textarea rows="8" class="form-control" th:field="*{tia.acceptedComment}"></textarea></td>
                             <td></td>
                         </tr>
                         <tr id="acceptDateRow" th:hidden="not *{tia.accepted}">

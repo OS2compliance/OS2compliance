@@ -947,6 +947,8 @@ public class AssetsController {
 			existingTia.setAcceptedComment(null);
 			existingTia.setAcceptedByUuid(null);
 			existingTia.setAcceptedByName(null);
+		} else if (existingTia.isAccepted()) {
+			existingTia.setAcceptedComment(newTia.getAcceptedComment());
 		}
 
         existingTia.setTransferCaseDescription(newTia.getTransferCaseDescription());

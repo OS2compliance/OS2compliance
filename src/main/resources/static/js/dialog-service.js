@@ -59,7 +59,13 @@ export async function openDialog(url, initFunction = null) {
         dialogEl.close();
     }
 
-    await networkService.GetFragment(url, contentEl);
+    try {
+        await networkService.GetFragment(url, contentEl);
+    } catch (e) {
+        console.error(e);
+        toastService.error('Indholdet kunne ikke hentes');
+        return;
+    }
 
     if (typeof initFunction === 'function') {
         initFunction(contentEl);
@@ -77,11 +83,12 @@ export function initSubmitButton(
     url,
     errorMessage = 'En fejl opstod og oplysningerne blev ikke gemt',
     customValidationFunction = null,
-    buttonSelector = '.confirmBtn'
+    buttonSelector = '.confirmBtn',
+    onSuccess = () => location.reload()
 ) {
     const confirmButton = container.querySelector(buttonSelector);
     confirmButton?.addEventListener('click', async () => {
-        await submitData(container, url, errorMessage, customValidationFunction);
+        await submitData(container, url, errorMessage, customValidationFunction, onSuccess);
     });
 }
 
@@ -103,7 +110,8 @@ async function submitData(
     container,
     url,
     errorMessage = 'En fejl opstod og oplysningerne blev ikke gemt',
-    customValidationFunction = null
+    customValidationFunction = null,
+    onSuccess = () => location.reload()
 ) {
     const form = container.querySelector('form');
 
@@ -126,7 +134,7 @@ async function submitData(
         return;
     }
 
-    location.reload();
+    onSuccess();
 }
 
 // Use confirm if the intention is to warn the user of something and allow them to either continue or cancel
@@ -136,7 +144,9 @@ export async function confirm(options = {}) {
         text: options.text,
         icon: options.icon,
         confirmButtonText: options.confirmButtonText || 'Ja',
+        confirmButtonClass: options.confirmButtonClass || 'btn-success',
         cancelButtonText: options.cancelButtonText || 'Nej',
+        cancelButtonClass: options.cancelButtonClass || 'btn-danger',
         showCancel: true,
     });
     return result.isConfirmed;
@@ -153,12 +163,17 @@ export async function alert(options = {}) {
         text: options.text,
         icon: options.icon,
         confirmButtonText: options.confirmButtonText || 'OK',
+        confirmButtonClass: options.confirmButtonClass || 'btn-primary',
         showCancel: false,
     });
 }
 
-function showStatic({ title, text, icon, confirmButtonText, cancelButtonText, showCancel }) {
+function showStatic({ title, text, icon, confirmButtonText, confirmButtonClass, cancelButtonText, cancelButtonClass, showCancel }) {
     init();
+
+    if (dialogEl.open) {
+        dialogEl.close();
+    }
 
     const iconEl = document.createElement('div');
     iconEl.className = 'mb-3';
@@ -180,18 +195,18 @@ function showStatic({ title, text, icon, confirmButtonText, cancelButtonText, sh
     titleEl.hidden = !title;
 
     const textEl = document.createElement('p');
-    textEl.className = 'text-primary mb-4 h4';
+    textEl.className = 'text-body mb-4 h4';
     textEl.textContent = text || '';
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.className = 'btn btn-danger btn-lg';
+    cancelBtn.className = `btn ${cancelButtonClass || 'btn-danger'} btn-lg`;
     cancelBtn.textContent = cancelButtonText || 'Annuller';
     cancelBtn.hidden = !showCancel;
 
     const confirmBtn = document.createElement('button');
     confirmBtn.type = 'button';
-    confirmBtn.className = 'btn btn-success btn-lg';
+    confirmBtn.className = `btn ${confirmButtonClass || 'btn-success'} btn-lg`;
     confirmBtn.textContent = confirmButtonText || 'OK';
 
     const actions = document.createElement('div');
