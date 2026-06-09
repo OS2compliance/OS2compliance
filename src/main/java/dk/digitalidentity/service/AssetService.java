@@ -876,4 +876,27 @@ public class AssetService implements TagableService<Asset> {
 				.ifPresent(ta -> result.put(assetId, ta.getAssessment())));
 		return result;
 	}
+
+	public void updateTiaAcceptance(TransferImpactAssessment existingTia, TransferImpactAssessment newTia) {
+		if (!existingTia.isAccepted() && newTia.isAccepted()) {
+			Optional<User> loggedInUser = userService.findByUuid(SecurityUtil.getLoggedInUserUuid());
+			if (loggedInUser.isEmpty()) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Logged in user not found");
+			}
+
+			existingTia.setAccepted(true);
+			existingTia.setAcceptedDate(LocalDate.now());
+			existingTia.setAcceptedByUuid(loggedInUser.get().getUuid());
+			existingTia.setAcceptedByName(loggedInUser.get().getName());
+			existingTia.setAcceptedComment(newTia.getAcceptedComment());
+		} else if (existingTia.isAccepted() && !newTia.isAccepted()) {
+			existingTia.setAccepted(false);
+			existingTia.setAcceptedDate(null);
+			existingTia.setAcceptedComment(null);
+			existingTia.setAcceptedByUuid(null);
+			existingTia.setAcceptedByName(null);
+		} else if (existingTia.isAccepted()) {
+			existingTia.setAcceptedComment(newTia.getAcceptedComment());
+		}
+	}
 }

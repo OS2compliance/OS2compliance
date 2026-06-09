@@ -50,7 +50,7 @@ async function saveTia() {
             body: new FormData(form)
         });
         if (response.ok) {
-            toastService.info('Gemt');
+            toastService.info('info', 'Dine ændringer er gemt');
             return true;
         }
         toastService.error('Kunne ikke gemme');
@@ -60,7 +60,7 @@ async function saveTia() {
     return false;
 }
 
-function setTiaAcceptedState(locked) {
+function setTiaLocked(locked) {
     document.getElementById('tiaView').querySelectorAll('select, textarea, input:not([type="hidden"])').forEach(e => {
         e.disabled = locked;
     });
@@ -71,14 +71,6 @@ function setTiaAcceptedState(locked) {
     if (tiaLinkEditBtn) {
         tiaLinkEditBtn.disabled = locked;
     }
-}
-
-function lockTiaForm() {
-    setTiaAcceptedState(true);
-}
-
-function unlockTiaForm() {
-    setTiaAcceptedState(false);
 }
 
 function tiaLinkEditStart() {
@@ -173,13 +165,16 @@ export function initTia() {
             }
             document.getElementById('acceptDateRow').hidden = true;
 
-            unlockTiaForm();
-            await saveTia();
+            setTiaLocked(false);
+            const saved = await saveTia();
+            if (!saved) {
+                setTiaLocked(true);
+            }
         });
     }
 
     if (tiaAccepted) {
-        lockTiaForm();
+        setTiaLocked(true);
     }
 
     document.getElementById('tia.forwardInformationToOtherSuppliers')

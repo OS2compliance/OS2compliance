@@ -930,26 +930,7 @@ public class AssetsController {
 		existingTia.setRegisteredCategories(newTia.getRegisteredCategories());
 		existingTia.setInformationTypes(newTia.getInformationTypes());
 
-		if (!existingTia.isAccepted() && newTia.isAccepted()) {
-			Optional<User> loggedInUser = userService.findByUuid(SecurityUtil.getLoggedInUserUuid());
-			if (loggedInUser.isEmpty()) {
-				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Logged in user not found");
-			}
-
-			existingTia.setAccepted(true);
-			existingTia.setAcceptedDate(LocalDate.now());
-			existingTia.setAcceptedByUuid(loggedInUser.get().getUuid());
-			existingTia.setAcceptedByName(loggedInUser.get().getName());
-			existingTia.setAcceptedComment(newTia.getAcceptedComment());
-		} else if (existingTia.isAccepted() && !newTia.isAccepted()) {
-			existingTia.setAccepted(false);
-			existingTia.setAcceptedDate(null);
-			existingTia.setAcceptedComment(null);
-			existingTia.setAcceptedByUuid(null);
-			existingTia.setAcceptedByName(null);
-		} else if (existingTia.isAccepted()) {
-			existingTia.setAcceptedComment(newTia.getAcceptedComment());
-		}
+		assetService.updateTiaAcceptance(existingTia, newTia);
 
 		existingTia.setTransferCaseDescription(newTia.getTransferCaseDescription());
 		return "redirect:/assets/" + existingAsset.getId();
