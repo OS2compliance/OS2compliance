@@ -1,50 +1,13 @@
-const WARNING_ICON = `<svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="width:52px;height:52px">
-    <path d="M26 4L48 44H4L26 4Z" fill="#f0ad4e" stroke="#d4892a" stroke-width="2.5" stroke-linejoin="round"/>
-    <rect x="23.5" y="19" width="5" height="13" rx="2.5" fill="#fff"/>
-    <rect x="23.5" y="35" width="5" height="5" rx="2.5" fill="#fff"/>
-</svg>`;
+// The dialog markup, icons and styling live in templates/fragments/dialog-service.html,
+// included on every page through templates/fragments/footer.html. This service only fills
+// in the caller's content and wires up the buttons.
 
-const INFO_ICON = `<svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="width:52px;height:52px">
-    <circle cx="26" cy="26" r="22" fill="#5b9bd5" stroke="#3a7abf" stroke-width="2.5"/>
-    <rect x="23.5" y="22" width="5" height="13" rx="2.5" fill="#fff"/>
-    <rect x="23.5" y="14" width="5" height="5" rx="2.5" fill="#fff"/>
-</svg>`;
-
-// reset defaults and backdrop styles
-const STYLES = `
-    #dsDialog {
-        border: none;
-        border-radius: var(--bs-border-radius-lg);
-        padding: 0;
-        max-width: 520px;
-        width: 90%;
-        box-shadow: var(--bs-box-shadow-lg, 0 8px 32px rgba(0,0,0,.2));
+function getDialog(id) {
+    const dialogEl = document.getElementById(id);
+    if (!dialogEl) {
+        console.error(`#${id} not found - is the dialog-service fragment included in the footer?`);
     }
-    #dsDialog::backdrop {
-        background: rgba(0, 0, 0, 0.45);
-    }
-`;
-
-let dialogEl = null;
-let contentEl = null;
-
-function init() {
-    if (dialogEl) {
-        return;
-    }
-
-    const style = document.createElement('style');
-    style.textContent = STYLES;
-    document.head.appendChild(style);
-
-    dialogEl = document.createElement('dialog');
-    dialogEl.id = 'dsDialog';
-
-    contentEl = document.createElement('div');
-    contentEl.id = 'dsContent';
-    dialogEl.appendChild(contentEl);
-
-    document.body.appendChild(dialogEl);
+    return dialogEl;
 }
 
 export async function openDialog(url, initFunction = null) {
@@ -53,7 +16,11 @@ export async function openDialog(url, initFunction = null) {
         return;
     }
 
-    init();
+    const dialogEl = getDialog('dsContentDialog');
+    if (!dialogEl) {
+        return;
+    }
+    const contentEl = dialogEl.querySelector('#dsContent');
 
     if (dialogEl.open) {
         dialogEl.close();
@@ -75,7 +42,7 @@ export async function openDialog(url, initFunction = null) {
 }
 
 export function closeDialog() {
-    dialogEl?.close();
+    getDialog('dsContentDialog')?.close();
 }
 
 export function initSubmitButton(
@@ -139,7 +106,7 @@ async function submitData(
 
 // Use confirm if the intention is to warn the user of something and allow them to either continue or cancel
 export async function showConfirm(options = {}) {
-    const result = await showStatic({
+    const result = await showStatic('dsConfirmDialog', {
         title: options.title,
         text: options.text,
         icon: options.icon,
@@ -158,7 +125,7 @@ export async function showAlert(options = {}) {
         options = { text: options };
     }
 
-    return await showStatic({
+    return await showStatic('dsAlertDialog', {
         title: options.title,
         text: options.text,
         icon: options.icon,
@@ -168,69 +135,59 @@ export async function showAlert(options = {}) {
     });
 }
 
-function showStatic({ title, text, icon, confirmButtonText, confirmButtonClass, cancelButtonText, cancelButtonClass, showCancel }) {
-    init();
+function showStatic(dialogId, { title, text, icon, confirmButtonText, confirmButtonClass, cancelButtonText, cancelButtonClass, showCancel }) {
+    const dialogEl = getDialog(dialogId);
+    if (!dialogEl) {
+        return Promise.resolve({ isConfirmed: false });
+    }
 
     if (dialogEl.open) {
         dialogEl.close();
     }
 
-    const iconEl = document.createElement('div');
-    iconEl.className = 'mb-3';
-    switch (icon) {
-        case 'warning': {
-            iconEl.insertAdjacentHTML('afterbegin', WARNING_ICON);
-            break;
-        }
-        case 'info': {
-            iconEl.insertAdjacentHTML('afterbegin', INFO_ICON);
-            break;
-        }
-    }
+    const iconEl = dialogEl.querySelector('.ds-icon');
+    const warningIcon = dialogEl.querySelector('.ds-icon-warning');
+    const infoIcon = dialogEl.querySelector('.ds-icon-info');
+    warningIcon.hidden = icon !== 'warning';
+    infoIcon.hidden = icon !== 'info';
     iconEl.hidden = !icon;
 
-    const titleEl = document.createElement('p');
-    titleEl.className = 'fw-semibold fs-5 mb-1';
+    const titleEl = dialogEl.querySelector('.ds-title');
     titleEl.textContent = title || '';
     titleEl.hidden = !title;
 
-    const textEl = document.createElement('p');
-    textEl.className = 'text-body mb-4 h4';
+    const textEl = dialogEl.querySelector('.ds-text');
     textEl.textContent = text || '';
     textEl.hidden = !text;
 
-    const cancelBtn = document.createElement('button');
-    cancelBtn.type = 'button';
-    cancelBtn.className = `btn ${cancelButtonClass || 'btn-danger'} btn-lg`;
-    cancelBtn.textContent = cancelButtonText || 'Annuller';
-    cancelBtn.hidden = !showCancel;
-
-    const confirmBtn = document.createElement('button');
-    confirmBtn.type = 'button';
-    confirmBtn.className = `btn ${confirmButtonClass || 'btn-success'} btn-lg`;
+    const confirmBtn = dialogEl.querySelector('.ds-confirm');
+    confirmBtn.className = `ds-confirm btn ${confirmButtonClass || 'btn-success'} btn-lg`;
     confirmBtn.textContent = confirmButtonText || 'OK';
 
-    const actions = document.createElement('div');
-    actions.className = 'd-flex justify-content-center gap-2';
-    actions.append(cancelBtn, confirmBtn);
-
-    const inner = document.createElement('div');
-    inner.className = 'p-4 text-center';
-    inner.append(iconEl, titleEl, textEl, actions);
-
-    contentEl.replaceChildren(inner);
+    const cancelBtn = dialogEl.querySelector('.ds-cancel');
+    if (cancelBtn) {
+        cancelBtn.className = `ds-cancel btn ${cancelButtonClass || 'btn-danger'} btn-lg`;
+        cancelBtn.textContent = cancelButtonText || 'Annuller';
+        cancelBtn.hidden = !showCancel;
+    }
 
     return new Promise((resolve) => {
+        // Buttons are reused across calls, so tie this call's listeners to an
+        // AbortController and drop them all once the dialog resolves.
+        const controller = new AbortController();
+        const { signal } = controller;
+
         function done(confirmed) {
+            controller.abort();
             dialogEl.close();
             resolve({ isConfirmed: confirmed });
         }
 
-        confirmBtn.addEventListener('click', () => done(true));
-        cancelBtn.addEventListener('click', () => done(false));
+        confirmBtn.addEventListener('click', () => done(true), { signal });
+        cancelBtn?.addEventListener('click', () => done(false), { signal });
 
         // Native ESC fires cancel on the dialog element
-        dialogEl.addEventListener('cancel', () => resolve({ isConfirmed: false }), { once: true });
+        dialogEl.addEventListener('cancel', () => done(false), { signal });
 
         dialogEl.showModal();
     });
