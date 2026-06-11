@@ -55,3 +55,23 @@
     width: 40px;
 }
 
+.tia-approval {
+    border: 1px solid #d6dee3;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .06);
+}
+.tia-approval-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Locked state: clearly approved and closed for editing. */
+.tia-approval-locked {
+    border-color: #198754;
+    background-color: #e8f5ee;
+}
+.tia-approval-locked .tia-approval-title {
+    color: #146c43;
+}
+

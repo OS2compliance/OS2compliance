@@ -65,11 +65,28 @@ function setTiaLocked(locked) {
         e.disabled = locked;
     });
     tiaChoiceElements.forEach(e => locked ? e.disable() : e.enable());
-    document.getElementById('removeAcceptanceRow').hidden = !locked;
+
+    const approvalCard = document.getElementById('tiaApprovalCard');
+    const approvalEdit = document.getElementById('tiaApprovalEdit');
+    const approvalLocked = document.getElementById('tiaApprovalLocked');
+    approvalCard?.classList.toggle('tia-approval-locked', locked);
+    if (approvalEdit) {
+        approvalEdit.hidden = locked;
+    }
+    if (approvalLocked) {
+        approvalLocked.hidden = !locked;
+    }
 
     const tiaLinkEditBtn = document.getElementById('tiaLinkEditBtn');
     if (tiaLinkEditBtn) {
         tiaLinkEditBtn.disabled = locked;
+    }
+
+    // The opt-out toggle lives outside #tiaView - hide it while locked so an
+    // accepted TIA cannot be deselected.
+    const optOutToggle = document.getElementById('tiaOptOutToggle');
+    if (optOutToggle) {
+        optOutToggle.hidden = locked;
     }
 }
 
@@ -123,8 +140,8 @@ export function initTia() {
     const debouncedSave = debounce(() => saveTia(), SAVE_DEBOUNCE_MS);
 
     for (const elem of form.elements) {
-        // We do not want event listeners on these elements (these are elements that are not included in the save of a TIA)
-        if (elem.type === 'hidden' || elem.tagName === 'BUTTON' || !elem.name || elem.name === 'tia.accepted' || elem.id === 'setTiaOptOutCheckbox') {
+        // Elements marked with 'tia-no-autosave' are not part of the debounced TIA save
+        if (elem.classList.contains('tia-no-autosave')) {
             continue;
         }
 
@@ -135,12 +152,16 @@ export function initTia() {
         }
     }
 
-    const acceptedCheckbox = form.querySelector('input[name="tia.accepted"][type="checkbox"]');
-    if (acceptedCheckbox) {
-        acceptedCheckbox.addEventListener('change', async () => {
+    const acceptedField = document.getElementById('acceptedField');
+    const acceptBtn = document.getElementById('acceptBtn');
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', async () => {
+            acceptedField.value = 'true';
             const saved = await saveTia();
             if (saved) {
                 location.reload();
+            } else {
+                acceptedField.value = 'false';
             }
         });
     }
@@ -156,22 +177,17 @@ export function initTia() {
                 return;
             }
 
-            if (acceptedCheckbox) {
-                acceptedCheckbox.checked = false;
-            }
+            acceptedField.value = 'false';
             const acceptComment = form.querySelector('[name="tia.acceptedComment"]');
             if (acceptComment) {
                 acceptComment.value = '';
             }
-            const acceptDateRow = document.getElementById('acceptDateRow');
-            acceptDateRow.hidden = true;
 
             setTiaLocked(false);
             const saved = await saveTia();
             if (!saved) {
-                // lock the fields if acceptance could not be removed
+                // re-lock the fields if acceptance could not be removed
                 setTiaLocked(true);
-                acceptDateRow.hidden = false;
             }
         });
     }

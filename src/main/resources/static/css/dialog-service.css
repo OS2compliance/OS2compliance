@@ -3,7 +3,7 @@
 
 .ds-dialog {
     border: none;
-    border-radius: var(--bs-border-radius-lg);
+    border-radius: 1rem;
     padding: 0;
     max-width: 520px;
     width: 90%;
@@ -16,4 +16,9 @@
 
 .ds-icon svg[hidden] {
     display: none;
+}
+
+.ds-icon-info, .ds-icon-warning {
+    width: 52px;
+    height: 52px;
 }

@@ -4,31 +4,32 @@
 <div th:fragment="tia(asset, dbChoices)" id="tiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="tia-tab">
     <form id="tiaForm" action="#" th:action="@{/assets/tia}" th:object="${asset}" method="post" class="needs-validation" novalidate>
         <div>
-            <label class="mb-2">
-                <input class="form-check-input" id="setTiaOptOutCheckbox" name="tiaOptOutReason" type="checkbox" th:checked="${asset.isTiaOptOut()}"> TIA fravalgt
+            <label id="tiaOptOutToggle" class="mb-2">
+                <input class="form-check-input tia-no-autosave" id="setTiaOptOutCheckbox" name="tiaOptOutReason" type="checkbox" th:checked="${asset.isTiaOptOut()}"> TIA fravalgt
             </label>
         </div>
         <div id="tiaOptOutView" class="d-none">
             <label for="tiaOptOutText" class="mb-1">Begrundelse for fravalg:</label>
-            <textarea id="tiaOptOutText" class="form-control" th:text="${asset.tiaOptOutReason}"></textarea>
+            <textarea id="tiaOptOutText" class="form-control tia-no-autosave" th:text="${asset.tiaOptOutReason}"></textarea>
             <div class="row mb-3 mt-2">
                 <label class="col-sm-3 col-form-label">TIA-link</label>
                 <div class="col-sm-9">
                     <div id="tiaLinkView" class="d-flex align-items-center gap-2">
                         <a id="tiaLinkAnchor" th:href="*{tia.link}" th:text="*{tia.link != null and !tia.link.isEmpty()} ? *{tia.link} : 'Ingen link'" target="_blank" rel="noopener noreferrer" class="form-control-link"></a>
-                        <button th:if="${changeableAsset}" id="tiaLinkEditBtn" type="button" class="btn btn-secondary btn-sm"><i class="pli-pencil fs-5"></i></button>
+                        <button th:if="${changeableAsset}" id="tiaLinkEditBtn" type="button" class="btn btn-secondary btn-sm tia-no-autosave"><i class="pli-pencil fs-5"></i></button>
                     </div>
                     <div id="tiaLinkEditGroup" class="input-group d-none">
-                        <input id="tiaLinkInput" class="form-control" th:value="*{tia.link}" type="text" placeholder="https://...">
-                        <button id="tiaLinkSaveBtn" type="button" class="btn btn-secondary"><i class="pli-disk fs-5"></i></button>
-                        <button id="tiaLinkCancelBtn" type="button" class="btn btn-danger"><i class="pli-cross fs-5"></i></button>
+                        <input id="tiaLinkInput" class="form-control tia-no-autosave" th:value="*{tia.link}" type="text" placeholder="https://...">
+                        <button id="tiaLinkSaveBtn" type="button" class="btn btn-secondary tia-no-autosave"><i class="pli-disk fs-5"></i></button>
+                        <button id="tiaLinkCancelBtn" type="button" class="btn btn-danger tia-no-autosave"><i class="pli-cross fs-5"></i></button>
                     </div>
                 </div>
             </div>
         </div>
         <div class="row" id="tiaView">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
-                <input th:field="${asset.id}" hidden>
+                <input th:field="${asset.id}" class="tia-no-autosave" hidden>
+                <input type="hidden" id="acceptedField" class="tia-no-autosave" name="tia.accepted" th:value="*{tia.accepted}">
 
                 <div class="row mb-3">
                     <!-- Table1-->
@@ -193,40 +194,39 @@
                                 </td>
                             </tr>
                         </tbody>
-                        <thead>
-                        <tr>
-                            <th colspan="3">Godkend</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td><label for="acceptedComment">Bemærkning</label></td>
-                            <td><textarea id="acceptedComment" rows="8" class="form-control" th:field="*{tia.acceptedComment}"></textarea></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td><label for="acceptedCheckbox">TIA gennemgået og accepteret</label></td>
-                            <td><input id="acceptedCheckbox" type="checkbox" class="form-check-input" th:field="*{tia.accepted}" /></td>
-                            <td></td>
-                        </tr>
-                        <tr id="acceptDateRow" th:hidden="not *{tia.accepted}">
-                            <td></td>
-                            <td><input id="acceptDate" type="text" class="form-control" th:value="*{tia.accepted} ? ${'Accepteret af ' + asset.tia.acceptedByName + ' d. ' + #temporals.format(asset.tia.acceptedDate, 'dd-MM-yyyy')} : ''" readonly /></td>
-                            <td></td>
-                        </tr>
-                        <tr id="removeAcceptanceRow" th:hidden="not *{tia.accepted}">
-                            <td></td>
-                            <td>
-                                <button id="removeAcceptanceBtn" type="button" class="btn btn-warning btn-lg hstack gap-2">
-                                    <i class="pli-pencil"></i>
-                                    <span class="vr"></span>
-                                    Fjern godkendelse for at redigere
-                                </button>
-                            </td>
-                            <td></td>
-                        </tr>
-                        </tbody>
                     </table>
+                </div>
+
+                <!-- Godkendelse: lifted out of the table so accepting (which locks the whole
+                     form for editing) reads as a distinct, state-changing action. -->
+                <div id="tiaApprovalCard" class="card border-1 shadow-none tia-approval mb-3" th:classappend="*{tia.accepted} ? 'tia-approval-locked'">
+                    <!-- Editable state: review and accept -->
+                    <div id="tiaApprovalEdit" class="card-body p-4" th:hidden="*{tia.accepted}">
+                        <h5 class="tia-approval-title mb-3">Godkendelse</h5>
+                        <div class="mb-3">
+                            <label for="acceptedComment" class="form-label">Bemærkning</label>
+                            <textarea id="acceptedComment" rows="4" class="form-control" th:field="*{tia.acceptedComment}"></textarea>
+                        </div>
+                        <button id="acceptBtn" type="button" class="btn btn-success btn-lg tia-no-autosave">Godkend</button>
+                    </div>
+
+                    <!-- Locked state: approved and closed for editing -->
+                    <div id="tiaApprovalLocked" class="card-body p-4" th:hidden="not *{tia.accepted}">
+                        <div class="tia-approval-title hstack gap-2 mb-2">
+                            <i class="pli-lock-2 fs-3"></i>
+                            <span>TIA godkendt og låst for redigering</span>
+                        </div>
+                        <p id="acceptDate" class="mb-1 text-body"
+                           th:text="*{tia.accepted} ? ${'Accepteret af ' + asset.tia.acceptedByName + ' d. ' + #temporals.format(asset.tia.acceptedDate, 'dd-MM-yyyy')} : ''"></p>
+                        <p class="mb-3 text-body" th:if="*{tia.acceptedComment != null and !tia.acceptedComment.isEmpty()}">
+                            <span class="fw-semibold">Bemærkning:</span> <span th:text="*{tia.acceptedComment}"></span>
+                        </p>
+                        <button id="removeAcceptanceBtn" type="button" class="btn btn-danger btn-lg hstack gap-2 tia-no-autosave">
+                            <i class="pli-pencil"></i>
+                            <span class="vr"></span>
+                            Fjern godkendelse for at redigere
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

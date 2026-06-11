@@ -107,13 +107,13 @@ async function submitData(
 // Use confirm if the intention is to warn the user of something and allow them to either continue or cancel
 export async function showConfirm(options = {}) {
     const result = await showStatic('dsConfirmDialog', {
-        title: options.title,
-        text: options.text,
-        icon: options.icon,
+        title: options.title || '',
+        text: options.text || '',
+        icon: options.icon || 'warning',
         confirmButtonText: options.confirmButtonText || 'Ja',
-        confirmButtonClass: options.confirmButtonClass || 'btn-danger',
+        confirmButtonClass: options.confirmButtonClass || 'btn-success',
         cancelButtonText: options.cancelButtonText || 'Nej',
-        cancelButtonClass: options.cancelButtonClass || 'btn-success',
+        cancelButtonClass: options.cancelButtonClass || 'btn-danger',
         showCancel: true,
     });
     return result.isConfirmed;
@@ -126,9 +126,9 @@ export async function showAlert(options = {}) {
     }
 
     return await showStatic('dsAlertDialog', {
-        title: options.title,
-        text: options.text,
-        icon: options.icon,
+        title: options.title || '',
+        text: options.text || '',
+        icon: options.icon || 'info',
         confirmButtonText: options.confirmButtonText || 'OK',
         confirmButtonClass: options.confirmButtonClass || 'btn-primary',
         showCancel: false,
@@ -145,35 +145,36 @@ function showStatic(dialogId, { title, text, icon, confirmButtonText, confirmBut
         dialogEl.close();
     }
 
-    const iconEl = dialogEl.querySelector('.ds-icon');
     const warningIcon = dialogEl.querySelector('.ds-icon-warning');
     const infoIcon = dialogEl.querySelector('.ds-icon-info');
-    warningIcon.hidden = icon !== 'warning';
-    infoIcon.hidden = icon !== 'info';
-    iconEl.hidden = !icon;
+    if (warningIcon) {
+        warningIcon.hidden = icon !== 'warning';
+    }
+    if (infoIcon) {
+        infoIcon.hidden = icon !== 'info';
+    }
 
     const titleEl = dialogEl.querySelector('.ds-title');
-    titleEl.textContent = title || '';
+    titleEl.textContent = title;
     titleEl.hidden = !title;
 
     const textEl = dialogEl.querySelector('.ds-text');
-    textEl.textContent = text || '';
+    textEl.textContent = text;
     textEl.hidden = !text;
 
     const confirmBtn = dialogEl.querySelector('.ds-confirm');
-    confirmBtn.className = `ds-confirm btn ${confirmButtonClass || 'btn-success'} btn-lg`;
-    confirmBtn.textContent = confirmButtonText || 'OK';
+    confirmBtn.className = `ds-confirm btn ${confirmButtonClass} btn-lg`;
+    confirmBtn.textContent = confirmButtonText;
 
     const cancelBtn = dialogEl.querySelector('.ds-cancel');
     if (cancelBtn) {
-        cancelBtn.className = `ds-cancel btn ${cancelButtonClass || 'btn-danger'} btn-lg`;
-        cancelBtn.textContent = cancelButtonText || 'Annuller';
+        cancelBtn.className = `ds-cancel btn ${cancelButtonClass} btn-lg`;
+        cancelBtn.textContent = cancelButtonText;
         cancelBtn.hidden = !showCancel;
     }
 
     return new Promise((resolve) => {
-        // Buttons are reused across calls, so tie this call's listeners to an
-        // AbortController and drop them all once the dialog resolves.
+        // AbortController drops the event listeners so that we don't create more each time we open a dialog
         const controller = new AbortController();
         const { signal } = controller;
 
