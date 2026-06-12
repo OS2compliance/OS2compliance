@@ -751,10 +751,6 @@ public class AssetService implements TagableService<Asset> {
 		return assetDao.findByResponsibleUsers_Uuid(userUuid);
 	}
 
-	public Set<Asset> findAssetsByOwnerUuid(String userUuid) {
-		return assetDao.findByResponsibleUsers_UuidContainsOrManagers_UuidContains(userUuid, userUuid);
-	}
-
 	// Helper method to get DBSAssets and avoid duplicated code in export and list
 	public Page<DBSAssetGrid> getDbsAssets(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
 		Page<DBSAssetGrid> assets;

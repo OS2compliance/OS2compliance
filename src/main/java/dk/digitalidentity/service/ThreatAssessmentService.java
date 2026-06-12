@@ -1,6 +1,7 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.Constants;
+import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
@@ -56,6 +57,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -90,9 +92,31 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 	private final SettingsService settingsService;
 	private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
 	private final RiskGridDao riskGridDao;
+	private final AssetDao assetDao;
 
+	/**
+	 * True if the currently logged-in user is considered responsible for the given threat assessment,
+	 * meaning the user is either risk owner, assigned to sign the report, or system owner/system
+	 * responsible on a related asset (cf. "Roller i OS2compliance")
+	 */
 	public boolean isResponsibleFor(ThreatAssessment threatAssessment) {
-		return threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid());
+		final String userUuid = SecurityUtil.getPrincipalUuid();
+		if (userUuid == null) {
+			return false;
+		}
+		if (threatAssessment.getResponsibleUser() != null && userUuid.equals(threatAssessment.getResponsibleUser().getUuid())) {
+			return true;
+		}
+		if (threatAssessment.getThreatAssessmentReportApprover() != null && userUuid.equals(threatAssessment.getThreatAssessmentReportApprover().getUuid())) {
+			return true;
+		}
+		final List<Long> relatedAssetIds = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
+				.map(r -> r.getRelationAType() == RelationType.ASSET ? r.getRelationAId() : r.getRelationBId())
+				.toList();
+		return !relatedAssetIds.isEmpty() && assetDao.findAllByIdInAndDeletedFalse(relatedAssetIds).stream()
+				.anyMatch(asset ->
+						asset.getResponsibleUsers().stream().anyMatch(u -> userUuid.equals(u.getUuid()))
+						|| asset.getManagers().stream().anyMatch(u -> userUuid.equals(u.getUuid())));
 	}
 
 	public ThreatAssessment findByS3Document(S3Document s3Document) {
@@ -1213,10 +1237,28 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		} else {
 			// User can only read threatAssessments they are responsible for
 			return riskGrids.stream()
-					.filter(rg ->
-							rg.getResponsibleUser().getUuid().equals(user.getUuid())
-					)
+					.filter(rg -> isAssignedUser(rg, user.getUuid()))
 					.toList();
 		}
+	}
+
+	/**
+	 * True if the user is risk owner, signer or system owner/system responsible on a related asset
+	 * (mirrors the visibility filter applied by the risk grid for owner-only users)
+	 */
+	public static boolean isAssignedUser(final RiskGrid riskGrid, final String userUuid) {
+		return (riskGrid.getResponsibleUser() != null && riskGrid.getResponsibleUser().getUuid().equals(userUuid))
+				|| (riskGrid.getSignerUuid() != null && riskGrid.getSignerUuid().equals(userUuid))
+				|| uuidListContains(riskGrid.getResponsibleUserUuids(), userUuid)
+				|| uuidListContains(riskGrid.getManagerUuids(), userUuid);
+	}
+
+	/**
+	 * Matches against the comma-separated uuid list columns (responsible_user_uuids/manager_uuids)
+	 * built by GROUP_CONCAT in view_gridjs_assessments
+	 */
+	private static boolean uuidListContains(final String commaSeparatedUuids, final String userUuid) {
+		return commaSeparatedUuids != null
+				&& Arrays.stream(commaSeparatedUuids.split(",")).anyMatch(uuid -> uuid.trim().equals(userUuid));
 	}
 }

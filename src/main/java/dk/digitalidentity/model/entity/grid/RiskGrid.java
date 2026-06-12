@@ -2,6 +2,9 @@ package dk.digitalidentity.model.entity.grid;
 
 import dk.digitalidentity.model.dto.RelatedEntityDTO;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.interfaces.HasManagers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasSigner;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
@@ -29,7 +32,7 @@ import java.util.List;
 @Getter
 @Setter
 @Immutable
-public class RiskGrid  implements HasSingleResponsibleUser {
+public class RiskGrid  implements HasSingleResponsibleUser, HasMultipleResponsibleUsers, HasManagers, HasSigner {
     @Id
     private Long id;
 
@@ -94,6 +97,18 @@ public class RiskGrid  implements HasSingleResponsibleUser {
 
 	@Column
 	private Integer completedTasks;
+
+	/**
+	 * Uuids of the responsible users (system owners) of related assets
+	 */
+	@Column
+	private String responsibleUserUuids;
+
+	/**
+	 * Uuids of the managers (system responsible) of related assets
+	 */
+	@Column
+	private String managerUuids;
 
 	/**
 	 * Parses the string that the view provides to DTO's

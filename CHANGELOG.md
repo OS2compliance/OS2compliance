@@ -40,6 +40,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (gitlab !473) Død Rediger-knap på aktivets Sikkerhedsfane ved tilpasset sikkerhedsskema (JS-fejl når et betinget opfølgningsspørgsmål var fjernet fra kommunens skema)
 - (gitlab !464) Signeringslink forblev aktivt efter sletning af en risikovurdering — en slettet/tilbagetrukket vurdering (eller DPIA) kunne stadig signeres og PDF'en blev signeret og uploadet pga. manglende else-gren i SigningController; viser nu en "trukket tilbage"-side
 - (Ad-hoc) Manglende redigeringsmulighed i standarder
+- (Ad-hoc) Risikovurderinger var ikke synlige for systemejere, systemansvarlige og signeringsansvarlige på tilknyttede aktiver (jf. rollebeskrivelsen "Roller i OS2compliance") — rammer fx systemansvarlige der ikke selv er risikoejer. Konsekvensanalyser var omvendt synlige for alle almindelige brugere og begrænses nu tilsvarende til egne
 - (Ad-hoc) Man kan oprette en konsekvensanalyse uden værdier
 - (Ad-hoc) JS-fejl i fortegnelse view
 - (Ad-hoc) Forskellig styling på card bodies på fortegnelser og aktiver
