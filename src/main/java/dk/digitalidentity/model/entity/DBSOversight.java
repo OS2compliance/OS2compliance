@@ -44,4 +44,7 @@ public class DBSOversight {
     @Column
     private LocalDateTime created;
 
+	@Column(name = "audit_link")
+	private String auditLink;
+
 }

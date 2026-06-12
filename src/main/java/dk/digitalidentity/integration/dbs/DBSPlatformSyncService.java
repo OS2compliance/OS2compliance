@@ -241,8 +241,16 @@ public class DBSPlatformSyncService {
 			if (existing.isPresent()) {
 				DBSOversight oversight = existing.get();
 				claimedOversightIds.add(oversight.getId());
+				boolean changed = false;
 				if (!Objects.equals(oversight.getName(), audit.getName())) {
 					oversight.setName(audit.getName());
+					changed = true;
+				}
+				if (!Objects.equals(oversight.getAuditLink(), audit.getAuditLink())) {
+					oversight.setAuditLink(audit.getAuditLink());
+					changed = true;
+				}
+				if (changed) {
 					dbsOversightDao.save(oversight);
 					updated++;
 				}
@@ -260,6 +268,7 @@ public class DBSPlatformSyncService {
 				oversight.setLocked(false);
 				oversight.setSupplier(supplier.get());
 				oversight.setTaskCreated(false);
+				oversight.setAuditLink(audit.getAuditLink());
 				dbsOversightDao.save(oversight);
 				created++;
 			}
