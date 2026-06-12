@@ -327,8 +327,11 @@ public class SearchRepositoryImpl implements SearchRepository {
 		// DPIAs are also visible to the report approver and to owners/managers of related assets
 		if (DPIA.class.isAssignableFrom(entityClass)) {
 			Join<T, dk.digitalidentity.model.entity.Asset> assetsJoin = root.join("assets", JoinType.LEFT);
-			userPredicates.add(criteriaBuilder.equal(assetsJoin.join("responsibleUsers", JoinType.LEFT).get("uuid"), user.getUuid()));
-			userPredicates.add(criteriaBuilder.equal(assetsJoin.join("managers", JoinType.LEFT).get("uuid"), user.getUuid()));
+			final Predicate assetNotDeleted = criteriaBuilder.isFalse(assetsJoin.get("deleted"));
+			userPredicates.add(criteriaBuilder.and(assetNotDeleted,
+					criteriaBuilder.equal(assetsJoin.join("responsibleUsers", JoinType.LEFT).get("uuid"), user.getUuid())));
+			userPredicates.add(criteriaBuilder.and(assetNotDeleted,
+					criteriaBuilder.equal(assetsJoin.join("managers", JoinType.LEFT).get("uuid"), user.getUuid())));
 			userPredicates.add(criteriaBuilder.equal(root.join("dpiaReports", JoinType.LEFT).get("reportApproverUuid"), user.getUuid()));
 		}
 
@@ -351,9 +354,11 @@ public class SearchRepositoryImpl implements SearchRepository {
 		final Join<dk.digitalidentity.model.entity.Asset, User> assetResponsibleJoin = assetRoot.join("responsibleUsers", JoinType.LEFT);
 		final Join<dk.digitalidentity.model.entity.Asset, User> assetManagersJoin = assetRoot.join("managers", JoinType.LEFT);
 		ownedAssetIds.select(assetRoot.get("id"))
-				.where(criteriaBuilder.or(
-						criteriaBuilder.equal(assetResponsibleJoin.get("uuid"), user.getUuid()),
-						criteriaBuilder.equal(assetManagersJoin.get("uuid"), user.getUuid())));
+				.where(criteriaBuilder.and(
+						criteriaBuilder.isFalse(assetRoot.get("deleted")),
+						criteriaBuilder.or(
+								criteriaBuilder.equal(assetResponsibleJoin.get("uuid"), user.getUuid()),
+								criteriaBuilder.equal(assetManagersJoin.get("uuid"), user.getUuid()))));
 
 		relatedToOwnedAsset.select(relationRoot.get("id"))
 				.where(criteriaBuilder.or(

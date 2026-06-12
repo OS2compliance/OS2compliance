@@ -113,7 +113,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		final List<Long> relatedAssetIds = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
 				.map(r -> r.getRelationAType() == RelationType.ASSET ? r.getRelationAId() : r.getRelationBId())
 				.toList();
-		return !relatedAssetIds.isEmpty() && assetDao.findAllById(relatedAssetIds).stream()
+		return !relatedAssetIds.isEmpty() && assetDao.findAllByIdInAndDeletedFalse(relatedAssetIds).stream()
 				.anyMatch(asset ->
 						asset.getResponsibleUsers().stream().anyMatch(u -> userUuid.equals(u.getUuid()))
 						|| asset.getManagers().stream().anyMatch(u -> userUuid.equals(u.getUuid())));
@@ -1253,6 +1253,10 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 				|| uuidListContains(riskGrid.getManagerUuids(), userUuid);
 	}
 
+	/**
+	 * Matches against the comma-separated uuid list columns (responsible_user_uuids/manager_uuids)
+	 * built by GROUP_CONCAT in view_gridjs_assessments
+	 */
 	private static boolean uuidListContains(final String commaSeparatedUuids, final String userUuid) {
 		return commaSeparatedUuids != null
 				&& Arrays.stream(commaSeparatedUuids.split(",")).anyMatch(uuid -> uuid.trim().equals(userUuid));

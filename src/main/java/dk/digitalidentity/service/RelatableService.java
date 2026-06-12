@@ -103,7 +103,7 @@ public class RelatableService {
 		final List<Long> relatedAssetIds = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.ASSET).stream()
 				.map(r -> r.getRelationAType() == RelationType.ASSET ? r.getRelationAId() : r.getRelationBId())
 				.toList();
-		return !relatedAssetIds.isEmpty() && assetDao.findAllById(relatedAssetIds).stream()
+		return !relatedAssetIds.isEmpty() && assetDao.findAllByIdInAndDeletedFalse(relatedAssetIds).stream()
 				.anyMatch(asset ->
 						asset.getResponsibleUsers().stream().anyMatch(u -> u.getUuid().equals(userUuid))
 						|| asset.getManagers().stream().anyMatch(u -> u.getUuid().equals(userUuid)));

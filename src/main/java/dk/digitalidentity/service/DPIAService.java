@@ -71,7 +71,7 @@ public class DPIAService implements TagableService<DPIA> {
 	public boolean isResponsibleFor(DPIA dpia) {
 		String userUuid = SecurityUtil.getPrincipalUuid();
 		return dpia.getResponsibleUser() != null && Strings.CI.equals(dpia.getResponsibleUser().getUuid(), userUuid)
-				|| dpia.getAssets().stream().anyMatch(assetService::isOwning)
+				|| dpia.getAssets().stream().filter(a -> !a.isDeleted()).anyMatch(assetService::isOwning)
 				|| dpia.getDpiaReports().stream().anyMatch(r -> r.getReportApproverUuid() != null && r.getReportApproverUuid().equalsIgnoreCase(userUuid));
 	}
 
