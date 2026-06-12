@@ -22,7 +22,6 @@ import dk.digitalidentity.service.model.PlaceholderInfo;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
 import org.htmlcleaner.CleanerProperties;
@@ -40,7 +39,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -73,8 +71,8 @@ public class DPIAService implements TagableService<DPIA> {
 	public boolean isResponsibleFor(DPIA dpia) {
 		String userUuid = SecurityUtil.getPrincipalUuid();
 		return dpia.getResponsibleUser() != null && Strings.CI.equals(dpia.getResponsibleUser().getUuid(), userUuid)
-				|| dpia.getAssets().stream().anyMatch(assetService::isResponsibleFor)
-				|| dpia.getDpiaReports().stream().anyMatch(r -> r.getReportApproverUuid().equalsIgnoreCase(userUuid));
+				|| dpia.getAssets().stream().anyMatch(assetService::isOwning)
+				|| dpia.getDpiaReports().stream().anyMatch(r -> r.getReportApproverUuid() != null && r.getReportApproverUuid().equalsIgnoreCase(userUuid));
 	}
 
 	public List<DPIA> findAll() {

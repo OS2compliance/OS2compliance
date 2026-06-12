@@ -171,7 +171,7 @@ public class RiskController {
 	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
+				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(editedAssessment)))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		if (editedAssessment.getThreatAssessmentType() != assessment.getThreatAssessmentType()) {
@@ -302,8 +302,7 @@ public class RiskController {
     public String risk(final Model model, @PathVariable final long id) {
 		final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		if (!(SecurityUtil.isOperationAllowed(Roles.READ_ALL) ||
-				(SecurityUtil.isOperationAllowed(Roles.READ_OWNER_ONLY) &&
-						threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
+				(SecurityUtil.isOperationAllowed(Roles.READ_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
         model.addAttribute("risk", threatAssessment);

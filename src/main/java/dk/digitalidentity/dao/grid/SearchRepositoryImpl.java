@@ -1,9 +1,14 @@
 package dk.digitalidentity.dao.grid;
 
+import dk.digitalidentity.model.entity.DPIA;
+import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasSigner;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -17,6 +22,7 @@ import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -209,6 +215,9 @@ public class SearchRepositoryImpl implements SearchRepository {
 		if (HasCustomResponsibleUsers.class.isAssignableFrom(entityClass)) {
 			orMap.put("customResponsibleUserUuids", user.getUuid());
 		}
+		if (HasSigner.class.isAssignableFrom(entityClass)) {
+			orMap.put("signerUuid", user.getUuid());
+		}
 		return findAllWithColumnSearch(searchableProperties, null, orMap, page, entityClass);
 	}
 
@@ -267,7 +276,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 		}
 
 		if (filterOnUser) {
-			addUserPredicates(entityClass, user, root, criteriaBuilder, predicates);
+			addUserPredicates(entityClass, user, root, criteriaBuilder, criteriaQuery, predicates);
 		}
 
 		criteriaQuery.select(root).where(predicates.toArray(new Predicate[0])).distinct(true);
@@ -284,7 +293,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 		return new PageImpl<>(query.getResultList(), page, totalRows);
 	}
 
-	private static <T> void addUserPredicates(Class<T> entityClass, User user, Root<T> root, CriteriaBuilder criteriaBuilder, List<Predicate> predicates) {
+	private static <T> void addUserPredicates(Class<T> entityClass, User user, Root<T> root, CriteriaBuilder criteriaBuilder, CriteriaQuery<T> criteriaQuery, List<Predicate> predicates) {
 		// Add user permission filter (user must match at least one role)
 		List<Predicate> userPredicates = new ArrayList<>();
 
@@ -308,10 +317,58 @@ public class SearchRepositoryImpl implements SearchRepository {
 			userPredicates.add(criteriaBuilder.equal(customResponsibleUsersJoin.get("uuid"), user.getUuid()));
 		}
 
+		// Threat assessments are also visible to the signer and to owners/managers of related assets
+		if (ThreatAssessment.class.isAssignableFrom(entityClass)) {
+			Join<T, User> approverJoin = root.join("threatAssessmentReportApprover", JoinType.LEFT);
+			userPredicates.add(criteriaBuilder.equal(approverJoin.get("uuid"), user.getUuid()));
+			userPredicates.add(relatedToOwnedAssetPredicate(user, root, criteriaBuilder, criteriaQuery));
+		}
+
+		// DPIAs are also visible to the report approver and to owners/managers of related assets
+		if (DPIA.class.isAssignableFrom(entityClass)) {
+			Join<T, dk.digitalidentity.model.entity.Asset> assetsJoin = root.join("assets", JoinType.LEFT);
+			userPredicates.add(criteriaBuilder.equal(assetsJoin.join("responsibleUsers", JoinType.LEFT).get("uuid"), user.getUuid()));
+			userPredicates.add(criteriaBuilder.equal(assetsJoin.join("managers", JoinType.LEFT).get("uuid"), user.getUuid()));
+			userPredicates.add(criteriaBuilder.equal(root.join("dpiaReports", JoinType.LEFT).get("reportApproverUuid"), user.getUuid()));
+		}
+
 		// User must match at least one permission
 		if (!userPredicates.isEmpty()) {
 			predicates.add(criteriaBuilder.or(userPredicates.toArray(new Predicate[0])));
 		}
+	}
+
+	/**
+	 * Predicate matching threat assessments related (through the relations table) to an asset
+	 * where the given user is either responsible user (system owner) or manager (system responsible)
+	 */
+	private static <T> Predicate relatedToOwnedAssetPredicate(User user, Root<T> root, CriteriaBuilder criteriaBuilder, CriteriaQuery<T> criteriaQuery) {
+		final Subquery<Long> relatedToOwnedAsset = criteriaQuery.subquery(Long.class);
+		final Root<Relation> relationRoot = relatedToOwnedAsset.from(Relation.class);
+
+		final Subquery<Long> ownedAssetIds = relatedToOwnedAsset.subquery(Long.class);
+		final Root<dk.digitalidentity.model.entity.Asset> assetRoot = ownedAssetIds.from(dk.digitalidentity.model.entity.Asset.class);
+		final Join<dk.digitalidentity.model.entity.Asset, User> assetResponsibleJoin = assetRoot.join("responsibleUsers", JoinType.LEFT);
+		final Join<dk.digitalidentity.model.entity.Asset, User> assetManagersJoin = assetRoot.join("managers", JoinType.LEFT);
+		ownedAssetIds.select(assetRoot.get("id"))
+				.where(criteriaBuilder.or(
+						criteriaBuilder.equal(assetResponsibleJoin.get("uuid"), user.getUuid()),
+						criteriaBuilder.equal(assetManagersJoin.get("uuid"), user.getUuid())));
+
+		relatedToOwnedAsset.select(relationRoot.get("id"))
+				.where(criteriaBuilder.or(
+						criteriaBuilder.and(
+								criteriaBuilder.equal(relationRoot.get("relationAType"), RelationType.THREAT_ASSESSMENT),
+								criteriaBuilder.equal(relationRoot.get("relationAId"), root.get("id")),
+								criteriaBuilder.equal(relationRoot.get("relationBType"), RelationType.ASSET),
+								relationRoot.get("relationBId").in(ownedAssetIds)),
+						criteriaBuilder.and(
+								criteriaBuilder.equal(relationRoot.get("relationBType"), RelationType.THREAT_ASSESSMENT),
+								criteriaBuilder.equal(relationRoot.get("relationBId"), root.get("id")),
+								criteriaBuilder.equal(relationRoot.get("relationAType"), RelationType.ASSET),
+								relationRoot.get("relationAId").in(ownedAssetIds))));
+
+		return criteriaBuilder.exists(relatedToOwnedAsset);
 	}
 
 }

@@ -3,6 +3,9 @@ package dk.digitalidentity.model.entity.grid;
 import dk.digitalidentity.model.ExcludeFromExport;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
+import dk.digitalidentity.model.entity.interfaces.HasManagers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasSigner;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,7 +23,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class DPIAGrid {
+public class DPIAGrid implements HasMultipleResponsibleUsers, HasManagers, HasSigner {
 
     @Id
     private Long id;
@@ -66,4 +69,26 @@ public class DPIAGrid {
 	@ExcludeFromExport
 	@Column
 	private String tagIds;
+
+	/**
+	 * Uuid of the user assigned to sign the DPIA report (same as approverUuid, exposed under the
+	 * name expected by {@link HasSigner} based grid filtering)
+	 */
+	@ExcludeFromExport
+	@Column
+	private String signerUuid;
+
+	/**
+	 * Uuids of the DPIA's own responsible user combined with the responsible users (system owners) of related assets
+	 */
+	@ExcludeFromExport
+	@Column
+	private String responsibleUserUuids;
+
+	/**
+	 * Uuids of the managers (system responsible) of related assets
+	 */
+	@ExcludeFromExport
+	@Column
+	private String managerUuids;
 }
