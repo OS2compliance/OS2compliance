@@ -120,6 +120,8 @@ public class DBSService {
 											if (task.getLinks().stream().noneMatch(l -> l.getUrl().equals(url))) {
 												task.getLinks().add(new TaskLink(null, url, task));
 											}
+
+											addAuditLinkIfAbsent(task, dbsOversight);
 										},
 										() -> {
 											// Create a new task
@@ -142,6 +144,9 @@ public class DBSService {
 											log.debug("Created task: {} responsible: {}", task.getName(),
 													taskResponsible != null ? taskResponsible.getName() : "email:" + taskEmail);
 											taskService.saveTask(task);
+
+											addAuditLinkIfAbsent(task, dbsOversight);
+
 											relationService.addRelation(task, dbsAsset);
 											relationService.addRelation(task, asset);
 
@@ -181,4 +186,13 @@ public class DBSService {
         return "Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
             + "Følgende filer kan findes på DBS-portalen:\n";
     }
+
+	private void addAuditLinkIfAbsent(Task task, DBSOversight oversight) {
+		String auditLink = oversight.getAuditLink();
+		if (auditLink != null && !auditLink.isBlank()) {
+			if (task.getLinks().stream().noneMatch(l -> l.getUrl().equals(auditLink))) {
+				task.getLinks().add(new TaskLink(null, auditLink, task));
+			}
+		}
+	}
 }
