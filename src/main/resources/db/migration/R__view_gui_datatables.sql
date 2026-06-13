@@ -592,11 +592,12 @@ SELECT a.id,
        a.last_sync,
        s.name                                               as supplier,
        GROUP_CONCAT(a2.id ORDER BY a2.id SEPARATOR ',')     AS assets_ids,
-       GROUP_CONCAT(a2.name ORDER BY a2.name SEPARATOR ',') AS asset_names
+       GROUP_CONCAT(a2.name ORDER BY a2.name SEPARATOR ',') AS asset_names,
+       GROUP_CONCAT(DISTINCT a2.data_processing_agreement_status ORDER BY a2.data_processing_agreement_status SEPARATOR ',') AS dpa_statuses
 FROM dbs_asset a
          LEFT JOIN dbs_supplier s on a.dbs_supplier_id = s.id
          LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
-         LEFT JOIN assets a2 on r.relation_a_id = a2.id OR r.relation_b_id = a2.id
+         LEFT JOIN assets a2 on (r.relation_a_id = a2.id OR r.relation_b_id = a2.id) AND a2.deleted = false
 WHERE a.deleted = false
 GROUP BY a.id;
 

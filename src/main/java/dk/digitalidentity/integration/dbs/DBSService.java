@@ -1,18 +1,12 @@
 package dk.digitalidentity.integration.dbs;
 
-import dk.dbs.api.model.Document;
-import dk.dbs.api.model.ItSystem;
-import dk.dbs.api.model.Supplier;
-import dk.digitalidentity.dao.DBSAssetDao;
+import dk.digitalidentity.Constants;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.DBSOversightDao;
-import dk.digitalidentity.dao.DBSSupplierDao;
-import dk.digitalidentity.integration.dbs.exception.DBSSynchronizationException;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.DBSOversight;
-import dk.digitalidentity.model.entity.DBSSupplier;
 import dk.digitalidentity.model.entity.Property;
-import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
@@ -20,308 +14,168 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.NotifyService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
-import java.time.temporal.IsoFields;
-import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
-import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DBSService {
-    private final DBSAssetDao dbsAssetDao;
-    private final DBSSupplierDao dbsSupplierDao;
     private final DBSOversightDao dbsOversightDao;
     private final RelationService relationService;
     private final AssetService assetService;
     private final TaskService taskService;
-	private final AssetOversightService assetOversightService;
+	private final SettingsService settingsService;
+	private final NotifyService notifyService;
+	private final OS2complianceConfiguration configuration;
 
 	@Transactional
-    public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
-        //Filter only itSystems related to this cvr
-        final List<ItSystem> relevantItSystems = allItSystems.stream()
-				.filter(i -> i.getStatus() != null && (
-						   "on_going".equals(i.getStatus().getValue())
-						|| "waiting".equals(i.getStatus().getValue())
-						|| "published".equals(i.getStatus().getValue())))
-				.filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
-				.toList();
-        log.debug("Found {} relevant itSystems in DBS", relevantItSystems.size());
+	public void oversightResponsible() {
+		final LocalDate now = LocalDate.now();
+		final LocalDate nowPlus30Days = now.plusDays(30);
+		final String recipientSetting = settingsService.getString(
+				Constants.DBS_OVERSIGHT_RECIPIENT_SETTING, "");
 
-        // First synchronize all suppliers
-        synchronizeAllSuppliers(allDbsSuppliers);
-        // Now synchronize all it-systems(assets)
-        synchronizeAllItSystems(relevantItSystems);
+		// Look back to backfillFrom when configured (oversights synced from the DBS platform carry their
+		// original publish date as created). Fall back to 10 days so we do not create tasks for everything
+		// the first time we activate DBS integration without a configured backfill.
+		final LocalDate backfillFrom = configuration.getIntegrations().getDbs().getBackfillFrom();
+		final LocalDateTime taskWindowStart = backfillFrom != null
+				? backfillFrom.atStartOfDay()
+				: LocalDateTime.now().minusDays(10);
+		final List<DBSOversight> oversights = dbsOversightDao
+				.findByCreatedGreaterThanAndTaskCreatedFalse(taskWindowStart);
+		log.debug("Found {} oversights that need a task.", oversights.size());
 
-    }
+		for (DBSOversight dbsOversight : oversights) {
+			log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
 
-    @SuppressWarnings("MappingBeforeCount")
-    private void synchronizeAllItSystems(List<ItSystem> allItSystems) {
-        final LocalDate lastSync = LocalDate.now();
-        // Create new it-systems
-        final List<String> existingAssetIds = dbsAssetDao.findAllDbsIds();
-        final long created = allItSystems.stream()
-            .filter(itSystem -> !existingAssetIds.contains(itSystem.getUuid()))
-            .peek(itSystem -> {
-                DBSAsset asset = new DBSAsset();
-                asset.setDbsId(itSystem.getUuid());
-                asset.setName(itSystem.getName());
-                asset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
-                    .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
-                asset.setLastSync(lastSync);
-                asset.setStatus(itSystem.getStatus().getValue());
-				if (itSystem.getNextRevision() != null) {
-					asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+			for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
+
+				//Only update/create related task if itsystem status changes to published
+				if (dbsAsset.getStatus() != null && dbsAsset.getStatus().equals("published")) {
+
+					List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
+					log.debug("Found {} related assets.", assetRelations.size());
+
+					List<Asset> assets = assetRelations.stream()
+							.map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
+							.map(assetService::findById)
+							.filter(Optional::isPresent)
+							.map(Optional::get)
+							.toList();
+
+					for (Asset asset : assets) {
+						// Priority 1: manually assigned oversight responsible on the asset
+						User responsibleUser = asset.getOversightResponsibleUser();
+						String notificationEmail = null;
+
+						// Priority 2: global setting — role lookup or direct email
+						if (responsibleUser == null && !recipientSetting.isEmpty()) {
+							if (recipientSetting.startsWith("ROLE:")) {
+								responsibleUser = resolveUserFromRole(asset, recipientSetting);
+							} else {
+								notificationEmail = recipientSetting;
+							}
+						}
+
+						if (responsibleUser == null && notificationEmail == null) {
+							log.warn("Skipping Asset: {} for DBSOversight: {} — no responsible user and no notification email configured.",
+									asset.getId(), dbsOversight.getId());
+							continue;
+						}
+
+						final User taskResponsible = responsibleUser;
+						final String taskEmail = notificationEmail;
+
+						// Check if there is an open task already
+						relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
+								.map(r -> taskService.findById(r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId()))
+								.filter(Optional::isPresent)
+								.map(Optional::get)
+								.filter(t -> t.getTaskType() == TaskType.TASK
+										&& t.getNextDeadline().isAfter(now)
+										&& t.getName().contains("- DBS tilsyn"))
+								.findFirst().ifPresentOrElse((task) -> {
+											// Task already exists — add oversight to description
+											task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
+
+											//set link to the folder containing the documents
+											String url = "https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId();
+											if (task.getLinks().stream().noneMatch(l -> l.getUrl().equals(url))) {
+												task.getLinks().add(new TaskLink(null, url, task));
+											}
+
+											addAuditLinkIfAbsent(task, dbsOversight);
+										},
+										() -> {
+											// Create a new task
+											Task task = new Task();
+											task.setName(getTaskName(asset));
+											task.setNextDeadline(nowPlus30Days);
+											if (taskResponsible != null) {
+												task.setResponsibleUsers(Set.of(taskResponsible));
+												task.setNotifyResponsible(true);
+											}
+											task.setTaskType(TaskType.TASK);
+											task.setRepetition(TaskRepetition.NONE);
+											task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
+											Property property = Property.builder()
+													.key(ASSOCIATED_INSPECTION_PROPERTY)
+													.value(asset.getId().toString())
+													.entity(task)
+													.build();
+											task.getProperties().add(property);
+											log.debug("Created task: {} responsible: {}", task.getName(),
+													taskResponsible != null ? taskResponsible.getName() : "email:" + taskEmail);
+											taskService.saveTask(task);
+
+											addAuditLinkIfAbsent(task, dbsOversight);
+
+											relationService.addRelation(task, dbsAsset);
+											relationService.addRelation(task, asset);
+
+											if (taskResponsible != null) {
+												notifyService.notifyTaskResponsible(task);
+											} else if (taskEmail != null) {
+												notifyService.notifyOversightByEmail(task, taskEmail);
+											}
+										});
+						dbsOversight.setTaskCreated(true);
+						dbsOversightDao.save(dbsOversight);
+					}
 				}
-				dbsAssetDao.save(asset);
-				// Call this here to assure that asset is saved in the DB already
-				mapKitosAssetsToDBS(itSystem, asset);
-			})
-            .count();
-
-        // Update existing
-        final long updated = allItSystems.stream()
-            .filter(itSystem -> existingAssetIds.contains(itSystem.getUuid()))
-            .peek(itSystem -> {
-                dbsAssetDao.findByDbsId(itSystem.getUuid())
-                    .ifPresent(dbsAsset -> {
-                        dbsAsset.setName(itSystem.getName());
-                        dbsAsset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
-                            .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
-						if (itSystem.getStatus() != null) {
-							dbsAsset.setStatus(itSystem.getStatus().getValue());
-						}
-                        if (itSystem.getNextRevision() != null) {
-                            dbsAsset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
-                        }
-						// Finding EVERYTHING related to the DB-Asset might be a bit too much, there could be things related that do not matter in our case, blocking the auto mapping
-						List<Relatable> allRelatedTo = relationService.findAllRelatedTo(dbsAsset);
-						// If no relations exist, we map
-						if (allRelatedTo == null || allRelatedTo.isEmpty()) {
-							mapKitosAssetsToDBS(itSystem, dbsAsset);
-						}
-                        dbsAsset.setLastSync(lastSync);
-                    });
-            })
-            .count();
-
-        // Delete removed
-        final Set<String> allActiveItSystemIds = allItSystems.stream().map(ItSystem::getUuid).collect(Collectors.toSet());
-        final long deleted = existingAssetIds.stream()
-            .filter(id -> !allActiveItSystemIds.contains(id))
-            .peek(dbsAssetDao::deleteByDbsId)
-            .count();
-        log.info("Created {}, updated {} and deleted {} DBS assets", created, updated, deleted);
-    }
-
-	private void mapKitosAssetsToDBS(ItSystem itSystem, @NotNull DBSAsset dbsAsset) {
-		Set<Long> assetIds = assetService.findByProperty(KITOS_UUID_PROPERTY_KEY, itSystem.getKitosUuid()).stream().map(Asset::getId).collect(Collectors.toSet());
-		if (!assetIds.isEmpty()) {
-			relationService.setRelationsAbsolute(dbsAsset, assetIds);
-			assetOversightService.setAssetsToDbsOversight(assetService.findAllById(assetIds));
+			}
 		}
 	}
 
-	@SuppressWarnings("MappingBeforeCount")
-    private void synchronizeAllSuppliers(List<Supplier> allDbsSuppliers) {
-        final List<Long> existingDbsSupplierIds = dbsSupplierDao.findAllDbsIds();
-
-        // Create new suppliers
-        final long created = allDbsSuppliers.stream().filter(supplier -> !existingDbsSupplierIds.contains(supplier.getId()))
-            .peek(supplier -> {
-                final DBSSupplier dbsSupplier = new DBSSupplier();
-                dbsSupplier.setDbsId(supplier.getId());
-                dbsSupplier.setName(supplier.getName());
-                if (supplier.getNextRevision() != null) {
-                    dbsSupplier.setNextRevision(supplier.getNextRevision().getValue());
-                }
-                dbsSupplierDao.save(dbsSupplier);
-            })
-            .count();
-
-        // Update existing
-        final long updated = allDbsSuppliers.stream().filter(dbsSupplier -> existingDbsSupplierIds.contains(dbsSupplier.getId()))
-            .peek(supplier -> dbsSupplierDao.findByDbsId(supplier.getId()).ifPresent(dbsSupplier -> {
-                dbsSupplier.setName(supplier.getName());
-                if (supplier.getNextRevision() != null) {
-                    dbsSupplier.setNextRevision(supplier.getNextRevision().getValue());
-                }
-            }))
-            .count();
-
-        // Delete removed
-        final Set<Long> allActiveSupplierIds = allDbsSuppliers.stream().map(Supplier::getId).collect(Collectors.toSet());
-        final long deleted = existingDbsSupplierIds.stream()
-            .filter(id -> !allActiveSupplierIds.contains(id))
-            .peek(dbsSupplierDao::deleteByDbsId)
-            .count();
-        log.info("Created {}, updated {} and deleted {} DBS suppliers", created, updated, deleted);
-    }
-
-    @Transactional
-    public void syncOversight(final List<Document> allDocuments) {
-
-        //Remove documents without suppliers
-        allDocuments.removeIf(d -> d.getPath().getSupplier() == null);
-
-        final List<DBSOversight> existingDBSOversights = dbsOversightDao.findAll();
-        final List<DBSOversight> toBeAdded = new ArrayList<>();
-        final List<DBSOversight> toBeUpdated = new ArrayList<>();
-        for (final Document document : allDocuments) {
-            if (document.getLocked()) {
-                continue;
-            }
-            // Add if isn't locally stored
-            if (existingDBSOversights.stream().noneMatch(s -> Objects.equals(s.getDbsId(), document.getId()))) {
-                DBSOversight dbsOversight = new DBSOversight();
-                dbsOversight.setDbsId(document.getId());
-                dbsOversight.setName(document.getName());
-                dbsOversight.setCreated(document.getCreated());
-                dbsOversight.setLocked(document.getLocked());
-                dbsOversight.setSupplier(dbsSupplierDao.findByDbsId(document.getPath().getSupplier().getId())
-                    .orElseThrow(() -> new DBSSynchronizationException("Supplier for id " + document.getPath().getSupplier().getId() + " not found in OS2Compliance.")));
-                dbsOversight.setTaskCreated(false);
-
-                toBeAdded.add(dbsOversight);
-            } else {
-                //Update
-                DBSOversight existingDBSOversight = existingDBSOversights.stream().filter(existing -> Objects.equals(existing.getDbsId(), document.getId())).findAny().orElseThrow(() -> new DBSSynchronizationException("Something went wrong."));
-
-                boolean changes = false;
-                if (!Objects.equals(existingDBSOversight.getName(), document.getName())) {
-                    existingDBSOversight.setName(document.getName());
-                    changes = true;
-                }
-                if (!Objects.equals(existingDBSOversight.isLocked(), document.getLocked())) {
-                    existingDBSOversight.setLocked(document.getLocked());
-                    changes = true;
-                }
-
-                if (changes) {
-                    toBeUpdated.add(existingDBSOversight);
-                }
-            }
-        }
-
-        log.debug("Adding {} oversights.", toBeAdded.size());
-        dbsOversightDao.saveAll(toBeAdded);
-        log.debug("Updating {} oversights.", toBeUpdated.size());
-        dbsOversightDao.saveAll(toBeUpdated);
-    }
-
-    public Optional<ZonedDateTime> findNewestUpdatedTime(final List<Document> allDocuments) {
-        return allDocuments.stream()
-            .max(Comparator.comparing(Document::getCreated))
-            .map(d -> d.getCreated().atZone(LOCAL_TZ_ID));
-    }
-
-    @Transactional
-    public void oversightResponsible() {
-        final LocalDate now = LocalDate.now();
-        final LocalDate nowPlus30Days = now.plusDays(30);
-
-        // Only look back 10 days so we do not create task for everything the first time we activate DBS integration
-        final List<DBSOversight> oversights = dbsOversightDao
-            .findByCreatedGreaterThanAndTaskCreatedFalse(LocalDateTime.now().minusDays(10));
-        log.debug("Found {} oversights that need a task.", oversights.size());
-
-        for (DBSOversight dbsOversight : oversights) {
-            log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
-
-            for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
-
-                //Only update/create related task if itsystem status changes to published
-                if (dbsAsset.getStatus() != null && dbsAsset.getStatus().equals("published")) {
-
-                    List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
-                    log.debug("Found {} related assets.", assetRelations.size());
-
-                    List<Asset> assets = assetRelations.stream()
-                        .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
-                        .map(assetService::findById)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .toList();
-
-                    for (Asset asset : assets) {
-                        if (asset.getOversightResponsibleUser() == null) {
-                            log.warn("Skipping Asset: {} for DBSOversight: {} because OversightResponsible is null.", asset.getId(), dbsOversight.getId());
-                            continue;
-                        }
-
-                        // Check if there is an open task already
-                        relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
-                            .map(r -> taskService.findById(r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId()))
-                            .filter(Optional::isPresent)
-                            .map(Optional::get)
-                            .filter(t -> t.getTaskType() == TaskType.TASK
-                                && t.getNextDeadline().isAfter(now)
-                                && t.getName().contains("- DBS tilsyn"))
-                            .findFirst().ifPresentOrElse((task) -> {
-                                    // Task already exist add our file to the existing task
-                                    task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
-
-                                    //set link to the folder containing the documents
-									String url = "https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId();
-									if (task.getLinks().stream().noneMatch(l -> l.getUrl().equals(url))) {
-										task.getLinks().add(new TaskLink(null, url, task));
-									}
-                                },
-                                () -> {
-                                    // Create a new task
-                                    Task task = new Task();
-                                    task.setName(getTaskName(asset));
-                                    task.setNextDeadline(nowPlus30Days);
-                                    task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
-                                    task.setTaskType(TaskType.TASK);
-                                    task.setRepetition(TaskRepetition.NONE);
-                                    task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
-									Property property = Property.builder()
-											.key(ASSOCIATED_INSPECTION_PROPERTY)
-											.value(asset.getId().toString())
-											.entity(task)
-											.build();
-									task.getProperties().add(property);
-                                    log.debug("Created task: {} {}", task.getName(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")));
-                                    taskService.saveTask(task);
-                                    relationService.addRelation(task, dbsAsset);
-                                    relationService.addRelation(task, asset);
-
-                                });
-                        dbsOversight.setTaskCreated(true);
-                        dbsOversightDao.save(dbsOversight);
-
-                    }
-                }
-            }
-        }
-    }
+	private User resolveUserFromRole(Asset asset, String roleSetting) {
+		List<? extends User> users = switch (roleSetting) {
+			case "ROLE:SYSTEM_OWNER" -> asset.getResponsibleUsers();
+			case "ROLE:SYSTEM_RESPONSIBLE" -> asset.getManagers();
+			case "ROLE:OPERATION_RESPONSIBLE" -> asset.getOperationResponsibleUsers();
+			default -> {
+				log.warn("Unknown role setting: {}", roleSetting);
+				yield List.of();
+			}
+		};
+		return (users != null && !users.isEmpty()) ? users.get(0) : null;
+	}
 
     // Generate task using name format: ”Leverandør” – ”Aktiv” – DBS Tilsyn
     private static String getTaskName(final Asset asset) {
@@ -333,24 +187,12 @@ public class DBSService {
             + "Følgende filer kan findes på DBS-portalen:\n";
     }
 
-    private LocalDate nextRevisionQuarterToDate(String revisionValue) {
-        if (revisionValue == null) {
-            return null;
-        }
-        if (!revisionValue.contains("Q")) {
-            // eg. "Efter behov"
-            return LocalDate.of(2099, 1, 1);
-        }
-
-        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-            .appendValue(ChronoField.YEAR, 4)
-            .appendLiteral(" Q")
-            .appendValue(IsoFields.QUARTER_OF_YEAR, 1)
-            .parseDefaulting(IsoFields.DAY_OF_QUARTER, 31)
-            .toFormatter();
-        return LocalDate.parse(revisionValue, formatter)
-            .plusMonths(2)
-            .with(TemporalAdjusters.lastDayOfMonth());
-    }
-
+	private void addAuditLinkIfAbsent(Task task, DBSOversight oversight) {
+		String auditLink = oversight.getAuditLink();
+		if (auditLink != null && !auditLink.isBlank()) {
+			if (task.getLinks().stream().noneMatch(l -> l.getUrl().equals(auditLink))) {
+				task.getLinks().add(new TaskLink(null, auditLink, task));
+			}
+		}
+	}
 }

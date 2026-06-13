@@ -247,6 +247,11 @@
 			<artifactId>simple-queue</artifactId>
 			<version>1.0.9</version>
 		</dependency>
+		<dependency>
+			<groupId>dk.digitalidentity</groupId>
+			<artifactId>dbs-platfom-client</artifactId>
+			<version>1.0.4</version>
+		</dependency>
     </dependencies>
 
 	<build>
