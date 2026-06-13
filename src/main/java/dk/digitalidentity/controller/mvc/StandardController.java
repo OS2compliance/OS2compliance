@@ -23,6 +23,7 @@ import dk.digitalidentity.service.SupportingStandardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -59,6 +60,7 @@ import java.util.stream.Collectors;
 @RequireStandard
 @RequiredArgsConstructor
 public class StandardController {
+	private static final int MAX_SECTION_NUMBER_ATTEMPTS = 1000;
     private final StandardsService standardsService;
     private final RelationService relationService;
     private final StandardSectionDao standardSectionDao;
@@ -415,7 +417,11 @@ public class StandardController {
 		// merge/overskrive en eksisterende template-sektion og efterlade to StandardSections paa
 		// samme template_section_identifier, hvilket faar /standards til at crashe (@OneToOne).
 		String sectionNumber = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
+		int attempts = 0;
 		while (standardTemplateSectionDao.existsById(sectionNumber)) {
+			if (++attempts > MAX_SECTION_NUMBER_ATTEMPTS) {
+				throw new IllegalStateException("Kunne ikke finde et ledigt sektionsnummer under " + parentsTemplateSection.getSection());
+			}
 			sectionNumber = bumpTrailingNumber(sectionNumber);
 		}
 
@@ -429,7 +435,16 @@ public class StandardController {
 		newSection.setParent(parentsTemplateSection);
 		newSection.setSortKey(Integer.parseInt(sectionNumber.replaceAll("[^0-9]", "")));
 
-		StandardTemplateSection save = standardTemplateSectionDao.save(newSection);
+		final StandardTemplateSection save;
+		try {
+			// saveAndFlush saa en samtidig oprettelse (TOCTOU mellem existsById og save) fanges her
+			// som constraint-violation i stedet for at boble op som et uhaandteret 500 ved commit.
+			save = standardTemplateSectionDao.saveAndFlush(newSection);
+		} catch (DataIntegrityViolationException e) {
+			log.warn("Kunne ikke oprette sektion {} - findes sandsynligvis allerede (samtidig oprettelse?)", sectionNumber, e);
+			redirectAttributes.addFlashAttribute("errorMessage", "Kravet kunne ikke oprettes - prøv igen.");
+			return "redirect:/standards/supporting/" + identifier;
+		}
 
 		standardSection.setName(sectionNumber + " " + standardSection.getName());
 		standardSection.setTemplateSection(save);
@@ -525,7 +540,9 @@ public class StandardController {
 	private String bumpTrailingNumber(String identifier) {
 		Matcher matcher = Pattern.compile("(\\d+)$").matcher(identifier);
 		if (!matcher.find()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+			// Intern invariant: identifieren kommer altid fra getHighestVersionNumberBasedOnIds,
+			// som altid slutter paa et tal. Sker dette er systemet i en uventet tilstand.
+			throw new IllegalStateException("Identifier mangler et afsluttende nummer: " + identifier);
 		}
 		int next = Integer.parseInt(matcher.group(1)) + 1;
 		return identifier.substring(0, matcher.start()) + next;
