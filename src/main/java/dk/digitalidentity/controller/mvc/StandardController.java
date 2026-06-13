@@ -23,9 +23,11 @@ import dk.digitalidentity.service.SupportingStandardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -59,6 +61,10 @@ import java.util.stream.Collectors;
 @RequireStandard
 @RequiredArgsConstructor
 public class StandardController {
+	private static final Pattern TRAILING_NUMBER = Pattern.compile("(\\d+)$");
+	// Sektionsnumre kan kun kollidere nogle faa gange (counter der haltede); rammes loftet
+	// signalerer det datakorruption snarere end en gendannelig tilstand.
+	private static final int MAX_SECTION_NUMBER_ATTEMPTS = 100;
     private final StandardsService standardsService;
     private final RelationService relationService;
     private final StandardSectionDao standardSectionDao;
@@ -410,23 +416,44 @@ public class StandardController {
 		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
 		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
 
-		String version = getHighestVersionNumber(parentsTemplateSection.getSection(), existingChildren);
-		String sectionPrefix = parentsTemplateSection.getSection();
-		String name = version + " " + standardSection.getName();
-		String templateSection = sectionPrefix + "." + version;
+		// Beregn én identifier og udled baade @Id, section, name og sortKey af den, saa de ikke kan
+		// divergere. Bump til naeste ledige nummer hvis den allerede findes - ellers ville save()
+		// merge/overskrive en eksisterende template-sektion og efterlade to StandardSections paa
+		// samme template_section_identifier, hvilket faar /standards til at crashe (@OneToOne).
+		String sectionNumber = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
+		int attempts = 0;
+		while (standardTemplateSectionDao.existsById(sectionNumber)) {
+			if (++attempts > MAX_SECTION_NUMBER_ATTEMPTS) {
+				throw new IllegalStateException("Kunne ikke finde et ledigt sektionsnummer under " + parentsTemplateSection.getSection());
+			}
+			sectionNumber = bumpTrailingNumber(sectionNumber);
+		}
+
 		standardSection.setSelected(true);
 		standardSection.setStatus(StandardSectionStatus.IN_PROGRESS);
-		String standardTemplateSectionIdentifier = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
+
 		StandardTemplateSection newSection = new StandardTemplateSection();
-		newSection.setIdentifier(standardTemplateSectionIdentifier);
-		newSection.setSection(version);
+		newSection.setIdentifier(sectionNumber);
+		newSection.setSection(sectionNumber);
 		newSection.setDescription(standardSection.getName());
 		newSection.setParent(parentsTemplateSection);
-		newSection.setSortKey(Integer.parseInt(templateSection.replace(".", "").replaceAll("[^0-9]", "")));
+		newSection.setSortKey(Integer.parseInt(sectionNumber.replaceAll("[^0-9]", "")));
 
-		StandardTemplateSection save = standardTemplateSectionDao.save(newSection);
+		final StandardTemplateSection save;
+		try {
+			// saveAndFlush saa en samtidig oprettelse (TOCTOU mellem existsById og save) fanges her
+			// som constraint-violation i stedet for at boble op som et uhaandteret 500 ved commit.
+			save = standardTemplateSectionDao.saveAndFlush(newSection);
+		} catch (DataIntegrityViolationException e) {
+			// Markér transaktionen til rollback, ellers forsoeger Spring at committe en transaktion
+			// hvis statement allerede fejlede - flash-attributten ligger i sessionen og overlever.
+			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+			log.warn("Kunne ikke oprette sektion {} - findes sandsynligvis allerede (samtidig oprettelse?)", sectionNumber, e);
+			redirectAttributes.addFlashAttribute("errorMessage", "Kravet kunne ikke oprettes - prøv igen.");
+			return "redirect:/standards/supporting/" + identifier;
+		}
 
-		standardSection.setName(name);
+		standardSection.setName(sectionNumber + " " + standardSection.getName());
 		standardSection.setTemplateSection(save);
 		standardSectionService.save(standardSection);
 
@@ -492,43 +519,41 @@ public class StandardController {
             .toList();
     }
 
-	private String getHighestVersionNumber(String parentSection, Set<StandardTemplateSection> allSections) {
-		String prefix = parentSection + ".";
-
-		int temp = 0;
-		for (StandardTemplateSection allSection : allSections) {
-			String[] split = allSection.getSection().split("\\.");
-			int value = Integer.parseInt(split[split.length - 1]);
-			if (value > temp) {
-				temp = value;
-			}
-		}
-		return prefix + (temp == 0 ? 1 : (temp + 1));
-	}
-
-	private String getHighestVersionNumberBasedOnIds(String parentSection, Set<StandardTemplateSection> allSections) {
+	private static String getHighestVersionNumberBasedOnIds(String parentSection, Set<StandardTemplateSection> allSections) {
 		String prefix = parentSection + ".";
 		int max = 0;
-		// Matching the last number, to figure out the highest number we can take
-		Pattern numberPattern = Pattern.compile("(\\d+)$");
 
 		for (StandardTemplateSection section : allSections) {
 			String identifier = section.getIdentifier();
 
-			Matcher matcher = numberPattern.matcher(identifier);
+			// Matching the last number, to figure out the highest number we can take
+			Matcher matcher = TRAILING_NUMBER.matcher(identifier);
 			if (matcher.find()) {
 				try {
 					int number = Integer.parseInt(matcher.group(1));
 					if (number > max) {
 						max = number;
 					}
-				} catch (NumberFormatException ignored) {
-					throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+				} catch (NumberFormatException e) {
+					// Et lagret identifier hvis sidste tal-segment ikke kan parses er en
+					// data-integritetsfejl, ikke et daarligt request.
+					throw new IllegalStateException("Kunne ikke parse sektionsnummer i identifier: " + identifier, e);
 				}
 			}
 		}
 
 		return prefix + (max + 1);
+	}
+
+	private static String bumpTrailingNumber(String identifier) {
+		Matcher matcher = TRAILING_NUMBER.matcher(identifier);
+		if (!matcher.find()) {
+			// Intern invariant: identifieren kommer altid fra getHighestVersionNumberBasedOnIds,
+			// som altid slutter paa et tal. Sker dette er systemet i en uventet tilstand.
+			throw new IllegalStateException("Identifier mangler et afsluttende nummer: " + identifier);
+		}
+		int next = Integer.parseInt(matcher.group(1)) + 1;
+		return identifier.substring(0, matcher.start()) + next;
 	}
 
 	private Map<StandardSectionStatus, Integer> getProgressBarValues(final StandardTemplate template) {
