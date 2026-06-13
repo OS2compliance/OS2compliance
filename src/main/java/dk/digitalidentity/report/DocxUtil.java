@@ -18,7 +18,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTAbstractNum;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTFldChar;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTNumbering;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTP;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTR;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTText;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STFldCharType;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -156,6 +161,49 @@ public class DocxUtil {
 
         final BigInteger abstractNumID = numbering.addAbstractNum(abstractNum);
         return numbering.addNum(abstractNumID);
+    }
+
+    /**
+     * Mark all TOC fields as dirty so Word silently refreshes them when the document opens,
+     * instead of showing the cached entries from the template. Walks the entire document XML
+     * (including content controls / sdt blocks) because TOCs are typically wrapped in a w:sdt.
+     */
+    public static void markTocFieldsDirty(final XWPFDocument document) {
+        final String wNs = "declare namespace w='http://schemas.openxmlformats.org/wordprocessingml/2006/main' ";
+        try (final XmlCursor cursor = document.getDocument().getBody().newCursor()) {
+            cursor.selectPath(wNs + ".//w:instrText");
+            while (cursor.toNextSelection()) {
+                final XmlObject obj = cursor.getObject();
+                if (!(obj instanceof CTText instrText)) {
+                    continue;
+                }
+                final String value = instrText.getStringValue();
+                if (value == null || !value.trim().startsWith("TOC")) {
+                    continue;
+                }
+                markEnclosingFieldBeginDirty(cursor);
+            }
+        }
+    }
+
+    private static void markEnclosingFieldBeginDirty(final XmlCursor instrTextCursor) {
+        try (final XmlCursor c = instrTextCursor.newCursor()) {
+            // Walk up to the enclosing w:p, then iterate its descendants to find the BEGIN fldChar.
+            while (c.toParent()) {
+                final XmlObject parent = c.getObject();
+                if (parent instanceof CTP ctp) {
+                    for (final CTR run : ctp.getRList()) {
+                        for (final CTFldChar fldChar : run.getFldCharList()) {
+                            if (fldChar.getFldCharType() == STFldCharType.BEGIN) {
+                                fldChar.setDirty(Boolean.TRUE);
+                                return;
+                            }
+                        }
+                    }
+                    return;
+                }
+            }
+        }
     }
 
     /**
