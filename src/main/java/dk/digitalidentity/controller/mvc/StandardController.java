@@ -410,23 +410,28 @@ public class StandardController {
 		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
 		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
 
-		String version = getHighestVersionNumber(parentsTemplateSection.getSection(), existingChildren);
-		String sectionPrefix = parentsTemplateSection.getSection();
-		String name = version + " " + standardSection.getName();
-		String templateSection = sectionPrefix + "." + version;
+		// Beregn én identifier og udled baade @Id, section, name og sortKey af den, saa de ikke kan
+		// divergere. Bump til naeste ledige nummer hvis den allerede findes - ellers ville save()
+		// merge/overskrive en eksisterende template-sektion og efterlade to StandardSections paa
+		// samme template_section_identifier, hvilket faar /standards til at crashe (@OneToOne).
+		String sectionNumber = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
+		while (standardTemplateSectionDao.existsById(sectionNumber)) {
+			sectionNumber = bumpTrailingNumber(sectionNumber);
+		}
+
 		standardSection.setSelected(true);
 		standardSection.setStatus(StandardSectionStatus.IN_PROGRESS);
-		String standardTemplateSectionIdentifier = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
+
 		StandardTemplateSection newSection = new StandardTemplateSection();
-		newSection.setIdentifier(standardTemplateSectionIdentifier);
-		newSection.setSection(version);
+		newSection.setIdentifier(sectionNumber);
+		newSection.setSection(sectionNumber);
 		newSection.setDescription(standardSection.getName());
 		newSection.setParent(parentsTemplateSection);
-		newSection.setSortKey(Integer.parseInt(templateSection.replace(".", "").replaceAll("[^0-9]", "")));
+		newSection.setSortKey(Integer.parseInt(sectionNumber.replaceAll("[^0-9]", "")));
 
 		StandardTemplateSection save = standardTemplateSectionDao.save(newSection);
 
-		standardSection.setName(name);
+		standardSection.setName(sectionNumber + " " + standardSection.getName());
 		standardSection.setTemplateSection(save);
 		standardSectionService.save(standardSection);
 
@@ -492,20 +497,6 @@ public class StandardController {
             .toList();
     }
 
-	private String getHighestVersionNumber(String parentSection, Set<StandardTemplateSection> allSections) {
-		String prefix = parentSection + ".";
-
-		int temp = 0;
-		for (StandardTemplateSection allSection : allSections) {
-			String[] split = allSection.getSection().split("\\.");
-			int value = Integer.parseInt(split[split.length - 1]);
-			if (value > temp) {
-				temp = value;
-			}
-		}
-		return prefix + (temp == 0 ? 1 : (temp + 1));
-	}
-
 	private String getHighestVersionNumberBasedOnIds(String parentSection, Set<StandardTemplateSection> allSections) {
 		String prefix = parentSection + ".";
 		int max = 0;
@@ -529,6 +520,15 @@ public class StandardController {
 		}
 
 		return prefix + (max + 1);
+	}
+
+	private String bumpTrailingNumber(String identifier) {
+		Matcher matcher = Pattern.compile("(\\d+)$").matcher(identifier);
+		if (!matcher.find()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+		}
+		int next = Integer.parseInt(matcher.group(1)) + 1;
+		return identifier.substring(0, matcher.start()) + next;
 	}
 
 	private Map<StandardSectionStatus, Integer> getProgressBarValues(final StandardTemplate template) {
