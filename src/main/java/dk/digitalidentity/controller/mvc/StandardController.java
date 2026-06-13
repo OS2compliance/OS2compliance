@@ -519,7 +519,7 @@ public class StandardController {
             .toList();
     }
 
-	private String getHighestVersionNumberBasedOnIds(String parentSection, Set<StandardTemplateSection> allSections) {
+	private static String getHighestVersionNumberBasedOnIds(String parentSection, Set<StandardTemplateSection> allSections) {
 		String prefix = parentSection + ".";
 		int max = 0;
 
@@ -545,7 +545,7 @@ public class StandardController {
 		return prefix + (max + 1);
 	}
 
-	private String bumpTrailingNumber(String identifier) {
+	private static String bumpTrailingNumber(String identifier) {
 		Matcher matcher = TRAILING_NUMBER.matcher(identifier);
 		if (!matcher.find()) {
 			// Intern invariant: identifieren kommer altid fra getHighestVersionNumberBasedOnIds,
