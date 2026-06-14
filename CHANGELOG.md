@@ -17,7 +17,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-292) (Aktiver/DPIA) Ved oprettelse af en påmindelse om at genbesøge DPIA skal det være systemansvarlig i stedet for systemejer, der default står som ansvarlig på opgaven
 - (https://os2web.atlassian.net/browse/COMPLY-324) (Opgavecenter/Ny fane) Dynamisk og brugerrettet årshjul
 - (https://os2web.atlassian.net/browse/COMPLY-350) (Opgavecenter) Kolonne der viser tilknyttet risikovurdering
-- (gitlab #24) DBS-integration v2: migrering til DBS' nye API — ny API-klient (dbs-platform-client), samlet synkronisering, cutover via kitos_uuid og backfill pr. kommune
+- (https://os2web.atlassian.net/browse/COMPLY-408) DBS-integration v2: migrering til DBS' nye API — ny API-klient (dbs-platform-client) og samlet synkronisering, letvægts cutover via kitos_uuid der bevarer aktiv-relationer, backfill-konfiguration pr. kommune + driftsdokumentation samt pilottest på Rebild Kommune + enhedstests
 - (https://os2web.atlassian.net/browse/COMPLY-344) (Opgaver) Arbejdsgang for registrering af tilsyn og udførelse af den tilhørende opgave
 - (https://os2web.atlassian.net/browse/COMPLY-336) (DBS tilsyn) Mulighed for at definere hvem der er ansvarlig
 - (https://os2web.atlassian.net/browse/COMPLY-338) (DBS tilsyn) Aktiver uden tilsyn markeres med "ingen dba"
