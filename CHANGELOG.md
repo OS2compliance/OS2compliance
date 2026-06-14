@@ -8,7 +8,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 
-## [2.6.0] - 2026-06-14
+## [2.7.0] - 2026-06-14
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-41) (Aktiver/Generelt) Visning af resultatet for senest gennemførte kontroller, deadline og opgavetype
 - (https://os2web.atlassian.net/browse/COMPLY-57) (Aktiver/generelt) Markering af integrationer mellem systemer
