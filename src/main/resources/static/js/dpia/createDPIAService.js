@@ -48,6 +48,12 @@ class CreateDPIAService {
                     titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "")
                 }
             }
+            if (selected.length > 0) {
+                const errorElement = document.getElementById('assetError')
+                if (errorElement) {
+                    errorElement.style.display = '';
+                }
+            }
         })
 
         return assetChoices;
@@ -81,8 +87,18 @@ class CreateDPIAService {
         const userUpdatedDateElement = document.getElementById('createUserUpdateDateField')
         const userSelect = document.getElementById('userSelect');
         const ouSelect = document.getElementById('ouSelect');
+
+        const assetIds = assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : [];
+        if (assetIds.length === 0) {
+            const errorElement = document.getElementById('assetError');
+            if (errorElement) {
+                errorElement.style.display = 'block';
+            }
+            return;
+        }
+
         const data = {
-            assetIds : assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : null,
+            assetIds : assetIds,
             userUpdatedDate: userUpdatedDateElement.value,
             responsibleUserUuid: userSelect.value,
             responsibleOuUuid: ouSelect.value,

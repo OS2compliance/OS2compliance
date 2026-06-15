@@ -108,6 +108,20 @@ function supportingStandartsViewLoaded() {
         });
     });
 
+    document.querySelectorAll('.section-edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            createSectionService.openRequirementEditModal(btn);
+        });
+    });
+
+    document.querySelectorAll('.section-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            createSectionService.openDeleteSwal(btn, false);
+        });
+    });
+
     const addRelationBtns = document.querySelectorAll('.addRelationBtn');
     addRelationBtns.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -310,6 +324,32 @@ function customDeleteRelation(element) {
             tbody.removeChild(trElement);
         } else {
             window.location.reload();
+        }
+    });
+}
+
+function initDragAndDrop() {
+    dragAndDropService.init({
+        rowClass: 'draggable-section',
+        onReorder: (identifiers, draggedRow) => {
+            const tbody = draggedRow.closest('tbody');
+            const parentSectionNumber = draggedRow.dataset.parentSection;
+            const groupRows = [...tbody.querySelectorAll(`.draggable-section[data-parent="${draggedRow.dataset.parent}"]`)];
+            groupRows.forEach((r, i) => {
+                const firstTd = r.querySelector('td:first-child');
+                const description = firstTd.textContent.trim().replace(/^\S+\s*/, '');
+                firstTd.textContent = parentSectionNumber + '.' + (i + 1) + ' ' + description;
+            });
+
+            postData('/rest/standards/section/reorder', identifiers).then(response => {
+                if (!response.ok) {
+                    console.error('Reorder failed:', response.statusText);
+                    toastService.error('Fejl ved gemning af rækkefølge');
+                }
+            }).catch(error => {
+                console.error(error);
+                toastService.error('Fejl ved gemning af rækkefølge');
+            });
         }
     });
 }

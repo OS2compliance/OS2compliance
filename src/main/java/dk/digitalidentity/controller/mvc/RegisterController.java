@@ -420,6 +420,8 @@ public class RegisterController {
         }
 		if(relevantLegalReferences != null && !relevantLegalReferences.isEmpty()) {
 			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(relevantLegalReferences));
+		} else {
+			register.setRelevantKLELegalReferences(new HashSet<>());
 		}
 
 		registerService.save(register);
@@ -519,26 +521,7 @@ public class RegisterController {
                 .filter(r -> r.getRelationType() == RelationType.DOCUMENT)
 				.toList());
 
-		record TaskListDTO(long id, String title, String responsibleUserName, String responsibleOuName, String taskType, String deadline, String repeats, String status, RelationType relationType){}
-		model.addAttribute("relatedTasks", allRelatedTo.stream()
-				.filter(r -> r.getRelationType() == RelationType.TASK)
-				.map(r -> {
-					Task task = ((Task) r);
-					return new TaskListDTO(
-							task.getId(),
-							task.getName(),
-							task.getResponsibleUsers().stream()
-									.map(User::getName)
-									.collect(Collectors.joining(", ")),
-							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
-							task.getTaskType().getMessage(),
-							task.getNextDeadline().toString(),
-							task.getRepetition() != null ? task.getRepetition().getMessage() : "",
-							taskService.findHtmlStatusBadgeForTask(task),
-							RelationType.TASK
-					);
-				})
-				.toList());
+		model.addAttribute("relatedTasks", taskService.convertRelatableToTaskListDTO(allRelatedTo));
         model.addAttribute("relatedAssets", relatedAssets);
         model.addAttribute("threatAssessments", allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)

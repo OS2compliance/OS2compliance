@@ -3,11 +3,34 @@
 <body>
 <div th:fragment="tia(asset, dbChoices)" id="tiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="tia-tab">
     <form id="tiaForm" action="#" th:action="@{/assets/tia}" th:object="${asset}" method="post" class="needs-validation" novalidate>
-        <div class="row">
+        <div>
+            <label class="mb-2">
+                <input class="form-check-input" id="setTiaOptOutCheckbox" name="tiaOptOutReason" type="checkbox" th:checked="${asset.isTiaOptOut()}"> TIA fravalgt
+            </label>
+        </div>
+        <div id="tiaOptOutView" class="d-none">
+            <label for="tiaOptOutText" class="mb-1">Begrundelse for fravalg:</label>
+            <textarea id="tiaOptOutText" class="form-control" th:text="${asset.tiaOptOutReason}"></textarea>
+            <div class="row mb-3 mt-2">
+                <label class="col-sm-3 col-form-label">TIA-link</label>
+                <div class="col-sm-9">
+                    <div id="tiaLinkView" class="d-flex align-items-center gap-2">
+                        <a id="tiaLinkAnchor" th:href="*{tia.link}" th:text="*{tia.link != null and !tia.link.isEmpty()} ? *{tia.link} : 'Ingen link'" target="_blank" rel="noopener noreferrer" class="form-control-link"></a>
+                        <button th:if="${changeableAsset}" id="tiaLinkEditBtn" type="button" class="btn btn-secondary btn-sm"><i class="pli-pencil fs-5"></i></button>
+                    </div>
+                    <div id="tiaLinkEditGroup" class="input-group d-none">
+                        <input id="tiaLinkInput" class="form-control" th:value="*{tia.link}" type="text" placeholder="https://...">
+                        <button id="tiaLinkSaveBtn" type="button" class="btn btn-secondary"><i class="pli-disk fs-5"></i></button>
+                        <button id="tiaLinkCancelBtn" type="button" class="btn btn-danger"><i class="pli-cross fs-5"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="tiaView">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
                 <div class="row mb-3 gap-1">
-                    <button id="editTIABtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setTIAEditState(true)">Rediger TIA</button>
-                    <button id="cancelTIABtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setTIAEditState(false)" hidden>Annuller</button>
+                    <button id="editTIABtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right">Rediger TIA</button>
+                    <button id="cancelTIABtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" hidden>Annuller</button>
                     <button id="saveTIABtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right"  hidden>Gem</button>
                 </div>
                 <input th:field="${asset.id}" hidden>
@@ -69,7 +92,7 @@
                             <tr>
                                 <td>Sendes oplysningerne sendes videre til andre leverandører?</td>
                                 <td>
-                                    <select class="form-control form-select editField" onchange="handleSendDataToOtherSuppliers()" th:field="*{tia.forwardInformationToOtherSuppliers}" tabindex="-1" disabled>
+                                    <select class="form-control form-select editField" th:field="*{tia.forwardInformationToOtherSuppliers}" tabindex="-1" disabled>
                                         <option value=""></option>
                                          <option th:each="fitos : ${T(dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers).values()}"
                                                  th:value="${fitos.name}" th:text="${fitos.message}"></option>
@@ -183,123 +206,12 @@
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-
-        /*[+
-        var changeableAsset = [[${changeableAsset}]]
-        +]*/
-        let bsCollapse;
-        let tiaChoiceElements =[];
-
+        const changeableAsset = /*[[${changeableAsset}]]*/ [];
         const registeredCategories = /*[[${dbChoices.personCategoriesRegisteredIdentifiers.values}]]*/ [];
         const informationChoices1 = /*[[${dbChoices.personCategoriesInformationIdentifiers1.values}]]*/ [];
         const informationChoices2 = /*[[${dbChoices.personCategoriesInformationIdentifiers2.values}]]*/ [];
         const chosenCategories = /*[[${asset.tia.registeredCategories}]]*/ [];
         const chosenInformationTypes = /*[[${asset.tia.informationTypes}]]*/ [];
-
-        document.addEventListener("DOMContentLoaded", function(event) {
-            //init collapse
-            bsCollapse = new bootstrap.Collapse(document.getElementById('details'), { toggle: false });
-
-
-            handleSendDataToOtherSuppliers();
-
-            //Init choices.js
-            // must be before setEditState
-            initRegisteredCategoriesChoices(registeredCategories);
-            initInformationTypeChoices(informationChoices1.concat(informationChoices2));
-
-            setTIAEditState(false);
-        });
-
-        function initRegisteredCategoriesChoices(values) {
-            let registeredCategoriesSelect = document.getElementById('tia.registeredCategories');
-            let registeredCategoriesChoice = initSelect(registeredCategoriesSelect);
-            registeredCategoriesChoice.setChoices(values, 'identifier', 'caption', true);
-            for (const option of document.querySelectorAll('#tia\\.registeredCategories option')) {
-                if (chosenCategories !== null && chosenCategories.includes(option.value)) {
-                    option.setAttribute('selected', 'selected');
-                }
-            }
-            tiaChoiceElements.push(registeredCategoriesChoice);
-        }
-
-        function initInformationTypeChoices(values) {
-            const informationTypeSelect = document.getElementById('tia.informationTypes');
-            let informationTypeChoice = initSelect(informationTypeSelect);
-            informationTypeChoice.setChoices(values, 'identifier', 'caption', true);
-            for (const option of document.querySelectorAll('#tia\\.informationTypes option')) {
-                if (chosenInformationTypes !== null && chosenInformationTypes.includes(option.value)) {
-                    option.setAttribute('selected', 'selected');
-                }
-            }
-            tiaChoiceElements.push(informationTypeChoice);
-        }
-
-        function setTIAEditState(enabled) {
-            const rootElement = document.getElementById('tiaTab');
-            if (enabled) {
-                rootElement.querySelectorAll('.editField').forEach(elem => {
-                  elem.disabled = false;
-                  if (elem.tagName === "A") {
-                      elem.hidden = true;
-                      if (elem.nextElementSibling) {
-                         elem.nextElementSibling.hidden = false;
-                      }
-                  }
-
-                  if (elem.classList.contains("datepicker")) {
-                    elem.parentElement.hidden = false; // show the datepicker
-                    if (elem.parentElement.nextElementSibling) {
-                        elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
-                    }
-                  }
-                });
-
-                tiaChoiceElements.forEach((e) => e.enable());
-
-                if(changeableAsset) {
-                    document.getElementById('saveTIABtn').hidden = false;
-                    document.getElementById('editTIABtn').hidden = true;
-                    document.getElementById('cancelTIABtn').hidden = false;
-                }
-            } else {
-                rootElement.querySelectorAll('.editField').forEach(elem => {
-                  elem.disabled = true;
-                  if (elem.tagName === "A") {
-                      elem.hidden = false;
-                      elem.nextElementSibling.hidden = true;
-                  }
-
-                  if (elem.classList.contains("datepicker")) {
-                    if (elem.value == null || elem.value === "") {
-                      elem.parentElement.hidden = true; // hide the datepicker
-                      elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
-                    }
-                  }
-                });
-
-                tiaChoiceElements.forEach((e) => e.disable());
-
-                if(changeableAsset) {
-                    document.getElementById('saveTIABtn').hidden = true;
-                    document.getElementById('editTIABtn').hidden = false;
-                    document.getElementById('cancelTIABtn').hidden = true;
-                }
-
-                const form = document.getElementById("tiaForm");
-                form.reset();
-            }
-        }
-
-        function handleSendDataToOtherSuppliers() {
-            const element = document.getElementById('tia.forwardInformationToOtherSuppliers');
-            if (element.value === "YES") {
-                bsCollapse.show();
-            } else {
-                bsCollapse.hide();
-            }
-        }
-
         /*]]>*/
     </script>
 </div>

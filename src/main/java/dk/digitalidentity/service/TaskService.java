@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
+import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.dto.enums.StatusColor;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
@@ -38,6 +39,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -192,10 +194,13 @@ public class TaskService implements TagableService<Task> {
     }
 
     public boolean isTaskDone(final Task task) {
-        if (task.getLogs().isEmpty()) {
+		boolean emptyLog = task.getLogs().isEmpty();
+        if (emptyLog) {
             return false;
         }
-        return task.getTaskType() == TaskType.TASK;
+		// OneShot tasks and checks are completed if logs exists
+		return task.getTaskType() == TaskType.TASK
+				|| (task.getTaskType() == TaskType.CHECK && (task.getRepetition() == null || task.getRepetition().equals(TaskRepetition.NONE)));
     }
 
     public List<TaskDTO> buildRelatedTasks(final List<ThreatAssessment> threatAssessments, final boolean onlyNotCompleted) {
@@ -209,7 +214,7 @@ public class TaskService implements TagableService<Task> {
         final List<Relatable> tasks = relationService.findAllRelatedTo(threatAssessment).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
         for (final Relatable taskAsRelatable : tasks) {
             final Task task = (Task) taskAsRelatable;
-            if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+            if (onlyNotCompleted && !isTaskDone(task)) {
                 continue;
             }
             relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
@@ -221,7 +226,7 @@ public class TaskService implements TagableService<Task> {
         final List<TaskDTO> relatedTasks = new ArrayList<>();
         final List<Task> tasks = findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + dpiaId);
         for (final Task task : tasks) {
-            if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+            if (onlyNotCompleted && !isTaskDone(task)) {
                 continue;
             }
             relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
@@ -230,7 +235,7 @@ public class TaskService implements TagableService<Task> {
     }
 
     public String findHtmlStatusBadgeForTask(Task task) {
-        if (task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+        if (isTaskDone(task)) {
             return "<div class=\"d-block badge bg-success\">Udført</div>";
         } else {
             LocalDate deadline = task.getNextDeadline();
@@ -261,7 +266,7 @@ public class TaskService implements TagableService<Task> {
 
 
 	public StatusCombination calculateStatus(final Task task) {
-		if (task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+		if (isTaskDone(task)) {
 			return new StatusCombination("Udført", StatusColor.GREEN);
 		} else {
 			LocalDate deadline = task.getNextDeadline();
@@ -346,8 +351,14 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		return getTasks(sortColumn, sortDirection, filters, page, pageLimit, user, false);
+	}
+
+	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user, boolean onlyMine) {
 		Page<TaskGrid> tasks;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+
+		// if onlyMine is true - only show the tasks assigned to the user, even if read_all
+		if (!onlyMine && SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			// Logged-in user can see all
 			tasks = taskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, TaskGrid.class),
@@ -455,5 +466,39 @@ public class TaskService implements TagableService<Task> {
 							.anyMatch(responsibleUser -> responsibleUser.getUuid().equals(user.getUuid())))
 					.toList();
 		}
+	}
+
+	public List<TaskListDTO> convertRelatableToTaskListDTO(final List<Relatable> relatable) {
+		// We need the taskIds to fetch Task with the responsible relations (A little inefficient, but best case without refactoring relationService)
+		final List<Long> taskIds = relatable.stream()
+				.filter(r -> r.getRelationType() == RelationType.TASK)
+				.map(Relatable::getId)
+				.toList();
+		// Fetch responsibleUser and responsibleOu in the same call to avoid N+1 queries
+		final Map<Long, Task> tasksById = taskDao.findAllByIdInWithResponsible(taskIds).stream()
+				.collect(Collectors.toMap(Task::getId, t -> t));
+
+		return taskIds.stream()
+				.map(id -> {
+					Task task = tasksById.get(id);
+					if (task == null) {
+						return null;
+					}
+					return new TaskListDTO(
+							task.getId(),
+							task.getName(),
+							task.getResponsibleUsers().stream()
+									.map(User::getName)
+									.collect(Collectors.joining(", ")),
+							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
+							task.getTaskType().getMessage(),
+							task.getNextDeadline().toString(),
+							task.getRepetition() != null ? task.getRepetition().getMessage() : "",
+							findHtmlStatusBadgeForTask(task),
+							RelationType.TASK
+					);
+				})
+				.filter(Objects::nonNull)
+				.toList();
 	}
 }

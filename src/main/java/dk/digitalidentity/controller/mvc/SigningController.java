@@ -78,6 +78,10 @@ public class SigningController {
         final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
         final DPIAReport dpiaReport = dpiaReportService.findByS3Document(s3Document);
 
+        if (threatAssessment == null && dpiaReport == null) {
+            return "sign/withdrawn";
+        }
+
         boolean canSign = false;
         if (threatAssessment != null) {
             if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED)) {
@@ -104,6 +108,10 @@ public class SigningController {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
         final DPIAReport dpiaReport = dpiaReportService.findByS3Document(s3Document);
+
+        if (threatAssessment == null && dpiaReport == null) {
+            return "sign/withdrawn";
+        }
 
         if (threatAssessment != null) {
 			if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.WAITING)) {
@@ -136,6 +144,10 @@ public class SigningController {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
         dpiaReport = dpiaReportService.findByS3Document(s3Document);
+
+        if (threatAssessment == null && dpiaReport == null) {
+            return "sign/withdrawn";
+        }
 
         if (threatAssessment != null) {
 

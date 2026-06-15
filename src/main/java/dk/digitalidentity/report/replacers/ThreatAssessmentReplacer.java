@@ -768,10 +768,10 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
 			//Operation responsible
 			final XWPFTableRow row4 = table.getRow(4);
-			Setting operationResponsibleInputSetting = settingsService.findBySettingKey(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
+			Setting operationResponsibleInputSetting = settingsService.findBySettingKey(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
 			String customInputOperationResponsible = (operationResponsibleInputSetting != null ? operationResponsibleInputSetting.getSettingValue() : "Driftsansvarlige") + ":";
 			setCellTextSmall(row4, 0, customInputOperationResponsible);
-			setCellTextSmall(row4, 1, isAsset ? context.asset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")) : "");
+			setCellTextSmall(row4, 1, isAsset ? context.asset.getOperationResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")) : "");
 
 			//Suppliers
 			final XWPFTableRow row5 = table.getRow(5);

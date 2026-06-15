@@ -37,6 +37,9 @@ public class AssetEO {
     public enum Criticality {
         CRITICAL, NON_CRITICAL
     }
+    public enum AssetCategory {
+        GREEN, YELLOW, WHITE, RED
+    }
 	public enum ArchiveDuty {
 		UNDECIDED,B,K,BK,KD,KB,UNKNOWN,PRESERVEDATACANDISCARDDOCUMENTS
 	}
@@ -77,6 +80,8 @@ public class AssetEO {
     private AssetStatus assetStatus;
     @Schema(description = "Criticality of the asset", example = ASSET_CRITICALITY_EXAMPLE)
     private Criticality criticality;
+    @Schema(description = "Category of the asset")
+    private AssetCategory assetCategory;
     @Schema(description = "Socially critical flag", example = ASSET_SOC_CRITICALITY_EXAMPLE)
     private boolean sociallyCritical;
     @Schema(description = "Emergency plan link", example = ASSET_EMERGENCY_LINK_EXAMPLE)

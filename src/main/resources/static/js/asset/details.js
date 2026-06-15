@@ -122,10 +122,31 @@ function AssetRiskKitosService() {
 }
 
 function AssetDetailsService() {
+    const AssessmentColorMap = {
+        GRAY: 'bg-gray-800',
+        RED: 'bg-red',
+        YELLOW: 'bg-yellow',
+        ORANGE: 'bg-orange',
+        GREEN: 'bg-green',
+        LIGHT_GREEN: 'bg-green-300'
+    }
+
+    // Might be extended later
+    const AssessmentBadgeMap = {
+        BADGE: 'badge'
+    }
+
+    // All classes the updateRiskAssessmentBadge and updateTiaBadge functions are responsible for — only these get removed/replaced
+    const MANAGED_CLASSES = new Set([
+        AssessmentBadgeMap.BADGE,
+        ...Object.values(AssessmentColorMap)
+    ]);
 
     this.init = function() {
         this.updateRiskAssessmentBadge();
+        this.updateTiaBadge();
         this.setTreatAssessmentVisibility(!asset.threatAssessmentOptOut);
+        this.setTiaVisibility(!asset.tiaOptOut);
     }
 
     this.setField = function (fieldName, value) {
@@ -145,22 +166,13 @@ function AssetDetailsService() {
 
     this.updateRiskAssessmentBadge = function() {
         let badgeElem = document.getElementById('riskAssessmentBadge');
-        badgeElem.classList.value = ''
-        ensureElementHasClass(badgeElem, 'badge');
+        MANAGED_CLASSES.forEach(cls => badgeElem.classList.remove(cls));
+        ensureElementHasClass(badgeElem, AssessmentBadgeMap.BADGE);
         if (asset.threatAssessmentOptOut === true) {
-            ensureElementHasClass(badgeElem, 'bg-gray-800');
-        } else if ('RED' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-red');
-        } else if ('YELLOW' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-yellow');
-        } else if ('ORANGE' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-orange');
-        } else if ('GREEN' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-green');
-        } else if ('LIGHT_GREEN' === assessment) {
-            ensureElementHasClass(badgeElem, 'bg-green-300');
+            ensureElementHasClass(badgeElem, AssessmentColorMap.GRAY);
         } else {
-            ensureElementHasClass(badgeElem, 'bg-gray-800');
+            const colorClass = AssessmentColorMap[assessment] || AssessmentColorMap.GRAY;
+            ensureElementHasClass(badgeElem, colorClass);
         }
     }
 
@@ -171,6 +183,38 @@ function AssetDetailsService() {
         this.setField('threatAssessmentOptOut', optOutBoolean);
         this.updateRiskAssessmentBadge();
         this.setTreatAssessmentVisibility(!optOut);
+    }
+
+    this.setTiaOptOut = function(checkboxElem) {
+        let optOut = checkboxElem.checked;
+        asset.tiaOptOut = optOut;
+        // Convert to string for backend
+        let optOutBooleanStr = optOut ? 'true' : 'false';
+        this.setField('tiaOptOut', optOutBooleanStr);
+        this.updateTiaBadge();
+        this.setTiaVisibility(!optOut);
+    }
+
+    this.setTiaVisibility = function(show) {
+        document.getElementById('tiaView').classList.toggle('d-none', !show);
+        document.getElementById('tiaOptOutView').classList.toggle('d-none', show);
+    }
+
+    this.updateTiaOptOutReason = function(elem) {
+        this.setField('tiaOptOutReason', elem.value);
+    }
+
+    this.updateTiaBadge = function() {
+        let badgeElem = document.getElementById('tiaBadge');
+        const tiaAssessment = badgeElem?.dataset.assessment;
+        MANAGED_CLASSES.forEach(cls => badgeElem.classList.remove(cls));
+        ensureElementHasClass(badgeElem, AssessmentBadgeMap.BADGE);
+        if (asset.tiaOptOut === true) {
+            ensureElementHasClass(badgeElem, AssessmentColorMap.GRAY);
+        } else {
+            const colorClass = AssessmentColorMap[tiaAssessment] || AssessmentColorMap.GRAY;
+            ensureElementHasClass(badgeElem, colorClass);
+        }
     }
 
     this.addProductLink = function() {
@@ -274,3 +318,4 @@ function AssetDpiaService() {
     }
 
 }
+

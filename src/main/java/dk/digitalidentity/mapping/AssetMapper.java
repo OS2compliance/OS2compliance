@@ -219,10 +219,11 @@ public interface AssetMapper {
         @Mapping(target = "localizedEnums", ignore = true),
         @Mapping(target = "threatAssessmentOptOut", ignore = true),
         @Mapping(target = "threatAssessmentOptOutReason", ignore = true),
+        @Mapping(target = "tiaOptOut", ignore = true),
+        @Mapping(target = "tiaOptOutReason", ignore = true),
         @Mapping(target = "dpiaOptOut", ignore = true),
         @Mapping(target = "dpiaOptOutReason", ignore = true),
         @Mapping(target = "oversightResponsibleUser", ignore = true),
-        @Mapping(target = "assetCategory", ignore = true),
         @Mapping(target = "roles", ignore = true),
         @Mapping(target = "assetType", ignore = true),
 		@Mapping(target = "aiStatus", ignore = true),
@@ -233,7 +234,8 @@ public interface AssetMapper {
 		@Mapping(target = "tags", ignore = true),
 		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks"),
 		@Mapping(target = "departments", source = "departments"),
-		@Mapping(target = "assetMeasureStatus", ignore = true)
+		@Mapping(target = "assetMeasureStatus", ignore = true),
+		@Mapping(target = "additionalSupervisoryModels", ignore = true)
 	})
     Asset fromEO(AssetCreateEO assetCreateEO);
 

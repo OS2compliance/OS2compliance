@@ -69,6 +69,30 @@ function DBSAssetService() {
                     searchable: {
                         searchKey: 'supplier'
                     }
+                },
+                {
+                    name: "Databehandleraftale",
+                    sort: false,
+                    formatter: (cell) => {
+                        if (!cell || cell.trim() === '') {
+                            return gridjs.html('<span class="badge bg-danger">Ingen DBA</span>');
+                        }
+                        const statusMap = {
+                            'YES': 'Ja',
+                            'NO': 'Ingen DBA',
+                            'ON_GOING': 'I proces',
+                            'NOT_RELEVANT': 'Ikke relevant'
+                        };
+                        const statuses = cell.split(',').map(s => s.trim());
+                        const labels = statuses.map(s => {
+                            const label = statusMap[s] || s;
+                            if (s === 'NO') {
+                                return '<span class="badge bg-danger">' + label + '</span>';
+                            }
+                            return '<span class="badge bg-success">' + label + '</span>';
+                        });
+                        return gridjs.html(labels.join(' '));
+                    }
                 }
             ],
             server:{
@@ -78,7 +102,7 @@ function DBSAssetService() {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.name, asset.assets, asset.lastSync, asset.supplier ],
+                    [ asset.id, asset.name, asset.assets, asset.lastSync, asset.supplier, asset.dpaStatuses ],
                 ),
                 total: data => data.totalCount
             },

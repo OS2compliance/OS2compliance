@@ -16,6 +16,7 @@ import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
+import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 
 import dk.digitalidentity.model.entity.enums.Criticality;
@@ -159,6 +160,7 @@ public class AssetApiController {
         asset.setNextInspectionDate(assetUpdateEO.getNextInspectionDate());
         asset.setAssetStatus(nullSafe(() -> AssetStatus.valueOf(assetUpdateEO.getAssetStatus().name())));
         asset.setCriticality(nullSafe(() -> Criticality.valueOf(assetUpdateEO.getCriticality().name())));
+        asset.setAssetCategory(nullSafe(() -> AssetCategory.valueOf(assetUpdateEO.getAssetCategory().name())));
         asset.setSociallyCritical(assetUpdateEO.isSociallyCritical());
         asset.setEmergencyPlanLink(assetUpdateEO.getEmergencyPlanLink());
         asset.setReEstablishmentPlanLink(assetUpdateEO.getReEstablishmentPlanLink());

@@ -20,6 +20,7 @@ function SettingsService() {
                     this.initKitosSelect('ownerSelect');
                     this.initKitosSelect('responsibleSelect');
                     this.initKitosSelect('otherSelect');
+                    this.initDbsRecipientSelector();
                 })
             ).catch(error => toastService.error(error));
     }
@@ -55,5 +56,44 @@ function SettingsService() {
             .catch(error => toastService.error(error));
     }
 
+    this.initDbsRecipientSelector = function() {
+        const wrapper = document.getElementById('dbsRecipientWrapper');
+        if (!wrapper) return;
 
+        const hiddenValue = wrapper.querySelector('[data-ref="dbsRecipientValue"]');
+        const typeSelect = wrapper.querySelector('[data-ref="dbsRecipientType"]');
+        const roleSelect = wrapper.querySelector('[data-ref="dbsRecipientRole"]');
+        const emailInput = wrapper.querySelector('[data-ref="dbsRecipientEmail"]');
+
+        // Initialize UI from current stored value
+        const currentValue = hiddenValue.value;
+        if (currentValue.startsWith('ROLE:')) {
+            typeSelect.value = 'role';
+            roleSelect.value = currentValue;
+            roleSelect.classList.remove('d-none');
+        } else if (currentValue.length > 0) {
+            typeSelect.value = 'email';
+            emailInput.value = currentValue;
+            emailInput.classList.remove('d-none');
+        }
+
+        const syncValue = () => {
+            if (typeSelect.value === 'role') {
+                hiddenValue.value = roleSelect.value;
+            } else if (typeSelect.value === 'email') {
+                hiddenValue.value = emailInput.value;
+            } else {
+                hiddenValue.value = '';
+            }
+        };
+
+        typeSelect.addEventListener('change', () => {
+            roleSelect.classList.toggle('d-none', typeSelect.value !== 'role');
+            emailInput.classList.toggle('d-none', typeSelect.value !== 'email');
+            syncValue();
+        });
+
+        roleSelect.addEventListener('change', syncValue);
+        emailInput.addEventListener('input', syncValue);
+    };
 }

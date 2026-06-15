@@ -52,4 +52,7 @@ public interface TaskDao extends TagableRepository<Task> {
 	List<Task> finAllTasks();
 
     List<Task> findByTaskDescriptionTemplate(ChoiceValue taskDescriptionTemplate);
+
+    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.responsibleUsers LEFT JOIN FETCH t.responsibleOu WHERE t.id IN :ids")
+    List<Task> findAllByIdInWithResponsible(@Param("ids") Collection<Long> ids);
 }

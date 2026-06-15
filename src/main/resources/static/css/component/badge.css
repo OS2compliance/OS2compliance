@@ -1,0 +1,22 @@
+
+.badge.list-badge {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    text-align: left;
+
+    min-width: 3rem;
+    min-height: 1rem;
+    font-weight: 500;
+    font-size: 0.6rem;
+    vertical-align: center;
+    border-radius: .5rem;
+    outline: lightgray solid 1px;
+}
+
+.badge.list-badge > a {
+    font-weight: 500;
+    font-size: 0.6rem;
+    color: white;
+    text-decoration: none;
+}

@@ -81,7 +81,7 @@ function EditTaskService() {
         this.taskModalDialog.querySelector('#taskEditFormBtnCheck').disabled = true;
         this.taskModalDialog.querySelector('#taskEditFormBtnTask').disabled = true;
 
-        const editTaskModal = new bootstrap.Modal(this.taskModalDialog);
+        const editTaskModal = new bootstrap.Modal(this.taskModalDialog, { backdrop: 'static' });
         editTaskModal.show();
     }
 
@@ -163,7 +163,7 @@ function CopyTaskService() {
         );
 
 
-        this.copyTaskModal = new bootstrap.Modal(this.modalContainer);
+        this.copyTaskModal = new bootstrap.Modal(this.modalContainer, { backdrop: 'static' });
         this.copyTaskModal.show();
     }
 

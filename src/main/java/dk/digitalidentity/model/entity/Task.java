@@ -123,13 +123,11 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
         String result = "";
         if (taskType != null) {
             result += taskType.getMessage();
-            if (taskType == TaskType.TASK) {
-                if (logs.isEmpty()) {
-                    result += "Ikke Udført";
-                } else {
-                    result += "Udført";
-                }
-            } else if ((logs.isEmpty())) {
+            boolean oneShotTask = taskType == TaskType.TASK
+                    || (taskType == TaskType.CHECK && (repetition == null || repetition == TaskRepetition.NONE));
+            if (!logs.isEmpty() && oneShotTask) {
+                result += "Udført";
+            } else if (logs.isEmpty()) {
                 result += "Ikke Udført";
             }
         }

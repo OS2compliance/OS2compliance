@@ -1,6 +1,8 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.dto.RelatedEntityDTO;
 import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
@@ -19,6 +21,7 @@ import org.hibernate.annotations.Immutable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -79,7 +82,31 @@ public class TaskGrid implements HasMultipleResponsibleUsers {
 	@Column
 	private LocalDate lastCompletionDate;
 
+	@Column
+	private String relatedEntities;
+
+	@Column
+	private boolean includeInReport;
+
+	@Column(name = "created_at")
+	private LocalDateTime createdAt;
+
 	public Set<String> getResponsibleUserUuidsAsSet() {
 		return Arrays.stream(responsibleUserUuids.split(",")).collect(Collectors.toSet());
+	}
+
+	/**
+	 * Parses the string that the view provides to DTOs
+	 */
+	public List<RelatedEntityDTO> getRelatedEntitiesDTO() {
+		if (relatedEntities == null || relatedEntities.isBlank()) {
+			return List.of();
+		}
+		return Arrays.stream(relatedEntities.split("\\|\\|"))
+				.map(token -> {
+					String[] parts = token.split(":", 3); // limit 3 — name may contain ':'
+					return new RelatedEntityDTO(RelationType.valueOf(parts[0]), Long.parseLong(parts[1]), parts[2]);
+				})
+				.toList();
 	}
 }

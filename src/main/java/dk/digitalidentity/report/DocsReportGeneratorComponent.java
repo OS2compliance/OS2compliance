@@ -18,7 +18,7 @@ public class DocsReportGeneratorComponent {
     public XWPFDocument generateDocument(final String inputFileName, final Map<String, String> parameters, StandardTemplate template) throws IOException {
         final XWPFDocument document = docxService.readDocument(inputFileName);
         docxService.replacePlaceHolders(document, parameters, template);
-        document.enforceUpdateFields();
+        DocxUtil.markTocFieldsDirty(document);
         return document;
     }
 

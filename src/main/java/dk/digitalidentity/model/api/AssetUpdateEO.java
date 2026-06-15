@@ -51,6 +51,8 @@ public class AssetUpdateEO {
     private AssetEO.AssetStatus assetStatus;
     @Schema(description = "Criticality of the asset", example = ASSET_CRITICALITY_EXAMPLE)
     private AssetEO.Criticality criticality;
+    @Schema(description = "Category of the asset")
+    private AssetEO.AssetCategory assetCategory;
     @Schema(description = "Socially critical flag", example = ASSET_SOC_CRITICALITY_EXAMPLE)
     private boolean sociallyCritical;
     @Schema(description = "Emergency plan link", example = ASSET_EMERGENCY_LINK_EXAMPLE)
