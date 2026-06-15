@@ -1,6 +1,7 @@
 package dk.digitalidentity.report;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
@@ -129,6 +130,8 @@ public class DocxServiceTest {
     private UserService userService;
     @MockitoBean
     private RiskGridDao riskGridDaoMock;
+    @MockitoBean
+    private AssetDao assetDaoMock;
 
     @BeforeEach
     public void setup() {

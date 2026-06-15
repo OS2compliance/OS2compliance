@@ -144,11 +144,6 @@ public class RiskRestController {
 		}
 		// else: keep the filter value as-is (true or false)
 
-		// Assets user is responsible for
-		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(uuid).stream()
-				.map(Relatable::getName)
-				.collect(Collectors.toSet());
-
 		Page<RiskGrid> risks = threatAssessmentService.getRisks(sortColumn, sortDirection, filters, page, limit, user);
 
 		Set<Long> entityIds = risks.getContent().stream().map(RiskGrid::getId).collect(Collectors.toSet());
@@ -157,7 +152,7 @@ public class RiskRestController {
 
 		assert risks != null;
 
-		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid, tagsById));
+		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), uuid, tagsById));
     }
 
 	record ResponsibleUserDTO(String uuid, String name, String userId) {}
@@ -451,8 +446,8 @@ public class RiskRestController {
     public ResponseEntity<HttpStatus> deleteCustomThread(@PathVariable final long id, @PathVariable final long threatId) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if (!SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		if (!(SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) ||
+				(SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -556,7 +551,7 @@ public class RiskRestController {
 		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
-				|| (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment)))) {
+				|| (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 

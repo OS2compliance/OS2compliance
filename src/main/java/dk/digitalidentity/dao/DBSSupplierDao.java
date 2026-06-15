@@ -12,6 +12,8 @@ public interface DBSSupplierDao extends JpaRepository<DBSSupplier, Long> {
 
     Optional<DBSSupplier> findByDbsId(Long id);
 
+    List<DBSSupplier> findByName(String name);
+
     @Query("select s.dbsId from DBSSupplier s")
     List<Long> findAllDbsIds();
 

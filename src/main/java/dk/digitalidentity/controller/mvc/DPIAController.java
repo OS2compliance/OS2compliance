@@ -35,6 +35,7 @@ import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -73,6 +74,7 @@ public class DPIAController {
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
     private final AssetService assetService;
     private final RelationService relationService;
+    private final UserService userService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -281,14 +283,16 @@ public class DPIAController {
         return result;
     }
 
-    public record RevisionFormDTO(@DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate nextRevision, RevisionInterval revisionInterval) {}
+    public record RevisionFormDTO(@DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate nextRevision, RevisionInterval revisionInterval, String responsibleUserUuid) {}
 	@RequireUpdateOwnerOnly
     @GetMapping("{dpiaId}/revision")
     public String revisionForm(final Model model, @PathVariable final long dpiaId) {
-         DPIA dpia = dpiaService.find(dpiaId);
+        DPIA dpia = dpiaService.find(dpiaId);
         assetService.updateNextRevisionAssociatedTask(dpia);
+        final String defaultUserUuid = dpia.getResponsibleUser() != null ? dpia.getResponsibleUser().getUuid() : null;
         model.addAttribute("dpiaId", dpia.getId());
-        model.addAttribute("RevisionFormDTO", new RevisionFormDTO(dpia.getNextRevision(), dpia.getRevisionInterval()));
+        model.addAttribute("users", userService.getAll());
+        model.addAttribute("RevisionFormDTO", new RevisionFormDTO(dpia.getNextRevision(), dpia.getRevisionInterval(), defaultUserUuid));
         return "dpia/fragments/revisionIntervalForm";
     }
 
@@ -297,11 +301,11 @@ public class DPIAController {
     @Transactional
     public String postRevisionForm(@ModelAttribute final RevisionFormDTO revisionFormDTO, @PathVariable final long dpiaId) {
         DPIA dpia = dpiaService.find(dpiaId);
-        final List<Asset> assets = dpia.getAssets();
 
         dpia.setRevisionInterval(revisionFormDTO.revisionInterval);
         dpia.setNextRevision(revisionFormDTO.nextRevision);
-        assetService.createOrUpdateAssociatedCheck(dpia);
+		User userOnAssociatedCheck = revisionFormDTO.responsibleUserUuid() != null ? userService.get(revisionFormDTO.responsibleUserUuid()).orElse(null) : null;
+        assetService.createOrUpdateAssociatedCheck(dpia, userOnAssociatedCheck);
         return "redirect:/dpia/" + dpia.getId();
     }
 

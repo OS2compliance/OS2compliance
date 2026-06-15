@@ -1,6 +1,7 @@
 package dk.digitalidentity.mapping;
 
 
+import dk.digitalidentity.model.dto.RelatedEntityDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
 import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
@@ -8,6 +9,7 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.tag.TagService;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
@@ -33,7 +35,9 @@ public interface RiskMapper {
                 .assessmentOrder(riskGrid.getAssessmentOrder())
                 .responsibleOU(nullSafe(() -> riskGrid.getResponsibleOU().getName()))
                 .responsibleUser(nullSafe(() -> riskGrid.getResponsibleUser().getName()))
-				.relatedAssetsAndRegisters(nullSafe(riskGrid::getRelatedAssetsAndRegisters))
+				.relatedAssetsAndRegisters(riskGrid.getRelatedAssetsAndRegistersDTO().stream()
+						.map(RelatedEntityDTO::toLink)
+						.toList())
                 .date(riskGrid.getDate().format(DK_DATE_FORMATTER))
                 .tasks(riskGrid.getTasks())
                 .name(riskGrid.getName())
@@ -60,13 +64,10 @@ public interface RiskMapper {
         return riskDTO;
     }
 
-    default List<RiskDTO> toDTO(List<RiskGrid> riskGrid, Set<String> responsibleAssetNames, String userUuid, Map<Long, Tag> tagsById) {
+    default List<RiskDTO> toDTO(List<RiskGrid> riskGrid, String userUuid, Map<Long, Tag> tagsById) {
 		return riskGrid.stream().map(r -> {
 			Set<AllowedAction> allowedActions = new HashSet<>();
-			boolean isAssetOwner = containsAnyString(r.getRelatedAssetsAndRegisters(), responsibleAssetNames);
-			boolean isRiskOwner = r.getResponsibleUser() != null && r.getResponsibleUser().getUuid().equals(userUuid);
-			boolean isSignedResponsible = r.getSignerUuid() != null && r.getSignerUuid().equals(userUuid);
-			boolean isResponsible = isAssetOwner || isRiskOwner || isSignedResponsible;
+			boolean isResponsible = ThreatAssessmentService.isAssignedUser(r, userUuid);
 			if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
 					|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
 				allowedActions.add(AllowedAction.UPDATE);
@@ -84,19 +85,4 @@ public interface RiskMapper {
 			return toDTO(r, allowedActions, tagsById);
 		}).toList();
     }
-
-	default boolean containsAnyString(String commaSeperatedList, Set<String> stringSet) {
-		if (commaSeperatedList == null || commaSeperatedList.isEmpty()) {
-			return false;
-		}
-
-		String[] names = commaSeperatedList.split(",");
-		for (String name : names) {
-			if (stringSet.contains(name.trim())) {
-				return true;
-			}
-		}
-		return false;
-
-	}
 }

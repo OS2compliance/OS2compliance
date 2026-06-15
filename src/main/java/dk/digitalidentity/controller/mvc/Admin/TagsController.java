@@ -19,7 +19,7 @@ public class TagsController {
     private final TagService tagService;
 
 	public record ColorDTO(String label, String colorCode, String contrastCode) {}
-	public record TagListDTO(Long id, String title, ColorDTO color) {}
+	public record TagListDTO(Long id, String title, ColorDTO color, boolean yearWheel) {}
     /**
      * Main endpoint for Tags view
      * @param model
@@ -35,7 +35,8 @@ public class TagsController {
 						new ColorDTO(
 								t.getColor().getMessage(),
 								t.getColor().getHexCode(),
-								t.getColor().getContrastHexCode())
+								t.getColor().getContrastHexCode()),
+								t.isYearWheel()
 				))
 				.toList());
         return "tags/tags_view";

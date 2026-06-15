@@ -216,7 +216,7 @@ public class ReportController {
 		Setting customOperationSetting = settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
 		model.put("customOwnerName", customOwnerSetting != null ? customOwnerSetting.getSettingValue() : null);
 		model.put("customResponsibleName", customResponsibleSetting != null ? customResponsibleSetting.getSettingValue() : null);
-		model.put("customOperationName", customResponsibleSetting != null ? customOperationSetting.getSettingValue() : null);
+		model.put("customOperationName", customOperationSetting != null ? customOperationSetting.getSettingValue() : null);
 		Asset riskAsset = relations.stream()
 				.filter(r -> r.getRelationType() == RelationType.ASSET)
 				.map(Asset.class::cast)
@@ -392,18 +392,18 @@ public class ReportController {
         DPIA dpia = dpiaService.find(dpiaId);
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAPdf(dpia);
-            response.addHeader("Content-disposition", "attachment;filename=konsekvensanalyse vedr " + dpia.getName() + ".pdf");
+            response.setHeader("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".pdf\"");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
             response.flushBuffer();
         } else if (type.equals("ZIP")) {
-            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".zip\"")
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".zip\"")
                 .body(out -> {
                         var zipOutputStream = new ZipOutputStream(out);
 
                         // add dpia pdf
                         try {
-                            ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + dpia.getName() + ".pdf");
+                            ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".pdf");
                             zipOutputStream.putNextEntry(dpiaFile);
                             zipOutputStream.write(assetService.getDPIAPdf(dpia));
                         } catch (DocumentException e) {
@@ -419,7 +419,7 @@ public class ReportController {
                                 ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);
                                 if (threatAssessment != null) {
                                     try {
-                                        ZipEntry file = new ZipEntry("risikovurdering " + threatAssessment.getName() + ".pdf");
+                                        ZipEntry file = new ZipEntry("risikovurdering " + sanitizeFileName(threatAssessment.getName()) + ".pdf");
                                         zipOutputStream.putNextEntry(file);
                                         zipOutputStream.write(threatAssessmentService.getThreatAssessmentPdf(threatAssessment));
                                     } catch (DocumentException e) {
@@ -446,18 +446,18 @@ public class ReportController {
         DPIA dpia = dpiaService.find(dpiaId);
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAScreeningPdf(dpia);
-            response.addHeader("Content-disposition", "attachment;filename=screening vedr " + dpia.getName() + ".pdf");
+            response.setHeader("Content-Disposition", "attachment; filename=\"screening vedr " + sanitizeFileName(dpia.getName()) + ".pdf\"");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
             response.flushBuffer();
         } else if (type.equals("ZIP")) {
-            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".zip\"")
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".zip\"")
                 .body(out -> {
                         var zipOutputStream = new ZipOutputStream(out);
 
                         // add dpia pdf
                         try {
-                            ZipEntry dpiaFile = new ZipEntry("screening vedr " + dpia.getName() + ".pdf");
+                            ZipEntry dpiaFile = new ZipEntry("screening vedr " + sanitizeFileName(dpia.getName()) + ".pdf");
                             zipOutputStream.putNextEntry(dpiaFile);
                             zipOutputStream.write(assetService.getDPIAScreeningPdf(dpia));
                         } catch (DocumentException e) {
@@ -473,7 +473,7 @@ public class ReportController {
                                 ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);
                                 if (threatAssessment != null) {
                                     try {
-                                        ZipEntry file = new ZipEntry("risikovurdering " + threatAssessment.getName() + ".pdf");
+                                        ZipEntry file = new ZipEntry("risikovurdering " + sanitizeFileName(threatAssessment.getName()) + ".pdf");
                                         zipOutputStream.putNextEntry(file);
                                         zipOutputStream.write(threatAssessmentService.getThreatAssessmentPdf(threatAssessment));
                                     } catch (DocumentException e) {
@@ -541,13 +541,13 @@ public class ReportController {
             if (toPDF) {
                 ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "ThreatAssessment not found"));
                 byte[] byteData = threatAssessmentService.getThreatAssessmentPdf(threatAssessment);
-                response.addHeader("Content-disposition", "attachment;filename=" + outputFilename);
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + outputFilename + "\"");
                 response.setContentType("application/pdf");
                 response.getOutputStream().write(byteData);
                 response.flushBuffer();
             } else {
 				try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters, template)) {
-                    response.addHeader("Content-disposition", "attachment;filename=" + outputFilename);
+                    response.setHeader("Content-Disposition", "attachment; filename=\"" + outputFilename + "\"");
                     response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
                     myDocument.write(response.getOutputStream());
                     response.flushBuffer();
@@ -583,6 +583,23 @@ public class ReportController {
 				})
 				.filter(Objects::nonNull)
 				.collect(Collectors.joining(" : "));
+	}
+
+	private String sanitizeFileName(String fileName) {
+		if (fileName == null || fileName.isBlank()) {
+			return "";
+		}
+
+		String sanitized = fileName
+				.replaceAll("[^\\w\\s()\\-]", "_")
+				.trim();
+
+		if (sanitized.isBlank()) {
+			return "";
+		}
+
+		return sanitized;
+
 	}
 
 }

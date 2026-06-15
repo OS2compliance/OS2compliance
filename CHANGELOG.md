@@ -5,6 +5,55 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+
+## [2.7.0] - 2026-06-14
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-41) (Aktiver/Generelt) Visning af resultatet for senest gennemførte kontroller, deadline og opgavetype
+- (https://os2web.atlassian.net/browse/COMPLY-57) (Aktiver/generelt) Markering af integrationer mellem systemer
+- (https://os2web.atlassian.net/browse/COMPLY-149) (Aktiver/TIA) Mulighed for at notere at der ikke skal udarbejdes en TIA
+- (https://os2web.atlassian.net/browse/COMPLY-150) (Aktiver/TIA) Mulighed for at indsætte link til TIA
+- (https://os2web.atlassian.net/browse/COMPLY-292) (Aktiver/DPIA) Ved oprettelse af en påmindelse om at genbesøge DPIA skal det være systemansvarlig i stedet for systemejer, der default står som ansvarlig på opgaven
+- (https://os2web.atlassian.net/browse/COMPLY-324) (Opgavecenter/Ny fane) Dynamisk og brugerrettet årshjul
+- (https://os2web.atlassian.net/browse/COMPLY-350) (Opgavecenter) Kolonne der viser tilknyttet risikovurdering
+- (https://os2web.atlassian.net/browse/COMPLY-408) DBS-integration v2: migrering til DBS' nye API — ny API-klient (dbs-platform-client) og samlet synkronisering, letvægts cutover via kitos_uuid der bevarer aktiv-relationer, backfill-konfiguration pr. kommune + driftsdokumentation samt pilottest på Rebild Kommune + enhedstests
+- (https://os2web.atlassian.net/browse/COMPLY-344) (Opgaver) Arbejdsgang for registrering af tilsyn og udførelse af den tilhørende opgave
+- (https://os2web.atlassian.net/browse/COMPLY-336) (DBS tilsyn) Mulighed for at definere hvem der er ansvarlig
+- (https://os2web.atlassian.net/browse/COMPLY-338) (DBS tilsyn) Aktiver uden tilsyn markeres med "ingen dba"
+- (https://os2web.atlassian.net/browse/COMPLY-392) (Aktiver/DBS tilsyn) Navneændring fra "DBS tilsyn" til "Tilsyn"
+- (https://os2web.atlassian.net/browse/COMPLY-263) (Aktiver/Generelt) Mulighed for at vælge flere tilsynsmodeller
+- (https://os2web.atlassian.net/browse/COMPLY-121) (Aktiver/DBS tilsyn) Ved oprettelse af tilsyn via leverandøren foreslås tilknyttede systemer
+
+### Fixed
+- (gitlab #1) Fejl i antal løsninger
+- (gitlab #2) Forkert terminologi
+- (gitlab #3) Manglende download af DPIA
+- (gitlab #13) Kan ikke fjerne lovhenvisninger fra "Relevante lovhenvisninger" på Fortegnelse
+- (gitlab #14) Dialog for oprettelse af ny opgave lukker og mister data ved klik udenfor
+- (gitlab #15) Notifikation om kommende deadline sendes selvom kontrol er udført
+- (gitlab #18) NullPointerException i task-grid når task har NULL task_type eller repetition
+- (gitlab #19) Datofelt på databehandleraftale fejler ved manuel indtastning uden ledende nul
+- (gitlab #20) Kopiering af risikovurdering medtager ikke tilknyttede foranstaltninger
+- (gitlab #21) Systemroller (Driftsansvarlig/Systemansvarlig) vises forkert i risikorapport (PDF/DOCX/Excel)
+- (gitlab #22) Standard-ID med skråstreger ødelagde URL og gjorde standarden utilgængelig (input-validering på ID ved oprettelse + robust håndtering af 404 på progress-endpoint)
+- (gitlab #23) Man kan ikke redigere/slette eksisterende foranstaltninger
+- (gitlab #35) StandardController eksponerede entitet i stedet for DTO mod frontend
+- (gitlab !469) Owner-brugere kunne ikke administrere trusler (tilføj/ret/slet samt vælg trusselskataloger) på egne risikovurderinger — frontend var gated til *_all-roller, mens backend tillod *_owner
+- (gitlab !473) Død Rediger-knap på aktivets Sikkerhedsfane ved tilpasset sikkerhedsskema (JS-fejl når et betinget opfølgningsspørgsmål var fjernet fra kommunens skema)
+- (gitlab !464) Signeringslink forblev aktivt efter sletning af en risikovurdering — en slettet/tilbagetrukket vurdering (eller DPIA) kunne stadig signeres og PDF'en blev signeret og uploadet pga. manglende else-gren i SigningController; viser nu en "trukket tilbage"-side
+- (gitlab !476) Dublerede StandardSections når krav oprettes fik /standards til at crashe ("More than one row with the given identifier was found") — createSection kunne overskrive en eksisterende template-sektion ved identifier-kollision; udleder nu @Id, sektion, navn og sortKey af én værdi, bumper til næste ledige nummer ved kollision og tilføjer UNIQUE-constraint på standard_sections.template_section_identifier (V1_113)
+- (Ad-hoc) Manglende redigeringsmulighed i standarder
+- (Ad-hoc) Risikovurderinger var ikke synlige for systemejere, systemansvarlige og signeringsansvarlige på tilknyttede aktiver (jf. rollebeskrivelsen "Roller i OS2compliance") — rammer fx systemansvarlige der ikke selv er risikoejer. Konsekvensanalyser var omvendt synlige for alle almindelige brugere og begrænses nu tilsvarende til egne
+- (Ad-hoc) Man kan oprette en konsekvensanalyse uden værdier
+- (Ad-hoc) JS-fejl i fortegnelse view
+- (Ad-hoc) Forskellig styling på card bodies på fortegnelser og aktiver
+- (Ad-hoc) Duplikerede tags vist på aktiv-oversigt
+- (Ad-hoc) Samlet rettelse af notifikationslogik (notify-fix)
+- (Ad-hoc) Sanitering af filnavne på downloads (header-parsing)
+- (Ad-hoc) Diverse bugfixes i trusselsvurderings-rapport
+- (Ad-hoc) CI: anvend seneste version af review-workflow
+
 ## [2.6.0] - 2026-03-24
 ### Added
 - (Ad-hoc) Ændringer til aktiv-fanen Foranstaltninger

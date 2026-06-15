@@ -1,7 +1,7 @@
 CREATE OR REPLACE VIEW view_gridjs_suppliers AS
 SELECT s.id,
        TRIM(s.name)                                                         AS name,
-       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id)           AS solution_count,
+       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false)           AS solution_count,
        s.updated_at                                                         AS updated,
        s.status,
        s.localized_enums,
@@ -29,6 +29,8 @@ SELECT t.id,
        t.responsible_ou_uuid,
        t.next_deadline,
        t.repetition,
+       t.include_in_report,
+       t.created_at,
        (CASE
             WHEN t.repetition = 'NONE' THEN 10
             WHEN t.repetition = 'MONTHLY' THEN 2
@@ -40,11 +42,23 @@ SELECT t.id,
            END)                                                                        as repetition_order,
        cv_result.caption                                                               as result,
        cv_result.id                                                                    as task_result_order,
-       `ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE') as `completed`,
+       COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) as `completed`,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
-       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')            AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')               AS tag_ids
+       GROUP_CONCAT(DISTINCT COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
+       GROUP_CONCAT(DISTINCT COALESCE(tg.id, '')   ORDER BY tg.value SEPARATOR ',') AS tag_ids,
+       GROUP_CONCAT(DISTINCT
+                    CASE
+                        WHEN rel.relation_a_type = 'TASK' THEN CONCAT(rel.relation_b_type, ':', rel.relation_b_id, ':', rel.relation_b_name)
+                        WHEN rel.relation_b_type = 'TASK' THEN CONCAT(rel.relation_a_type, ':', rel.relation_a_id, ':', rel.relation_a_name)
+                        END
+                    ORDER BY
+                    CASE
+                        WHEN rel.relation_a_type = 'TASK' THEN rel.relation_b_name
+                        WHEN rel.relation_b_type = 'TASK' THEN rel.relation_a_name
+                        END ASC
+                    SEPARATOR '||'
+       )                                                                             AS related_entities
 FROM tasks t
     LEFT JOIN task_responsible_users tru ON tru.task_id = t.id
     LEFT JOIN users u ON u.uuid = tru.user_uuid
@@ -52,6 +66,8 @@ FROM tasks t
     LEFT JOIN choice_values cv_result ON cv_result.id = ts.task_result
     LEFT JOIN task_tag rt on rt.task_id = t.id
     LEFT JOIN tags tg on rt.tag_id = tg.id
+    LEFT JOIN relations rel ON (rel.relation_a_id = t.id AND rel.relation_a_type = 'TASK')
+                            OR (rel.relation_b_id = t.id AND rel.relation_b_type = 'TASK')
 WHERE t.deleted = false
   AND (ts.id IS NULL OR ts.id = (SELECT MAX(id) FROM task_logs WHERE task_id = t.id))
 GROUP BY t.id;
@@ -253,8 +269,12 @@ SELECT a.id,
        IF(properties.prop_value IS null, 0, 1)                              AS kitos,
        IF(old_kitos_prop.prop_value IS NULL, 0, 1)                          AS old_kitos,
        MAX(ao.creation_date)                                                AS last_oversight_date,
-       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
+       (SELECT GROUP_CONCAT(DISTINCT tg.value ORDER BY tg.value SEPARATOR ',')
+        FROM asset_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.asset_id = a.id)                                           AS tag_names,
+       (SELECT GROUP_CONCAT(DISTINCT tg.id ORDER BY tg.value SEPARATOR ',')
+        FROM asset_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.asset_id = a.id)                                           AS tag_ids,
        CASE
            WHEN EXISTS (SELECT 1
                         FROM assets_suppliers
@@ -372,21 +392,19 @@ FROM assets a
          LEFT JOIN assets_users_mapping aum ON aum.asset_id = a.id
          LEFT JOIN users mu ON aum.user_uuid = mu.uuid
          LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
-         LEFT JOIN asset_tag rt on rt.asset_id = a.id
-         LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE a.deleted = false
 GROUP BY a.id;
 
 
 CREATE OR REPLACE VIEW view_gridjs_assessments AS
 SELECT t.id,
-       TRIM(t.name)                                                                                                                                                  as name,
+       TRIM(t.name)                                                                                                                                                  AS name,
        t.responsible_uuid,
        t.responsible_ou_uuid,
-       t.threat_assessment_type                                                                                                                                      as type,
-       t.threat_assessment_report_user_uuid                                                                                                                          as signer_uuid,
+       t.threat_assessment_type                                                                                                                                      AS type,
+       t.threat_assessment_report_user_uuid                                                                                                                          AS signer_uuid,
        t.threat_assessment_report_approval_status,
-       t.updated_at                                                                                                                                                  as date,
+       t.updated_at                                                                                                                                                  AS date,
        t.assessment,
        t.hidden,
        t.localized_enums,
@@ -396,31 +414,33 @@ SELECT t.id,
             WHEN t.assessment = 'YELLOW' THEN 3
             WHEN t.assessment = 'ORANGE' THEN 4
             WHEN t.assessment = 'RED' THEN 5
-           END)                                                                                                                                                      as assessment_order,
+           END)                                                                                                                                                      AS assessment_order,
        (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks,
        (SELECT COUNT(r.id)
         FROM relations r
-        JOIN tasks task ON (
+                 JOIN tasks task ON (
             (r.relation_a_id = task.id AND r.relation_a_type = 'TASK' AND r.relation_b_id = t.id) OR
             (r.relation_b_id = task.id AND r.relation_b_type = 'TASK' AND r.relation_a_id = t.id)
             )
         WHERE (SELECT CASE
-                    WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = task.id) THEN 'COMPLETED'
-                    WHEN task.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
-                    ELSE 'EXCEEDED'
-                    END) = 'COMPLETED'
-        ) AS completed_tasks,
+                          WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = task.id) THEN 'COMPLETED'
+                          WHEN task.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
+                          ELSE 'EXCEEDED'
+                          END) = 'COMPLETED'
+       )                                                                                                                                                            AS completed_tasks,
        t.from_external_source,
        t.external_link,
        GROUP_CONCAT(DISTINCT
                     CASE
-                        WHEN a.name IS NOT NULL THEN a.name
-                        WHEN rgs.name IS NOT NULL THEN rgs.name
+                        WHEN rel.relation_a_type = 'ASSET' AND rel.relation_b_type = 'THREAT_ASSESSMENT' THEN CONCAT('ASSET:', rel.relation_a_id, ':', rel.relation_a_name)
+                        WHEN rel.relation_b_type = 'ASSET' AND rel.relation_a_type = 'THREAT_ASSESSMENT' THEN CONCAT('ASSET:', rel.relation_b_id, ':', rel.relation_b_name)
+                        WHEN rel.relation_a_type = 'REGISTER' AND rel.relation_b_type = 'THREAT_ASSESSMENT' THEN CONCAT('REGISTER:', rel.relation_a_id, ':', rel.relation_a_name)
+                        WHEN rel.relation_b_type = 'REGISTER' AND rel.relation_a_type = 'THREAT_ASSESSMENT' THEN CONCAT('REGISTER:', rel.relation_b_id, ':', rel.relation_b_name)
                         END
                     ORDER BY
                     CASE
-                        WHEN a.name IS NOT NULL THEN a.name
-                        WHEN rgs.name IS NOT NULL THEN rgs.name
+                        WHEN rel.relation_a_type IN ('ASSET', 'REGISTER') AND rel.relation_b_type = 'THREAT_ASSESSMENT' THEN rel.relation_a_name
+                        WHEN rel.relation_b_type IN ('ASSET', 'REGISTER') AND rel.relation_a_type = 'THREAT_ASSESSMENT' THEN rel.relation_b_name
                         END ASC
                     SEPARATOR '||'
        )                                                                                                                                                             AS related_assets_and_registers,
@@ -431,22 +451,26 @@ SELECT t.id,
           AND tc.deleted = false)                                                                                                                                    AS threat_catalogs,
        (SELECT GROUP_CONCAT(DISTINCT tg.value ORDER BY tg.value SEPARATOR ',')
         FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
-        WHERE rt.threat_assessment_id = t.id) AS tag_names,
+        WHERE rt.threat_assessment_id = t.id)                                                                                                                       AS tag_names,
        (SELECT GROUP_CONCAT(DISTINCT tg.id ORDER BY tg.value SEPARATOR ',')
         FROM threat_assessment_tag rt LEFT JOIN tags tg ON rt.tag_id = tg.id
-        WHERE rt.threat_assessment_id = t.id) AS tag_ids
+        WHERE rt.threat_assessment_id = t.id)                                                                                                                       AS tag_ids,
+       (SELECT GROUP_CONCAT(DISTINCT arum.user_uuid SEPARATOR ',')
+        FROM relations r2
+                 JOIN assets a2 ON a2.deleted = false AND a2.id = (CASE WHEN r2.relation_a_type = 'ASSET' THEN r2.relation_a_id ELSE r2.relation_b_id END)
+                 JOIN assets_responsible_users_mapping arum ON arum.asset_id = a2.id
+        WHERE (r2.relation_a_type = 'THREAT_ASSESSMENT' AND r2.relation_a_id = t.id AND r2.relation_b_type = 'ASSET')
+           OR (r2.relation_b_type = 'THREAT_ASSESSMENT' AND r2.relation_b_id = t.id AND r2.relation_a_type = 'ASSET'))                                              AS responsible_user_uuids,
+       (SELECT GROUP_CONCAT(DISTINCT aum.user_uuid SEPARATOR ',')
+        FROM relations r2
+                 JOIN assets a2 ON a2.deleted = false AND a2.id = (CASE WHEN r2.relation_a_type = 'ASSET' THEN r2.relation_a_id ELSE r2.relation_b_id END)
+                 JOIN assets_users_mapping aum ON aum.asset_id = a2.id
+        WHERE (r2.relation_a_type = 'THREAT_ASSESSMENT' AND r2.relation_a_id = t.id AND r2.relation_b_type = 'ASSET')
+           OR (r2.relation_b_type = 'THREAT_ASSESSMENT' AND r2.relation_b_id = t.id AND r2.relation_a_type = 'ASSET'))                                              AS manager_uuids
 FROM threat_assessments t
          LEFT JOIN relations rel ON (
-    (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
-        OR (rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
-    )
-         LEFT JOIN assets a ON (
-    (rel.relation_a_type = 'ASSET' AND rel.relation_a_id = a.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
-        OR (rel.relation_b_type = 'ASSET' AND rel.relation_b_id = a.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
-    )
-         LEFT JOIN registers rgs ON (
-    (rel.relation_a_type = 'REGISTER' AND rel.relation_a_id = rgs.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
-        OR (rel.relation_b_type = 'REGISTER' AND rel.relation_b_id = rgs.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
+    (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id AND rel.relation_b_type IN ('ASSET', 'REGISTER'))
+        OR (rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id AND rel.relation_a_type IN ('ASSET', 'REGISTER'))
     )
 WHERE t.deleted = false
 GROUP BY t.id;
@@ -568,11 +592,12 @@ SELECT a.id,
        a.last_sync,
        s.name                                               as supplier,
        GROUP_CONCAT(a2.id ORDER BY a2.id SEPARATOR ',')     AS assets_ids,
-       GROUP_CONCAT(a2.name ORDER BY a2.name SEPARATOR ',') AS asset_names
+       GROUP_CONCAT(a2.name ORDER BY a2.name SEPARATOR ',') AS asset_names,
+       GROUP_CONCAT(DISTINCT a2.data_processing_agreement_status ORDER BY a2.data_processing_agreement_status SEPARATOR ',') AS dpa_statuses
 FROM dbs_asset a
          LEFT JOIN dbs_supplier s on a.dbs_supplier_id = s.id
          LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
-         LEFT JOIN assets a2 on r.relation_a_id = a2.id OR r.relation_b_id = a2.id
+         LEFT JOIN assets a2 on (r.relation_a_id = a2.id OR r.relation_b_id = a2.id) AND a2.deleted = false
 WHERE a.deleted = false
 GROUP BY a.id;
 
@@ -617,8 +642,20 @@ SELECT d.id,
        (SELECT sc.conclusion FROM dpia_screening sc WHERE sc.dpia_id = d.id)                                                                                         as screening_conclusion,
        d.from_external_source                                                                                                                                        as is_external,
        dr.report_approver_uuid                                                                                                                                       AS approver_uuid,
+       dr.report_approver_uuid                                                                                                                                       AS signer_uuid,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')                                                                                          AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')                                                                                             AS tag_ids
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')                                                                                             AS tag_ids,
+       CONCAT_WS(',', d.responsible_user_uuid,
+                 (SELECT GROUP_CONCAT(DISTINCT arum.user_uuid SEPARATOR ',')
+                  FROM dpia_asset da
+                           JOIN assets a2 ON a2.id = da.asset_id AND a2.deleted = false
+                           JOIN assets_responsible_users_mapping arum ON arum.asset_id = a2.id
+                  WHERE da.dpia_id = d.id))                                                                                                                          AS responsible_user_uuids,
+       (SELECT GROUP_CONCAT(DISTINCT aum.user_uuid SEPARATOR ',')
+        FROM dpia_asset da
+                 JOIN assets a2 ON a2.id = da.asset_id AND a2.deleted = false
+                 JOIN assets_users_mapping aum ON aum.asset_id = a2.id
+        WHERE da.dpia_id = d.id)                                                                                                                                     AS manager_uuids
 FROM dpia d
          LEFT JOIN dpia_report dr ON d.id = dr.dpia_id
          LEFT JOIN dpia_tag rt on rt.dpia_id = d.id

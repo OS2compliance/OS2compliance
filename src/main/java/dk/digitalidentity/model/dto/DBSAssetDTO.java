@@ -31,4 +31,6 @@ public class DBSAssetDTO {
     private List<Asset> assets;
 	@ExcelColumn(headerName = "Leverandør", order = 4)
     private String supplier;
+	@ExcelColumn(headerName = "Databehandleraftale", order = 5)
+	private String dpaStatuses;
 }

@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.DataProcessingDao;
+import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.dao.grid.DBSAssetGridDao;
 import dk.digitalidentity.model.entity.Asset;
@@ -39,8 +40,6 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
-import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
@@ -106,6 +105,7 @@ public class AssetService implements TagableService<Asset> {
 	private final AssetGridDao assetGridDao;
 	private final AssetOversightDao assetOversightDao;
 	private final RelationService relationService;
+	private final ThreatAssessmentDao threatAssessmentDao;
 	private final DataProcessingDao dataProcessingDao;
 	private final TaskService taskService;
 	private final UserService userService;
@@ -279,7 +279,7 @@ public class AssetService implements TagableService<Asset> {
     }
 
 	@Transactional
-	public Task createOrUpdateAssociatedCheck(DPIA dpia) {
+	public Task createOrUpdateAssociatedCheck(DPIA dpia, User updatedUser) {
 		final LocalDate deadline = dpia.getNextRevision();
 		if (deadline != null && dpia.getRevisionInterval() != null) {
 			final Task task = findAssociatedCheck(dpia).orElseGet(() -> createAssociatedCheck(dpia));
@@ -287,7 +287,7 @@ public class AssetService implements TagableService<Asset> {
 			name += (dpia.getAssets().size() > 1) ? " med flere" : "";
 			task.setName(name);
 			task.setNextDeadline(dpia.getNextRevision());
-			task.setResponsibleUsers(dpia.getResponsibleUser() != null ? Set.of(dpia.getResponsibleUser()) : Collections.emptySet());
+			task.setResponsibleUsers(updatedUser != null ? Set.of(updatedUser) : Collections.emptySet());
 			task.setDescription("Revider DPIA for " + String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList()));
 			setTaskRevisionInterval(dpia, task);
 			return task;
@@ -751,10 +751,6 @@ public class AssetService implements TagableService<Asset> {
 		return assetDao.findByResponsibleUsers_Uuid(userUuid);
 	}
 
-	public Set<Asset> findAssetsByOwnerUuid(String userUuid) {
-		return assetDao.findByResponsibleUsers_UuidContainsOrManagers_UuidContains(userUuid, userUuid);
-	}
-
 	// Helper method to get DBSAssets and avoid duplicated code in export and list
 	public Page<DBSAssetGrid> getDbsAssets(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
 		Page<DBSAssetGrid> assets;
@@ -844,5 +840,36 @@ public class AssetService implements TagableService<Asset> {
 					)
 					.toList();
 		}
+	}
+
+	public Map<Long, RiskAssessment> getLatestRiskAssessment(List<Relatable> relatedAssets) {
+		if (relatedAssets == null || relatedAssets.isEmpty()) {
+			return Map.of();
+		}
+
+		final List<Long> assetIds = relatedAssets.stream().map(Relatable::getId).toList();
+		final List<Relation> relations = relationService.findRelatedToWithType(assetIds, RelationType.THREAT_ASSESSMENT);
+		if (relations == null || relations.isEmpty()) {
+			return Map.of();
+		}
+
+		final Set<Long> threatAssessmentIds = relations.stream()
+				.map(r -> r.getRelationAType() == RelationType.THREAT_ASSESSMENT ? r.getRelationAId() : r.getRelationBId())
+				.collect(Collectors.toSet());
+		final Map<Long, ThreatAssessment> threatAssessmentsById = threatAssessmentDao.findAllById(threatAssessmentIds).stream()
+				.collect(Collectors.toMap(ThreatAssessment::getId, ta -> ta));
+
+		final Map<Long, List<Relation>> relationsByAssetId = relations.stream()
+				.collect(groupingBy(r -> r.getRelationAType() == RelationType.THREAT_ASSESSMENT ? r.getRelationBId() : r.getRelationAId()));
+
+		final Map<Long, RiskAssessment> result = new HashMap<>();
+		relationsByAssetId.forEach((assetId, rels) -> rels.stream()
+				.map(r -> r.getRelationAType() == RelationType.THREAT_ASSESSMENT ? r.getRelationAId() : r.getRelationBId())
+				.map(threatAssessmentsById::get)
+				.filter(Objects::nonNull)
+				.filter(ta -> ta.getAssessment() != null)
+				.max(Comparator.comparing(Relatable::getCreatedAt))
+				.ifPresent(ta -> result.put(assetId, ta.getAssessment())));
+		return result;
 	}
 }

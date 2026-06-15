@@ -163,7 +163,11 @@ public class AssetsRestController {
         if (!assetService.isEditable(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        ReflectionHelper.callSetterWithParam(Asset.class, asset, fieldName, value);
+        if (fieldName.equals("tiaLink")) {
+            asset.getTia().setLink(value);
+        } else {
+            ReflectionHelper.callSetterWithParam(Asset.class, asset, fieldName, value);
+        }
         assetService.save(asset);
     }
 
@@ -474,7 +478,10 @@ public class AssetsRestController {
         if (!(fieldName.equals("threatAssessmentOptOut") ||
             fieldName.equals("threatAssessmentOptOutReason") ||
             fieldName.equals("dpiaOptOutReason") ||
-            fieldName.equals("dpiaOptOut"))) {
+            fieldName.equals("dpiaOptOut") ||
+            fieldName.equals("tiaOptOut") ||
+            fieldName.equals("tiaOptOutReason") ||
+            fieldName.equals("tiaLink"))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }

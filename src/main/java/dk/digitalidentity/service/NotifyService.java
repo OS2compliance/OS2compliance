@@ -1,12 +1,12 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
-import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -37,46 +36,58 @@ public class NotifyService {
 	public void notifyTask(final Long taskId) {
 		final Task task = taskService.findById(taskId)
 				.orElseThrow(() -> new IllegalArgumentException("Task with id: " + taskId + " not found"));
-		if (task.getTaskType() == TaskType.TASK && !task.getLogs().isEmpty()) {
-			// Do not notify task already done
+
+		if (taskService.isTaskDone(task)) {
 			return;
 		}
 
 		EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
-		if (template.isEnabled()) {
-			final LocalDate today = LocalDate.now();
-			final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
-			final String url = baseUrl + "/tasks/" + task.getId();
-			final String link = "<a href=\"" + url + "\">" + url + "</a>";
-			final String objectName = task.getName();
-			final long days = ChronoUnit.DAYS.between(today, task.getNextDeadline());
-
-			// Send email to each responsible user
-			for (User responsibleUser : task.getResponsibleUsers()) {
-				final String recipient = responsibleUser.getName();
-
-				String title = template.getTitle();
-				title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-				title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-				title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-				title = title.replace(EmailTemplatePlaceholder.DAYS_TILL_DEADLINE.getPlaceholder(), Long.toString(days));
-
-				String message = template.getMessage();
-				message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-				message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-				message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-				message = message.replace(EmailTemplatePlaceholder.DAYS_TILL_DEADLINE.getPlaceholder(), Long.toString(days));
-
-				eventPublisher.publishEvent(EmailEvent.builder()
-						.message(message)
-						.subject(title)
-						.email(responsibleUser.getEmail())
-						.templateType(template.getTemplateType())
-						.build());
-			}
-		} else {
-			log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
+		if (!template.isEnabled()) {
+			log.info("Email template with type {} is disabled. Email was not sent.", template.getTemplateType());
+			return;
 		}
+
+		if (task.getResponsibleUsers().isEmpty()) {
+			boolean isDbsOversightTask = task.getProperties().stream()
+					.anyMatch(p -> Constants.ASSOCIATED_INSPECTION_PROPERTY.equals(p.getKey()));
+			if (isDbsOversightTask) {
+				String recipientEmail = settingsService.getString(
+						Constants.DBS_OVERSIGHT_RECIPIENT_SETTING, "");
+				if (!recipientEmail.isEmpty() && !recipientEmail.startsWith("ROLE:")) {
+					sendTaskEmail(template, task, recipientEmail, recipientEmail);
+				}
+			}
+			return;
+		}
+
+		for (User responsibleUser : task.getResponsibleUsers()) {
+			sendTaskEmail(template, task, responsibleUser.getName(), responsibleUser.getEmail());
+		}
+	}
+
+	public void notifyTaskResponsible(final Task task) {
+		if (task.getNotifyResponsible() == null || !task.getNotifyResponsible() || task.getResponsibleUsers().isEmpty()) {
+			return;
+		}
+		EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_RESPONSIBLE);
+		if (!template.isEnabled()) {
+			log.info("Email template with type {} is disabled. Email was not sent.", template.getTemplateType());
+			return;
+		}
+		for (User responsibleUser : task.getResponsibleUsers()) {
+			if (StringUtils.hasLength(responsibleUser.getEmail())) {
+				sendTaskEmail(template, task, responsibleUser.getName(), responsibleUser.getEmail());
+			}
+		}
+	}
+
+	public void notifyOversightByEmail(Task task, String email) {
+		EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_RESPONSIBLE);
+		if (!template.isEnabled()) {
+			log.info("Email template with type {} is disabled. Email was not sent.", template.getTemplateType());
+			return;
+		}
+		sendTaskEmail(template, task, email, email);
 	}
 
     public void notifyAboutInactiveUsers(Set<String> newlyInactiveUuids) {
@@ -117,4 +128,30 @@ public class NotifyService {
             }
         }
     }
+
+	private void sendTaskEmail(EmailTemplate template, Task task, String recipientName, String recipientEmail) {
+		final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
+		final String url = baseUrl + "/tasks/" + task.getId();
+		final String link = "<a href=\"" + url + "\">" + url + "</a>";
+		final long days = ChronoUnit.DAYS.between(LocalDate.now(), task.getNextDeadline());
+
+		String title = template.getTitle()
+				.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipientName)
+				.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), task.getName())
+				.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link)
+				.replace(EmailTemplatePlaceholder.DAYS_TILL_DEADLINE.getPlaceholder(), Long.toString(days));
+
+		String message = template.getMessage()
+				.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipientName)
+				.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), task.getName())
+				.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link)
+				.replace(EmailTemplatePlaceholder.DAYS_TILL_DEADLINE.getPlaceholder(), Long.toString(days));
+
+		eventPublisher.publishEvent(EmailEvent.builder()
+				.message(message)
+				.subject(title)
+				.email(recipientEmail)
+				.templateType(template.getTemplateType())
+				.build());
+	}
 }

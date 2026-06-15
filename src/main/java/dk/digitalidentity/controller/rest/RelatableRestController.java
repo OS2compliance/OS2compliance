@@ -206,16 +206,18 @@ public class RelatableRestController {
             return new ResponseEntity<>(HttpStatus.OK);
         }
 
-        dto.relations().stream()
-            .map(relatedId -> relatableDao.findById(relatedId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet")))
-            .map(relatable -> Relation.builder()
-                .relationAId(relateTo.getId())
-                .relationAType(relateTo.getRelationType())
-                .relationBId(relatable.getId())
-                .relationBType(relatable.getRelationType())
-                .build())
-            .forEach(relationDao::save);
+		dto.relations().stream()
+				.map(relatedId -> relatableDao.findById(relatedId)
+						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet")))
+				.map(relatable -> Relation.builder()
+						.relationAId(relateTo.getId())
+						.relationAType(relateTo.getRelationType())
+						.relationAName(relateTo.getName())
+						.relationBId(relatable.getId())
+						.relationBType(relatable.getRelationType())
+						.relationBName(relatable.getName())
+						.build())
+				.forEach(relationDao::save);
 
         final Set<Long> addedIds = new HashSet<>();
         final List<AddedRelationDTO> relationsToReturn = new ArrayList<>();

@@ -43,4 +43,6 @@ public class TaskDTO {
     private Set<AllowedAction> allowedActions;
 	@ExcludeFromExport
 	private String lastCompletionDate;
+	@ExcludeFromExport
+	private List<RelatedEntityLink> relatedEntities;
 }

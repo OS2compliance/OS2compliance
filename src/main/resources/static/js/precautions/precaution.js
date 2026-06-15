@@ -1,6 +1,7 @@
 import { initSaveAsExcelButtonClientside } from "/js/excel-export/excel-export-init.js";
 const precaution = new PrecautionService();
 
+let editDialog;
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener("DOMContentLoaded", function (event) {
@@ -61,9 +62,9 @@ function initGrid() {
                 width: '90px',
                 formatter: (cell, row) => {
                     const id = row.cells[0]['data'];
-                    const precaution = row.cells[1]['data'];
-                    const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="precaution.editPrecaution('${id}')"><i class="pli-pencil fs-5"></i></button>`;
-                    const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="precaution.deletePrecaution('${id}', '${precaution}')"><i class="pli-trash fs-5"></i></button>`;
+                    const name = row.cells[1]['data'];
+                    const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 btn-precaution-edit" data-id="${id}"><i class="pli-pencil fs-5"></i></button>`;
+                    const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 btn-precaution-delete" data-id="${id}" data-name="${name}"><i class="pli-trash fs-5"></i></button>`;
                     return gridjs.html(editButton + deleteButton);
                 }
             }
@@ -86,6 +87,17 @@ function initGrid() {
             }
         }
     }).render(document.getElementById("precautionsDatatable"));
+
+    document.getElementById("precautionsDatatable").addEventListener("click", (e) => {
+        const editBtn = e.target?.closest("button.btn-precaution-edit");
+        const deleteBtn = e.target?.closest("button.btn-precaution-delete");
+        if (editBtn) {
+            precaution.editPrecaution(editBtn.dataset.id);
+        }
+        if (deleteBtn) {
+            precaution.deletePrecaution(deleteBtn.dataset.id, deleteBtn.dataset.name);
+        }
+    });
 
     initSaveAsExcelButtonClientside('precautionsDatatable', 'precaution', 'precautions', 'Foranstaltninger', () => {
         return data.map(item => ({

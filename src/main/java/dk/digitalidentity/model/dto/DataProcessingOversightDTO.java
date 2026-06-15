@@ -1,6 +1,5 @@
 package dk.digitalidentity.model.dto;
 
-import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
@@ -10,6 +9,7 @@ import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -24,5 +24,6 @@ public class DataProcessingOversightDTO {
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     private LocalDate nextInspectionDate;
 	private Long supervisoryModelId;
+	private Set<Long> additionalSupervisoryModelIds;
 	private User oversightResponsibleUser;
 }

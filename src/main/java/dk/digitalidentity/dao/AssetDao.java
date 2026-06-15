@@ -46,8 +46,6 @@ public interface AssetDao extends TagableRepository<Asset> {
 
 	Set<Asset> findByResponsibleUsers_Uuid(String uuid);
 
-	Set<Asset> findByResponsibleUsers_UuidContainsOrManagers_UuidContains(String uuid, String uuid1);
-
 	List<Asset> findAllById(Long id);
 
 	boolean existsBySupervisoryModelId(Long supervisoryModelId);

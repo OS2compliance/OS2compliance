@@ -7,6 +7,7 @@ import dk.digitalidentity.model.dto.SubTaskDTO;
 import dk.digitalidentity.model.dto.TaskCreateRequestDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.dto.TaskLinkDTO;
+import dk.digitalidentity.model.dto.YearWheelDTO;
 import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
 import dk.digitalidentity.model.dto.excel.EntityListRequest;
 import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
@@ -31,6 +32,7 @@ import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.service.YearWheelService;
 import dk.digitalidentity.service.tag.TagService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -80,6 +82,7 @@ public class TaskRestController {
 	private final OrganisationService organisationService;
 	private final ChoiceValueService choiceValueService;
 	private final ExcelExportHelperService excelExportHelperService;
+	private final YearWheelService yearWheelService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -258,8 +261,7 @@ public class TaskRestController {
 				request.getFilters(),
 				0,
 				Integer.MAX_VALUE,
-				user
-		);
+				user);
 
 		return excelExportHelperService.toEntityListItems(
 				tasks.getContent(),
@@ -290,6 +292,19 @@ public class TaskRestController {
 				request,
 				response
 		);
+	}
+
+	@RequireReadOwnerOnly
+	@PostMapping("year-wheel")
+	public YearWheelDTO yearWheel(
+			@RequestParam(value = "year") int year,
+			@RequestParam(value = "onlyMine", defaultValue = "false") boolean onlyMine,
+			@RequestParam Map<String, String> filters
+	) {
+		User user = securityUserService.getCurrentUserOrThrow();
+		filters.remove("year");
+		filters.remove("onlyMine");
+		return yearWheelService.buildYearWheel(year, filters, user, onlyMine);
 	}
 
 }

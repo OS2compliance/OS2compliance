@@ -105,6 +105,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -146,6 +147,9 @@ public class AssetsController {
 	private final ChoiceValueService choiceValueService;
 	private final AssetSupplierMappingService assetSupplierMappingService;
 	private final DBSAssetDao dBSAssetDao;
+
+
+	private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -222,7 +226,7 @@ public class AssetsController {
             .map(ThreatAssessment.class::cast)
             .collect(Collectors.toList());
         threatAssessments.sort(Comparator.comparing(Relatable::getCreatedAt).reversed());
-		final List<Relatable> tasks = relationService.findAllRelatedTo(asset).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
+		final List<Relatable> relatedTasks = relationService.findAllRelatedTo(asset);
 
 		final ChoiceList acceptListIdentifiers = choiceService.findChoiceList("dp-supplier-accept-list")
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -291,11 +295,12 @@ public class AssetsController {
 		model.addAttribute("asset", asset);
         model.addAttribute("changeableAsset", assetService.isEditable(asset));
 		model.addAttribute("relatedAssets", relatedAssets);
+        model.addAttribute("relatedAssetsRiskMap", assetService.getLatestRiskAssessment(relatedAssets));
 		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);
 		model.addAttribute("documents", documents);
 		model.addAttribute("precautions", precautions);
-		model.addAttribute("tasks", tasks);
+		model.addAttribute("tasks", taskService.convertRelatableToTaskListDTO(relatedTasks));
 		model.addAttribute("dataProcessing", asset.getDataProcessing());
 		model.addAttribute("dpChoices", dataProcessingService.getChoices());
 		model.addAttribute("acceptanceBasisChoices", acceptListIdentifiers);
@@ -477,7 +482,7 @@ public class AssetsController {
 	public String dataprocessing(@Valid @ModelAttribute final DataProcessingDTO body) {
 		final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+		if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 		if (body != null && asset.getDataProcessing() != null) {
@@ -486,12 +491,19 @@ public class AssetsController {
 
 		asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
 
-		// Parse date with proper format and null handling
 		if (body.getDataProcessingAgreementDate() != null && !body.getDataProcessingAgreementDate().trim().isEmpty()) {
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
-			String dateStr = body.getDataProcessingAgreementDate().trim();
-			dateStr = dateStr.replaceFirst("^[,\\s]+", "");
-			asset.setDataProcessingAgreementDate(LocalDate.parse(dateStr, formatter));
+			String dateStr = body.getDataProcessingAgreementDate().trim().replaceFirst("^[,\\s]+", "");
+			LocalDate parsedDate = null;
+			for (DateTimeFormatter formatter : DATE_TIME_FORMATTERS) {
+				try {
+					parsedDate = LocalDate.parse(dateStr, formatter);
+					break;
+				} catch (DateTimeParseException ignored) {}
+			}
+			if (parsedDate == null) {
+				throw new DateTimeParseException("Ugyldigt datoformat: " + dateStr, dateStr, 0);
+			}
+			asset.setDataProcessingAgreementDate(parsedDate);
 		} else {
 			asset.setDataProcessingAgreementDate(null);
 		}
@@ -517,7 +529,7 @@ public class AssetsController {
     @PostMapping("measures")
     public String measures(@ModelAttribute final SaveMeasuresDTO measuresForm) {
         final Asset asset = assetService.get(measuresForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -543,7 +555,7 @@ public class AssetsController {
     @PostMapping("dpia")
     public String dpia(@ModelAttribute final AssetDPIAPageDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDpiaOptOut(dpiaForm.isOptOut());
@@ -584,7 +596,7 @@ public class AssetsController {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -675,7 +687,7 @@ public class AssetsController {
 		if (subSupplier.isPresent()) {
 			//Edit
 			if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-					(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && assetService.isResponsibleFor(asset)))) {
+					(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && assetService.isOwning(asset)))) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 			subSupplier.get().setSupplier(supplier);
@@ -685,7 +697,7 @@ public class AssetsController {
 		} else {
 			//Create
 			if (!(SecurityUtil.isOperationAllowed(Roles.CREATE_ALL) ||
-					(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && assetService.isResponsibleFor(asset)))) {
+					(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && assetService.isOwning(asset)))) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 			final AssetSupplierMapping newSubsupplier = new AssetSupplierMapping();
@@ -717,7 +729,7 @@ public class AssetsController {
     public String oversightSettings(@Valid @ModelAttribute final DataProcessingOversightDTO body) {
         final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		boolean isDbs = false;
@@ -726,6 +738,17 @@ public class AssetsController {
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid supervisory model"));
 			asset.setSupervisoryModel(supervisoryModel);
 			isDbs = supervisoryModel.getIdentifier().startsWith("supervision-model-dbs-123456");
+
+			if (body.getAdditionalSupervisoryModelIds() != null) {
+				Set<ChoiceValue> additionalModels = body.getAdditionalSupervisoryModelIds().stream()
+						.map(choiceValueService::findById)
+						.filter(Optional::isPresent)
+						.map(Optional::get)
+						.collect(Collectors.toSet());
+				asset.setAdditionalSupervisoryModels(additionalModels);
+			} else {
+				asset.getAdditionalSupervisoryModels().clear();
+			}
 		}
 		if (body.getDataProcessingAgreementStatus() != null) {
 			asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
@@ -764,7 +787,7 @@ public class AssetsController {
 		Long redirectId = 0L;
 		for (Long assetId : dto.assetIds) {
 			final Asset asset = assetService.get(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+			if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 			final Optional<AssetOversight> oversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), dto.id)).findAny();
@@ -883,7 +906,7 @@ public class AssetsController {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -897,6 +920,7 @@ public class AssetsController {
         existingAsset.getTia().setAccessType(asset.getTia().getAccessType());
         existingAsset.getTia().setAssessment(asset.getTia().getAssessment());
         existingAsset.getTia().setConclusion(asset.getTia().getConclusion());
+		existingAsset.getTia().setLink(asset.getTia().getLink());
         existingAsset.getTia().setExpectedTransferDuration(asset.getTia().getExpectedTransferDuration());
         existingAsset.getTia().setContractualSecurityMeasures(asset.getTia().getContractualSecurityMeasures());
         existingAsset.getTia().setTechnicalSecurityMeasures(asset.getTia().getTechnicalSecurityMeasures());

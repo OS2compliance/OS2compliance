@@ -5,14 +5,16 @@ import lombok.Getter;
 
 @Getter
 public enum RiskAssessment implements HasMessage {
-    RED("Rød"),
-    ORANGE("Orange"),
-    GREEN("Grøn"),
-    LIGHT_GREEN("Lysgrøn"),
-    YELLOW("Gul");
+    RED("Rød", "bg-danger"),
+    ORANGE("Orange", "bg-orange"),
+    GREEN("Grøn", "bg-green"),
+    LIGHT_GREEN("Lysgrøn", "bg-green-300"),
+    YELLOW("Gul", "bg-yellow");
     private final String message;
+    private final String badgeClass;
 
-    RiskAssessment(final String message) {
+    RiskAssessment(final String message, final String badgeClass) {
         this.message = message;
+        this.badgeClass = badgeClass;
     }
 }

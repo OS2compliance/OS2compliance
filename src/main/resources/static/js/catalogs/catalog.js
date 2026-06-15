@@ -1,8 +1,10 @@
 import { initSaveAsExcelButtonClientside } from "/js/excel-export/excel-export-init.js";
 
-const catalog = new CatalogService();
+window.catalog = new CatalogService();
 
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+let editDialog;
+let copyDialog;
 
 document.addEventListener("DOMContentLoaded", function (event) {
     initGrid()

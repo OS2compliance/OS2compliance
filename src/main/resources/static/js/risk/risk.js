@@ -3,6 +3,7 @@ import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import {CreateThreatAssessmentService, initRegisterSelect, initAssetSelectRisk, userChanged} from "./createThreatAssessmentService.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
+import {BadgeData, createBadges} from "../component/badge.js";
 
 const columnProperties = [
     'id',
@@ -150,20 +151,14 @@ function CreateTable() {
                         searchKey: 'relatedAssetsAndRegisters'
                     },
                     formatter: (cell, row) => {
-                        const dbsAssetId = row.cells[0]['data'];
-
-                        let items = [];
-                        if (typeof cell === "string" && cell.trim() !== "") {
-                            items = cell.split("||").map(name => name.trim());
-                        } else if (Array.isArray(cell)) {
-                            items = cell.map(item => typeof item === "string" ? item.trim() : item.name);
+                        if (!Array.isArray(cell)) {
+                            return ""
                         }
 
-                        const badges = items.map(option =>
-                            `<div class="badge bg-info me-1 mb-1" style="white-space: normal; word-break: break-word; overflow-wrap: break-word; text-align: left">${option}</div>`
-                        );
+                        const badgedata = cell.map(rel => new BadgeData(rel.name, rel.link,rel.helpText, rel.color))
 
-                        return gridjs.html(`<div class="d-flex flex-wrap">${badges.join('')}</div>`);
+                        const badges = createBadges(badgedata)
+                        return gridjs.html(badges.outerHTML);
                     },
                 },
                 {

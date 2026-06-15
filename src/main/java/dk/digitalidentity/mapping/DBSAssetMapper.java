@@ -22,6 +22,7 @@ public interface DBSAssetMapper {
                 .supplier(nullSafe(() -> assetGrid.getSupplier()))
                 .lastSync(assetGrid.getLastSync())
                 .assets(nullSafe(() -> assetGrid.getAssets()))
+				.dpaStatuses(nullSafe(() -> assetGrid.getDpaStatuses()))
                 .build();
     }
 

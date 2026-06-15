@@ -14,6 +14,22 @@ tr, td {
     cursor: pointer;
 }
 
+.draggable-section {
+    cursor: grab;
+}
+
+.draggable-section.dragging {
+    opacity: 0.4;
+}
+
+.draggable-section.drag-over-above {
+    box-shadow: 0 -2px 0 0 #03a9f4;
+}
+
+.draggable-section.drag-over-below {
+    box-shadow: 0 2px 0 0 #03a9f4;
+}
+
 .editDescription {
     cursor: text;
 }
