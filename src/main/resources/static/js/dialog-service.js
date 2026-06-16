@@ -2,6 +2,39 @@
 // included on every page through templates/fragments/footer.html. This service only fills
 // in the caller's content and wires up the buttons.
 
+const DIALOG = {
+    ALERT: 'dsAlertDialog',
+    CONFIRM: 'dsConfirmDialog',
+    CONTENT: 'dsContentDialog'
+};
+
+const ICON = {
+    WARNING: 'warning',
+    INFO: 'info'
+};
+
+const BTN = {
+    PRIMARY: 'btn-primary',
+    SUCCESS: 'btn-success',
+    DANGER: 'btn-danger'
+};
+
+const LABEL = {
+    YES: 'Ja',
+    NO: 'Nej',
+    OK: 'OK'
+};
+
+const SELECTOR = {
+    CONTENT: '#dsContent',
+    ICON_WARNING: '.ds-icon-warning',
+    ICON_INFO: '.ds-icon-info',
+    TITLE: '.ds-title',
+    TEXT: '.ds-text',
+    CONFIRM: '.ds-confirm',
+    CANCEL: '.ds-cancel'
+}
+
 function getDialog(id) {
     const dialogEl = document.getElementById(id);
     if (!dialogEl) {
@@ -16,11 +49,11 @@ export async function openDialog(url, initFunction = null) {
         return;
     }
 
-    const dialogEl = getDialog('dsContentDialog');
+    const dialogEl = getDialog(DIALOG.CONTENT);
     if (!dialogEl) {
         return;
     }
-    const contentEl = dialogEl.querySelector('#dsContent');
+    const contentEl = dialogEl.querySelector(SELECTOR.CONTENT);
 
     if (dialogEl.open) {
         dialogEl.close();
@@ -42,7 +75,7 @@ export async function openDialog(url, initFunction = null) {
 }
 
 export function closeDialog() {
-    getDialog('dsContentDialog')?.close();
+    getDialog(DIALOG.CONTENT)?.close();
 }
 
 export function initSubmitButton(
@@ -106,14 +139,14 @@ async function submitData(
 
 // Use confirm if the intention is to warn the user of something and allow them to either continue or cancel
 export async function showConfirm(options = {}) {
-    const result = await showStatic('dsConfirmDialog', {
+    const result = await showStatic(DIALOG.CONFIRM, {
         title: options.title || '',
         text: options.text || '',
-        icon: options.icon || 'warning',
-        confirmButtonText: options.confirmButtonText || 'Ja',
-        confirmButtonClass: options.confirmButtonClass || 'btn-success',
-        cancelButtonText: options.cancelButtonText || 'Nej',
-        cancelButtonClass: options.cancelButtonClass || 'btn-danger',
+        icon: options.icon || ICON.WARNING,
+        confirmButtonText: options.confirmButtonText || LABEL.YES,
+        confirmButtonClass: options.confirmButtonClass || BTN.SUCCESS,
+        cancelButtonText: options.cancelButtonText || LABEL.NO,
+        cancelButtonClass: options.cancelButtonClass || BTN.DANGER,
         showCancel: true,
     });
     return result.isConfirmed;
@@ -125,12 +158,12 @@ export async function showAlert(options = {}) {
         options = { text: options };
     }
 
-    return await showStatic('dsAlertDialog', {
+    return await showStatic(DIALOG.ALERT, {
         title: options.title || '',
         text: options.text || '',
-        icon: options.icon || 'info',
-        confirmButtonText: options.confirmButtonText || 'OK',
-        confirmButtonClass: options.confirmButtonClass || 'btn-primary',
+        icon: options.icon || ICON.INFO,
+        confirmButtonText: options.confirmButtonText || LABEL.OK,
+        confirmButtonClass: options.confirmButtonClass || BTN.PRIMARY,
         showCancel: false,
     });
 }
@@ -145,28 +178,28 @@ function showStatic(dialogId, { title, text, icon, confirmButtonText, confirmBut
         dialogEl.close();
     }
 
-    const warningIcon = dialogEl.querySelector('.ds-icon-warning');
-    const infoIcon = dialogEl.querySelector('.ds-icon-info');
+    const warningIcon = dialogEl.querySelector(SELECTOR.ICON_WARNING);
+    const infoIcon = dialogEl.querySelector(SELECTOR.ICON_INFO);
     if (warningIcon) {
-        warningIcon.hidden = icon !== 'warning';
+        warningIcon.hidden = icon !== ICON.WARNING;
     }
     if (infoIcon) {
-        infoIcon.hidden = icon !== 'info';
+        infoIcon.hidden = icon !== ICON.INFO;
     }
 
-    const titleEl = dialogEl.querySelector('.ds-title');
+    const titleEl = dialogEl.querySelector(SELECTOR.TITLE);
     titleEl.textContent = title;
     titleEl.hidden = !title;
 
-    const textEl = dialogEl.querySelector('.ds-text');
+    const textEl = dialogEl.querySelector(SELECTOR.TEXT);
     textEl.textContent = text;
     textEl.hidden = !text;
 
-    const confirmBtn = dialogEl.querySelector('.ds-confirm');
+    const confirmBtn = dialogEl.querySelector(SELECTOR.CONFIRM);
     confirmBtn.className = `ds-confirm btn ${confirmButtonClass} btn-lg`;
     confirmBtn.textContent = confirmButtonText;
 
-    const cancelBtn = dialogEl.querySelector('.ds-cancel');
+    const cancelBtn = dialogEl.querySelector(SELECTOR.CANCEL);
     if (cancelBtn) {
         cancelBtn.className = `ds-cancel btn ${cancelButtonClass} btn-lg`;
         cancelBtn.textContent = cancelButtonText;

@@ -5,7 +5,7 @@
     border: none;
     border-radius: 1rem;
     padding: 0;
-    max-width: 520px;
+    max-width: 32.5rem;
     width: 90%;
     box-shadow: var(--bs-box-shadow-lg, 0 8px 32px rgba(0, 0, 0, .2));
 }
@@ -14,11 +14,7 @@
     background: rgba(0, 0, 0, 0.45);
 }
 
-.ds-icon svg[hidden] {
-    display: none;
-}
-
 .ds-icon-info, .ds-icon-warning {
-    width: 52px;
-    height: 52px;
+    width: 3.25rem;
+    height: 3.25rem;
 }

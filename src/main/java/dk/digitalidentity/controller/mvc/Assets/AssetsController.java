@@ -912,6 +912,11 @@ public class AssetsController {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 		}
 
+		if (existingTia.isAccepted()) {
+			assetService.updateTiaAcceptance(existingTia, newTia);
+			return "redirect:/assets/" + existingAsset.getId();
+		}
+
 		existingTia.setForwardInformationToOtherSuppliers(newTia.getForwardInformationToOtherSuppliers());
 		existingTia.setForwardInformationToOtherSuppliersDetail(newTia.getForwardInformationToOtherSuppliersDetail());
 
@@ -929,8 +934,6 @@ public class AssetsController {
 		existingTia.setOrganizationalSecurityMeasures(newTia.getOrganizationalSecurityMeasures());
 		existingTia.setRegisteredCategories(newTia.getRegisteredCategories());
 		existingTia.setInformationTypes(newTia.getInformationTypes());
-
-		assetService.updateTiaAcceptance(existingTia, newTia);
 
 		existingTia.setTransferCaseDescription(newTia.getTransferCaseDescription());
 		return "redirect:/assets/" + existingAsset.getId();
