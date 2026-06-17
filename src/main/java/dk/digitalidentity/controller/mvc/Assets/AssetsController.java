@@ -71,7 +71,6 @@ import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
-import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.simple_queue.QueueMessage;
 import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -150,9 +149,7 @@ public class AssetsController {
 	private final AssetSupplierMappingService assetSupplierMappingService;
 	private final DBSAssetDao dBSAssetDao;
 
-
 	private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
-	private final UserService userService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -912,7 +909,7 @@ public class AssetsController {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 		}
 
-		if (existingTia.isAccepted()) {
+		if (existingTia.isAccepted() || newTia.isAccepted()) {
 			assetService.updateTiaAcceptance(existingTia, newTia);
 			return "redirect:/assets/" + existingAsset.getId();
 		}
