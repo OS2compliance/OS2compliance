@@ -60,6 +60,23 @@ async function saveTia() {
     return false;
 }
 
+async function postAcceptance(url, params) {
+    try {
+        const token = document.getElementsByName('_csrf')[0]?.getAttribute('content');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+            },
+            body: new URLSearchParams(params),
+        });
+        return response.ok;
+    } catch {
+        return false;
+    }
+}
+
 function setTiaLocked(locked) {
     document.getElementById('tiaView').querySelectorAll('select, textarea, input:not([type="hidden"])').forEach(e => {
         e.disabled = locked;
@@ -152,16 +169,17 @@ export function initTia() {
         }
     }
 
-    const acceptedField = document.getElementById('acceptedField');
+    const assetId = form.querySelector('input[name="id"]').value;
+
     const acceptBtn = document.getElementById('acceptBtn');
     if (acceptBtn) {
         acceptBtn.addEventListener('click', async () => {
-            acceptedField.value = 'true';
-            const saved = await saveTia();
-            if (saved) {
+            const comment = form.querySelector('[name="tia.acceptedComment"]')?.value ?? '';
+            const ok = await postAcceptance('/rest/assets/tia/accept', { assetId, comment });
+            if (ok) {
                 location.reload();
             } else {
-                acceptedField.value = 'false';
+                toastService.error('Kunne ikke godkende');
             }
         });
     }
@@ -177,17 +195,11 @@ export function initTia() {
                 return;
             }
 
-            acceptedField.value = 'false';
-            const acceptComment = form.querySelector('[name="tia.acceptedComment"]');
-            if (acceptComment) {
-                acceptComment.value = '';
-            }
-
-            setTiaLocked(false);
-            const saved = await saveTia();
-            if (!saved) {
-                // re-lock the fields if acceptance could not be removed
-                setTiaLocked(true);
+            const ok = await postAcceptance('/rest/assets/tia/unaccept', { assetId });
+            if (ok) {
+                location.reload();
+            } else {
+                toastService.error('Kunne ikke fjerne godkendelsen');
             }
         });
     }

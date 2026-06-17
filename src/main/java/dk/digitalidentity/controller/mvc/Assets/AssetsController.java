@@ -44,7 +44,6 @@ import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
-import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -85,6 +84,7 @@ import org.htmlcleaner.TagNode;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -96,6 +96,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -902,49 +903,17 @@ public class AssetsController {
 	@RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("tia")
-	public String tia(@ModelAttribute final Asset asset) {
-		final Asset existingAsset = assetService.get(asset.getId())
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+	@ResponseBody
+	public ResponseEntity<Void> tia(@ModelAttribute final Asset asset) {
+		final TransferImpactAssessment existingTia = assetService.getEditableTia(asset.getId());
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
-
-		TransferImpactAssessment existingTia = existingAsset.getTia();
-		if (existingTia == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-		}
-
-		TransferImpactAssessment newTia = asset.getTia();
+		final TransferImpactAssessment newTia = asset.getTia();
 		if (newTia == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 		}
 
-		existingTia.setForwardInformationToOtherSuppliers(newTia.getForwardInformationToOtherSuppliers());
-		existingTia.setForwardInformationToOtherSuppliersDetail(newTia.getForwardInformationToOtherSuppliersDetail());
-
-		if (existingTia.getForwardInformationToOtherSuppliers() != ForwardInformationToOtherSuppliers.YES) {
-			existingTia.setForwardInformationToOtherSuppliersDetail(null);
-		}
-
-		existingTia.setAccessType(newTia.getAccessType());
-		existingTia.setAssessment(newTia.getAssessment());
-		existingTia.setConclusion(newTia.getConclusion());
-		existingTia.setLink(newTia.getLink());
-		existingTia.setExpectedTransferDuration(newTia.getExpectedTransferDuration());
-		existingTia.setContractualSecurityMeasures(newTia.getContractualSecurityMeasures());
-		existingTia.setTechnicalSecurityMeasures(newTia.getTechnicalSecurityMeasures());
-		existingTia.setOrganizationalSecurityMeasures(newTia.getOrganizationalSecurityMeasures());
-		existingTia.setRegisteredCategories(newTia.getRegisteredCategories());
-		existingTia.setInformationTypes(newTia.getInformationTypes());
-
-		existingTia.setTransferCaseDescription(newTia.getTransferCaseDescription());
-
-		if (existingTia.isAccepted() || newTia.isAccepted()) {
-			assetService.updateTiaAcceptance(existingTia, newTia);
-		}
-
-		return "redirect:/assets/" + existingAsset.getId();
+		assetService.updateTiaContent(existingTia, newTia);
+		return ResponseEntity.ok().build();
 	}
 
 	@RequireReadOwnerOnly
