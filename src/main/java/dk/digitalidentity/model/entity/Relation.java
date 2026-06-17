@@ -10,12 +10,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.util.HashSet;
@@ -30,6 +33,8 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Relation {
+	public static final int NAME_LENGTH = 768;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -48,10 +53,10 @@ public class Relation {
 	@Column(nullable = false, name = "relation_b_type")
 	private RelationType relationBType;
 
-	@Column(name = "relation_a_name")
+	@Column(name = "relation_a_name", length = NAME_LENGTH)
 	private String relationAName;
 
-	@Column(name = "relation_b_name")
+	@Column(name = "relation_b_name", length = NAME_LENGTH)
 	private String relationBName;
 
     @OneToMany(orphanRemoval = true,
@@ -59,6 +64,15 @@ public class Relation {
         mappedBy = "relation")
 	@Builder.Default
     private Set<RelationProperty> properties = new HashSet<>();
+
+	// Navnene er denormaliserede kopier af Relatable.name, som i nogle kunde-databaser kan være
+	// længere end kolonnen her - trunkér derfor altid før skrivning.
+	@PrePersist
+	@PreUpdate
+	private void truncateNames() {
+		relationAName = StringUtils.truncate(relationAName, NAME_LENGTH);
+		relationBName = StringUtils.truncate(relationBName, NAME_LENGTH);
+	}
 
 	@Override
 	public final boolean equals(Object o) {

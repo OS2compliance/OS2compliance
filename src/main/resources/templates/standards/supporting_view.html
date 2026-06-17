@@ -148,6 +148,7 @@
         var viewUrl = [[@{/standards/supporting/}]];
         var today = [[${today}]];
         var success = [[${successMessage}]];
+        var errorMessage = [[${errorMessage}]];
         var templateIdentifier = [[${template.identifier}]];
         var testMap = [[${relationMap}]]
         var modalError = [[${headerModalError}]]
@@ -164,6 +165,9 @@
         initPageTopButtons()
         if (success) {
             toastService.info(success);
+        }
+        if (errorMessage) {
+            toastService.error(errorMessage);
         }
         // choiceService.initHeaderSelect("headerSelect");
     });

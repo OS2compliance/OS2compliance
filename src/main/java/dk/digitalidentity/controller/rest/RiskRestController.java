@@ -144,11 +144,6 @@ public class RiskRestController {
 		}
 		// else: keep the filter value as-is (true or false)
 
-		// Assets user is responsible for
-		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(uuid).stream()
-				.map(Relatable::getName)
-				.collect(Collectors.toSet());
-
 		Page<RiskGrid> risks = threatAssessmentService.getRisks(sortColumn, sortDirection, filters, page, limit, user);
 
 		Set<Long> entityIds = risks.getContent().stream().map(RiskGrid::getId).collect(Collectors.toSet());
@@ -157,7 +152,7 @@ public class RiskRestController {
 
 		assert risks != null;
 
-		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid, tagsById));
+		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), uuid, tagsById));
     }
 
 	record ResponsibleUserDTO(String uuid, String name, String userId) {}

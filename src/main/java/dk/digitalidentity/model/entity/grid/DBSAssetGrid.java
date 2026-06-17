@@ -39,4 +39,7 @@ public class DBSAssetGrid {
 
     @Column(name = "asset_names")
     private String assetNames;
+
+	@Column(name = "dpa_statuses")
+	private String dpaStatuses;
 }

@@ -397,6 +397,70 @@
 
                         </div>
                     </div>
+                    <!--DBS Tilsyn-->
+                    <a th:if="${dbsEnabled}" class="btn btn-primary" data-bs-toggle="collapse" href="#dbsPart" role="button"
+                       aria-expanded="false" aria-controls="dbsPart">
+                        DBS Tilsyn
+                    </a>
+                    <div th:if="${dbsEnabled}" class="collapse" id="dbsPart">
+                        <div class="card card-body">
+                            <div th:each="setting, itemStat : *{settingsList}">
+                                <div th:if="${setting.association} == 'dbs' and ${setting.settingKey} == 'dbsOversightRecipient'"
+                                     class="row mt-3" id="dbsRecipientWrapper">
+                                    <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
+                                    <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
+                                    <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}"/>
+                                    <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}"/>
+                                    <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
+
+                                    <label class="col-sm-12 col-form-label" style="color: black;">
+                                        Modtager af tilsynsnotifikationer
+                                    </label>
+
+                                    <!-- Hidden field bound to the actual setting value -->
+                                    <input type="hidden"
+                                           th:field="*{settingsList[__${itemStat.index}__].settingValue}"
+                                           data-ref="dbsRecipientValue"/>
+
+                                    <!-- Type selector -->
+                                    <select data-ref="dbsRecipientType" class="form-control form-select mb-2"
+                                            style="color: black;">
+                                        <option value="">Vælg type...</option>
+                                        <option value="role">Rolle på aktivet</option>
+                                        <option value="email">Email-adresse</option>
+                                    </select>
+
+                                    <!-- Role dropdown (hidden by default) -->
+                                    <select data-ref="dbsRecipientRole" class="form-control form-select d-none"
+                                            style="color: black;">
+                                        <option value="ROLE:SYSTEM_OWNER"
+                                                th:text="${customSystemOwnerInput != null ? customSystemOwnerInput.settingValue : 'Systemejer'}">
+                                            Systemejer
+                                        </option>
+                                        <option value="ROLE:SYSTEM_RESPONSIBLE"
+                                                th:text="${customSystemResponsibleInput != null ? customSystemResponsibleInput.settingValue : 'Systemansvarlig'}">
+                                            Systemansvarlig
+                                        </option>
+                                        <option value="ROLE:OPERATION_RESPONSIBLE"
+                                                th:text="${customSystemOperationResponsibleInput != null ? customSystemOperationResponsibleInput.settingValue : 'Driftsansvarlig'}">
+                                            Driftsansvarlig
+                                        </option>
+                                    </select>
+
+                                    <!-- Email input (hidden by default) -->
+                                    <input type="email" data-ref="dbsRecipientEmail"
+                                           class="form-control d-none"
+                                           style="color: black;"
+                                           placeholder="Indtast email-adresse"/>
+
+                                    <small class="form-text text-muted d-block mt-2">
+                                        Hvis aktivet har en tilsynsansvarlig bruger sat manuelt, bruges den altid
+                                        i stedet for denne indstilling.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </form>
                 <form id="kitosSettingsForm" class="row g-3" action="#" th:action="@{/settings/update}"
                       th:object="${kitosSettings}"

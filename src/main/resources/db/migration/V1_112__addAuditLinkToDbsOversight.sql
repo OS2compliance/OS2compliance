@@ -1,0 +1,1 @@
+ALTER TABLE dbs_oversight ADD COLUMN audit_link VARCHAR(1024) NULL;

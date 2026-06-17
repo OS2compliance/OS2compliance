@@ -19,8 +19,9 @@
                             <th class="col-lg-2">Link</th>
                             <th class="col-lg-2">Ansvarlig</th>
                             <th class="col-lg-2">Valg af tilsynsmodel</th>
-                            <th class="col-lg-2">Hyppighed</th>
-                            <th class="col-lg-2">Næste tilsyn</th>
+                            <th class="col-lg-2">Yderligere tilsynsmodeller</th>
+                            <th class="col-lg-1">Hyppighed</th>
+                            <th class="col-lg-1">Næste tilsyn</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -56,6 +57,19 @@
                                             th:value="${supervision.id}"
                                             th:text="${supervision.caption}"
                                             th:selected="${asset?.supervisoryModel != null && supervision.id == asset.supervisoryModel.id}">
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-control form-select choices__input editField"
+                                        name="additionalSupervisoryModelIds"
+                                        id="additionalSupervisoryModelsSelect"
+                                        multiple="multiple"
+                                        disabled>
+                                    <option th:each="supervision : ${supervisions}"
+                                            th:value="${supervision.id}"
+                                            th:text="${supervision.caption}"
+                                            th:selected="${asset.additionalSupervisoryModels != null and asset.additionalSupervisoryModels.contains(supervision)}">
                                     </option>
                                 </select>
                             </td>
@@ -140,6 +154,11 @@
             //Init choices.js
             const assetOversightResponsibleSelect = document.getElementById('assetOversightUserSelect');
             assetOversightResponsibleUserChoices = initSelect(assetOversightResponsibleSelect);
+            const additionalModelsSelect = document.getElementById('additionalSupervisoryModelsSelect');
+            if (additionalModelsSelect) {
+                window.additionalSupervisoryModelsChoices = initSelect(additionalModelsSelect);
+                additionalSupervisoryModelsChoices.disable();
+            }
             choiceService.updateUsers(assetOversightResponsibleUserChoices, "");
             assetOversightResponsibleSelect.addEventListener("search",
                     function(event) {
@@ -169,6 +188,10 @@
                       assetOversightResponsibleUserChoices.enable();
                   }
 
+                  if (elem.id === 'additionalSupervisoryModelsSelect') {
+                      additionalSupervisoryModelsChoices.enable();
+                  }
+
                   if (elem.classList.contains("datepicker")) {
                     elem.parentElement.hidden = false; // show the datepicker
                     if (elem.parentElement.nextElementSibling) {
@@ -190,6 +213,10 @@
 
                   if (elem.id =='assetOversightUserSelect') {
                       assetOversightResponsibleUserChoices.disable();
+                  }
+
+                  if (elem.id === 'additionalSupervisoryModelsSelect') {
+                      additionalSupervisoryModelsChoices.disable();
                   }
 
                   if (elem.classList.contains("datepicker")) {

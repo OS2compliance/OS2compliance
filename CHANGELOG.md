@@ -6,6 +6,9 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+
+## [2.7.0] - 2026-06-14
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-41) (Aktiver/Generelt) Visning af resultatet for senest gennemførte kontroller, deadline og opgavetype
 - (https://os2web.atlassian.net/browse/COMPLY-57) (Aktiver/generelt) Markering af integrationer mellem systemer
@@ -14,7 +17,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-292) (Aktiver/DPIA) Ved oprettelse af en påmindelse om at genbesøge DPIA skal det være systemansvarlig i stedet for systemejer, der default står som ansvarlig på opgaven
 - (https://os2web.atlassian.net/browse/COMPLY-324) (Opgavecenter/Ny fane) Dynamisk og brugerrettet årshjul
 - (https://os2web.atlassian.net/browse/COMPLY-350) (Opgavecenter) Kolonne der viser tilknyttet risikovurdering
-- (gitlab #24) DBS-integration v2: migrering til DBS' nye API — ny API-klient (dbs-platform-client), samlet synkronisering, cutover via kitos_uuid og backfill pr. kommune
+- (https://os2web.atlassian.net/browse/COMPLY-408) DBS-integration v2: migrering til DBS' nye API — ny API-klient (dbs-platform-client) og samlet synkronisering, letvægts cutover via kitos_uuid der bevarer aktiv-relationer, backfill-konfiguration pr. kommune + driftsdokumentation samt pilottest på Rebild Kommune + enhedstests
 - (https://os2web.atlassian.net/browse/COMPLY-344) (Opgaver) Arbejdsgang for registrering af tilsyn og udførelse af den tilhørende opgave
 - (https://os2web.atlassian.net/browse/COMPLY-336) (DBS tilsyn) Mulighed for at definere hvem der er ansvarlig
 - (https://os2web.atlassian.net/browse/COMPLY-338) (DBS tilsyn) Aktiver uden tilsyn markeres med "ingen dba"
@@ -39,7 +42,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (gitlab !469) Owner-brugere kunne ikke administrere trusler (tilføj/ret/slet samt vælg trusselskataloger) på egne risikovurderinger — frontend var gated til *_all-roller, mens backend tillod *_owner
 - (gitlab !473) Død Rediger-knap på aktivets Sikkerhedsfane ved tilpasset sikkerhedsskema (JS-fejl når et betinget opfølgningsspørgsmål var fjernet fra kommunens skema)
 - (gitlab !464) Signeringslink forblev aktivt efter sletning af en risikovurdering — en slettet/tilbagetrukket vurdering (eller DPIA) kunne stadig signeres og PDF'en blev signeret og uploadet pga. manglende else-gren i SigningController; viser nu en "trukket tilbage"-side
+- (gitlab !476) Dublerede StandardSections når krav oprettes fik /standards til at crashe ("More than one row with the given identifier was found") — createSection kunne overskrive en eksisterende template-sektion ved identifier-kollision; udleder nu @Id, sektion, navn og sortKey af én værdi, bumper til næste ledige nummer ved kollision og tilføjer UNIQUE-constraint på standard_sections.template_section_identifier (V1_113)
 - (Ad-hoc) Manglende redigeringsmulighed i standarder
+- (Ad-hoc) Risikovurderinger var ikke synlige for systemejere, systemansvarlige og signeringsansvarlige på tilknyttede aktiver (jf. rollebeskrivelsen "Roller i OS2compliance") — rammer fx systemansvarlige der ikke selv er risikoejer. Konsekvensanalyser var omvendt synlige for alle almindelige brugere og begrænses nu tilsvarende til egne
 - (Ad-hoc) Man kan oprette en konsekvensanalyse uden værdier
 - (Ad-hoc) JS-fejl i fortegnelse view
 - (Ad-hoc) Forskellig styling på card bodies på fortegnelser og aktiver
