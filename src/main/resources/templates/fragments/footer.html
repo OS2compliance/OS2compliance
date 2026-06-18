@@ -39,6 +39,9 @@
 
     <div th:if="${statistic == true}" id="statisticModalContainer" class="modal fade" tabindex="-1"></div>
 
+    <!-- Dialogs used by dialog-service.js (showConfirm / showAlert / openDialog) -->
+    <div th:replace="~{fragments/dialog-service :: dialogs}"></div>
+
     <div class="toast" id="toastTemplate">
         <div class="toast-header">
             <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">

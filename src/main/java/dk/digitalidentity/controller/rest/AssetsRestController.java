@@ -172,6 +172,23 @@ public class AssetsRestController {
     }
 
 	@RequireUpdateOwnerOnly
+	@Transactional
+	@PostMapping("tia/accept")
+	public ResponseEntity<Void> acceptTia(@RequestParam("assetId") final Long assetId,
+										  @RequestParam(value = "comment", required = false) final String comment) {
+		assetService.acceptTia(assetService.getEditableTia(assetId), comment);
+		return ResponseEntity.ok().build();
+	}
+
+	@RequireUpdateOwnerOnly
+	@Transactional
+	@PostMapping("tia/unaccept")
+	public ResponseEntity<Void> unacceptTia(@RequestParam("assetId") final Long assetId) {
+		assetService.removeTiaAcceptance(assetService.getEditableTia(assetId));
+		return ResponseEntity.ok().build();
+	}
+
+	@RequireUpdateOwnerOnly
     @PutMapping("{id}/dpiascreening/setfield")
     public void setDpiaScreeningField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                                       @RequestParam(value = "value", required = false) final String value) {

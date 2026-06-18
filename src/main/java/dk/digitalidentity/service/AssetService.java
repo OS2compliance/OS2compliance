@@ -33,6 +33,7 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.TransferImpactAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.EstimationDTO;
+import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -871,5 +872,67 @@ public class AssetService implements TagableService<Asset> {
 				.max(Comparator.comparing(Relatable::getCreatedAt))
 				.ifPresent(ta -> result.put(assetId, ta.getAssessment())));
 		return result;
+	}
+
+	/** Loads the TIA of an editable asset, or throws the appropriate HTTP status. */
+	public TransferImpactAssessment getEditableTia(final Long assetId) {
+		final Asset asset = findById(assetId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		if (!isEditable(asset)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+		final TransferImpactAssessment tia = asset.getTia();
+		if (tia == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		}
+		return tia;
+	}
+
+	/** Content edits are only allowed while the TIA is NOT accepted. */
+	public void updateTiaContent(TransferImpactAssessment existingTia, TransferImpactAssessment newTia) {
+		if (existingTia.isAccepted()) {
+			// Server-side enforcement of the "locked when accepted" invariant.
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "TIA is accepted and locked for editing");
+		}
+
+		existingTia.setForwardInformationToOtherSuppliers(newTia.getForwardInformationToOtherSuppliers());
+		if (existingTia.getForwardInformationToOtherSuppliers() != ForwardInformationToOtherSuppliers.YES) {
+			existingTia.setForwardInformationToOtherSuppliersDetail(null);
+		} else {
+			existingTia.setForwardInformationToOtherSuppliersDetail(newTia.getForwardInformationToOtherSuppliersDetail());
+		}
+
+		existingTia.setAccessType(newTia.getAccessType());
+		existingTia.setAssessment(newTia.getAssessment());
+		existingTia.setConclusion(newTia.getConclusion());
+		existingTia.setLink(newTia.getLink());
+		existingTia.setExpectedTransferDuration(newTia.getExpectedTransferDuration());
+		existingTia.setContractualSecurityMeasures(newTia.getContractualSecurityMeasures());
+		existingTia.setTechnicalSecurityMeasures(newTia.getTechnicalSecurityMeasures());
+		existingTia.setOrganizationalSecurityMeasures(newTia.getOrganizationalSecurityMeasures());
+		existingTia.setRegisteredCategories(newTia.getRegisteredCategories());
+		existingTia.setInformationTypes(newTia.getInformationTypes());
+		existingTia.setTransferCaseDescription(newTia.getTransferCaseDescription());
+	}
+
+	public void acceptTia(TransferImpactAssessment tia, String comment) {
+		if (tia.isAccepted()) {
+			return; // idempotent - acceptance metadata is fixed once set
+		}
+		User user = userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Logged in user not found"));
+		tia.setAccepted(true);
+		tia.setAcceptedDate(LocalDate.now());
+		tia.setAcceptedByUuid(user.getUuid());
+		tia.setAcceptedByName(user.getName());
+		tia.setAcceptedComment(comment);
+	}
+
+	public void removeTiaAcceptance(TransferImpactAssessment tia) {
+		tia.setAccepted(false);
+		tia.setAcceptedDate(null);
+		tia.setAcceptedByUuid(null);
+		tia.setAcceptedByName(null);
+		tia.setAcceptedComment(null);
 	}
 }

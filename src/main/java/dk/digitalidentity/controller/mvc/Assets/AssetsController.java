@@ -36,6 +36,7 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.TransferImpactAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ColorStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
@@ -43,7 +44,6 @@ import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
-import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -84,6 +84,7 @@ import org.htmlcleaner.TagNode;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -95,6 +96,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -147,7 +149,6 @@ public class AssetsController {
 	private final ChoiceValueService choiceValueService;
 	private final AssetSupplierMappingService assetSupplierMappingService;
 	private final DBSAssetDao dBSAssetDao;
-
 
 	private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
 
@@ -900,37 +901,20 @@ public class AssetsController {
     }
 
 	@RequireUpdateOwnerOnly
-    @Transactional
-    @PostMapping("tia")
-    public String tia(@ModelAttribute final Asset asset) {
-        final Asset existingAsset = assetService.get(asset.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+	@Transactional
+	@PostMapping("tia")
+	@ResponseBody
+	public ResponseEntity<Void> tia(@ModelAttribute final Asset asset) {
+		final TransferImpactAssessment existingTia = assetService.getEditableTia(asset.getId());
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+		final TransferImpactAssessment newTia = asset.getTia();
+		if (newTia == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+		}
 
-        existingAsset.getTia().setForwardInformationToOtherSuppliers(asset.getTia().getForwardInformationToOtherSuppliers());
-        existingAsset.getTia().setForwardInformationToOtherSuppliersDetail(asset.getTia().getForwardInformationToOtherSuppliersDetail());
-
-        if (existingAsset.getTia().getForwardInformationToOtherSuppliers() != ForwardInformationToOtherSuppliers.YES) {
-            existingAsset.getTia().setForwardInformationToOtherSuppliersDetail(null);
-        }
-
-        existingAsset.getTia().setAccessType(asset.getTia().getAccessType());
-        existingAsset.getTia().setAssessment(asset.getTia().getAssessment());
-        existingAsset.getTia().setConclusion(asset.getTia().getConclusion());
-		existingAsset.getTia().setLink(asset.getTia().getLink());
-        existingAsset.getTia().setExpectedTransferDuration(asset.getTia().getExpectedTransferDuration());
-        existingAsset.getTia().setContractualSecurityMeasures(asset.getTia().getContractualSecurityMeasures());
-        existingAsset.getTia().setTechnicalSecurityMeasures(asset.getTia().getTechnicalSecurityMeasures());
-        existingAsset.getTia().setOrganizationalSecurityMeasures(asset.getTia().getOrganizationalSecurityMeasures());
-        existingAsset.getTia().setRegisteredCategories(asset.getTia().getRegisteredCategories());
-        existingAsset.getTia().setInformationTypes(asset.getTia().getInformationTypes());
-
-        existingAsset.getTia().setTransferCaseDescription(asset.getTia().getTransferCaseDescription());
-        return "redirect:/assets/" + existingAsset.getId();
-    }
+		assetService.updateTiaContent(existingTia, newTia);
+		return ResponseEntity.ok().build();
+	}
 
 	@RequireReadOwnerOnly
     @GetMapping("dpia/schema")
