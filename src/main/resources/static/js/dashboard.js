@@ -80,6 +80,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 {
                     name: "Status",
                     searchable: {
+                        sortKey: "completed",
                         searchKey: 'taskDeadlineStatus',
                         fieldId: "taskStatusSearchSelector"
                     },
