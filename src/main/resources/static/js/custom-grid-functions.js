@@ -1,9 +1,9 @@
-
+import CustomMultiSelect from "./CustomSelector.js";
 /**
  * Enables custom sort, search and pagination for an existing grid.
  * Warning: Overwrites some GridJS configs for the grid, in order to enable the custom features.
  */
-class CustomGridFunctions {
+export default class CustomGridFunctions {
     dataUrl
     grid
     gridId
@@ -15,6 +15,7 @@ class CustomGridFunctions {
         searchValues: {}
     }
     #INPUTCLASSNAME
+    selectorInstances = {}
 
     /**
      * Enabled custom sort, search and pagination for an existing GridJS object
@@ -27,16 +28,16 @@ class CustomGridFunctions {
         grid,
         dataUrl,
         gridId,
-        initialSortConfig  = {
+        initialSortConfig = {
             sortDirection: 'ASC',
             sortColumn: '',
-    }) {
+        }) {
         this.dataUrl = dataUrl
         this.grid = grid
         this.state.page = 0
         this.state.limit = 50
         this.gridId = gridId
-        this.#INPUTCLASSNAME = `${this.gridId}_grid_columnSearchInput}`
+        this.#INPUTCLASSNAME = `${this.gridId}_grid_columnSearchInput`
         this.state.sortDirection = initialSortConfig.sortDirection || 'ASC'
         this.state.sortColumn = initialSortConfig.sortColumn || ''
 
@@ -49,8 +50,9 @@ class CustomGridFunctions {
             server: {
                 ...this.grid.config.server,
                 url: `${this.dataUrl}?${this.getParamString()}`,
-                then : (data) => {
+                then: (data) => {
                     this.initializeInputFields()
+                    this.initializeCustomSelects()
                     return originalThenFunction(data)
                 }
             },
@@ -65,27 +67,76 @@ class CustomGridFunctions {
                 server: {
                     url: (prev, columns) => `${this.dataUrl}?${this.updateSorting(prev, columns)}`
                 }
-            },
-            language: {
-                'noRecordsFound': "Ingen data fundet",
-                'pagination': {
-                    'previous': 'Forrige',
-                    'next': 'Næste',
-                    'showing': 'Viser',
-                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                    'of': 'af',
-                    'to': 'til'
-                },
             }
         })
 
         this.addSearchFields()
 
+        if (this.grid.config.container && this.grid.config.container.childNodes.length > 0) {
+            gridConfig.forceRender()
+        }
+    }
 
-        this.grid.on('ready', () => {
-        })
+    /**
+     * Initialize or reinitialize all custom select instances
+     */
+    initializeCustomSelects() {
+        // Destroy all existing instances
+        for (let [key, instance] of Object.entries(this.selectorInstances)) {
+            instance.destroy()
+        }
+        this.selectorInstances = {}
 
-        gridConfig.forceRender()
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+            const placeholders = document.querySelectorAll(`#${this.gridId} .custom-select-placeholder`);
+            for (let placeholder of placeholders) {
+                const originalId = placeholder.dataset.originalId
+                const originalSelect = document.getElementById(originalId)
+
+                if (!originalSelect) {
+                    console.warn('Original select not found for id', originalId)
+                    continue
+                }
+
+                const searchKey = this.#getSearchKeyForSelect(originalId)
+
+                // Restore saved selections to original select from state
+                if (searchKey && this.state.searchValues[searchKey]) {
+                    const savedValue = this.state.searchValues[searchKey]
+                    let savedArray = []
+
+                    if (typeof savedValue === 'string') {
+                        savedArray = savedValue.split(',').map(v => v.trim()).filter(v => v)
+                    } else if (Array.isArray(savedValue)) {
+                        savedArray = savedValue
+                    }
+
+                    const savedSet = new Set(savedArray)
+
+                    for (let option of Array.from(originalSelect.options)) {
+                        option.selected = savedSet.has(option.value)
+                    }
+                }
+
+                // Create instance - button will be created in placeholder's parent
+                const container = placeholder.parentElement
+                this.selectorInstances[originalId] = new CustomMultiSelect(container, originalSelect)
+            }
+        }, 0)
+    }
+
+    /**
+     * Helper to find the search key associated with a select id
+     */
+    #getSearchKeyForSelect(selectId) {
+        // Look through grid columns to find matching field
+        for (const column of this.grid.config.columns) {
+            if (column.searchable && column.searchable.fieldId === selectId) {
+                return column.searchable.searchKey
+            }
+        }
+        return null
     }
 
     /**
@@ -178,15 +229,8 @@ class CustomGridFunctions {
             column.sort = !!column.searchable;
 
             if (column.searchable && column.searchable.searchKey) {
-                if (column.searchable.fieldId ) {
-                    const foundElement = document.getElementById(column.searchable.fieldId)
-                        foundElement.classList.add(this.#INPUTCLASSNAME)
-                        foundElement.setAttribute('data-search-key', column.searchable.searchKey)
-                        searchFieldHTML = foundElement.outerHTML
-                    if (column.hidden) {
-                        foundElement.style.display = 'none'
-                    }
-                    foundElement.remove()
+                if (column.searchable.fieldId) {
+                    searchFieldHTML = this.findPredefinedInputFieldHTML(column.searchable.fieldId, column.searchable.searchKey, column.hidden)
                 } else {
                     searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey)
                 }
@@ -209,7 +253,7 @@ class CustomGridFunctions {
                     id: 'search_' + column.id
                 }]
             }
-            column.onHiddenUpdate = ()=> {
+            column.onHiddenUpdate = () => {
                 for (const subcolumn of column.columns) {
                     subcolumn.hidden = column.hidden
                 }
@@ -224,6 +268,34 @@ class CustomGridFunctions {
         this.grid.updateConfig({
             columns: updatedConfig
         })
+    }
+
+    findPredefinedInputFieldHTML(fieldId, searchKey, isHidden) {
+        const foundElement = document.getElementById(fieldId)
+
+        if (!foundElement) {
+            return this.generateTextInputFieldHTML(searchKey);
+        }
+
+        foundElement.classList.add(this.#INPUTCLASSNAME)
+        foundElement.setAttribute('data-search-key', searchKey)
+
+        // Multi-selects become a custom dropdown: hide the original (keep it in
+        // the DOM) and emit a placeholder that initializeCustomSelects() turns
+        // into a CustomMultiSelect button.
+        if (foundElement.hasAttribute('multiple')) {
+            foundElement.style.display = 'none'
+            return '<div class="custom-select-placeholder" data-original-id="' + fieldId + '"></div>'
+        }
+
+        // Single selects keep the original behaviour: inject the element markup
+        // into the grid header and let initializeInputFields() wire it up.
+        const html = foundElement.outerHTML
+        if (isHidden) {
+            foundElement.style.display = 'none'
+        }
+        foundElement.remove()
+        return html
     }
 
     /**
@@ -249,27 +321,20 @@ class CustomGridFunctions {
 
         for (const input of inputFields) {
             const key = input.getAttribute('data-search-key')
-            let inputType = 'text'
 
-            if (input.tagName === 'select') {inputType = 'enum'}
-            if (input.tagName === 'input' && input.type ==='date') {inputType = 'date'}
+            let eventTargetElement = input.closest('.gridjs-th-content') || input
 
-            input.addEventListener('click', (event) => {
+            eventTargetElement.addEventListener('click', (event) => {
                 event.stopPropagation();
-                event.preventDefault()
+
             })
 
-            input.addEventListener('change', (event) => {
+            eventTargetElement.addEventListener('change', (event) => {
                 event.stopPropagation();
-                event.preventDefault()
-
-                this.updateColumnValue(key,input.value ? input.value : null)
-
-                this.saveState(key, input.value)
-                this.onSearch()
+                this.handleSearchFieldChange(event, key)
             })
 
-            input.addEventListener('keydown', (event) => {
+            eventTargetElement.addEventListener('keydown', (event) => {
                 event.stopPropagation();
             })
 
@@ -278,6 +343,50 @@ class CustomGridFunctions {
                 input.value = savedValue
             }
         }
+    }
+
+    handleSearchFieldChange(event, key) {
+        const target = this.#findSearchField(event)
+        const value = this.#getSearchFieldValue(target)
+        this.updateColumnValue(key, value)
+
+        this.saveState(key, value)
+        this.onSearch()
+    }
+
+    #getSearchFieldValue(element) {
+        if (!element) {
+            return null;
+        }
+
+        const tagName = element.tagName.toLowerCase();
+        if (tagName === 'input') {
+            return element.value
+        } else if (tagName === 'select') {
+            if (element.multiple) {
+                return Array.from(element.selectedOptions).map(opt => opt.value);
+            } else {
+                return element.value;
+            }
+        }
+    }
+
+
+    #findSearchField(event) {
+        const target = event.target
+        if (target) {
+            let searchField = target.closest(`.${this.#INPUTCLASSNAME}`)
+            if (!searchField) {
+                const choicesContainer = target.closest('.choices')
+                if (choicesContainer) {
+                    searchField = choicesContainer.querySelector(`.${this.#INPUTCLASSNAME}`)
+                }
+            }
+
+
+            return searchField;
+        }
+        return null;
     }
 
     /**
