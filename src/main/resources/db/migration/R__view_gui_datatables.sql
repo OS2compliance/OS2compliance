@@ -43,6 +43,11 @@ SELECT t.id,
        cv_result.caption                                                               as result,
        cv_result.id                                                                    as task_result_order,
        COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) as `completed`,
+       CASE
+           WHEN COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) = true THEN 'COMPLETED'
+           WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
+           ELSE 'EXCEEDED'
+       END as task_deadline_status,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
        GROUP_CONCAT(DISTINCT COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,

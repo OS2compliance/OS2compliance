@@ -3,6 +3,7 @@ package dk.digitalidentity.model.entity.grid;
 import dk.digitalidentity.model.dto.RelatedEntityDTO;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
@@ -63,6 +64,10 @@ public class TaskGrid implements HasMultipleResponsibleUsers {
 
     @Column
     private boolean completed;
+
+    @Column(name = "task_deadline_status")
+    @Enumerated(EnumType.STRING)
+    private TaskDeadlineStatus taskDeadlineStatus;
 
     @Column(name = "result")
     private String taskResult;
