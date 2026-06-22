@@ -3,7 +3,7 @@ import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 import {BadgeData, createBadges} from "../component/badge.js";
-import CustomGridFunctions from "../custom-grid-functions";
+import CustomGridFunctions from "../custom-grid-functions.js";
 import { initYearWheel } from "./year-wheel.js";
 
 let today = new Date();
