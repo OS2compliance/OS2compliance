@@ -16,6 +16,7 @@ export default class CustomGridFunctions {
     }
     #INPUTCLASSNAME
     selectorInstances = {}
+    _selectGeneration = 0
 
     /**
      * Enabled custom sort, search and pagination for an existing GridJS object
@@ -94,12 +95,17 @@ export default class CustomGridFunctions {
     initializeCustomSelects() {
         // Destroy all existing instances
         for (let [key, instance] of Object.entries(this.selectorInstances)) {
-            instance.destroy()
+            instance.destroy();
         }
         this.selectorInstances = {}
 
         // Small delay to ensure DOM is ready
+        const generation = ++this._selectGeneration;
         setTimeout(() => {
+            // Avoid creating duplicates when the user clicks fx "next page" before the timeout runs
+            if (generation !== this._selectGeneration) {
+                return;
+            }
             const placeholders = document.querySelectorAll(`#${this.gridId} .custom-select-placeholder`);
             for (let placeholder of placeholders) {
                 const originalId = placeholder.dataset.originalId
