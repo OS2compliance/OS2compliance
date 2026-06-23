@@ -33,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,15 +119,21 @@ public class SearchRepositoryImpl implements SearchRepository {
 			else if ("EMPTY".equals(value)) {
 				predicates.add(criteriaBuilder.or(criteriaBuilder.isNull(propertyPath), criteriaBuilder.equal(propertyPath.as(String.class), "")));
 			}
-			else if (value.contains(",")) {
-				CriteriaBuilder.In<String> inClause = criteriaBuilder.in(propertyPath.as(String.class));
-				for (String part : value.split(",")) {
-					inClause.value(part.trim());
-				}
-				predicates.add(inClause);
-			}
 			else {
-				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath), "%" + searchEntry.getValue().toLowerCase() + "%"));
+				if (value != null && !value.isEmpty()) {
+					List<String> values = Arrays.asList(StringUtils.split(value, ","));
+					List<Predicate> valuePredicates = new ArrayList<>();
+					for (String val : values) {
+						String trimmed = val.trim();
+						valuePredicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath.as(String.class)),
+								"%" + trimmed.toLowerCase() + "%"));
+					}
+					if (valuePredicates.size() == 1) {
+						predicates.add(valuePredicates.getFirst());
+					} else if (!valuePredicates.isEmpty()) {
+						predicates.add(criteriaBuilder.or(valuePredicates.toArray(new Predicate[0])));
+					}
+				}
 			}
 		}
 
