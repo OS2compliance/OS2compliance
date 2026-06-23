@@ -118,6 +118,13 @@ public class SearchRepositoryImpl implements SearchRepository {
 			else if ("EMPTY".equals(value)) {
 				predicates.add(criteriaBuilder.or(criteriaBuilder.isNull(propertyPath), criteriaBuilder.equal(propertyPath.as(String.class), "")));
 			}
+			else if (value.contains(",")) {
+				CriteriaBuilder.In<String> inClause = criteriaBuilder.in(propertyPath.as(String.class));
+				for (String part : value.split(",")) {
+					inClause.value(part.trim());
+				}
+				predicates.add(inClause);
+			}
 			else {
 				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath), "%" + searchEntry.getValue().toLowerCase() + "%"));
 			}

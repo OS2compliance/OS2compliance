@@ -1,6 +1,7 @@
 import IncidentQuestionService from "../incident-question-service.js";
 import ColumnOptions from "../../grid-js-extension/column-options.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
+import CustomGridFunctions from "../../custom-grid-functions.js";
 
 const formUrl = "/incidents/questionForm"
 const restUrl = "/rest/incidents/questions"

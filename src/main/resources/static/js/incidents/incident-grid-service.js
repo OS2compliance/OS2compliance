@@ -1,6 +1,7 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import IncidentService from "./incident-service.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
+import CustomGridFunctions from "../custom-grid-functions.js";
 
 export default function IncidentGridService () {
     this.incidentService = new IncidentService();

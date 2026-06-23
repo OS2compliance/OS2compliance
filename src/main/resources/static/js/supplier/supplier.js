@@ -1,6 +1,7 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
+import CustomGridFunctions from "../custom-grid-functions.js";
 
 let editDialog;
 

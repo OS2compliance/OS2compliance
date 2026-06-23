@@ -67,7 +67,18 @@ export default class CustomGridFunctions {
                 server: {
                     url: (prev, columns) => `${this.dataUrl}?${this.updateSorting(prev, columns)}`
                 }
-            }
+            },
+            language: {
+            'noRecordsFound': "Ingen data fundet",
+                'pagination': {
+                'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'of': 'af',
+                    'to': 'til'
+            },
+        }
         })
 
         this.addSearchFields()
@@ -157,9 +168,12 @@ export default class CustomGridFunctions {
             params.append("limit", this.state.limit)
         }
         for (const [key, value] of Object.entries(this.state.searchValues)) {
-            const calculatedValue = value
-            if (calculatedValue) {
-                params.append(key, calculatedValue)
+            if (Array.isArray(value)) {
+                if (value.length > 0) {
+                    params.append(key, value.join(','))
+                }
+            } else if (value) {
+                params.append(key, value)
             }
         }
 

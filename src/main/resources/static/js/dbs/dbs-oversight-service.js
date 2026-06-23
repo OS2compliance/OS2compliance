@@ -1,4 +1,5 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
+import CustomGridFunctions from "../custom-grid-functions.js";
 
 let dbsOversightService = new DBSOversightService();
 document.addEventListener("DOMContentLoaded", function(event) {

@@ -4,6 +4,7 @@ import formatTags from "../tags/tag-grid-formatter.js";
 import {CreateThreatAssessmentService, initRegisterSelect, initAssetSelectRisk, userChanged} from "./createThreatAssessmentService.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 import {BadgeData, createBadges} from "../component/badge.js";
+import CustomGridFunctions from "../custom-grid-functions.js";
 
 const columnProperties = [
     'id',
