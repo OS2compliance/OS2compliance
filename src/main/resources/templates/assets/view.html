@@ -84,10 +84,10 @@
                             <div id="assetTab" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
                                 <form id="editForm" action="#" th:action="@{/assets/edit}" th:object="${asset}" method="post" class="needs-validation was-validated">
                                     <!-- buttons row -->
-                                    <div class="row mb-3 gap-1">
-                                        <button id="saveEditAssetBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" hidden>Annuller</button>
-                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger stamdata</button>
+                                    <div class="mb-3 gap-1 text-end">
+                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-lg" th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger</button>
+                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-lg" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" hidden>Annuller</button>
+                                        <button id="saveEditAssetBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-lg" hidden>Gem</button>
                                     </div>
                                     <div class="row mb-3">
                                         <!-- Column 1 -->

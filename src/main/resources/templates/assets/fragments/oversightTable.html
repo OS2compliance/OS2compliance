@@ -1,12 +1,14 @@
 <div th:fragment="oversightTable(oversights)" id="oversightTable" aria-labelledby="oversight-table">
-<div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
-    <button type="button" sec:authorize="hasAnyRole('ROLE_create_all')" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="oversightService.showOversightModal()">
-        <i class="ti-plus fs-4"></i>
-        <span class="vr"></span>
-        Nyt tilsyn
-    </button>
-    <table class="table table-striped">
-        <thead>
+    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
+        <div class="mb-3 d-flex justify-content-end">
+            <button type="button" sec:authorize="hasAnyRole('ROLE_create_all')" class="btn btn-info btn-lg hstack gap-2" onclick="oversightService.showOversightModal()">
+                <i class="ti-plus fs-4"></i>
+                <span class="vr"></span>
+                Nyt tilsyn
+            </button>
+        </div>
+        <table class="table table-striped">
+            <thead>
             <tr>
                 <th>Dato</th>
                 <th>Aktiver</th>
@@ -18,8 +20,8 @@
                 <th>Resultat</th>
                 <th>Handlinger</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr th:each="oversight : ${oversights}">
                 <td th:text="${oversight.creationDate}"></td>
                 <td th:text="${oversight.asset.name}"></td>
@@ -46,10 +48,8 @@
                     </button>
                 </td>
             </tr>
-        </tbody>
+            </tbody>
 
-    </table>
-</div>
-</div>
-
+        </table>
+    </div>
 </div>
