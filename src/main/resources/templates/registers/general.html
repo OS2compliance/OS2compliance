@@ -6,12 +6,12 @@
         <link th:href="@{/css/register.css}" rel="stylesheet">
         <form id="editDescId" class="row" action="#" th:action="@{/registers/__${register.id}__/update}" th:object="${register}" name="generelt" method="post">
             <div class="card-header toolbar border-0 pb-0">
-                <div class="toolbar-start"></div>
-                <div class="toolbar-end">
+                <div class="toolbar-start d-flex gap-1">
                     <button id="editBtn" th:if="${changeableRegister}" type="button" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" class="btn btn-secondary btn-lg">Rediger</button>
                     <button id="cancelBtn" th:if="${changeableRegister}" type="button" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" class="btn btn-danger btn-lg" style="display: none">Annuller</button>
                     <button id="saveBtn" th:if="${changeableRegister}" form="editDescId" type="submit" class="btn btn-secondary btn-lg" style="display: none">Gem</button>
                 </div>
+                <div class="toolbar-end"></div>
             </div>
             <div class="card-body pt-0">
                 <div class="form-group row mt-0">

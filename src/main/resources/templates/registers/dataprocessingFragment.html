@@ -11,12 +11,12 @@
                 <div class="accordion-body">
                     <form id="dataprocessingForm" action="#" th:action="@{/registers/__${register.id}__/dataprocessing}" method="post" class="needs-validation" novalidate>
                         <div class="card-header toolbar border-0 pb-0">
-                            <div class="toolbar-start"></div>
-                            <div class="toolbar-end">
+                            <div class="toolbar-start d-flex gap-1">
                                 <button id="editDataProcessingBtn" th:if="${changeableRegister}" type="button" class="btn btn-secondary btn-lg" onclick="registerDataprocessingService.setDataprocessingEditState(true)">Rediger</button>
                                 <button id="cancelDataProcessingBtn" th:if="${changeableRegister}" type="button" onclick="registerDataprocessingService.setDataprocessingEditState(false)" class="btn btn-danger btn-lg" hidden="hidden">Annuller</button>
                                 <button id="saveDataProcessingBtn" th:if="${changeableRegister}" form="dataprocessingForm" type="submit" class="btn btn-secondary btn-lg" hidden="hidden">Gem</button>
                             </div>
+                            <div class="toolbar-end"></div>
                         </div>
                         <div class="row">
                             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">

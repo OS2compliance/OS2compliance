@@ -43,11 +43,11 @@
 
                     <div class="tab-content">
                         <div id="_dm-tabsOpgave" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
-                                <div class="row mb-3">
-                                    <button th:unless="${completed}" th:if="${changeableTask}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button th:unless="${completed}" th:if="${changeableTask}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right">Rediger stamdata</button>
-                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.empty}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
-                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.present}" id="oversightBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" th:attr="data-asset-id=${oversightAsset.get().id}">Udfør tilsyn</button>
+                                <div class="mb-3">
+                                    <button th:unless="${completed}" th:if="${changeableTask}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-lg" hidden>Gem</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask}" id="editTaskBtn" type="button" class="btn btn-secondary btn-lg">Rediger</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.empty}" id="completeBtn" type="button" class="btn btn-secondary btn-lg" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
+                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.present}" id="oversightBtn" type="button" class="btn btn-secondary btn-lg" style="margin-left: 10px;" th:attr="data-asset-id=${oversightAsset.get().id}">Udfør tilsyn</button>
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">

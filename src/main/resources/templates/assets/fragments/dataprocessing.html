@@ -56,7 +56,7 @@
                     </table>
                 </div>
 
-                <div class="mb-3 gap-1 text-end">
+                <div class="mb-3 gap-1">
                     <button id="editDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary btn-lg" onclick="setDataprocessingEditState(true)">Rediger</button>
                     <button id="cancelDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-danger btn-lg" onclick="setDataprocessingEditState(false)" hidden>Annuller</button>
                     <button id="saveDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="submit" class="btn btn-secondary btn-lg" hidden>Gem</button>
