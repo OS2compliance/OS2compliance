@@ -342,8 +342,8 @@ function editMode(enabled, responsibleFieldChangeable) {
         document.getElementById('cancelBtn').hidden = false;
         document.getElementById('editAssetBtn').hidden = true;
 
-        if (!isKitosUsage) {
-            active.disabled = false;
+        if (isKitosUsage) {
+            active.disabled = true;
         }
 
         if (!isKitos) {
