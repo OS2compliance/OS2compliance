@@ -157,6 +157,14 @@ function initGrid() {
                 hidden: true
             },
             {
+                id: 'land',
+                name: "Land",
+                searchable: {
+                    searchKey: 'country',
+                    sortKey: 'country'
+                },
+            },
+            {
                 name: "Tags",
                 searchable: {
                     searchKey: 'tagNames',
@@ -186,7 +194,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(supplier =>
-                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.tags, supplier.allowedActions]
+                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.country, supplier.tags, supplier.allowedActions]
             ),
             total: data => data.totalCount
         },
@@ -217,6 +225,6 @@ function initGrid() {
         datatableId,
         grid,
         ['navn', 'allowedActions'],
-        ['navn', 'allowedActions','antalLøsninger', 'opdateret','status' ],
+        ['navn', 'allowedActions', 'antalLøsninger', 'opdateret', 'status'],
         ['id', 'kitosUuid'])
 }

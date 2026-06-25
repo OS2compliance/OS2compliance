@@ -74,6 +74,8 @@ public class SupplierRestController {
 			String status,
 			@ExcelColumn(headerName = "Sidste tilsyn", order = 5)
 			LocalDate lastOversightDate,
+			@ExcelColumn(headerName = "Land", order = 6)
+			String country,
 			@ExcludeFromExport
 			String kitosUuid,
 			@ExcludeFromExport
@@ -114,6 +116,7 @@ public class SupplierRestController {
 					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER),
 					supplier.getStatus().getMessage(),
 					supplier.getLastOversightDate(),
+					supplier.getCountry(),
 					supplier.getKitosUuid(),
 					TagService.toTagDTO(supplier.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(),
 					allowedActions
@@ -200,6 +203,7 @@ public class SupplierRestController {
 						sg.getUpdated() != null ? sg.getUpdated().toLocalDate().format(DK_DATE_FORMATTER) : "",
 						sg.getStatus() != null ? sg.getStatus().getMessage() : "",
 						sg.getLastOversightDate(),
+						sg.getCountry(),
 						null, // kitosUuid - excluded from export
 						null, // tags - excluded from export
 						null  // allowedActions - excluded from export
