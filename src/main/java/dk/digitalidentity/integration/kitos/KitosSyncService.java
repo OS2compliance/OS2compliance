@@ -54,7 +54,6 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 public class KitosSyncService {
 
     // Lifecycle phases that map to active=true; all others map to inactive.
-    // Confirm exact mapping with customer before go-live.
     private static final Set<ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum> ACTIVE_LIFECYCLE_STATUSES = EnumSet.of(
         ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum.OPERATIONAL,
         ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum.PHASINGIN
