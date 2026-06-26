@@ -3,9 +3,18 @@ import IncidentService from "./incident-service.js";
 import IncidentGridService from "./incident-grid-service.js";
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    const urlSearch = new URLSearchParams(window.location.search).get('search');
+    const params = new URLSearchParams(window.location.search);
+    const urlSearch = params.get('search');
     if (urlSearch) {
         localStorage.setItem('/incidents/logs-search', urlSearch);
+    }
+    const urlFrom = params.get('from');
+    if (urlFrom) {
+        localStorage.setItem('incidentFilterFrom', new Date(urlFrom).toISOString());
+    }
+    const urlTo = params.get('to');
+    if (urlTo) {
+        localStorage.setItem('incidentFilterTo', new Date(urlTo).toISOString());
     }
 
     let incidentService = new IncidentService();
