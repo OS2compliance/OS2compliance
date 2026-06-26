@@ -63,6 +63,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -362,10 +363,8 @@ public class RiskController {
 
         if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
             final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
-            final java.time.LocalDate dateFrom = java.time.LocalDate.now().minusMonths(12);
-            final java.time.LocalDate dateTo = java.time.LocalDate.now();
-            model.addAttribute("incidentDateFrom", dateFrom.toString());
-            model.addAttribute("incidentDateTo", dateTo.toString());
+            model.addAttribute("incidentDateFrom", LocalDate.now().minusMonths(12).toString());
+            model.addAttribute("incidentDateTo", LocalDate.now().toString());
             if (!assetRelations.isEmpty()) {
                 final Relation rel = assetRelations.get(0);
                 final long assetId = rel.getRelationAType() == RelationType.ASSET ? rel.getRelationAId() : rel.getRelationBId();
