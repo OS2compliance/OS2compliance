@@ -430,7 +430,7 @@ public class AssetService implements TagableService<Asset> {
 		return convertHtmlToPdf(html);
 	}
 
-	private String getDPIAHTML(DPIA dpia) {
+	public String getDPIAHTML(DPIA dpia) {
 		final List<Asset> assets = dpia.getAssets();
 		final List<Relatable> allRelatedTo = assets.stream().flatMap(a -> relationService.findAllRelatedTo(a).stream()).toList();
 		final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()

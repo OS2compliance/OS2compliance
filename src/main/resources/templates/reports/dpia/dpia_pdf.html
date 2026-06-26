@@ -117,10 +117,10 @@
 </head>
 <body>
 
-<h1 th:text="'Konsekvensanalyse vedr. ' + ${assetNames}" style="text-align: center;"></h1>
-<div th:each="section : ${dpiaSections}">
-    <h2 th:text="${section.heading}"></h2>
-    <p th:utext="${section.explainer}"></p>
+<h1 id="Title" th:text="'Konsekvensanalyse vedr. ' + ${assetNames}" style="text-align: center;"></h1>
+<div class="DPIASection" th:each="section : ${dpiaSections}">
+    <h2 class="DPIAHeader" th:text="${section.heading}"></h2>
+    <p class="DPIADescription" th:utext="${section.explainer}"></p>
     <table class="table">
         <thead>
         <tr>
@@ -160,9 +160,9 @@
         </tbody>
     </table>
 </div>
-<div>
-    <h2>Risikovurderinger</h2>
-    <p>Denne sektion indeholder en liste af valgte risikovurderinger af aktivet, der skal medtages i det samlede materiale</p>
+<div id="RiskAssessments">
+    <h2 class="DPIAHeader">Risikovurderinger</h2>
+    <p class="DPIADescription">Denne sektion indeholder en liste af valgte risikovurderinger af aktivet, der skal medtages i det samlede materiale</p>
     <table class="table">
         <thead>
         <tr>
@@ -186,9 +186,9 @@
         </tbody>
     </table>
 </div>
-<div>
-    <h2>Konklusion</h2>
-    <div th:utext="${conclusion}" style="max-width: 100%"></div>
+<div id="ConclusionSection">
+    <h2 class="DPIAHeader">Konklusion</h2>
+    <div class="DPIADescription" th:utext="${conclusion}" style="max-width: 100%"></div>
 </div>
 
 </body>

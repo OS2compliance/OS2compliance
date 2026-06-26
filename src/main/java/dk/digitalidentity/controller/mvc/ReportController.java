@@ -38,6 +38,7 @@ import dk.digitalidentity.security.annotations.sections.RequireReport;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
+import dk.digitalidentity.service.exporter.DPIADocxExportService;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
@@ -54,6 +55,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -114,6 +116,7 @@ public class ReportController {
 	private final RiskImageService riskImageService;
 	private final SettingsService settingsService;
 	private final ChoiceService choiceService;
+	private final DPIADocxExportService dpiaDocxExportService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -390,6 +393,9 @@ public class ReportController {
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
         DPIA dpia = dpiaService.find(dpiaId);
+
+		final String filename = "konsekvensanalyse vedr " + sanitizeFileName(dpia.getName());
+
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAPdf(dpia);
             response.setHeader("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".pdf\"");
@@ -433,7 +439,15 @@ public class ReportController {
                         zipOutputStream.close();
                     }
                 );
-        }
+        } else if (type.equals("DOCX")) {
+			return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".docx\"")
+				.body(outputStream -> {
+					try (final XWPFDocument document = dpiaDocxExportService.export(assetService.getDPIAHTML(dpia))) {
+						document.write(outputStream);
+					}
+				});
+		}
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
