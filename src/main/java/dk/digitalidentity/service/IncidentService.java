@@ -2,7 +2,6 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.IncidentDao;
 import dk.digitalidentity.dao.IncidentFieldDao;
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;

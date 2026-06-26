@@ -1,6 +1,5 @@
 package dk.digitalidentity.dao;
 
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Incident;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
