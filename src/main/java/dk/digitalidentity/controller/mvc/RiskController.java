@@ -35,6 +35,7 @@ import dk.digitalidentity.security.annotations.sections.RequireRisk;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
@@ -92,6 +93,7 @@ public class RiskController {
     private final AssetDao assetDao;
     private final UserService userService;
     private final EmailTemplateService emailTemplateService;
+    private final IncidentService incidentService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -357,6 +359,18 @@ public class RiskController {
 
         boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
         model.addAttribute("signed", signed);
+
+        if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
+            final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
+            if (!assetRelations.isEmpty()) {
+                final Relation rel = assetRelations.get(0);
+                final long assetId = rel.getRelationAType() == RelationType.ASSET ? rel.getRelationAId() : rel.getRelationBId();
+                model.addAttribute("incidentCount", incidentService.countIncidentsForAssetLastYear(assetId));
+                model.addAttribute("incidentAssetId", assetId);
+            } else {
+                model.addAttribute("incidentCount", 0L);
+            }
+        }
 
         return "risks/view";
     }

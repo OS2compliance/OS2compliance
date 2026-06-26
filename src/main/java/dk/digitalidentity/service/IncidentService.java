@@ -240,6 +240,10 @@ public class IncidentService {
 		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(incidentFieldId, fromDate, toDate);
 	}
 
+	public long countIncidentsForAssetLastYear(final long assetId) {
+		return incidentDao.countIncidentsByAssetIdSince(assetId, LocalDateTime.now().minusMonths(12));
+	}
+
 	public List<Incident> getByIds (List<Long> ids) {
 		return incidentDao.findAllById(ids);
 	}

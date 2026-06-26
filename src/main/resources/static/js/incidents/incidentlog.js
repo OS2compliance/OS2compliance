@@ -3,6 +3,11 @@ import IncidentService from "./incident-service.js";
 import IncidentGridService from "./incident-grid-service.js";
 
 document.addEventListener("DOMContentLoaded", function(event) {
+    const urlSearch = new URLSearchParams(window.location.search).get('search');
+    if (urlSearch) {
+        localStorage.setItem('/incidents/logs-search', urlSearch);
+    }
+
     let incidentService = new IncidentService();
     incidentService.init();
 
