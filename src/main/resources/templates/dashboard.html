@@ -82,6 +82,17 @@
                                 <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.TaskDeadlineStatus).values()}"
                                         th:value="${option}" th:text="${option.message}"></option>
                             </select>
+                            <div th:replace="~{fragments/component/customSelector :: multiSelectDropdown('taskStatusSearchSelector', ~{::  #taskStatusDropdownItems})}">
+                                <ul id="taskStatusDropdownItems" class="dropdown-menu">
+                                    <li><label class="dropdown-item d-flex gap-2 align-items-center"><input type="checkbox" th:value="null"> Alle</label></li>
+                                    <li th:each="option : ${T(dk.digitalidentity.model.entity.enums.TaskDeadlineStatus).values()}">
+                                        <label class="dropdown-item d-flex gap-2 align-items-center">
+                                            <input type="checkbox" th:value="${option}">
+                                            <span th:text="${option.message}"></span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </div>
 
                         </div>
                         <div id="_dm-tabsAssets" class="tab-pane fade" role="tabpanel" aria-labelledby="assets-tab">

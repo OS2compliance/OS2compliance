@@ -1,4 +1,3 @@
-import CustomMultiSelect from "./CustomSelector.js";
 /**
  * Enables custom sort, search and pagination for an existing grid.
  * Warning: Overwrites some GridJS configs for the grid, in order to enable the custom features.
@@ -15,7 +14,6 @@ export default class CustomGridFunctions {
         searchValues: {}
     }
     #INPUTCLASSNAME
-    selectorInstances = {}
     _selectGeneration = 0
 
     /**
@@ -89,71 +87,106 @@ export default class CustomGridFunctions {
         }
     }
 
-    /**
-     * Initialize or reinitialize all custom select instances
-     */
     initializeCustomSelects() {
-        // Destroy all existing instances
-        for (let [key, instance] of Object.entries(this.selectorInstances)) {
-            instance.destroy();
-        }
-        this.selectorInstances = {}
-
-        // Small delay to ensure DOM is ready
         const generation = ++this._selectGeneration;
         setTimeout(() => {
-            // Avoid creating duplicates when the user clicks fx "next page" before the timeout runs
             if (generation !== this._selectGeneration) {
                 return;
             }
-            const placeholders = document.querySelectorAll(`#${this.gridId} .custom-select-placeholder`);
-            for (let placeholder of placeholders) {
-                const originalId = placeholder.dataset.originalId
-                const originalSelect = document.getElementById(originalId)
+            for (const container of document.querySelectorAll(`#${this.gridId} [data-multiselect-id]`)) {
+                const fieldId = container.dataset.multiselectId;
+                const searchKey = container.dataset.searchKey;
+                const select = document.getElementById(fieldId);
+                const button = container.querySelector('button');
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
 
-                if (!originalSelect) {
-                    console.warn('Original select not found for id', originalId)
-                    continue
+                if (!select) {
+                    console.warn('Original select not found for id', fieldId);
+                    continue;
                 }
 
-                const searchKey = this.#getSearchKeyForSelect(originalId)
-
-                // Restore saved selections to original select from state
-                if (searchKey && this.state.searchValues[searchKey]) {
-                    const savedValue = this.state.searchValues[searchKey]
-                    let savedArray = []
-
-                    if (typeof savedValue === 'string') {
-                        savedArray = savedValue.split(',').map(v => v.trim()).filter(v => v)
-                    } else if (Array.isArray(savedValue)) {
-                        savedArray = savedValue
+                // Restore saved selections
+                const savedValue = this.state.searchValues[searchKey];
+                if (savedValue) {
+                    const savedArray = typeof savedValue === 'string'
+                        ? savedValue.split(',').map(v => v.trim()).filter(v => v)
+                        : (Array.isArray(savedValue) ? savedValue : []);
+                    const savedSet = new Set(savedArray);
+                    for (const option of select.options) {
+                        option.selected = savedSet.has(option.value);
                     }
-
-                    const savedSet = new Set(savedArray)
-
-                    for (let option of Array.from(originalSelect.options)) {
-                        option.selected = savedSet.has(option.value)
+                    for (const checkbox of checkboxes) {
+                        checkbox.checked = savedSet.has(checkbox.value);
                     }
                 }
 
-                // Create instance - button will be created in placeholder's parent
-                const container = placeholder.parentElement
-                this.selectorInstances[originalId] = new CustomMultiSelect(container, originalSelect)
+                this.#updateMultiSelectButtonText(button, select);
+
+                const bsDropdown = bootstrap.Dropdown.getOrCreateInstance(button, {
+                    autoClose: false,
+                    popperConfig: { strategy: 'fixed' }
+                });
+
+                let outsideClickHandler = null;
+
+                container.querySelector('.dropdown-menu').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    bsDropdown.toggle();
+                });
+
+                button.addEventListener('show.bs.dropdown', () => {
+                    container.querySelector('.dropdown-menu').style.width = `${button.offsetWidth}px`;
+                    for (const checkbox of checkboxes) {
+                        checkbox.checked = Array.from(select.options).find(o => o.value === checkbox.value)?.selected ?? false;
+                    }
+                    outsideClickHandler = (e) => {
+                        if (!container.contains(e.target)) {
+                            bsDropdown.hide();
+                        }
+                    };
+                    document.addEventListener('click', outsideClickHandler, true);
+                });
+
+                button.addEventListener('hide.bs.dropdown', () => {
+                    document.removeEventListener('click', outsideClickHandler, true);
+                    outsideClickHandler = null;
+                });
+
+                button.addEventListener('hidden.bs.dropdown', () => {
+                    const checkedValues = new Set(Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value));
+                    let changed = false;
+                    for (const option of select.options) {
+                        const shouldBeSelected = checkedValues.has(option.value);
+                        if (option.selected !== shouldBeSelected) {
+                            option.selected = shouldBeSelected;
+                            changed = true;
+                        }
+                    }
+                    if (changed) {
+                        this.#updateMultiSelectButtonText(button, select);
+                        const values = Array.from(checkedValues);
+                        this.updateColumnValue(searchKey, values.length > 0 ? values : null);
+                        this.saveState();
+                        this.onSearch();
+                    }
+                });
             }
-        }, 0)
+        }, 0);
     }
 
-    /**
-     * Helper to find the search key associated with a select id
-     */
-    #getSearchKeyForSelect(selectId) {
-        // Look through grid columns to find matching field
-        for (const column of this.grid.config.columns) {
-            if (column.searchable && column.searchable.fieldId === selectId) {
-                return column.searchable.searchKey
-            }
+    #updateMultiSelectButtonText(button, select) {
+        const selected = Array.from(select.selectedOptions);
+        if (selected.length === 0) {
+            button.textContent = 'Intet filter';
+        } else if (selected.length === 1) {
+            button.textContent = selected[0].text;
+        } else {
+            button.textContent = `${selected.length} valgt`;
         }
-        return null
     }
 
     /**
@@ -300,12 +333,19 @@ export default class CustomGridFunctions {
         foundElement.classList.add(this.#INPUTCLASSNAME)
         foundElement.setAttribute('data-search-key', searchKey)
 
-        // Multi-selects become a custom dropdown: hide the original (keep it in
-        // the DOM) and emit a placeholder that initializeCustomSelects() turns
-        // into a CustomMultiSelect button.
         if (foundElement.hasAttribute('multiple')) {
-            foundElement.style.display = 'none'
-            return '<div class="custom-select-placeholder" data-original-id="' + fieldId + '"></div>'
+            foundElement.style.display = 'none';
+            const dropdown = document.querySelector(`[data-multiselect-for="${fieldId}"]`);
+            if (!dropdown) {
+                console.warn('No pre-rendered dropdown found for multi-select', fieldId);
+                return '<div></div>';
+            }
+            dropdown.dataset.multiselectId = fieldId;
+            dropdown.dataset.searchKey = searchKey;
+            delete dropdown.dataset.multiselectFor;
+            const html = dropdown.outerHTML;
+            dropdown.remove();
+            return html;
         }
 
         // Single selects keep the original behaviour: inject the element markup
@@ -317,7 +357,6 @@ export default class CustomGridFunctions {
         foundElement.remove()
         return html
     }
-
     /**
      * Generates a html input field with the given data-search-key attribute
      * @param {string} searchKey name of search parameter for this field
