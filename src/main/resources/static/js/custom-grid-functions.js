@@ -14,7 +14,6 @@ export default class CustomGridFunctions {
         searchValues: {}
     }
     #INPUTCLASSNAME
-    _selectGeneration = 0
 
     /**
      * Enabled custom sort, search and pagination for an existing GridJS object
@@ -88,11 +87,11 @@ export default class CustomGridFunctions {
     }
 
     initializeCustomSelects() {
-        const generation = ++this._selectGeneration;
+        this._selectAbortController?.abort();
+        this._selectAbortController = new AbortController();
+        const { signal } = this._selectAbortController;
+
         setTimeout(() => {
-            if (generation !== this._selectGeneration) {
-                return;
-            }
             for (const container of document.querySelectorAll(`#${this.gridId} [data-multiselect-id]`)) {
                 const fieldId = container.dataset.multiselectId;
                 const searchKey = container.dataset.searchKey;
@@ -105,7 +104,6 @@ export default class CustomGridFunctions {
                     continue;
                 }
 
-                // Restore saved selections
                 const savedValue = this.state.searchValues[searchKey];
                 if (savedValue) {
                     const savedArray = typeof savedValue === 'string'
@@ -127,8 +125,6 @@ export default class CustomGridFunctions {
                     popperConfig: { strategy: 'fixed' }
                 });
 
-                let outsideClickHandler = null;
-
                 container.querySelector('.dropdown-menu').addEventListener('click', (e) => {
                     e.stopPropagation();
                 });
@@ -143,20 +139,17 @@ export default class CustomGridFunctions {
                     for (const checkbox of checkboxes) {
                         checkbox.checked = Array.from(select.options).find(o => o.value === checkbox.value)?.selected ?? false;
                     }
-                    outsideClickHandler = (e) => {
+                    document.addEventListener('click', (e) => {
                         if (!container.contains(e.target)) {
                             bsDropdown.hide();
                         }
-                    };
-                    document.addEventListener('click', outsideClickHandler, true);
-                });
-
-                button.addEventListener('hide.bs.dropdown', () => {
-                    document.removeEventListener('click', outsideClickHandler, true);
-                    outsideClickHandler = null;
+                    }, { capture: true, signal });
                 });
 
                 button.addEventListener('hidden.bs.dropdown', () => {
+                    if (!document.contains(container)) {
+                        return;
+                    }
                     const checkedValues = new Set(Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value));
                     let changed = false;
                     for (const option of select.options) {
