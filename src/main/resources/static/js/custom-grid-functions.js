@@ -91,84 +91,120 @@ export default class CustomGridFunctions {
         this._selectAbortController = new AbortController();
         const { signal } = this._selectAbortController;
 
-        setTimeout(() => {
-            for (const container of document.querySelectorAll(`#${this.gridId} [data-multiselect-id]`)) {
-                const fieldId = container.dataset.multiselectId;
-                const searchKey = container.dataset.searchKey;
-                const select = document.getElementById(fieldId);
-                const button = container.querySelector('button');
-                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        for (const container of document.querySelectorAll(`#${this.gridId} [data-multiselect-id]`)) {
+            this.#initializeCustomSelect(container, signal);
+        }
+    }
 
-                if (!select) {
-                    console.warn('Original select not found for id', fieldId);
-                    continue;
-                }
+    #initializeCustomSelect(container, signal) {
+        const fieldId = container.dataset.multiselectId;
+        const searchKey = container.dataset.searchKey;
+        const select = document.getElementById(fieldId);
+        const button = container.querySelector('button');
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
 
-                const savedValue = this.state.searchValues[searchKey];
-                if (savedValue) {
-                    const savedArray = typeof savedValue === 'string'
-                        ? savedValue.split(',').map(v => v.trim()).filter(v => v)
-                        : (Array.isArray(savedValue) ? savedValue : []);
-                    const savedSet = new Set(savedArray);
-                    for (const option of select.options) {
-                        option.selected = savedSet.has(option.value);
-                    }
-                    for (const checkbox of checkboxes) {
-                        checkbox.checked = savedSet.has(checkbox.value);
-                    }
-                }
+        if (!select) {
+            console.warn('Original select not found for id', fieldId);
+            return;
+        }
 
-                this.#updateMultiSelectButtonText(button, select);
+        this.#applySavedMultiSelectValue(select, checkboxes, searchKey);
+        this.#updateMultiSelectButtonText(button, select);
 
-                const bsDropdown = bootstrap.Dropdown.getOrCreateInstance(button, {
-                    autoClose: false,
-                    popperConfig: { strategy: 'fixed' }
-                });
+        const bsDropdown = bootstrap.Dropdown.getOrCreateInstance(button, {
+            autoClose: false,
+            popperConfig: { strategy: 'fixed' }
+        });
 
-                container.querySelector('.dropdown-menu').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
+        this.#bindMultiSelectEvents({ container, select, button, checkboxes, searchKey, bsDropdown, signal });
+    }
 
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    bsDropdown.toggle();
-                });
+    #applySavedMultiSelectValue(select, checkboxes, searchKey) {
+        const savedValue = this.state.searchValues[searchKey];
+        if (!savedValue) {
+            return;
+        }
 
-                button.addEventListener('show.bs.dropdown', () => {
-                    container.querySelector('.dropdown-menu').style.width = `${button.offsetWidth}px`;
-                    for (const checkbox of checkboxes) {
-                        checkbox.checked = Array.from(select.options).find(o => o.value === checkbox.value)?.selected ?? false;
-                    }
-                    document.addEventListener('click', (e) => {
-                        if (!container.contains(e.target)) {
-                            bsDropdown.hide();
-                        }
-                    }, { capture: true, signal });
-                });
+        const savedArray = typeof savedValue === 'string'
+            ? savedValue.split(',').map(v => v.trim()).filter(v => v)
+            : (Array.isArray(savedValue) ? savedValue : []);
+        const savedSet = new Set(savedArray);
 
-                button.addEventListener('hidden.bs.dropdown', () => {
-                    if (!document.contains(container)) {
-                        return;
-                    }
-                    const checkedValues = new Set(Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value));
-                    let changed = false;
-                    for (const option of select.options) {
-                        const shouldBeSelected = checkedValues.has(option.value);
-                        if (option.selected !== shouldBeSelected) {
-                            option.selected = shouldBeSelected;
-                            changed = true;
-                        }
-                    }
-                    if (changed) {
-                        this.#updateMultiSelectButtonText(button, select);
-                        const values = Array.from(checkedValues);
-                        this.updateColumnValue(searchKey, values.length > 0 ? values : null);
-                        this.saveState();
-                        this.onSearch();
-                    }
-                });
+        for (const option of select.options) {
+            option.selected = savedSet.has(option.value);
+        }
+        for (const checkbox of checkboxes) {
+            checkbox.checked = savedSet.has(checkbox.value);
+        }
+        this.#syncDropdownItemActiveStates(checkboxes);
+    }
+
+    #bindMultiSelectEvents({ container, select, button, checkboxes, searchKey, bsDropdown, signal }) {
+        container.querySelector('.dropdown-menu').addEventListener('click', (e) => {
+            e.stopPropagation();
+        }, { signal });
+
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bsDropdown.toggle();
+        }, { signal });
+
+        button.addEventListener('show.bs.dropdown', () => {
+            // position:fixed breaks CSS % width, so match button width manually here
+            container.querySelector('.dropdown-menu').style.width = `${button.offsetWidth}px`;
+            for (const checkbox of checkboxes) {
+                checkbox.checked = Array.from(select.options).find(o => o.value === checkbox.value)?.selected ?? false;
             }
-        }, 0);
+            this.#syncDropdownItemActiveStates(checkboxes);
+        }, { signal });
+
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) {
+                bsDropdown.hide();
+            }
+        }, { capture: true, signal });
+
+        button.addEventListener('hidden.bs.dropdown', () => {
+            this.#commitMultiSelectChanges(container, select, button, checkboxes, searchKey);
+        }, { signal });
+
+        for (const checkbox of checkboxes) {
+            checkbox.addEventListener('change', () => {
+                checkbox.closest('.dropdown-item')?.classList.toggle('active', checkbox.checked);
+            }, { signal });
+        }
+    }
+
+    #commitMultiSelectChanges(container, select, button, checkboxes, searchKey) {
+        if (!document.contains(container)) {
+            return;
+        }
+
+        const checkedValues = new Set(Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value));
+        let changed = false;
+        for (const option of select.options) {
+            const shouldBeSelected = checkedValues.has(option.value);
+            if (option.selected !== shouldBeSelected) {
+                option.selected = shouldBeSelected;
+                changed = true;
+            }
+        }
+
+        if (!changed) {
+            return;
+        }
+
+        this.#updateMultiSelectButtonText(button, select);
+        const values = Array.from(checkedValues);
+        this.updateColumnValue(searchKey, values.length > 0 ? values : null);
+        this.saveState();
+        this.onSearch();
+    }
+
+    #syncDropdownItemActiveStates(checkboxes) {
+        for (const checkbox of checkboxes) {
+            checkbox.closest('.dropdown-item')?.classList.toggle('active', checkbox.checked);
+        }
     }
 
     #updateMultiSelectButtonText(button, select) {

@@ -77,18 +77,19 @@
                             </select>
 
                             <!-- Custom search selectors-->
-                            <select class="form-control form-select editField" data-trigger="" name="taskStatusSearchSelector" id="taskStatusSearchSelector" tabindex="-1" required multiple hidden>
+                            <select class="form-control form-select editField" data-trigger="" name="taskStatusSearchSelector" id="taskStatusSearchSelector" tabindex="-1" multiple hidden>
                                 <option th:text="'Alle'" th:value="null"></option>
                                 <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.TaskDeadlineStatus).values()}"
-                                        th:value="${option}" th:text="${option.message}"></option>
+                                        th:value="${option}"
+                                        th:text="${option.name() == 'FUTURE'} ? 'Ikke udført' : ${option.message}"></option>
                             </select>
                             <div th:replace="~{fragments/component/customSelector :: multiSelectDropdown('taskStatusSearchSelector', ~{::  #taskStatusDropdownItems})}">
                                 <ul id="taskStatusDropdownItems" class="dropdown-menu">
                                     <li><label class="dropdown-item d-flex gap-2 align-items-center"><input type="checkbox" th:value="null"> Alle</label></li>
                                     <li th:each="option : ${T(dk.digitalidentity.model.entity.enums.TaskDeadlineStatus).values()}">
-                                        <label class="dropdown-item d-flex gap-2 align-items-center">
+                                        <label class="dropdown-item d-flex gap-2 align-items-center ps-2">
                                             <input type="checkbox" th:value="${option}">
-                                            <span th:text="${option.message}"></span>
+                                            <span th:text="${option.name() == 'FUTURE'} ? 'Ikke udført' : ${option.message}"></span>
                                         </label>
                                     </li>
                                 </ul>
