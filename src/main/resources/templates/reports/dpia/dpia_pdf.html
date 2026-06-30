@@ -26,23 +26,11 @@
             font-size: 9px;
         }
 
+        .col-4 { width: 34%; }
+        .col-6 { width: 66%; }
+
         tr, th, td {
             border: 1px solid black;
-        }
-
-        .col-4 {
-            flex: 0 0 auto;
-            width: 34%;
-        }
-
-        .col-8 {
-            flex: 0 0 auto;
-            width: 66%;
-        }
-
-        .riskProfileTable {
-            font-size: 12px;
-            text-align: left;
         }
 
         table {
@@ -56,49 +44,6 @@
             overflow-wrap: break-word;
             word-break: break-word;
             white-space: normal;
-        }
-
-        table td > .answer-container {
-            display: block;
-            width: 100%;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            white-space: normal;
-        }
-
-        img {
-            display: block;
-            margin: auto;
-            object-fit: contain;
-        }
-
-        .beforeTableSection, .afterTableSection {
-            width: 47%;
-            display: inline-block;
-            vertical-align: top;
-        }
-
-        .threatAndTasksTables {
-            font-size: 9px;
-            word-wrap: break-word;
-            table-layout: fixed;
-            width: 100%;
-        }
-
-        .threatAndTasksTables td, .threatAndTasksTables th {
-            overflow-wrap: break-word;
-            max-width: 100px;
-            white-space: normal;
-        }
-
-        .riskScoreField {
-            width: 65px !important;
-            height: 65px !important;
-        }
-
-        tr {
-            page-break-inside:avoid
         }
 
         .bg-green {
@@ -117,10 +62,10 @@
 </head>
 <body>
 
-<h1 id="Title" th:text="'Konsekvensanalyse vedr. ' + ${assetNames}" style="text-align: center;"></h1>
-<div class="DPIASection" th:each="section : ${dpiaSections}">
-    <h2 class="DPIAHeader" th:text="${section.heading}"></h2>
-    <p class="DPIADescription" th:utext="${section.explainer}"></p>
+<h1 th:text="'Konsekvensanalyse vedr. ' + ${assetNames}" style="text-align: center;"></h1>
+<div th:each="section : ${dpiaSections}">
+    <h2 th:text="${section.heading}"></h2>
+    <p th:utext="${section.explainer}"></p>
     <table class="table">
         <thead>
         <tr>
@@ -131,45 +76,55 @@
         <tbody>
         <th:block th:if="${section.sectionIdentifier == 'scope'}">
             <tr>
-                <td>Systemets navn</td>
-                <td th:text="${assetNames}"></td>
+                <td class="col-4">Systemets navn</td>
+                <td class="col-6">
+                    <div class="answer-container" th:utext="${assetNames}" ></div>
+                </td>
             </tr>
             <tr>
-                <td>Systemejer</td>
-                <td th:text="${responsibleUserNames}"></td>
+                <td class="col-4">Systemejer</td>
+                <td class="col-6">
+                    <div class="answer-container" th:utext="${responsibleUserNames}" ></div>
+                </td>
             </tr>
             <tr>
-                <td>Systemtype</td>
-                <td th:text="${assetTypeNames}"></td>
+                <td class="col-4">Systemtype</td>
+                <td class="col-6">
+                    <div class="answer-container" th:utext="${assetTypeNames}" ></div>
+                </td>
             </tr>
             <tr>
-                <td>Leverandør</td>
-                <td th:text="${supplierName}"></td>
+                <td class="col-4">Leverandør</td>
+                <td class="col-6">
+                    <div class="answer-container" th:utext="${supplierName}" ></div>
+                </td>
             </tr>
             <tr>
-                <td>Systemansvarlig</td>
-                <td th:text="${managerNames}"></td>
+                <td class="col-4">Systemansvarlig</td>
+                <td class="col-6">
+                    <div class="answer-container" th:utext="${managerNames}" ></div>
+                </td>
             </tr>
         </th:block>
         <tr th:each="question : ${section.questions}">
-            <td th:text="${question.question}"></td>
-            <td>
+            <td class="col-4" th:text="${question.question}"></td>
+            <td class="col-6">
                 <div class="answer-container" th:utext="${question.response}" ></div>
             </td>
         </tr>
         </tbody>
     </table>
 </div>
-<div id="RiskAssessments">
-    <h2 class="DPIAHeader">Risikovurderinger</h2>
-    <p class="DPIADescription">Denne sektion indeholder en liste af valgte risikovurderinger af aktivet, der skal medtages i det samlede materiale</p>
+<div>
+    <h2 >Risikovurderinger</h2>
+    <p>Denne sektion indeholder en liste af valgte risikovurderinger af aktivet, der skal medtages i det samlede materiale</p>
     <table class="table">
         <thead>
         <tr>
-            <th class="col-lg-8">Risikovurdering</th>
-            <th class="col-lg-2">Dato</th>
-            <th class="col-lg-1">Signeret?</th>
-            <th class="col-lg-2">Status</th>
+            <th>Risikovurdering</th>
+            <th>Dato</th>
+            <th>Signeret?</th>
+            <th>Status</th>
         </tr>
         </thead>
         <tbody>
@@ -186,9 +141,9 @@
         </tbody>
     </table>
 </div>
-<div id="ConclusionSection">
-    <h2 class="DPIAHeader">Konklusion</h2>
-    <div class="DPIADescription" th:utext="${conclusion}" style="max-width: 100%"></div>
+<div>
+    <h2>Konklusion</h2>
+    <div th:utext="${conclusion}" style="max-width: 100%"></div>
 </div>
 
 </body>

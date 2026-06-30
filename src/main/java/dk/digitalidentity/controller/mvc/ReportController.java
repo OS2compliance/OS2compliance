@@ -1,6 +1,7 @@
 package dk.digitalidentity.controller.mvc;
 
 import com.lowagie.text.DocumentException;
+
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
@@ -26,19 +27,20 @@ import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
 import dk.digitalidentity.report.ReportThreatAssessmentXlsView;
+import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.riskimage.RiskImageService;
 import dk.digitalidentity.report.riskimage.RiskImageView;
 import dk.digitalidentity.report.riskimage.dto.ThreatRow;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
+import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireReport;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
-import dk.digitalidentity.service.exporter.DPIADocxExportService;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
@@ -51,6 +53,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -69,6 +73,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -116,7 +121,6 @@ public class ReportController {
 	private final RiskImageService riskImageService;
 	private final SettingsService settingsService;
 	private final ChoiceService choiceService;
-	private final DPIADocxExportService dpiaDocxExportService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -440,13 +444,19 @@ public class ReportController {
                     }
                 );
         } else if (type.equals("DOCX")) {
-			return ResponseEntity.ok()
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".docx\"")
-				.body(outputStream -> {
-					try (final XWPFDocument document = dpiaDocxExportService.export(assetService.getDPIAHTML(dpia))) {
-						document.write(outputStream);
-					}
-				});
+			try {
+				ByteArrayOutputStream data = assetService.getDPIADocx(dpia);
+
+				return ResponseEntity.ok()
+					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".docx\"")
+					.body(outputStream -> {
+						data.writeTo(outputStream);
+					});
+			} catch (Docx4JException e) {
+				log.error("Failed to convert DPIA to docx: ", e);
+				return ResponseEntity.internalServerError().build();
+			}
+
 		}
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);

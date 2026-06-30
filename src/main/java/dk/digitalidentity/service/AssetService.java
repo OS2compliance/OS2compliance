@@ -48,6 +48,13 @@ import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.docx4j.Docx4J;
+import org.docx4j.convert.in.xhtml.XHTMLImporterImpl;
+import org.docx4j.convert.in.xhtml.renderer.DocxRenderer;
+import org.docx4j.convert.out.HTMLSettings;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -425,6 +432,11 @@ public class AssetService implements TagableService<Asset> {
 		return convertHtmlToPdf(html);
 	}
 
+	public ByteArrayOutputStream getDPIADocx(DPIA dpia) throws Docx4JException {
+		String html = getDPIAHTML(dpia);
+		return convertHtmlToDocx(html);
+	}
+
 	public byte[] getDPIAScreeningPdf(DPIA dpia) throws IOException {
 		String html = getDPIAScreeningHTML(dpia);
 		return convertHtmlToPdf(html);
@@ -604,6 +616,24 @@ public class AssetService implements TagableService<Asset> {
 		var result = outputStream.toByteArray();
 		outputStream.close();
 		return result;
+	}
+
+	private ByteArrayOutputStream convertHtmlToDocx(String html) throws Docx4JException {
+		WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.createPackage();
+        XHTMLImporterImpl importer = new XHTMLImporterImpl(wordMLPackage);
+		importer.setRenderer(new DocxRenderer(20f, 20));
+
+		wordMLPackage.getMainDocumentPart().getContent().addAll( 
+				importer.convert( html, null) );
+
+		HTMLSettings htmlSettings = Docx4J.createHTMLSettings();
+		htmlSettings.setOpcPackage(wordMLPackage);
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+		wordMLPackage.save(baos);
+
+		return baos;
 	}
 
 	private String handleResponseImg(String response) {
