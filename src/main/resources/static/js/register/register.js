@@ -2,7 +2,6 @@ import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { formatThreatTypes, formatThreatCatalogs, formatRiskAssessment } from "../risk-assessment-formatter.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
-import CustomGridFunctions from "../custom-grid-functions.js";
 
 let grid = null;
 

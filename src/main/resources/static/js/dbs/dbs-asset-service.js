@@ -1,6 +1,5 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
-import CustomGridFunctions from "../custom-grid-functions.js";
 
 let dbsAssetService = new DBSAssetService();
 document.addEventListener("DOMContentLoaded", function(event) {

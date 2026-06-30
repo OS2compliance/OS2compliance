@@ -1,5 +1,4 @@
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
-import CustomGridFunctions from "../../../custom-grid-functions.js";
 
 export default class MailLogListService {
     /**Endpoint for grid data*/

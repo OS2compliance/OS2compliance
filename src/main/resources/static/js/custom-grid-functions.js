@@ -2,7 +2,7 @@
  * Enables custom sort, search and pagination for an existing grid.
  * Warning: Overwrites some GridJS configs for the grid, in order to enable the custom features.
  */
-export default class CustomGridFunctions {
+class CustomGridFunctions {
     dataUrl
     grid
     gridId
@@ -125,9 +125,12 @@ export default class CustomGridFunctions {
             return;
         }
 
-        const savedArray = typeof savedValue === 'string'
-            ? savedValue.split(',').map(v => v.trim()).filter(v => v)
-            : (Array.isArray(savedValue) ? savedValue : []);
+        let savedArray = [];
+        if (typeof savedValue === 'string') {
+            savedArray = savedValue.split(',').map(v => v.trim()).filter(Boolean);
+        } else if (Array.isArray(savedValue)) {
+            savedArray = savedValue;
+        }
         const savedSet = new Set(savedArray);
 
         for (const option of select.options) {
@@ -180,7 +183,7 @@ export default class CustomGridFunctions {
             return;
         }
 
-        const checkedValues = new Set(Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value));
+        const checkedValues = new Set(Array.from(checkboxes).filter(cb => cb.checked && cb.value !== '').map(cb => cb.value));
         let changed = false;
         for (const option of select.options) {
             const shouldBeSelected = checkedValues.has(option.value);
@@ -456,6 +459,8 @@ export default class CustomGridFunctions {
             } else {
                 return element.value;
             }
+        } else {
+            return null;
         }
     }
 
