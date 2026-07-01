@@ -73,7 +73,10 @@ function DBSOversightService() {
                     name: "DBS",
                     sort: false,
                     formatter: (cell, row) => {
-                        var html = '<ul>'
+                        if (!cell) {
+                            return '';
+                        }
+                        let html = '<ul>'
 
                         for (let i = 0; i < cell.length; i++) {
                             html += '<li>' + cell[i].name + '</li>'
