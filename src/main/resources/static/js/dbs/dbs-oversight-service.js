@@ -1,4 +1,5 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
+import {initSaveAsExcelButton} from "../excel-export/excel-export-init.js";
 
 let dbsOversightService = new DBSOversightService();
 document.addEventListener("DOMContentLoaded", function(event) {
