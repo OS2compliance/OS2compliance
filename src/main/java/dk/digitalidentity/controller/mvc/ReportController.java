@@ -32,9 +32,7 @@ import dk.digitalidentity.report.riskimage.RiskImageService;
 import dk.digitalidentity.report.riskimage.RiskImageView;
 import dk.digitalidentity.report.riskimage.dto.ThreatRow;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
-import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
-import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireReport;
@@ -58,6 +56,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -448,6 +447,7 @@ public class ReportController {
 
 				return ResponseEntity.ok()
 					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".docx\"")
+					.contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
 					.body(outputStream -> {
 						data.writeTo(outputStream);
 					});
