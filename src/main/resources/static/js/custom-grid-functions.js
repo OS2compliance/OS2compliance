@@ -1,6 +1,7 @@
 /**
- * Enables custom sort, search and pagination for an existing grid.
- * Warning: Overwrites some GridJS configs for the grid, in order to enable the custom features.
+ * Adds server-side column search, sort, and pagination to an existing GridJS grid.
+ * GridJS's built-in search operates client-side and doesn't compose well with server-side
+ * pagination, so we override those configs and inject our own filter inputs instead.
  */
 class CustomGridFunctions {
     dataUrl
@@ -16,7 +17,6 @@ class CustomGridFunctions {
     #INPUTCLASSNAME
 
     /**
-     * Enabled custom sort, search and pagination for an existing GridJS object
      * @param {Grid} grid GridJS grid element
      * @param {string} dataUrl Server endpoint handling data request
      * @param gridId
@@ -87,9 +87,10 @@ class CustomGridFunctions {
     }
 
     /**
-     * Re-initializes all custom multiselect widgets in the grid. Tears down
-     * previous event listeners via AbortController before wiring up fresh ones,
-     * so it is safe to call on every grid re-render.
+     * GridJS destroys and recreates the DOM on every render, so multiselect widgets
+     * must be fully re-initialized each time. We use an AbortController to tear down
+     * all previous listeners in one call rather than tracking individual references,
+     * which would leak across renders.
      */
     initializeCustomSelects() {
         this._selectAbortController?.abort();
@@ -102,9 +103,12 @@ class CustomGridFunctions {
     }
 
     /**
-     * Initializes one custom multiselect widget: restores saved filter state,
-     * sets the button label, creates a Bootstrap Dropdown instance with
-     * autoClose:false and position:fixed, then binds all event handlers.
+     * Initializes a multiselect widget.
+     *
+     * `autoClose: false` is required because Bootstrap would otherwise close the
+     * dropdown on any click inside it before we can read the checkbox state.
+     * `strategy: 'fixed'` prevents the dropdown from being clipped by the table
+     * header's `overflow: hidden`.
      */
     #initializeCustomSelect(container, signal) {
         const fieldId = container.dataset.multiselectId;
@@ -130,9 +134,10 @@ class CustomGridFunctions {
     }
 
     /**
-     * Reads the saved filter value for searchKey from state (accepting either a
-     * comma-separated string or an array), then marks matching <option> elements
-     * and checkboxes as selected/checked and syncs the active CSS classes.
+     * Applies the saved value from `this.state` to the multiselect widget.
+     *
+     * The grid DOM is recreated on every render, so the filter state cannot be read
+     * from the DOM — it must come from `this.state`, which survives across renders.
      */
     #applySavedMultiSelectValue(select, checkboxes, searchKey) {
         const savedValue = this.state.searchValues[searchKey];
@@ -158,14 +163,15 @@ class CustomGridFunctions {
     }
 
     /**
-     * Wires up all event listeners for a multiselect widget:
-     * - Stops click propagation inside the dropdown menu to prevent unintended closes.
-     * - Toggles the dropdown on button click.
-     * - On show: manually matches dropdown width to button width (position:fixed breaks CSS % widths)
-     *   and re-syncs checkbox states from the hidden <select>.
-     * - On outside click: hides the dropdown.
-     * - On hidden: commits checkbox selections to the <select> and triggers search.
-     * - On checkbox change: toggles the 'active' class on the parent dropdown item.
+     * Binds event handlers to the multiselect widget.
+     *
+     * Key decisions:
+     * - `stopPropagation` on the menu prevents Bootstrap's document-level handler
+     *   from treating inner clicks as "outside" clicks and closing the dropdown.
+     * - Width is set manually on `show` because `position: fixed` breaks CSS
+     *   percentage widths relative to the parent element.
+     * - Changes are committed on `hidden` (not per-checkbox) so all selections
+     *   result in a single search request instead of one per checkbox.
      */
     #bindMultiSelectEvents({ container, select, button, checkboxes, searchKey, bsDropdown, signal }) {
         container.querySelector('.dropdown-menu').addEventListener('click', (e) => {
@@ -204,10 +210,13 @@ class CustomGridFunctions {
     }
 
     /**
-     * Called when the dropdown closes. Compares checked checkboxes against the
-     * hidden <select>'s current state; if anything changed, updates the <select>,
-     * refreshes the button label, saves the new values to state, and triggers a
-     * search. No-ops if the container has been removed from the DOM.
+     * Applies the selected values from the multiselect widget to the hidden
+     * `<select>` and updates the button text.
+     *
+     * Diffing against the hidden `<select>` before committing avoids triggering a
+     * server re-fetch when the user opens and closes the dropdown without changing
+     * anything. The container guard handles the edge case where the grid re-renders
+     * while the dropdown is open.
      */
     #commitMultiSelectChanges(container, select, button, checkboxes, searchKey) {
         if (!document.contains(container)) {
@@ -236,8 +245,8 @@ class CustomGridFunctions {
     }
 
     /**
-     * Toggles the 'active' CSS class on each checkbox's parent .dropdown-item
-     * to match its checked state. Pure visual sync — no state changes.
+     * Toggle active/inactive states for dropdown items based on the checked state
+     * of their corresponding checkboxes.
      */
     #syncDropdownItemActiveStates(checkboxes) {
         for (const checkbox of checkboxes) {
@@ -246,8 +255,7 @@ class CustomGridFunctions {
     }
 
     /**
-     * Sets the dropdown button label based on how many options are selected:
-     * "Intet filter" (none), the option text (one), or "N valgt" (multiple).
+     * Updates the multiselect button text based on the selected options.
      */
     #updateMultiSelectButtonText(button, select) {
         const selected = Array.from(select.selectedOptions);
@@ -261,7 +269,7 @@ class CustomGridFunctions {
     }
 
     /**
-     * Generates a parameters for url request, based on current state
+     * Generates parameters for url request, based on the current state.
      */
     getParamString() {
         const params = new URLSearchParams()
@@ -291,7 +299,6 @@ class CustomGridFunctions {
     }
 
     /**
-     * updates state on pagination change
      * @param {URL} prev
      * @param {number} page
      * @param {number} limit
@@ -395,12 +402,12 @@ class CustomGridFunctions {
     }
 
     /**
-     * Looks up a pre-existing DOM element by fieldId for use as a grid header
-     * search field. For <select multiple>: hides the original element, moves the
-     * pre-rendered Bootstrap dropdown wrapper ([data-multiselect-for]) into the
-     * grid by stamping it with data-multiselect-id/data-search-key and returning
-     * its outerHTML. For single selects: captures outerHTML and removes the
-     * original. Falls back to a generated text input if the element is not found.
+     * For multiselects: the dropdown wrapper is moved (not cloned) into the grid
+     * header as an HTML string, so `initializeCustomSelects` can re-wire it after
+     * each render. The original `<select>` stays in the DOM but hidden, acting as
+     * the source of truth for selected values.
+     * For single selects: the original element is removed to prevent duplicate IDs
+     * after GridJS injects the captured outerHTML into the header.
      */
     findPredefinedInputFieldHTML(fieldId, searchKey, isHidden) {
         const foundElement = document.getElementById(fieldId)
@@ -436,8 +443,8 @@ class CustomGridFunctions {
         foundElement.remove()
         return html
     }
+
     /**
-     * Generates a html input field with the given data-search-key attribute
      * @param {string} searchKey name of search parameter for this field
      * @returns Text input field as HTML
      */
@@ -484,8 +491,8 @@ class CustomGridFunctions {
     }
 
     /**
-     * Change handler for any search field. Extracts the field's current value,
-     * updates the column filter state for key, saves state, and triggers a search.
+     * Single entry point for all search field changes so state update, persistence,
+     * and re-fetch always happen together and in the right order.
      */
     handleSearchFieldChange(event, key) {
         const target = this.#findSearchField(event)
@@ -497,9 +504,8 @@ class CustomGridFunctions {
     }
 
     /**
-     * Reads the current value from an input or select element. Returns a string
-     * for text inputs and single selects, an array of strings for multi-selects,
-     * and null for null input or unrecognized element types.
+     * Returns an array for multi-selects so `getParamString` can join the values
+     * as a single comma-separated parameter rather than repeating the key.
      */
     #getSearchFieldValue(element) {
         if (!element) {
@@ -522,10 +528,9 @@ class CustomGridFunctions {
 
 
     /**
-     * Resolves the actual search field element from a DOM event. Walks up from
-     * the event target looking for the input class directly; if not found, checks
-     * whether the target is inside a Choices.js wrapper and queries within that
-     * instead. Returns null if no search field can be found.
+     * Choices.js wraps the underlying `<select>` in its own container, so
+     * `event.target` may be a Choices.js element rather than the input we track.
+     * The fallback queries within the Choices wrapper to find the actual field.
      */
     #findSearchField(event) {
         const target = event.target
@@ -548,7 +553,6 @@ class CustomGridFunctions {
      * Updates the grid based on values of all search fields
      */
     onSearch() {
-        // For some reason grid.js reset the column sort after server fetch, or forceRender, so set it again here.
         this.grid.config.columns.forEach(column => {
             column.columns.forEach(subcolumn => {subcolumn.sort = !!column.searchable;})
         })
@@ -568,7 +572,8 @@ class CustomGridFunctions {
     }
 
     /**
-     * Loads current state from local storage
+     * Restores state persisted by `saveState`. Called on init and before each
+     * render so filter inputs reflect what was active in the previous session.
      */
     loadState() {
         const retrievedState = JSON.parse(localStorage.getItem(`${this.dataUrl}_search`))
