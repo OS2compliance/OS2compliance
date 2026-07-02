@@ -86,6 +86,11 @@ class CustomGridFunctions {
         }
     }
 
+    /**
+     * Re-initializes all custom multiselect widgets in the grid. Tears down
+     * previous event listeners via AbortController before wiring up fresh ones,
+     * so it is safe to call on every grid re-render.
+     */
     initializeCustomSelects() {
         this._selectAbortController?.abort();
         this._selectAbortController = new AbortController();
@@ -96,6 +101,11 @@ class CustomGridFunctions {
         }
     }
 
+    /**
+     * Initializes one custom multiselect widget: restores saved filter state,
+     * sets the button label, creates a Bootstrap Dropdown instance with
+     * autoClose:false and position:fixed, then binds all event handlers.
+     */
     #initializeCustomSelect(container, signal) {
         const fieldId = container.dataset.multiselectId;
         const searchKey = container.dataset.searchKey;
@@ -119,6 +129,11 @@ class CustomGridFunctions {
         this.#bindMultiSelectEvents({ container, select, button, checkboxes, searchKey, bsDropdown, signal });
     }
 
+    /**
+     * Reads the saved filter value for searchKey from state (accepting either a
+     * comma-separated string or an array), then marks matching <option> elements
+     * and checkboxes as selected/checked and syncs the active CSS classes.
+     */
     #applySavedMultiSelectValue(select, checkboxes, searchKey) {
         const savedValue = this.state.searchValues[searchKey];
         if (!savedValue) {
@@ -142,6 +157,16 @@ class CustomGridFunctions {
         this.#syncDropdownItemActiveStates(checkboxes);
     }
 
+    /**
+     * Wires up all event listeners for a multiselect widget:
+     * - Stops click propagation inside the dropdown menu to prevent unintended closes.
+     * - Toggles the dropdown on button click.
+     * - On show: manually matches dropdown width to button width (position:fixed breaks CSS % widths)
+     *   and re-syncs checkbox states from the hidden <select>.
+     * - On outside click: hides the dropdown.
+     * - On hidden: commits checkbox selections to the <select> and triggers search.
+     * - On checkbox change: toggles the 'active' class on the parent dropdown item.
+     */
     #bindMultiSelectEvents({ container, select, button, checkboxes, searchKey, bsDropdown, signal }) {
         container.querySelector('.dropdown-menu').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -178,6 +203,12 @@ class CustomGridFunctions {
         }
     }
 
+    /**
+     * Called when the dropdown closes. Compares checked checkboxes against the
+     * hidden <select>'s current state; if anything changed, updates the <select>,
+     * refreshes the button label, saves the new values to state, and triggers a
+     * search. No-ops if the container has been removed from the DOM.
+     */
     #commitMultiSelectChanges(container, select, button, checkboxes, searchKey) {
         if (!document.contains(container)) {
             return;
@@ -204,12 +235,20 @@ class CustomGridFunctions {
         this.onSearch();
     }
 
+    /**
+     * Toggles the 'active' CSS class on each checkbox's parent .dropdown-item
+     * to match its checked state. Pure visual sync — no state changes.
+     */
     #syncDropdownItemActiveStates(checkboxes) {
         for (const checkbox of checkboxes) {
             checkbox.closest('.dropdown-item')?.classList.toggle('active', checkbox.checked);
         }
     }
 
+    /**
+     * Sets the dropdown button label based on how many options are selected:
+     * "Intet filter" (none), the option text (one), or "N valgt" (multiple).
+     */
     #updateMultiSelectButtonText(button, select) {
         const selected = Array.from(select.selectedOptions);
         if (selected.length === 0) {
@@ -355,6 +394,14 @@ class CustomGridFunctions {
         })
     }
 
+    /**
+     * Looks up a pre-existing DOM element by fieldId for use as a grid header
+     * search field. For <select multiple>: hides the original element, moves the
+     * pre-rendered Bootstrap dropdown wrapper ([data-multiselect-for]) into the
+     * grid by stamping it with data-multiselect-id/data-search-key and returning
+     * its outerHTML. For single selects: captures outerHTML and removes the
+     * original. Falls back to a generated text input if the element is not found.
+     */
     findPredefinedInputFieldHTML(fieldId, searchKey, isHidden) {
         const foundElement = document.getElementById(fieldId)
 
@@ -436,6 +483,10 @@ class CustomGridFunctions {
         }
     }
 
+    /**
+     * Change handler for any search field. Extracts the field's current value,
+     * updates the column filter state for key, saves state, and triggers a search.
+     */
     handleSearchFieldChange(event, key) {
         const target = this.#findSearchField(event)
         const value = this.#getSearchFieldValue(target)
@@ -445,6 +496,11 @@ class CustomGridFunctions {
         this.onSearch()
     }
 
+    /**
+     * Reads the current value from an input or select element. Returns a string
+     * for text inputs and single selects, an array of strings for multi-selects,
+     * and null for null input or unrecognized element types.
+     */
     #getSearchFieldValue(element) {
         if (!element) {
             return null;
@@ -465,6 +521,12 @@ class CustomGridFunctions {
     }
 
 
+    /**
+     * Resolves the actual search field element from a DOM event. Walks up from
+     * the event target looking for the input class directly; if not found, checks
+     * whether the target is inside a Choices.js wrapper and queries within that
+     * instead. Returns null if no search field can be found.
+     */
     #findSearchField(event) {
         const target = event.target
         if (target) {
