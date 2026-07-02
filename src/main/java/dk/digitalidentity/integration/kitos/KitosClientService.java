@@ -42,6 +42,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -157,29 +158,37 @@ public class KitosClientService {
      */
     public void updateBusinessCriticalAndArchiveDuty(final String itSystemUuid, boolean critical, AssetEO.ArchiveDuty archiveDuty) {
         final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUuid));
-        final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
 
 		// Business critical moved from GDPR to General in the Kitos v2 API.
-		// Kitos PATCH replaces a provided section wholesale, so keep the general
-		// data mapped from the original usage and only change businessCritical.
-		if (update.getGeneral() == null) {
-			update.setGeneral(new GeneralDataUpdateRequestDTO());
-		}
-		update.getGeneral().setIsBusinessCritical(critical ? YesNoDontKnowChoice.YES : YesNoDontKnowChoice.NO);
+		final YesNoDontKnowChoice wantedCritical = critical ? YesNoDontKnowChoice.YES : YesNoDontKnowChoice.NO;
+		final ArchiveDutyChoice wantedArchiveDuty = archiveDuty != null ? toArchiveDutyChoice(archiveDuty) : null;
 
-		if (archiveDuty != null) {
+		// Only patch sections whose value actually changed, so concurrent
+		// Kitos-side edits are not overwritten with stale data from the last sync.
+		final EnumSet<PatchSection> sections = EnumSet.noneOf(PatchSection.class);
+		if (originalUsage.getGeneral() == null || wantedCritical != originalUsage.getGeneral().getIsBusinessCritical()) {
+			sections.add(PatchSection.GENERAL);
+		}
+		if (wantedArchiveDuty != null && (originalUsage.getArchiving() == null || wantedArchiveDuty != originalUsage.getArchiving().getArchiveDuty())) {
+			sections.add(PatchSection.ARCHIVING);
+		}
+		if (sections.isEmpty()) {
+			return;
+		}
+
+		final UpdateItSystemUsageRequestDTO update = toPatchRequest(originalUsage, sections);
+		if (sections.contains(PatchSection.GENERAL)) {
+			if (update.getGeneral() == null) {
+				update.setGeneral(new GeneralDataUpdateRequestDTO());
+			}
+			update.getGeneral().setIsBusinessCritical(wantedCritical);
+		}
+		if (sections.contains(PatchSection.ARCHIVING)) {
 			if (update.getArchiving() == null) {
 				update.setArchiving(new ArchivingUpdateRequestDTO());
 			}
-			update.getArchiving().setArchiveDuty(toArchiveDutyChoice(archiveDuty));
+			update.getArchiving().setArchiveDuty(wantedArchiveDuty);
 		}
-
-        // Only send general (business critical) and archiving
-        update.setGdpr(null);
-        update.setLocalKleDeviations(null);
-        update.setOrganizationUsage(null);
-        update.setExternalReferences(null);
-        update.setRoles(null);
 
 		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update));
     }
@@ -189,20 +198,13 @@ public class KitosClientService {
 	 */
 	public void updateAssetRiskAssessment(String itSystemUsageUuid, AssetRiskKitosEvent event) {
 		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUsageUuid));
-		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+		final UpdateItSystemUsageRequestDTO update = toPatchRequest(originalUsage, EnumSet.of(PatchSection.GDPR));
 
 		if (update.getGdpr() == null) {
 			update.setGdpr(new GDPRWriteRequestDTO());
 		}
-		final GDPRWriteRequestDTO gdpr = update.getGdpr();
-		setGdprFieldsNull(gdpr);
+		setGdprFieldsNull(update.getGdpr());
 
-		// Only send
-		update.setGeneral(null);
-		update.setLocalKleDeviations(null);
-		update.setOrganizationUsage(null);
-		update.setExternalReferences(null);
-		update.setRoles(null);
 		update.getGdpr().setRiskAssessmentConducted(event.isRiskAssessmentConducted() ? YesNoDontKnowIrrelevantChoice.YES : YesNoDontKnowIrrelevantChoice.NO);
 		update.getGdpr().setRiskAssessmentConductedDate(getOffsetDateTime(event.getRiskAssessmentConductedDate()));
 		update.getGdpr().setRiskAssessmentResult(getRiskAssessmentResult(event.getResult()));
@@ -219,20 +221,13 @@ public class KitosClientService {
 	 */
 	public void updateAssetDPIA(String itSystemUsageUuid, AssetDPIAKitosEvent event) {
 		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUsageUuid));
-		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+		final UpdateItSystemUsageRequestDTO update = toPatchRequest(originalUsage, EnumSet.of(PatchSection.GDPR));
 
 		if (update.getGdpr() == null) {
 			update.setGdpr(new GDPRWriteRequestDTO());
 		}
-		final GDPRWriteRequestDTO gdpr = update.getGdpr();
-		setGdprFieldsNull(gdpr);
+		setGdprFieldsNull(update.getGdpr());
 
-		// Only send
-		update.setGeneral(null);
-		update.setLocalKleDeviations(null);
-		update.setOrganizationUsage(null);
-		update.setExternalReferences(null);
-		update.setRoles(null);
 		update.getGdpr().setDpiaConducted(YesNoDontKnowChoice.YES);
 		update.getGdpr().setDpiaDate(getOffsetDateTime(event.getDpiaDate()));
 		update.getGdpr().setRiskAssessmentDocumentation(new SimpleLinkDTO());
@@ -240,6 +235,31 @@ public class KitosClientService {
 		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getDpiaUrl());
 
 		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
+	}
+
+	private enum PatchSection { GENERAL, GDPR, ARCHIVING }
+
+	/**
+	 * Map the original usage to a PATCH request containing only the given sections.
+	 * Kitos PATCH replaces a provided section wholesale and leaves omitted sections
+	 * unchanged, so every section not being patched must be nulled (= omitted).
+	 */
+	private UpdateItSystemUsageRequestDTO toPatchRequest(final ItSystemUsageResponseDTO originalUsage, final EnumSet<PatchSection> sections) {
+		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+		if (!sections.contains(PatchSection.GENERAL)) {
+			update.setGeneral(null);
+		}
+		if (!sections.contains(PatchSection.GDPR)) {
+			update.setGdpr(null);
+		}
+		if (!sections.contains(PatchSection.ARCHIVING)) {
+			update.setArchiving(null);
+		}
+		update.setLocalKleDeviations(null);
+		update.setOrganizationUsage(null);
+		update.setExternalReferences(null);
+		update.setRoles(null);
+		return update;
 	}
 
 	private void patchWarnOnError(Runnable runnable) {

@@ -27,7 +27,6 @@ import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
-import dk.kitos.api.model.YesNoDontKnowChoice;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -214,13 +213,10 @@ public class KitosSyncService {
 		asset.setArchive(ArchiveDuty.fromApiEnum(itSystemUsageResponseDTO.getArchiving().getArchiveDuty()));
 
         // Business critical moved from GDPR to General in the Kitos v2 API
-        final YesNoDontKnowChoice businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getIsBusinessCritical());
-        if (businessCritical != null) {
-            if (businessCritical == YesNoDontKnowChoice.YES && asset.getCriticality() != Criticality.CRITICAL) {
-                asset.setCriticality(Criticality.CRITICAL);
-            } else if (businessCritical == YesNoDontKnowChoice.NO && asset.getCriticality() != Criticality.NON_CRITICAL) {
-                asset.setCriticality(Criticality.NON_CRITICAL);
-            }
+        switch (nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getIsBusinessCritical())) {
+            case YES -> asset.setCriticality(Criticality.CRITICAL);
+            case NO -> asset.setCriticality(Criticality.NON_CRITICAL);
+            case null, default -> { }
         }
 
 		String setting = settingsService.getString(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, null);
