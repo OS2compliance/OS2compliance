@@ -187,7 +187,6 @@ function initGrid() {
                     let status = '';
                     let type = row.cells[2]['data'];
                     let deadline = row.cells[7]['data'] || null;
-                    console.log(deadline);
 
                     // if completed and task type opgave
                     if ((cell && type === "Opgave") || row.cells[11]['data'] === true) {
