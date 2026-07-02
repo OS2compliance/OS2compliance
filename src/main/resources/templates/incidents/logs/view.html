@@ -42,12 +42,12 @@
                     <div class="tab-content">
                         <div id="_dm-tabsIncident" class="tab-pane fade active show" role="tabpanel" aria-labelledby="incident-tab">
                             <div class="card-header toolbar">
-                                <h5 class="toolbar-start m-0"></h5>
-                                <div class="toolbar-end">
-                                    <button id="editDescBtn" th:if="${changeableIncident}" type="button" class="btn btn-secondary btn-xs">Rediger</button>
-                                    <button id="cancelBtn" th:if="${changeableIncident}" type="button" class="btn btn-light btn-xs" style="display: none">Annuller</button>
-                                    <button id="saveBtn" th:if="${changeableIncident}" th:form="${formId}" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+                                <div class="toolbar-start d-flex gap-1">
+                                    <button id="editDescBtn" th:if="${changeableIncident}" type="button" class="btn btn-secondary btn-lg">Rediger</button>
+                                    <button id="cancelBtn" th:if="${changeableIncident}" type="button" class="btn btn-danger btn-lg" style="display: none">Annuller</button>
+                                    <button id="saveBtn" th:if="${changeableIncident}" th:form="${formId}" type="submit" class="btn btn-secondary btn-lg" style="display: none">Gem</button>
                                 </div>
+                                <div class="toolbar-end"></div>
                             </div>
                             <div class="card-body">
                                 <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post">
