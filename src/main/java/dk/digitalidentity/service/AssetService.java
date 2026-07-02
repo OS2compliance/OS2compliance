@@ -49,10 +49,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.docx4j.Docx4J;
 import org.docx4j.convert.in.xhtml.XHTMLImporterImpl;
 import org.docx4j.convert.in.xhtml.renderer.DocxRenderer;
-import org.docx4j.convert.out.HTMLSettings;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.jsoup.Jsoup;
@@ -625,9 +623,6 @@ public class AssetService implements TagableService<Asset> {
 
 		wordMLPackage.getMainDocumentPart().getContent().addAll( 
 				importer.convert( html, null) );
-
-		HTMLSettings htmlSettings = Docx4J.createHTMLSettings();
-		htmlSettings.setOpcPackage(wordMLPackage);
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
