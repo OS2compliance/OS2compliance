@@ -4,12 +4,12 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.integration.kitos.exception.KitosSynchronizationException;
 import dk.digitalidentity.integration.kitos.mapper.KitosMapperImpl;
 import dk.digitalidentity.service.SettingsService;
-import dk.kitos.api.ApiV2DeltaFeedApi;
-import dk.kitos.api.ApiV2ItContractApi;
-import dk.kitos.api.ApiV2ItSystemApi;
-import dk.kitos.api.ApiV2ItSystemUsageApi;
-import dk.kitos.api.ApiV2ItSystemUsageRoleTypeApi;
-import dk.kitos.api.ApiV2OrganizationApi;
+import dk.kitos.api.DeltaFeedV2Api;
+import dk.kitos.api.ItContractV2Api;
+import dk.kitos.api.ItSystemUsageRoleTypeV2Api;
+import dk.kitos.api.ItSystemUsageV2Api;
+import dk.kitos.api.ItSystemV2Api;
+import dk.kitos.api.OrganizationV2Api;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationResponseDTO;
 import org.junit.jupiter.api.Test;
@@ -44,17 +44,17 @@ import static org.mockito.Mockito.doReturn;
 @ActiveProfiles("test")
 public class KitosClientServiceTest {
     @MockitoBean
-    private ApiV2ItSystemApi itSystemApiMock;
+    private ItSystemV2Api itSystemApiMock;
     @MockitoBean
-    private ApiV2ItSystemUsageApi itSystemUsageApiMock;
+    private ItSystemUsageV2Api itSystemUsageApiMock;
     @MockitoBean
-    private ApiV2OrganizationApi organizationApiMock;
+    private OrganizationV2Api organizationApiMock;
     @MockitoBean
-    private ApiV2ItSystemUsageRoleTypeApi systemUsageRoleTypeApiMock;
+    private ItSystemUsageRoleTypeV2Api systemUsageRoleTypeApiMock;
     @MockitoBean
-    private ApiV2ItContractApi contractApiMock;
+    private ItContractV2Api contractApiMock;
     @MockitoBean
-    private ApiV2DeltaFeedApi deltaFeedApiMock;
+    private DeltaFeedV2Api deltaFeedApiMock;
     @MockitoBean
     private SettingsService settingsServiceMock;
 
@@ -68,7 +68,7 @@ public class KitosClientServiceTest {
         final UUID actualUuid = UUID.randomUUID();
         response.setUuid(actualUuid);
         doReturn(List.of(response)).when(organizationApiMock)
-            .getManyOrganizationV2GetOrganizations(isNull(), isNull(), eq("123456"), isNull(), isNull(), isNull(), eq(0), eq(1));
+            .getSingleOrganizationV2GetOrganizations(isNull(), isNull(), eq("123456"), isNull(), isNull(), isNull(), eq(0), eq(1));
 
         // When
         final UUID uuid = kitosClientService.lookupMunicipalUuid("123456");
@@ -81,7 +81,7 @@ public class KitosClientServiceTest {
     public void lookupMunicipalUuidFails() {
         // Given
         doReturn(Collections.emptyList()).when(organizationApiMock)
-            .getManyOrganizationV2GetOrganizations(any(), any(), any(), any(), any(), any(), any(), any());
+            .getSingleOrganizationV2GetOrganizations(any(), any(), any(), any(), any(), any(), any(), any());
 
         // When
         assertThatThrownBy(() -> kitosClientService.lookupMunicipalUuid("123456"))
@@ -96,11 +96,11 @@ public class KitosClientServiceTest {
             .getZonedDateTime(IT_SYSTEM_USAGE_OFFSET_SETTING_KEY, KITOS_DELTA_START_FROM);
         doReturn(createItSystemResponseList(OffsetDateTime.of(2023, 1, 1, 1, 0, 0, 0, ZoneOffset.UTC), KitosConstants.PAGE_SIZE))
             .when(itSystemUsageApiMock)
-            .getManyItSystemUsageV2GetItSystemUsages(eq(municipalUuid), isNull(), isNull(), isNull(), isNull(),
+            .getSingleItSystemUsageV2GetItSystemUsages(eq(municipalUuid), isNull(), isNull(), isNull(), isNull(),
                 isNull(), any(), isNull(), eq(0), any());
         doReturn(createItSystemResponseList(OffsetDateTime.of(2023, 2, 1, 1, 0, 0, 0, ZoneOffset.UTC), 10))
             .when(itSystemUsageApiMock)
-            .getManyItSystemUsageV2GetItSystemUsages(eq(municipalUuid), isNull(), isNull(), isNull(), isNull(),
+            .getSingleItSystemUsageV2GetItSystemUsages(eq(municipalUuid), isNull(), isNull(), isNull(), isNull(),
                 isNull(), any(), isNull(), eq(1), any());
 
         // When

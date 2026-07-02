@@ -36,9 +36,6 @@ public interface KitosConstants {
     ZonedDateTime KITOS_DELTA_START_FROM = OffsetDateTime.of(1970, 1, 1, 0, 0, 0 ,0, ZoneOffset.UTC).toZonedDateTime();
     OffsetDateTime KITOS_DELTA_START_FROM_OFFSET = KITOS_DELTA_START_FROM.toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);
 
-    String IT_SYSTEM_USAGE_ENTITY_TYPE = "ItSystemUsage";
-    String IT_SYSTEM_ENTITY_TYPE = "ItSystem";
-
     Integer PAGE_SIZE = 100;
 
     Integer MAX_PAGE_REQUEST = 100;

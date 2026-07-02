@@ -1,7 +1,7 @@
 package dk.digitalidentity.model.entity.enums;
 
 import dk.digitalidentity.model.api.AssetEO;
-import dk.kitos.api.model.ArchivingRegistrationsResponseDTO;
+import dk.kitos.api.model.ArchiveDutyChoice;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +19,7 @@ public enum ArchiveDuty {
 
 	private final String message;
 
-	public static ArchiveDuty fromApiEnum(ArchivingRegistrationsResponseDTO.ArchiveDutyEnum apiEnum) {
+	public static ArchiveDuty fromApiEnum(ArchiveDutyChoice apiEnum) {
 		if (apiEnum == null) return null;
 		return switch (apiEnum) {
 			case UNDECIDED -> ArchiveDuty.UNDECIDED;
@@ -29,7 +29,9 @@ public enum ArchiveDuty {
 			case KD -> ArchiveDuty.KD;
 			case KB -> ArchiveDuty.KB;
 			case UNKNOWN -> ArchiveDuty.UNKNOWN;
-			case PRESERVEDATACANDISCARDDOCUMENTS -> ArchiveDuty.PRESERVEDATACANDISCARDDOCUMENTS;
+			case PRESERVE_DATA_CAN_DISCARD_DOCUMENTS -> ArchiveDuty.PRESERVEDATACANDISCARDDOCUMENTS;
+			// DK/DD are new Kitos archive-duty codes with no OS2compliance equivalent
+			case DK, DD -> ArchiveDuty.UNKNOWN;
 		};
 	}
 

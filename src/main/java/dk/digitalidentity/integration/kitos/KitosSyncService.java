@@ -20,7 +20,6 @@ import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
-import dk.kitos.api.model.GDPRRegistrationsResponseDTO;
 import dk.kitos.api.model.IdentityNamePairResponseDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
@@ -28,6 +27,7 @@ import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
+import dk.kitos.api.model.YesNoDontKnowChoice;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -213,11 +213,12 @@ public class KitosSyncService {
 		setUsersWithRole(asset.getOperationResponsibleUsers(), itSystemUsageResponseDTO, KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY);
 		asset.setArchive(ArchiveDuty.fromApiEnum(itSystemUsageResponseDTO.getArchiving().getArchiveDuty()));
 
-        final GDPRRegistrationsResponseDTO.BusinessCriticalEnum businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGdpr().getBusinessCritical());
+        // Business critical moved from GDPR to General in the Kitos v2 API
+        final YesNoDontKnowChoice businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getIsBusinessCritical());
         if (businessCritical != null) {
-            if (businessCritical == GDPRRegistrationsResponseDTO.BusinessCriticalEnum.YES && asset.getCriticality() != Criticality.CRITICAL) {
+            if (businessCritical == YesNoDontKnowChoice.YES && asset.getCriticality() != Criticality.CRITICAL) {
                 asset.setCriticality(Criticality.CRITICAL);
-            } else if (businessCritical == GDPRRegistrationsResponseDTO.BusinessCriticalEnum.NO && asset.getCriticality() != Criticality.NON_CRITICAL) {
+            } else if (businessCritical == YesNoDontKnowChoice.NO && asset.getCriticality() != Criticality.NON_CRITICAL) {
                 asset.setCriticality(Criticality.NON_CRITICAL);
             }
         }

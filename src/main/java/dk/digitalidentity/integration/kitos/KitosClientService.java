@@ -7,23 +7,29 @@ import dk.digitalidentity.integration.kitos.mapper.KitosMapper;
 import dk.digitalidentity.model.api.AssetEO;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.service.SettingsService;
-import dk.kitos.api.ApiV2DeltaFeedApi;
-import dk.kitos.api.ApiV2ItContractApi;
-import dk.kitos.api.ApiV2ItSystemApi;
-import dk.kitos.api.ApiV2ItSystemUsageApi;
-import dk.kitos.api.ApiV2ItSystemUsageRoleTypeApi;
-import dk.kitos.api.ApiV2OrganizationApi;
+import dk.kitos.api.DeltaFeedV2Api;
+import dk.kitos.api.ItContractV2Api;
+import dk.kitos.api.ItSystemUsageRoleTypeV2Api;
+import dk.kitos.api.ItSystemUsageV2Api;
+import dk.kitos.api.ItSystemV2Api;
+import dk.kitos.api.OrganizationV2Api;
+import dk.kitos.api.model.ArchiveDutyChoice;
 import dk.kitos.api.model.ArchivingUpdateRequestDTO;
 import dk.kitos.api.model.GDPRWriteRequestDTO;
+import dk.kitos.api.model.GeneralDataUpdateRequestDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
+import dk.kitos.api.model.RiskLevelChoice;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.SimpleLinkDTO;
+import dk.kitos.api.model.TrackedEntityTypeChoice;
 import dk.kitos.api.model.TrackingEventResponseDTO;
 import dk.kitos.api.model.UpdateItSystemUsageRequestDTO;
+import dk.kitos.api.model.YesNoDontKnowChoice;
+import dk.kitos.api.model.YesNoDontKnowIrrelevantChoice;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -42,9 +48,7 @@ import java.util.function.Function;
 
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_CONTRACT_OFFSET_SETTING_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_DELETION_OFFSET_USAGE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_ENTITY_TYPE;
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_OFFSET_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_ENTITY_TYPE;
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_OFFSET_SETTING_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM_OFFSET;
@@ -54,17 +58,17 @@ import static dk.digitalidentity.integration.kitos.KitosConstants.USAGE_DELETION
 @Service
 @RequiredArgsConstructor
 public class KitosClientService {
-    private final ApiV2ItSystemApi itSystemApi;
-    private final ApiV2ItSystemUsageApi itSystemUsageApi;
-    private final ApiV2OrganizationApi organizationApi;
-    private final ApiV2ItSystemUsageRoleTypeApi systemUsageRoleTypeApi;
-    private final ApiV2ItContractApi contractApi;
-    private final ApiV2DeltaFeedApi deltaFeedApi;
+    private final ItSystemV2Api itSystemApi;
+    private final ItSystemUsageV2Api itSystemUsageApi;
+    private final OrganizationV2Api organizationApi;
+    private final ItSystemUsageRoleTypeV2Api systemUsageRoleTypeApi;
+    private final ItContractV2Api contractApi;
+    private final DeltaFeedV2Api deltaFeedApi;
     private final SettingsService settingsService;
     private final KitosMapper kitosMapper;
 
     public UUID lookupMunicipalUuid(final String cvr) {
-        final List<OrganizationResponseDTO> organizations = organizationApi.getManyOrganizationV2GetOrganizations(null, null, cvr, null, null, null, 0, 1);
+        final List<OrganizationResponseDTO> organizations = organizationApi.getSingleOrganizationV2GetOrganizations(null, null, cvr, null, null, null, 0, 1);
         if (organizations == null || organizations.isEmpty()) {
             throw new KitosSynchronizationException("Could not lookup uuid for cvr: " + cvr);
         }
@@ -72,7 +76,7 @@ public class KitosClientService {
     }
 
     public List<RoleOptionResponseDTO> listRoles(final UUID municipalUuid) {
-        return systemUsageRoleTypeApi.getManyItSystemUsageRoleTypeV2Get(municipalUuid, 0, KitosConstants.PAGE_SIZE);
+        return systemUsageRoleTypeApi.getSingleItSystemUsageRoleTypeV2Get(municipalUuid, 0, KitosConstants.PAGE_SIZE);
     }
 
     public List<OrganizationUserResponseDTO> listUsers(final UUID municipalUuid) {
@@ -80,7 +84,7 @@ public class KitosClientService {
         List<OrganizationUserResponseDTO> currentUsers;
         int page = 0;
         do {
-            currentUsers = organizationApi.getManyOrganizationV2GetOrganizationUsers(municipalUuid, null, null, null, null, page++, KitosConstants.PAGE_SIZE);
+            currentUsers = organizationApi.getSingleOrganizationV2GetOrganizationUsers(municipalUuid, null, null, null, null, page++, KitosConstants.PAGE_SIZE);
             allUsers.addAll(currentUsers);
         } while (currentUsers.size() == KitosConstants.PAGE_SIZE && page < KitosConstants.MAX_PAGE_REQUEST);
         return allUsers;
@@ -101,7 +105,7 @@ public class KitosClientService {
      */
     public List<TrackingEventResponseDTO> fetchDeletedSystemUsages(final boolean reimport) {
         return deltaFetch(USAGE_DELETION_OFFSET_USAGE_SETTING_KEY,
-            pageAndOffset -> deltaFeedApi.getManyDeltaFeedV2GetDeletedObjects(IT_SYSTEM_USAGE_ENTITY_TYPE, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
+            pageAndOffset -> deltaFeedApi.getSingleDeltaFeedV2GetDeletedObjects(TrackedEntityTypeChoice.IT_SYSTEM_USAGE, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             TrackingEventResponseDTO::getOccurredAtUtc
         );
     }
@@ -111,7 +115,7 @@ public class KitosClientService {
      */
     public List<TrackingEventResponseDTO> fetchDeletedItSystems(final boolean reimport) {
         return deltaFetch(IT_SYSTEM_DELETION_OFFSET_USAGE_SETTING_KEY,
-            pageAndOffset -> deltaFeedApi.getManyDeltaFeedV2GetDeletedObjects(IT_SYSTEM_ENTITY_TYPE, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
+            pageAndOffset -> deltaFeedApi.getSingleDeltaFeedV2GetDeletedObjects(TrackedEntityTypeChoice.IT_SYSTEM, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             TrackingEventResponseDTO::getOccurredAtUtc
         );
     }
@@ -121,7 +125,7 @@ public class KitosClientService {
      */
     public List<ItContractResponseDTO> fetchChangedItContracts(final UUID municipalUuid, final boolean reimport) {
         return deltaFetch(IT_CONTRACT_OFFSET_SETTING_KEY,
-            pageAndOffset -> contractApi.getManyItContractV2GetItContracts(municipalUuid, null, null, null, null,
+            pageAndOffset -> contractApi.getSingleItContractV2GetItContracts(municipalUuid, null, null, null, null,
                 null, null, null, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItContractResponseDTO::getLastModified);
     }
@@ -131,7 +135,7 @@ public class KitosClientService {
      */
     public List<ItSystemResponseDTO> fetchChangedItSystems(final UUID municipalUuid, final boolean reimport) {
         return deltaFetch(IT_SYSTEM_OFFSET_SETTING_KEY,
-            pageAndOffset -> itSystemApi.getManyItSystemV2GetItSystems(null, null, null, null, null,
+            pageAndOffset -> itSystemApi.getSingleItSystemV2GetItSystems(null, null, null, null, null,
                 false, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), municipalUuid, null, null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItSystemResponseDTO::getLastModified
         );
@@ -142,7 +146,7 @@ public class KitosClientService {
      */
     public List<ItSystemUsageResponseDTO> fetchChangedItSystemUsage(final UUID municipalUuid) {
         return deltaFetch(IT_SYSTEM_USAGE_OFFSET_SETTING_KEY,
-            pageAndOffset -> itSystemUsageApi.getManyItSystemUsageV2GetItSystemUsages(municipalUuid, null, null, null, null,
+            pageAndOffset -> itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsages(municipalUuid, null, null, null, null,
                 null, pageAndOffset.getValue().plusNanos(1000L), null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItSystemUsageResponseDTO::getLastModified
         );
@@ -155,27 +159,25 @@ public class KitosClientService {
         final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUuid));
         final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
 
-
-		if (update.getGdpr() == null) {
-            update.setGdpr(new GDPRWriteRequestDTO());
-        }
-        final GDPRWriteRequestDTO gdpr = update.getGdpr();
-		setGdprFieldsNull(gdpr);
+		// Business critical moved from GDPR to General in the Kitos v2 API.
+		// Only the businessCritical field is sent (models serialize with JsonInclude.NON_NULL).
+		final GeneralDataUpdateRequestDTO general = new GeneralDataUpdateRequestDTO();
+		general.setIsBusinessCritical(critical ? YesNoDontKnowChoice.YES : YesNoDontKnowChoice.NO);
+		update.setGeneral(general);
 
 		if (archiveDuty != null) {
 			if (update.getArchiving() == null) {
 				update.setArchiving(new ArchivingUpdateRequestDTO());
 			}
-			update.getArchiving().setArchiveDuty(toArchiveDutyEnum(archiveDuty));
+			update.getArchiving().setArchiveDuty(toArchiveDutyChoice(archiveDuty));
 		}
 
-        // Only send
-        update.setGeneral(null);
+        // Only send general (business critical) and archiving
+        update.setGdpr(null);
         update.setLocalKleDeviations(null);
         update.setOrganizationUsage(null);
         update.setExternalReferences(null);
         update.setRoles(null);
-        update.getGdpr().setBusinessCritical(critical ? GDPRWriteRequestDTO.BusinessCriticalEnum.YES : GDPRWriteRequestDTO.BusinessCriticalEnum.NO);
 
 		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update));
     }
@@ -199,7 +201,7 @@ public class KitosClientService {
 		update.setOrganizationUsage(null);
 		update.setExternalReferences(null);
 		update.setRoles(null);
-		update.getGdpr().setRiskAssessmentConducted(event.isRiskAssessmentConducted() ? GDPRWriteRequestDTO.RiskAssessmentConductedEnum.YES : GDPRWriteRequestDTO.RiskAssessmentConductedEnum.NO);
+		update.getGdpr().setRiskAssessmentConducted(event.isRiskAssessmentConducted() ? YesNoDontKnowIrrelevantChoice.YES : YesNoDontKnowIrrelevantChoice.NO);
 		update.getGdpr().setRiskAssessmentConductedDate(getOffsetDateTime(event.getRiskAssessmentConductedDate()));
 		update.getGdpr().setRiskAssessmentResult(getRiskAssessmentResult(event.getResult()));
 		update.getGdpr().setRiskAssessmentDocumentation(new SimpleLinkDTO());
@@ -229,7 +231,7 @@ public class KitosClientService {
 		update.setOrganizationUsage(null);
 		update.setExternalReferences(null);
 		update.setRoles(null);
-		update.getGdpr().setDpiaConducted(GDPRWriteRequestDTO.DpiaConductedEnum.YES);
+		update.getGdpr().setDpiaConducted(YesNoDontKnowChoice.YES);
 		update.getGdpr().setDpiaDate(getOffsetDateTime(event.getDpiaDate()));
 		update.getGdpr().setRiskAssessmentDocumentation(new SimpleLinkDTO());
 		update.getGdpr().getRiskAssessmentDocumentation().setName(event.getDpiaName());
@@ -264,16 +266,16 @@ public class KitosClientService {
 		}
 	}
 
-	private GDPRWriteRequestDTO.RiskAssessmentResultEnum getRiskAssessmentResult(RiskAssessment result) {
+	private RiskLevelChoice getRiskAssessmentResult(RiskAssessment result) {
 		if (result == null) {
-			return GDPRWriteRequestDTO.RiskAssessmentResultEnum.UNDECIDED;
+			return RiskLevelChoice.UNDECIDED;
 		}
 
 		// the api only have three possible results, OS2compliance has five. We are rounding up
 		return switch (result) {
-			case LIGHT_GREEN, GREEN -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.LOW;
-			case YELLOW -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.MEDIUM;
-			case ORANGE, RED -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.HIGH;
+			case LIGHT_GREEN, GREEN -> RiskLevelChoice.LOW;
+			case YELLOW -> RiskLevelChoice.MEDIUM;
+			case ORANGE, RED -> RiskLevelChoice.HIGH;
 		};
 	}
 
@@ -284,26 +286,35 @@ public class KitosClientService {
 		return date.toInstant().atZone(ZoneId.systemDefault()).toOffsetDateTime();
 	}
 
-	private ArchivingUpdateRequestDTO.ArchiveDutyEnum toArchiveDutyEnum(AssetEO.ArchiveDuty archiveDuty) {
+	private ArchiveDutyChoice toArchiveDutyChoice(AssetEO.ArchiveDuty archiveDuty) {
 		switch (archiveDuty) {
 			case K -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.K;
+				return ArchiveDutyChoice.K;
 			}
 			case B -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.B;
+				return ArchiveDutyChoice.B;
+			}
+			case BK -> {
+				return ArchiveDutyChoice.BK;
+			}
+			case KD -> {
+				return ArchiveDutyChoice.KD;
+			}
+			case KB -> {
+				return ArchiveDutyChoice.KB;
 			}
 			case UNDECIDED -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNDECIDED;
+				return ArchiveDutyChoice.UNDECIDED;
 			}
 			case UNKNOWN -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNKNOWN;
+				return ArchiveDutyChoice.UNKNOWN;
 			}
 			case PRESERVEDATACANDISCARDDOCUMENTS -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.PRESERVEDATACANDISCARDDOCUMENTS;
+				return ArchiveDutyChoice.PRESERVE_DATA_CAN_DISCARD_DOCUMENTS;
 			}
 		}
 
-		return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNDECIDED;
+		return ArchiveDutyChoice.UNDECIDED;
 	}
 
 	private boolean isEmpty(final SimpleLinkDTO simpleLinkDTO) {
