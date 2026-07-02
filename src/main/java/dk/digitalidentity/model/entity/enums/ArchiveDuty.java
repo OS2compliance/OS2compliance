@@ -14,6 +14,8 @@ public enum ArchiveDuty {
 	BK("BK"),
 	KD("KD"),
 	KB("KB"),
+	DK("DK"),
+	DD("DD"),
 	UNKNOWN("Ukendt"),
 	PRESERVEDATACANDISCARDDOCUMENTS("Bevar data, dokumenter kan kasseres");
 
@@ -28,10 +30,10 @@ public enum ArchiveDuty {
 			case BK -> ArchiveDuty.BK;
 			case KD -> ArchiveDuty.KD;
 			case KB -> ArchiveDuty.KB;
+			case DK -> ArchiveDuty.DK;
+			case DD -> ArchiveDuty.DD;
 			case UNKNOWN -> ArchiveDuty.UNKNOWN;
 			case PRESERVE_DATA_CAN_DISCARD_DOCUMENTS -> ArchiveDuty.PRESERVEDATACANDISCARDDOCUMENTS;
-			// DK/DD are new Kitos archive-duty codes with no OS2compliance equivalent
-			case DK, DD -> ArchiveDuty.UNKNOWN;
 		};
 	}
 
@@ -44,6 +46,8 @@ public enum ArchiveDuty {
 			case BK -> ArchiveDuty.BK;
 			case KD -> ArchiveDuty.KD;
 			case KB -> ArchiveDuty.KB;
+			case DK -> ArchiveDuty.DK;
+			case DD -> ArchiveDuty.DD;
 			case UNKNOWN -> ArchiveDuty.UNKNOWN;
 			case PRESERVEDATACANDISCARDDOCUMENTS -> ArchiveDuty.PRESERVEDATACANDISCARDDOCUMENTS;
 		};

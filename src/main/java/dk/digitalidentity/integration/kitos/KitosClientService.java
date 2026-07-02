@@ -160,10 +160,12 @@ public class KitosClientService {
         final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
 
 		// Business critical moved from GDPR to General in the Kitos v2 API.
-		// Only the businessCritical field is sent (models serialize with JsonInclude.NON_NULL).
-		final GeneralDataUpdateRequestDTO general = new GeneralDataUpdateRequestDTO();
-		general.setIsBusinessCritical(critical ? YesNoDontKnowChoice.YES : YesNoDontKnowChoice.NO);
-		update.setGeneral(general);
+		// Kitos PATCH replaces a provided section wholesale, so keep the general
+		// data mapped from the original usage and only change businessCritical.
+		if (update.getGeneral() == null) {
+			update.setGeneral(new GeneralDataUpdateRequestDTO());
+		}
+		update.getGeneral().setIsBusinessCritical(critical ? YesNoDontKnowChoice.YES : YesNoDontKnowChoice.NO);
 
 		if (archiveDuty != null) {
 			if (update.getArchiving() == null) {
@@ -287,34 +289,18 @@ public class KitosClientService {
 	}
 
 	private ArchiveDutyChoice toArchiveDutyChoice(AssetEO.ArchiveDuty archiveDuty) {
-		switch (archiveDuty) {
-			case K -> {
-				return ArchiveDutyChoice.K;
-			}
-			case B -> {
-				return ArchiveDutyChoice.B;
-			}
-			case BK -> {
-				return ArchiveDutyChoice.BK;
-			}
-			case KD -> {
-				return ArchiveDutyChoice.KD;
-			}
-			case KB -> {
-				return ArchiveDutyChoice.KB;
-			}
-			case UNDECIDED -> {
-				return ArchiveDutyChoice.UNDECIDED;
-			}
-			case UNKNOWN -> {
-				return ArchiveDutyChoice.UNKNOWN;
-			}
-			case PRESERVEDATACANDISCARDDOCUMENTS -> {
-				return ArchiveDutyChoice.PRESERVE_DATA_CAN_DISCARD_DOCUMENTS;
-			}
-		}
-
-		return ArchiveDutyChoice.UNDECIDED;
+		return switch (archiveDuty) {
+			case K -> ArchiveDutyChoice.K;
+			case B -> ArchiveDutyChoice.B;
+			case BK -> ArchiveDutyChoice.BK;
+			case KD -> ArchiveDutyChoice.KD;
+			case KB -> ArchiveDutyChoice.KB;
+			case DK -> ArchiveDutyChoice.DK;
+			case DD -> ArchiveDutyChoice.DD;
+			case UNDECIDED -> ArchiveDutyChoice.UNDECIDED;
+			case UNKNOWN -> ArchiveDutyChoice.UNKNOWN;
+			case PRESERVEDATACANDISCARDDOCUMENTS -> ArchiveDutyChoice.PRESERVE_DATA_CAN_DISCARD_DOCUMENTS;
+		};
 	}
 
 	private boolean isEmpty(final SimpleLinkDTO simpleLinkDTO) {
