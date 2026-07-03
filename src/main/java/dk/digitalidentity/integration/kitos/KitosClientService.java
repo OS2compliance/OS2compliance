@@ -69,7 +69,7 @@ public class KitosClientService {
     private final KitosMapper kitosMapper;
 
     public UUID lookupMunicipalUuid(final String cvr) {
-        final List<OrganizationResponseDTO> organizations = organizationApi.getSingleOrganizationV2GetOrganizations(null, null, cvr, null, null, null, 0, 1);
+        final List<OrganizationResponseDTO> organizations = organizationApi.getManyOrganizationV2GetOrganizations(null, null, cvr, null, null, null, 0, 1);
         if (organizations == null || organizations.isEmpty()) {
             throw new KitosSynchronizationException("Could not lookup uuid for cvr: " + cvr);
         }
@@ -77,7 +77,7 @@ public class KitosClientService {
     }
 
     public List<RoleOptionResponseDTO> listRoles(final UUID municipalUuid) {
-        return systemUsageRoleTypeApi.getSingleItSystemUsageRoleTypeV2Get(municipalUuid, 0, KitosConstants.PAGE_SIZE);
+        return systemUsageRoleTypeApi.getManyItSystemUsageRoleTypeV2Get(municipalUuid, 0, KitosConstants.PAGE_SIZE);
     }
 
     public List<OrganizationUserResponseDTO> listUsers(final UUID municipalUuid) {
@@ -85,7 +85,7 @@ public class KitosClientService {
         List<OrganizationUserResponseDTO> currentUsers;
         int page = 0;
         do {
-            currentUsers = organizationApi.getSingleOrganizationV2GetOrganizationUsers(municipalUuid, null, null, null, null, page++, KitosConstants.PAGE_SIZE);
+            currentUsers = organizationApi.getManyOrganizationV2GetOrganizationUsers(municipalUuid, null, null, null, null, page++, KitosConstants.PAGE_SIZE);
             allUsers.addAll(currentUsers);
         } while (currentUsers.size() == KitosConstants.PAGE_SIZE && page < KitosConstants.MAX_PAGE_REQUEST);
         return allUsers;
@@ -106,7 +106,7 @@ public class KitosClientService {
      */
     public List<TrackingEventResponseDTO> fetchDeletedSystemUsages(final boolean reimport) {
         return deltaFetch(USAGE_DELETION_OFFSET_USAGE_SETTING_KEY,
-            pageAndOffset -> deltaFeedApi.getSingleDeltaFeedV2GetDeletedObjects(TrackedEntityTypeChoice.IT_SYSTEM_USAGE, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
+            pageAndOffset -> deltaFeedApi.getManyDeltaFeedV2GetDeletedObjects(TrackedEntityTypeChoice.IT_SYSTEM_USAGE, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             TrackingEventResponseDTO::getOccurredAtUtc
         );
     }
@@ -116,7 +116,7 @@ public class KitosClientService {
      */
     public List<TrackingEventResponseDTO> fetchDeletedItSystems(final boolean reimport) {
         return deltaFetch(IT_SYSTEM_DELETION_OFFSET_USAGE_SETTING_KEY,
-            pageAndOffset -> deltaFeedApi.getSingleDeltaFeedV2GetDeletedObjects(TrackedEntityTypeChoice.IT_SYSTEM, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
+            pageAndOffset -> deltaFeedApi.getManyDeltaFeedV2GetDeletedObjects(TrackedEntityTypeChoice.IT_SYSTEM, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             TrackingEventResponseDTO::getOccurredAtUtc
         );
     }
@@ -126,7 +126,7 @@ public class KitosClientService {
      */
     public List<ItContractResponseDTO> fetchChangedItContracts(final UUID municipalUuid, final boolean reimport) {
         return deltaFetch(IT_CONTRACT_OFFSET_SETTING_KEY,
-            pageAndOffset -> contractApi.getSingleItContractV2GetItContracts(municipalUuid, null, null, null, null,
+            pageAndOffset -> contractApi.getManyItContractV2GetItContracts(municipalUuid, null, null, null, null,
                 null, null, null, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItContractResponseDTO::getLastModified);
     }
@@ -136,7 +136,7 @@ public class KitosClientService {
      */
     public List<ItSystemResponseDTO> fetchChangedItSystems(final UUID municipalUuid, final boolean reimport) {
         return deltaFetch(IT_SYSTEM_OFFSET_SETTING_KEY,
-            pageAndOffset -> itSystemApi.getSingleItSystemV2GetItSystems(null, null, null, null, null,
+            pageAndOffset -> itSystemApi.getManyItSystemV2GetItSystems(null, null, null, null, null,
                 false, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), municipalUuid, null, null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItSystemResponseDTO::getLastModified
         );
@@ -147,7 +147,7 @@ public class KitosClientService {
      */
     public List<ItSystemUsageResponseDTO> fetchChangedItSystemUsage(final UUID municipalUuid) {
         return deltaFetch(IT_SYSTEM_USAGE_OFFSET_SETTING_KEY,
-            pageAndOffset -> itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsages(municipalUuid, null, null, null, null,
+            pageAndOffset -> itSystemUsageApi.getManyItSystemUsageV2GetItSystemUsages(municipalUuid, null, null, null, null,
                 null, pageAndOffset.getValue().plusNanos(1000L), null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItSystemUsageResponseDTO::getLastModified
         );

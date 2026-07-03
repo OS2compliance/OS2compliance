@@ -68,7 +68,7 @@ public class KitosClientServiceTest {
         final UUID actualUuid = UUID.randomUUID();
         response.setUuid(actualUuid);
         doReturn(List.of(response)).when(organizationApiMock)
-            .getSingleOrganizationV2GetOrganizations(isNull(), isNull(), eq("123456"), isNull(), isNull(), isNull(), eq(0), eq(1));
+            .getManyOrganizationV2GetOrganizations(isNull(), isNull(), eq("123456"), isNull(), isNull(), isNull(), eq(0), eq(1));
 
         // When
         final UUID uuid = kitosClientService.lookupMunicipalUuid("123456");
@@ -81,7 +81,7 @@ public class KitosClientServiceTest {
     public void lookupMunicipalUuidFails() {
         // Given
         doReturn(Collections.emptyList()).when(organizationApiMock)
-            .getSingleOrganizationV2GetOrganizations(any(), any(), any(), any(), any(), any(), any(), any());
+            .getManyOrganizationV2GetOrganizations(any(), any(), any(), any(), any(), any(), any(), any());
 
         // When
         assertThatThrownBy(() -> kitosClientService.lookupMunicipalUuid("123456"))
@@ -96,11 +96,11 @@ public class KitosClientServiceTest {
             .getZonedDateTime(IT_SYSTEM_USAGE_OFFSET_SETTING_KEY, KITOS_DELTA_START_FROM);
         doReturn(createItSystemResponseList(OffsetDateTime.of(2023, 1, 1, 1, 0, 0, 0, ZoneOffset.UTC), KitosConstants.PAGE_SIZE))
             .when(itSystemUsageApiMock)
-            .getSingleItSystemUsageV2GetItSystemUsages(eq(municipalUuid), isNull(), isNull(), isNull(), isNull(),
+            .getManyItSystemUsageV2GetItSystemUsages(eq(municipalUuid), isNull(), isNull(), isNull(), isNull(),
                 isNull(), any(), isNull(), eq(0), any());
         doReturn(createItSystemResponseList(OffsetDateTime.of(2023, 2, 1, 1, 0, 0, 0, ZoneOffset.UTC), 10))
             .when(itSystemUsageApiMock)
-            .getSingleItSystemUsageV2GetItSystemUsages(eq(municipalUuid), isNull(), isNull(), isNull(), isNull(),
+            .getManyItSystemUsageV2GetItSystemUsages(eq(municipalUuid), isNull(), isNull(), isNull(), isNull(),
                 isNull(), any(), isNull(), eq(1), any());
 
         // When
