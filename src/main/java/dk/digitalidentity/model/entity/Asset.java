@@ -41,6 +41,7 @@ import lombok.ToString;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.envers.Audited;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -55,6 +56,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @ToString
+@Audited
 @SQLDelete(sql = "UPDATE assets SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers, StatisticEnabled, Ownable, Tagable {
 
