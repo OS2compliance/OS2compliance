@@ -155,6 +155,9 @@ public class KitosClientService {
 
     /**
      * Update business criticality and archiving for an it-system usage
+     *
+     * @param archiveDuty wanted archive duty; null means "leave archiving untouched in Kitos"
+     *                    — an existing value cannot be cleared through this method
      */
     public void updateBusinessCriticalAndArchiveDuty(final String itSystemUuid, boolean critical, AssetEO.ArchiveDuty archiveDuty) {
         final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUuid));
@@ -255,6 +258,10 @@ public class KitosClientService {
 		if (!sections.contains(PatchSection.ARCHIVING)) {
 			update.setArchiving(null);
 		}
+		// The remaining root sections are never patched by OS2compliance and must be
+		// omitted (nulled) so Kitos leaves them unchanged. If a future client version
+		// adds a new root section, MapStruct will populate it (compile error only if
+		// the response has no matching field) — it must then be added to this list.
 		update.setLocalKleDeviations(null);
 		update.setOrganizationUsage(null);
 		update.setExternalReferences(null);
