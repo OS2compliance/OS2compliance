@@ -25,6 +25,9 @@ import lombok.Setter;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -39,6 +42,7 @@ import java.util.Set;
 @Setter
 @SQLDelete(sql = "UPDATE threat_assessments SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
+@Audited
 public class ThreatAssessment extends Relatable implements HasSingleResponsibleUser, StatisticEnabled, Tagable {
     @Column
     @Enumerated(EnumType.STRING)
@@ -50,6 +54,7 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsible_ou_uuid")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private OrganisationUnit responsibleOu;
 
 	@ManyToMany(fetch = FetchType.LAZY)
@@ -58,10 +63,12 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
 			joinColumns = { @JoinColumn(name = "threat_assessment_id") },
 			inverseJoinColumns = { @JoinColumn(name = "threat_catalog_identifier") }
 	)
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private List<ThreatCatalog> threatCatalogs = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "threat_assessment_report_s3_document_id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private S3Document threatAssessmentReportS3Document;
 
     @ManyToOne
@@ -139,9 +146,11 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
     private List<User> presentAtMeeting;
 
     @OneToMany(mappedBy = "threatAssessment",  orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @NotAudited
     private List<CustomThreat> customThreats = new ArrayList<>();
 
     @OneToMany(mappedBy = "threatAssessment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @NotAudited
     private List<ThreatAssessmentResponse> threatAssessmentResponses = new ArrayList<>();
 
     @Column
@@ -155,6 +164,7 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
 	@JoinTable(name = "threat_assessment_tag", joinColumns = { @JoinColumn(name = "threat_assessment_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<Tag> tags = new HashSet<>();
 
 	@Column

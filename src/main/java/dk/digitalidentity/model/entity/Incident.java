@@ -13,6 +13,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +23,13 @@ import java.util.List;
 @Table(name = "incidents")
 @Getter
 @Setter
+@Audited
 public class Incident extends Relatable implements StatisticEnabled {
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToMany(orphanRemoval = true, mappedBy = "incident", cascade = CascadeType.ALL)
+    @NotAudited
     private List<IncidentFieldResponse> responses = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
