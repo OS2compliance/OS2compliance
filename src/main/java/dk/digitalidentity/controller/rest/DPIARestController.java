@@ -298,7 +298,7 @@ public class DPIARestController {
             assets = dpia.getAssets();
         }
 
-		if (assetService.isEditable(assets)) {
+		if (!assetService.isEditable(assets)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
