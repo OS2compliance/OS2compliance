@@ -1,7 +1,6 @@
 package dk.digitalidentity.controller.rest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import dk.digitalidentity.controller.rest.Admin.MailLogRestController;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.dto.DPIAExportDTO;
@@ -22,7 +21,6 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.EmailTemplate;
-import dk.digitalidentity.model.entity.MailLog;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.Tag;
@@ -33,7 +31,6 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.DPIAGrid;
-import dk.digitalidentity.model.entity.grid.MailLogGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -97,7 +94,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
 @Slf4j
 @RestController
