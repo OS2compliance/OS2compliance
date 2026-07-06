@@ -20,7 +20,6 @@ import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
-import dk.kitos.api.model.GDPRRegistrationsResponseDTO;
 import dk.kitos.api.model.IdentityNamePairResponseDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
@@ -213,13 +212,11 @@ public class KitosSyncService {
 		setUsersWithRole(asset.getOperationResponsibleUsers(), itSystemUsageResponseDTO, KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY);
 		asset.setArchive(ArchiveDuty.fromApiEnum(itSystemUsageResponseDTO.getArchiving().getArchiveDuty()));
 
-        final GDPRRegistrationsResponseDTO.BusinessCriticalEnum businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGdpr().getBusinessCritical());
-        if (businessCritical != null) {
-            if (businessCritical == GDPRRegistrationsResponseDTO.BusinessCriticalEnum.YES && asset.getCriticality() != Criticality.CRITICAL) {
-                asset.setCriticality(Criticality.CRITICAL);
-            } else if (businessCritical == GDPRRegistrationsResponseDTO.BusinessCriticalEnum.NO && asset.getCriticality() != Criticality.NON_CRITICAL) {
-                asset.setCriticality(Criticality.NON_CRITICAL);
-            }
+        // Business critical moved from GDPR to General in the Kitos v2 API
+        switch (nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getIsBusinessCritical())) {
+            case YES -> asset.setCriticality(Criticality.CRITICAL);
+            case NO -> asset.setCriticality(Criticality.NON_CRITICAL);
+            case null, default -> { }
         }
 
 		String setting = settingsService.getString(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, null);
