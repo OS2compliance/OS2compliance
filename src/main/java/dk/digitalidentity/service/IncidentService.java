@@ -243,6 +243,14 @@ public class IncidentService {
 		return incidentDao.countIncidentsByAssetIdSince(assetId, LocalDateTime.now().minusMonths(12));
 	}
 
+	public long countIncidentsForAssetsLastYear(final List<Long> assetIds) {
+		if (assetIds.isEmpty()) {
+			return 0;
+		}
+
+		return incidentDao.countIncidentsByAssetIdsSince(assetIds, LocalDateTime.now().minusMonths(12));
+	}
+
 	public List<Incident> getByIds (List<Long> ids) {
 		return incidentDao.findAllById(ids);
 	}

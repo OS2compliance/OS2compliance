@@ -49,4 +49,11 @@ public interface IncidentDao extends JpaRepository<Incident, Long> {
 			"WHERE i.deleted = false AND i.created_at >= :from",
 			nativeQuery = true)
 	long countIncidentsByAssetIdSince(@Param("assetId") long assetId, @Param("from") LocalDateTime from);
+
+	@Query(value = "SELECT COUNT(DISTINCT i.id) FROM incidents i " +
+			"JOIN relations r ON (r.relation_a_id = i.id AND r.relation_a_type = 'INCIDENT' AND r.relation_b_id IN (:assetIds) AND r.relation_b_type = 'ASSET') " +
+			"   OR (r.relation_b_id = i.id AND r.relation_b_type = 'INCIDENT' AND r.relation_a_id IN (:assetIds) AND r.relation_a_type = 'ASSET') " +
+			"WHERE i.deleted = false AND i.created_at >= :from",
+			nativeQuery = true)
+	long countIncidentsByAssetIdsSince(@Param("assetIds") List<Long> assetIds, @Param("from") LocalDateTime from);
 }
