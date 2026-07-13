@@ -365,13 +365,13 @@ public class RiskController {
             final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
             model.addAttribute("incidentDateFrom", LocalDate.now().minusMonths(12).toString());
             model.addAttribute("incidentDateTo", LocalDate.now().toString());
-            if (!assetRelations.isEmpty()) {
-                final Relation rel = assetRelations.get(0);
-                final long assetId = rel.getRelationAType() == RelationType.ASSET ? rel.getRelationAId() : rel.getRelationBId();
-                model.addAttribute("incidentCount", incidentService.countIncidentsForAssetLastYear(assetId));
-            } else {
-                model.addAttribute("incidentCount", 0L);
-            }
+            final long incidentCount = assetRelations.stream()
+                .mapToLong(rel -> {
+                    final long assetId = rel.getRelationAType() == RelationType.ASSET ? rel.getRelationAId() : rel.getRelationBId();
+                    return incidentService.countIncidentsForAssetLastYear(assetId);
+                })
+                .sum();
+            model.addAttribute("incidentCount", incidentCount);
         }
 
         return "risks/view";

@@ -44,8 +44,8 @@ public interface IncidentDao extends JpaRepository<Incident, Long> {
 	List<Incident> findAllById(Long id);
 
 	@Query(value = "SELECT COUNT(DISTINCT i.id) FROM incidents i " +
-			"JOIN relations r ON (r.relation_a_id = i.id AND r.relation_a_type = 'INCIDENT' AND r.relation_b_id = :assetId) " +
-			"   OR (r.relation_b_id = i.id AND r.relation_b_type = 'INCIDENT' AND r.relation_a_id = :assetId) " +
+			"JOIN relations r ON (r.relation_a_id = i.id AND r.relation_a_type = 'INCIDENT' AND r.relation_b_id = :assetId AND r.relation_b_type = 'ASSET') " +
+			"   OR (r.relation_b_id = i.id AND r.relation_b_type = 'INCIDENT' AND r.relation_a_id = :assetId AND r.relation_a_type = 'ASSET') " +
 			"WHERE i.deleted = false AND i.created_at >= :from",
 			nativeQuery = true)
 	long countIncidentsByAssetIdSince(@Param("assetId") long assetId, @Param("from") LocalDateTime from);
