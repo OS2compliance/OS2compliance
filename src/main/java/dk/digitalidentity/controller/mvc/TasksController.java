@@ -198,6 +198,9 @@ public class TasksController {
         }
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
         existingTask.setIncludeInReport(task.getIncludeInReport());
+        final boolean inProgress = Boolean.TRUE.equals(task.getInProgress());
+        existingTask.setInProgress(inProgress);
+        existingTask.setNote(inProgress ? task.getNote() : null);
 		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());

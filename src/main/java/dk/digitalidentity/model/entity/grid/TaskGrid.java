@@ -88,6 +88,9 @@ public class TaskGrid implements HasMultipleResponsibleUsers {
 	@Column
 	private boolean includeInReport;
 
+	@Column
+	private boolean inProgress;
+
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
 

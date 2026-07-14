@@ -38,6 +38,7 @@ public final class ColorMapperUtil {
 			return switch (status) {
 				case EXCEEDED -> ColorConstants.RED;
 				case FUTURE -> ColorConstants.ORANGE;
+				case IN_PROGRESS -> ColorConstants.LIGHT_BLUE;
 				case COMPLETED -> ColorConstants.LIME;
 				default -> null;
 			};

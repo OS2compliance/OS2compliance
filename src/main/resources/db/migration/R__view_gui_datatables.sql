@@ -31,6 +31,7 @@ SELECT t.id,
        t.next_deadline,
        t.repetition,
        t.include_in_report,
+       t.in_progress,
        t.created_at,
        (CASE
             WHEN t.repetition = 'NONE' THEN 10
