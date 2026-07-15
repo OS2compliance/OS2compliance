@@ -123,6 +123,11 @@ public class YearWheelService {
 			return "completed";
 		}
 
+		// In progress covers the current occurrence (deadlines up to and including the task's next deadline)
+		if (task.isInProgress() && !occurrenceDeadline.isAfter(task.getNextDeadline().toLocalDate())) {
+			return "inprogress";
+		}
+
 		// Not completed — check if overdue
 		if (occurrenceDeadline.isBefore(LocalDate.now())) {
 			return "overdue";

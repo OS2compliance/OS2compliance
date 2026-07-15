@@ -180,6 +180,8 @@ public class TaskService implements TagableService<Task> {
     @Transactional
     public void completeTask(final Task task, final TaskLog taskLog) {
         task.getLogs().add(taskLog);
+        task.setInProgress(false);
+        task.setNote(null);
         if (task.getTaskType() == TaskType.CHECK) {
             final LocalDate nextDeadline = getNextDeadline(task.getNextDeadline(), task.getRepetition());
             // Check if we need to move date on related assets
@@ -237,6 +239,8 @@ public class TaskService implements TagableService<Task> {
     public String findHtmlStatusBadgeForTask(Task task) {
         if (isTaskDone(task)) {
             return "<div class=\"d-block badge bg-success\">Udført</div>";
+        } else if (task.getInProgress()) {
+            return "<div class=\"d-block badge bg-lightblue\">I gang</div>";
         } else {
             LocalDate deadline = task.getNextDeadline();
             LocalDate today = LocalDate.now();
@@ -268,6 +272,8 @@ public class TaskService implements TagableService<Task> {
 	public StatusCombination calculateStatus(final Task task) {
 		if (isTaskDone(task)) {
 			return new StatusCombination("Udført", StatusColor.GREEN);
+		} else if (task.getInProgress()) {
+			return new StatusCombination("I gang", StatusColor.YELLOW);
 		} else {
 			LocalDate deadline = task.getNextDeadline();
 			LocalDate today = LocalDate.now();

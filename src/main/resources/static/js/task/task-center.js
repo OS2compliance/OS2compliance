@@ -27,6 +27,15 @@ const DateDiff = {
     }
 };
 
+function escapeAttribute(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 const defaultClassName = {
     table: 'table table-striped',
     search: "form-control",
@@ -186,13 +195,15 @@ function initGrid() {
                     let status = "";
                     let type = row.cells[2]['data'];
                     let inProgress = row.cells[13]['data'];
+                    let note = row.cells[14]['data'];
                     let completed = (cell && type === "Opgave") || row.cells[11]['data'] === true;
 
                     // completed always wins over in progress
                     if (completed) {
                         status = '<div class="d-block badge bg-success">Udført</div>'
                     } else if (inProgress === true) {
-                        status = '<div class="d-block badge bg-lightblue">I gang</div>'
+                        let noteAttribute = note ? ` title="${escapeAttribute(note)}"` : '';
+                        status = `<div class="d-block badge bg-lightblue"${noteAttribute}>I gang</div>`
                     } else {
                         let deadline = row.cells[7]['data'];
                         let dateString = deadline.replace(" ", "/");
@@ -238,6 +249,10 @@ function initGrid() {
             {
                 name: "inProgress",
                 hidden: true
+            },
+            {
+                name: "note",
+                hidden: true
             }
         ],
         server: {
@@ -249,12 +264,9 @@ function initGrid() {
             then: data => data.content.map(task =>
                 [ task.id, task.name, task.taskType, task.relatedEntities,
                     task.responsibleNames, task.responsibleOU, task.tags, task.nextDeadline,
-                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions, task.inProgress]
+                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions, task.inProgress, task.inProgressNote]
             ),
-            total: data => {
-                console.log(data)
-             return data.totalCount;
-            }
+            total: data => data.totalCount
         },
         language: {
             'search': {
@@ -283,7 +295,7 @@ function initGrid() {
         grid,
         ['opgavenavn', 'allowedActions'],
         ['opgavenavn', 'allowedActions', 'opgaveType', 'ansvarlig', 'deadline', 'status', 'resultat'],
-        ['id'])
+        ['id', 'inProgress', 'note'])
 
     initGridActions()
 

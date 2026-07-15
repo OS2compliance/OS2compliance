@@ -36,6 +36,8 @@ public class TaskDTO {
 	@ExcludeFromExport
 	private boolean inProgress;
 	@ExcludeFromExport
+	private String inProgressNote;
+	@ExcludeFromExport
     private String taskResult;
 	@ExcludeFromExport
     private Integer taskResultOrder;

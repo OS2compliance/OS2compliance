@@ -54,6 +54,7 @@ public interface TaskMapper {
 				.taskResultOrder(taskGrid.getTaskResultOrder())
 				.completed(nullSafe(taskGrid::isCompleted))
 				.inProgress(nullSafe(taskGrid::isInProgress))
+				.inProgressNote(nullSafe(taskGrid::getInProgressNote))
 				.tags(tags)
 				.lastCompletionDate(nullSafe(() -> taskGrid.getLastCompletionDate().format(DK_DATE_FORMATTER)))
 				.relatedEntities(taskGrid.getRelatedEntitiesDTO().stream().map(RelatedEntityDTO::toLink).toList())
