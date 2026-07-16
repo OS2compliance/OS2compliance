@@ -24,6 +24,7 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -134,8 +135,24 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		return threatAssessmentDao.findByThreatAssessmentTypeInAndCreatedAtBetween(types, from.atStartOfDay(), to.atTime(LocalTime.MAX));
 	}
 
-	public Set<ThreatAssessment> findLatestForAllAssets(LocalDate from, LocalDate to){
-		return threatAssessmentDao.findLatestForAllAssetsBetweenDates(from.atStartOfDay(), to.atTime(LocalTime.MAX));
+	public Set<ThreatAssessment> findLatestForAllAssets(LocalDate from, LocalDate to, List<Criticality> criticalities, boolean sociallyCriticalOnly, List<String> departmentUuids) {
+		// inactive filters get a placeholder value since empty IN-lists cannot be bound
+		final boolean criticalitiesActive = criticalities != null && !criticalities.isEmpty();
+		final boolean departmentsActive = departmentUuids != null && !departmentUuids.isEmpty();
+		return threatAssessmentDao.findLatestForAllAssetsBetweenDates(from.atStartOfDay(), to.atTime(LocalTime.MAX),
+				criticalitiesActive, criticalitiesActive ? criticalities : List.of(Criticality.CRITICAL),
+				sociallyCriticalOnly,
+				departmentsActive, departmentsActive ? departmentUuids : List.of("-"));
+	}
+
+	public Set<ThreatAssessment> findAllForAssetsFiltered(LocalDate from, LocalDate to, List<Criticality> criticalities, boolean sociallyCriticalOnly, List<String> departmentUuids) {
+		// inactive filters get a placeholder value since empty IN-lists cannot be bound
+		final boolean criticalitiesActive = criticalities != null && !criticalities.isEmpty();
+		final boolean departmentsActive = departmentUuids != null && !departmentUuids.isEmpty();
+		return threatAssessmentDao.findAllForAssetsBetweenDatesFiltered(from.atStartOfDay(), to.atTime(LocalTime.MAX),
+				criticalitiesActive, criticalitiesActive ? criticalities : List.of(Criticality.CRITICAL),
+				sociallyCriticalOnly,
+				departmentsActive, departmentsActive ? departmentUuids : List.of("-"));
 	}
 
 	public Set<ThreatAssessment> findLatestForAllRegisters(LocalDate from, LocalDate to){
