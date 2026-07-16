@@ -191,8 +191,18 @@ function editField(elem) {
             setField(id, type, editor.getData(), index);
         });
 
+        // save when leaving source-mode, since the visual editor's blur does not fire there
+        const sourceEditingPlugin = editor.plugins.has('SourceEditing') ? editor.plugins.get('SourceEditing') : null;
+        if (sourceEditingPlugin) {
+            sourceEditingPlugin.on('change:isSourceEditingMode', (evt, name, isSourceMode) => {
+                if (!isSourceMode) {
+                    setField(id, type, editor.getData(), index);
+                }
+            });
+        }
+
         showEditor(index, type);
-    });
+    }, { sourceEditing: true });
 }
 
 function showEditor(index, type) {

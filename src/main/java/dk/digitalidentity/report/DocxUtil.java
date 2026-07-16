@@ -14,9 +14,6 @@ import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTAbstractNum;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTFldChar;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTNumbering;
@@ -102,10 +99,7 @@ public class DocxUtil {
         if (Strings.isEmpty(html)) {
             return;
         }
-        final Document htmlDocument = Jsoup.parseBodyFragment(html);
-        final Element body = htmlDocument.body();
-        final HtmlToDocVisitor visitor = new HtmlToDocVisitor(document, cursor);
-        body.traverse(visitor);
+        new HtmlToDocConverter(document, cursor).convert(html);
     }
 
     public static void addBulletList(final XWPFDocument document, final XmlCursor cursor,
