@@ -273,7 +273,7 @@ public class TaskService implements TagableService<Task> {
 		if (isTaskDone(task)) {
 			return new StatusCombination("Udført", StatusColor.GREEN);
 		} else if (task.getInProgress()) {
-			return new StatusCombination("I gang", StatusColor.YELLOW);
+			return new StatusCombination("I gang", StatusColor.LIGHT_BLUE);
 		} else {
 			LocalDate deadline = task.getNextDeadline();
 			LocalDate today = LocalDate.now();

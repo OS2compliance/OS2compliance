@@ -229,7 +229,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         final XWPFParagraph tableParagraph = document.insertNewParagraph(cursor);
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
-        createTableCells(table, tasks.size()+1, 6);
+        createTableCells(table, tasks.size()+1, 7);
         final XWPFTableRow headerRow = table.getRow(0);
         setCellHeaderTextSmall(headerRow, 0, "Opgave navn");
         setCellHeaderTextSmall(headerRow, 1, "Beskrivelse");
@@ -237,6 +237,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         setCellHeaderTextSmall(headerRow, 3, "Deadline");
         setCellHeaderTextSmall(headerRow, 4, "Ansvarlig");
         setCellHeaderTextSmall(headerRow, 5, "Afdeling");
+        setCellHeaderTextSmall(headerRow, 6, "Status");
 
         final int[] idx = { 1 };
         tasks.forEach(
@@ -248,6 +249,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 setCellTextSmall(row, 3, DK_DATE_FORMATTER.format(task.getNextDeadline()));
                 setCellTextSmall(row, 4, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))));
                 setCellTextSmall(row, 5, nullSafe(() -> task.getResponsibleOu().getName()));
+                setCellTextSmall(row, 6, taskService.calculateStatus(task).text());
                 idx[0]++;
             }
         );

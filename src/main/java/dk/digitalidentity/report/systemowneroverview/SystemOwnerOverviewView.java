@@ -160,6 +160,7 @@ public class SystemOwnerOverviewView extends AbstractXlsView {
 			case StatusColor.GREEN -> IndexedColors.GREEN.getIndex();
 			case StatusColor.ORANGE -> IndexedColors.ORANGE.getIndex();
 			case StatusColor.LIGHT_GREEN -> IndexedColors.LIGHT_GREEN.getIndex();
+			case StatusColor.LIGHT_BLUE -> IndexedColors.PALE_BLUE.getIndex();
 			case StatusColor.GREY -> IndexedColors.GREY_25_PERCENT.getIndex();
 		};
 	}
