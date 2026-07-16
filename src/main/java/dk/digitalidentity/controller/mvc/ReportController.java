@@ -19,6 +19,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.report.ContactsView;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
@@ -500,7 +501,10 @@ public class ReportController {
 			@RequestParam List<String> includedTypes,
 			@RequestParam(required = false) List<String> latestOnly,
 			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate fromDate,
-			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy")LocalDate toDate) {
+			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy")LocalDate toDate,
+			@RequestParam(required = false) List<Criticality> criticalities,
+			@RequestParam(required = false, defaultValue = "false") boolean sociallyCriticalOnly,
+			@RequestParam(required = false) List<String> departments) {
 
 		// Validate
 		if (fromDate == null && toDate == null) {
@@ -511,7 +515,8 @@ public class ReportController {
 		response.setContentType("application/ms-excel");
 		response.setHeader("Content-Disposition", "attachment; filename=\"risikobillede.xlsx\"");
 
-		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly, fromDate, toDate);
+		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly, fromDate, toDate,
+				criticalities, sociallyCriticalOnly, departments);
 
 		List<ThreatRow> threats = riskImageService.mapToRows(relevantThreatAssessments);
 
