@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -308,10 +309,16 @@ public class ScaleService {
     }
 
     public Set<RiskAssessment> getPossibleAssessments() {
-        final BiFunction<Integer, Integer, RiskAssessment> assessmentLookup = scaleSettingsForType(getScaleType()).assessmentLookup;
+        final ScaleSetting scaleSetting = scaleSettingsForType(getScaleType());
+        final BiFunction<Integer, Integer, RiskAssessment> assessmentLookup = scaleSetting.assessmentLookup;
+        final int dimension = scaleSetting.colorsMatrix.keySet().stream()
+            .flatMap(key -> Arrays.stream(key.split(",")))
+            .mapToInt(Integer::parseInt)
+            .max()
+            .orElse(0);
         final Set<RiskAssessment> found = EnumSet.noneOf(RiskAssessment.class);
-        for (int probability = 1; probability <= 4; probability++) {
-            for (int consequence = 1; consequence <= 4; consequence++) {
+        for (int probability = 1; probability <= dimension; probability++) {
+            for (int consequence = 1; consequence <= dimension; consequence++) {
                 final RiskAssessment assessment = assessmentLookup.apply(probability, consequence);
                 if (assessment != null) {
                     found.add(assessment);
