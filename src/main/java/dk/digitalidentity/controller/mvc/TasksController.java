@@ -336,7 +336,8 @@ public class TasksController {
 	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("complete")
-    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
+    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral,
+            @RequestParam(name = "stay", required = false, defaultValue = "false") boolean stay) {
         final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !taskService.isResponsibleFor(task)) {
@@ -390,6 +391,9 @@ public class TasksController {
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
         taskService.completeTask(task, taskLog);
+        if (stay) {
+            return "redirect:/tasks/" + task.getId() + (referral != null ? "?referral=" + referral : "");
+        }
         if ("dashboard".equals(referral)) {
             return "redirect:/dashboard";
         }
