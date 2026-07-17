@@ -12,6 +12,15 @@ const updateUrl = (prev, query) => {
     return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 };
 
+function escapeAttribute(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 document.addEventListener("DOMContentLoaded", function (event) {
 
     initSystemOwnerRapportButton();
@@ -87,10 +96,15 @@ document.addEventListener("DOMContentLoaded", function (event) {
                         // Null-safe access to row cells and data
                         let type = row?.cells?.[2]?.data || null;
                         let deadline = row?.cells?.[5]?.data || null;
+                        let inProgress = row?.cells?.[9]?.data === true;
+                        let note = row?.cells?.[10]?.data || null;
 
                         // if completed and task type opgave
                         if (cell && type === "Opgave") {
                             status = '<div class="d-block badge bg-success">Udført</div>';
+                        } else if (inProgress) {
+                            let noteAttribute = note ? ` title="${escapeAttribute(note)}"` : '';
+                            status = `<div class="d-block badge bg-lightblue"${noteAttribute}>I gang</div>`;
                         } else if (deadline) {
                             // Only process deadline if it exists
                             let dateString = deadline.replace(" ", "/");
@@ -128,6 +142,14 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     },
                     formatter: (cell, row) => formatTags(cell, row),
                 },
+                {
+                    name: "inProgress",
+                    hidden: true
+                },
+                {
+                    name: "note",
+                    hidden: true
+                },
             ],
             server: {
                 url: gridTasksUrl + "/" + userId,
@@ -136,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(task =>
-                    [task.id, task.name, task.taskType, task.responsibleNames, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags]
+                    [task.id, task.name, task.taskType, task.responsibleNames, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags, task.inProgress, task.inProgressNote]
                 ),
                 total: data => data.totalCount ? data.totalCount : 0
             },
@@ -169,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             gridTasks,
             ['opgavenavn'],
             ['opgavenavn','deadline','status', 'OpgaveType'],
-            ['id', 'completed'],
+            ['id', 'completed', 'inProgress', 'note'],
             '.taskTableOptionsContainer')
 
         let gridConfigAssets = {

@@ -3,6 +3,7 @@ package dk.digitalidentity.model.entity;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -31,6 +32,9 @@ public class Incident extends Relatable implements StatisticEnabled {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_uuid")
     private User creator;
+
+    @Column(name = "draft", nullable = false)
+    private boolean draft = false;
 
     @Override
     public RelationType getRelationType() {

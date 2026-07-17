@@ -41,6 +41,7 @@ public class IncidentsXlsView extends AbstractXlsView {
         for (IncidentDTO incident : allIncidents) {
             final Row row = sheet.createRow(rowCount++);
             createCell(row, 0, incident.getName(), style);
+            createCell(row, 1, incident.getDraftText(), style);
             for (int i = 1; i <= sortedFields.size(); i++) {
                 final IncidentField field = sortedFields.get(i-1);
                 final String columnValue = incident.getResponses().stream()
@@ -49,11 +50,11 @@ public class IncidentsXlsView extends AbstractXlsView {
                     .filter(Objects::nonNull)
                     .findFirst()
                     .orElse("");
-                createCell(row, i, columnValue, style);
+                createCell(row, i + 1, columnValue, style);
             }
         }
 
-        for (int i = 0; i < allFields.size(); i++) {
+        for (int i = 0; i < allFields.size() + 2; i++) {
             sheet.autoSizeColumn(i);
         }
     }
@@ -66,8 +67,9 @@ public class IncidentsXlsView extends AbstractXlsView {
 
         final Row header = sheet.createRow(0);
         createCell(header, 0, "Titel", headerStyle);
+        createCell(header, 1, "Status", headerStyle);
         for (int i = 1; i <= sortedFields.size(); i++) {
-            createCell(header, i, sortedFields.get(i-1).getQuestion(), headerStyle);
+            createCell(header, i + 1, sortedFields.get(i-1).getQuestion(), headerStyle);
         }
 
     }

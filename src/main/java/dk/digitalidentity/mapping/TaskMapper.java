@@ -53,6 +53,8 @@ public interface TaskMapper {
 				.taskResult(nullSafe(() -> taskGrid.getTaskResult()))
 				.taskResultOrder(taskGrid.getTaskResultOrder())
 				.completed(nullSafe(taskGrid::isCompleted))
+				.inProgress(nullSafe(taskGrid::isInProgress))
+				.inProgressNote(nullSafe(taskGrid::getInProgressNote))
 				.tags(tags)
 				.lastCompletionDate(nullSafe(() -> taskGrid.getLastCompletionDate().format(DK_DATE_FORMATTER)))
 				.relatedEntities(taskGrid.getRelatedEntitiesDTO().stream().map(RelatedEntityDTO::toLink).toList())
@@ -101,6 +103,8 @@ public interface TaskMapper {
 	@Mapping(target = "notificationReminders", expression = "java(mapNotificationReminders(dto.getNotificationReminders()))")
 	@Mapping(target = "links", ignore = true)
 	@Mapping(target = "subTasks", ignore = true)
+	@Mapping(target = "inProgress", ignore = true)
+	@Mapping(target = "note", ignore = true)
 	// Ignore fields we dont need
 	@Mapping(target = "version", ignore = true)
 	@Mapping(target = "preservedResponsibleUserUuids", ignore = true)

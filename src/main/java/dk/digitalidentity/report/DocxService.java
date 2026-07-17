@@ -24,7 +24,9 @@ public class DocxService {
     }
 
     public XWPFDocument readDocument(final String filename) throws IOException {
-        return new XWPFDocument(Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(filename)));
+        final XWPFDocument document = new XWPFDocument(Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(filename)));
+        DocxUtil.normalizeHeadingStyles(document);
+        return document;
     }
     public void replacePlaceHolders(final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
         Arrays.stream(PlaceHolder.values())

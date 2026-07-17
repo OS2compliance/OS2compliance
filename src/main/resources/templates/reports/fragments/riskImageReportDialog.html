@@ -71,6 +71,38 @@
                         </div>
                     </div>
 
+                    <div class="row mt-4">
+                        <label class="col-sm-3 col-form-label" for="criticalitiesList">Kritikalitet</label>
+                        <div id="criticalitiesList" class="col-sm-9 d-flex flex-column gap-2 mt-2">
+                            <div class="form-check" th:each="criticality, iter : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}">
+                                <input class="form-check-input" type="checkbox" name="criticalities" th:value="${criticality.name()}" th:id="'criticality' + ${iter.index}">
+                                <label class="form-check-label" th:for="'criticality' + ${iter.index}" th:text="${criticality.message}"></label>
+                            </div>
+                            <small class="text-muted">Gælder kun aktiver</small>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <label class="col-sm-3 col-form-label" for="sociallyCriticalOnly">Samfundskritisk</label>
+                        <div class="col-sm-9 mt-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="sociallyCriticalOnly" value="true" id="sociallyCriticalOnly">
+                                <label class="form-check-label" for="sociallyCriticalOnly">
+                                    Vis kun samfundskritiske systemer
+                                </label>
+                            </div>
+                            <small class="text-muted">Gælder kun aktiver</small>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <label class="col-sm-3 col-form-label" for="riskImageDepartmentSelect">Afdeling</label>
+                        <div class="col-sm-9">
+                            <select id="riskImageDepartmentSelect" name="departments" class="form-select" data-trigger="" multiple="multiple"></select>
+                            <small class="text-muted">Gælder kun aktiver</small>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>

@@ -105,6 +105,21 @@ function ViewTaskService() {
             'viewTaskNotificationSelectDiv',
             'viewTaskNotificationSelectInput'
         );
+
+        this.initInProgressNoteToggle();
+    }
+
+    this.initInProgressNoteToggle = function() {
+        const inProgressCheckbox = document.getElementById('inProgress');
+        const noteRow = document.getElementById('noteRow');
+
+        if (!inProgressCheckbox || !noteRow) {
+            return;
+        }
+
+        inProgressCheckbox.addEventListener('change', (event) => {
+            noteRow.hidden = !event.target.checked;
+        });
     }
 
     // In case this task is an oversight, a special oversight dialog can be shown

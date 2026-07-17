@@ -5,11 +5,18 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Use event delegation since cells are rendered by GridJS
     document.addEventListener('mouseenter', function(e) {
+        if (!(e.target instanceof Element)) {
+            return;
+        }
         const cell = e.target.closest('.risk-assessment-cell');
-        if (!cell) return;
+        if (!cell) {
+            return;
+        }
 
         const tooltip = cell.querySelector('.risk-tooltip');
-        if (!tooltip) return;
+        if (!tooltip) {
+            return;
+        }
 
         positionTooltip(cell, tooltip);
     }, true);

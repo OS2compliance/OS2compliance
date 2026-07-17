@@ -7,6 +7,7 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import dk.digitalidentity.model.dto.AssetIdNameDTO;
 import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
 
@@ -21,7 +22,7 @@ public interface DBSAssetMapper {
                 .name(assetGrid.getName())
                 .supplier(nullSafe(() -> assetGrid.getSupplier()))
                 .lastSync(assetGrid.getLastSync())
-                .assets(nullSafe(() -> assetGrid.getAssets()))
+                .assets(nullSafe(() -> assetGrid.getAssets().stream().map(a -> new AssetIdNameDTO(a.getId(), a.getName())).toList()))
 				.dpaStatuses(nullSafe(() -> assetGrid.getDpaStatuses()))
                 .build();
     }

@@ -4,10 +4,8 @@ import dk.digitalidentity.model.dto.YearWheelDTO;
 import dk.digitalidentity.model.dto.YearWheelTagDTO;
 import dk.digitalidentity.model.dto.YearWheelTaskDTO;
 import dk.digitalidentity.model.entity.Tag;
-import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
-import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.service.tag.TagService;
 import lombok.RequiredArgsConstructor;
@@ -121,6 +119,11 @@ public class YearWheelService {
 		LocalDate lastCompletion = task.getLastCompletionDate();
 		if (lastCompletion != null && !occurrenceDeadline.isAfter(lastCompletion)) {
 			return "completed";
+		}
+
+		// In progress covers the current occurrence (deadlines up to and including the task's next deadline)
+		if (task.isInProgress() && !occurrenceDeadline.isAfter(task.getNextDeadline().toLocalDate())) {
+			return "inprogress";
 		}
 
 		// Not completed — check if overdue

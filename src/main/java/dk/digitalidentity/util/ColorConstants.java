@@ -14,4 +14,5 @@ public class ColorConstants {
 		public static final String GREEN = "rgba(34, 197, 94, 0.8)";
 		public static final String LIME = "rgba(159, 204, 46, 0.8)";
 		public static final String GREY = "rgba(128, 128, 128, 0.8)";
+		public static final String LIGHT_BLUE = "rgba(147, 197, 253, 0.8)";
 }
