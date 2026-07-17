@@ -30,29 +30,32 @@
     </div>
     <div class="row mt-3" th:unless="${isNSIS}">
         <label class="col-sm-2 col-form-label">Efterlevelse af kravet</label>
-        <div class="col-sm-10" onclick="editField(this)" data-type="DESCRIPTION" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+        <div class="col-sm-10 click-to-edit" onclick="editField(this)" data-type="DESCRIPTION" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
             <div class="editor-container" th:id="'editorDescriptionContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
                 <textarea th:id="'description' + ${stat.index} + '.' + ${statSection.index}" data-type="DESCRIPTION" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.description}"></textarea>
             </div>
-            <div class="editDescription" th:id="'descriptionRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.description}"></div>
+            <div class="editDescription click-to-edit-content" th:id="'descriptionRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.description}"></div>
+            <i class="pli-pencil click-to-edit-icon" aria-hidden="true"></i>
         </div>
     </div>
     <div class="row mt-3" th:if="${isNSIS}">
         <label class="col-sm-2 col-form-label">Anmelders beskrivelse af opfyldelse (Praksis)</label>
-        <div class="col-sm-10" onclick="editField(this)" data-type="NSIS_PRACTICE" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+        <div class="col-sm-10 click-to-edit" onclick="editField(this)" data-type="NSIS_PRACTICE" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
             <div class="editor-container" th:id="'editorPracticeContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
                 <textarea th:id="'practice' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_PRACTICE" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisPractice}"></textarea>
             </div>
-            <div class="editDescription" th:id="'practiceRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisPractice}"></div>
+            <div class="editDescription click-to-edit-content" th:id="'practiceRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisPractice}"></div>
+            <i class="pli-pencil click-to-edit-icon" aria-hidden="true"></i>
         </div>
     </div>
     <div class="row mt-3" th:if="${isNSIS}">
         <label class="col-sm-2 col-form-label">Anmelders beskrivelse af kontrolmål (SMART)</label>
-        <div class="col-sm-10" onclick="editField(this)" data-type="NSIS_SMART" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+        <div class="col-sm-10 click-to-edit" onclick="editField(this)" data-type="NSIS_SMART" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
             <div class="editor-container" th:id="'editorSmartContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
                 <textarea th:id="'smart' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_SMART" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisSmart}"></textarea>
             </div>
-            <div class="editDescription" th:id="'smartRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisSmart}"></div>
+            <div class="editDescription click-to-edit-content" th:id="'smartRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisSmart}"></div>
+            <i class="pli-pencil click-to-edit-icon" aria-hidden="true"></i>
         </div>
     </div>
 
