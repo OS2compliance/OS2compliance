@@ -68,7 +68,7 @@ public abstract class IncidentMapper {
 				.createdAt(incident.getCreatedAt() != null ? incident.getCreatedAt().format(formatter) : null)
 				.updatedAt(incident.getUpdatedAt() != null ? incident.getUpdatedAt().format(formatter) : null)
 				.draft(incident.isDraft())
-				.draftText(incident.isDraft() ? "Ja" : "Nej")
+				.draftText(incident.isDraft() ? "Kladde" : "Færdig")
 				.responses(toResponseFieldDTOs(incident.getResponses()))
 				.build();
 

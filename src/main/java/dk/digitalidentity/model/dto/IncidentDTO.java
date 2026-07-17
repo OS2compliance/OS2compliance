@@ -28,7 +28,7 @@ public class IncidentDTO {
     private String updatedAt;
 	@ExcludeFromExport
 	private boolean draft;
-	@ExcelColumn(headerName = "Kladde", order = 4)
+	@ExcelColumn(headerName = "Status", order = 4)
 	private String draftText;
 	@ExcludeFromExport
 	@Builder.Default

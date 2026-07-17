@@ -67,7 +67,7 @@ public class IncidentsXlsView extends AbstractXlsView {
 
         final Row header = sheet.createRow(0);
         createCell(header, 0, "Titel", headerStyle);
-        createCell(header, 1, "Kladde", headerStyle);
+        createCell(header, 1, "Status", headerStyle);
         for (int i = 1; i <= sortedFields.size(); i++) {
             createCell(header, i + 1, sortedFields.get(i-1).getQuestion(), headerStyle);
         }

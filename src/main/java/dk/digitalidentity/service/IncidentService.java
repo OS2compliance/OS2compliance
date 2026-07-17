@@ -2,7 +2,6 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.IncidentDao;
 import dk.digitalidentity.dao.IncidentFieldDao;
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
@@ -252,7 +251,10 @@ public class IncidentService {
 		return (List<IncidentField>) incidentFieldDao.findAllById(ids);
 	}
 
+	/**
+	 * Used for statistics; drafts are excluded so they do not skew the numbers before they are finished.
+	 */
 	public List<Incident> findByFieldIdAndDateRange(Long incidentFieldId, LocalDateTime startDate, LocalDateTime endDate) {
-		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(incidentFieldId, startDate, endDate);
+		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBeforeAndDraftFalse(incidentFieldId, startDate, endDate);
 	}
 }
