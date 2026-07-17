@@ -9,6 +9,8 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFNumbering;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFStyle;
+import org.apache.poi.xwpf.usermodel.XWPFStyles;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
@@ -16,11 +18,18 @@ import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTAbstractNum;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTFldChar;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTFonts;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTNumbering;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTP;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPrGeneral;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTR;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSpacing;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTStyle;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTText;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STFldCharType;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STStyleType;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTheme;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -43,6 +52,104 @@ public class DocxUtil {
             + "<w:lvl w:ilvl=\"1\" w:tentative=\"1\"><w:start w:val=\"1\"/><w:numFmt w:val=\"decimal\"/><w:lvlText w:val=\"%1.%2\"/><w:lvlJc w:val=\"left\"/><w:pPr><w:ind w:left=\"1440\" w:hanging=\"360\"/></w:pPr></w:lvl>"
             + "<w:lvl w:ilvl=\"2\" w:tentative=\"1\"><w:start w:val=\"1\"/><w:numFmt w:val=\"decimal\"/><w:lvlText w:val=\"%1.%2.%3\"/><w:lvlJc w:val=\"left\"/><w:pPr><w:ind w:left=\"2160\" w:hanging=\"360\"/></w:pPr></w:lvl>"
             + "</w:abstractNum>";
+
+    private record HeadingDefinition(int level, int sizeHalfPoints, boolean bold, boolean italic) {}
+
+    // The report templates ship Word's stock heading ladder where Heading3+ is body-sized (or missing
+    // entirely), leaving no visual hierarchy for the CKEditor content headings that HtmlToDocConverter
+    // maps to Heading3-6. Heading1/2 are used by the reports' own chapter/section titles.
+    // Uniform 2pt steps (20/18/16/14/12/12) so every level is visually distinguishable from the next
+    private static final List<HeadingDefinition> HEADING_DEFINITIONS = List.of(
+        new HeadingDefinition(1, 40, false, false),
+        new HeadingDefinition(2, 36, false, false),
+        new HeadingDefinition(3, 32, true, false),
+        new HeadingDefinition(4, 28, true, false),
+        new HeadingDefinition(5, 24, true, false),
+        new HeadingDefinition(6, 24, true, true)
+    );
+
+    /**
+     * Ensure the document defines all Heading1-6 paragraph styles with a visually distinct
+     * size/weight ladder. Existing styles keep their template-defined color and fonts and only have
+     * size, bold and italic normalized; missing styles are created with the standard heading look.
+     */
+    public static void normalizeHeadingStyles(final XWPFDocument document) {
+        final XWPFStyles styles = document.createStyles();
+        for (final HeadingDefinition definition : HEADING_DEFINITIONS) {
+            final String styleId = "Heading" + definition.level();
+            final XWPFStyle existingStyle = styles.getStyle(styleId);
+            if (existingStyle != null) {
+                applyHeadingFormat(existingStyle.getCTStyle(), definition);
+            } else {
+                styles.addStyle(createHeadingStyle(styleId, definition));
+            }
+        }
+    }
+
+    private static XWPFStyle createHeadingStyle(final String styleId, final HeadingDefinition definition) {
+        final CTStyle ctStyle = CTStyle.Factory.newInstance();
+        ctStyle.setType(STStyleType.PARAGRAPH);
+        ctStyle.setStyleId(styleId);
+        ctStyle.addNewName().setVal("heading " + definition.level());
+        ctStyle.addNewBasedOn().setVal("Normal");
+        ctStyle.addNewNext().setVal("Normal");
+        ctStyle.addNewUiPriority().setVal(BigInteger.valueOf(9));
+        ctStyle.addNewUnhideWhenUsed();
+        ctStyle.addNewQFormat();
+
+        final CTPPrGeneral ppr = ctStyle.addNewPPr();
+        ppr.addNewKeepNext();
+        ppr.addNewKeepLines();
+        final CTSpacing spacing = ppr.addNewSpacing();
+        spacing.setBefore(BigInteger.valueOf(240));
+        spacing.setAfter(BigInteger.ZERO);
+        ppr.addNewOutlineLvl().setVal(BigInteger.valueOf(definition.level() - 1));
+
+        final CTRPr rpr = ctStyle.addNewRPr();
+        final CTFonts fonts = rpr.addNewRFonts();
+        fonts.setAsciiTheme(STTheme.MAJOR_H_ANSI);
+        fonts.setEastAsiaTheme(STTheme.MAJOR_EAST_ASIA);
+        fonts.setHAnsiTheme(STTheme.MAJOR_H_ANSI);
+        fonts.setCstheme(STTheme.MAJOR_BIDI);
+        // same blue as the heading styles already defined in the templates
+        rpr.addNewColor().setVal("2F5496");
+
+        applyHeadingFormat(ctStyle, definition);
+        return new XWPFStyle(ctStyle);
+    }
+
+    private static void applyHeadingFormat(final CTStyle ctStyle, final HeadingDefinition definition) {
+        final CTRPr rpr = ctStyle.isSetRPr() ? ctStyle.getRPr() : ctStyle.addNewRPr();
+        final BigInteger size = BigInteger.valueOf(definition.sizeHalfPoints());
+        while (rpr.sizeOfSzArray() > 0) {
+            rpr.removeSz(0);
+        }
+        rpr.addNewSz().setVal(size);
+        while (rpr.sizeOfSzCsArray() > 0) {
+            rpr.removeSzCs(0);
+        }
+        rpr.addNewSzCs().setVal(size);
+        while (rpr.sizeOfBArray() > 0) {
+            rpr.removeB(0);
+        }
+        while (rpr.sizeOfBCsArray() > 0) {
+            rpr.removeBCs(0);
+        }
+        if (definition.bold()) {
+            rpr.addNewB();
+            rpr.addNewBCs();
+        }
+        while (rpr.sizeOfIArray() > 0) {
+            rpr.removeI(0);
+        }
+        while (rpr.sizeOfICsArray() > 0) {
+            rpr.removeICs(0);
+        }
+        if (definition.italic()) {
+            rpr.addNewI();
+            rpr.addNewICs();
+        }
+    }
 
     public static XWPFParagraph findParagraphToReplace(final XWPFDocument document, final String placeHolder) {
         final AtomicReference<XWPFParagraph> result = new AtomicReference<>();

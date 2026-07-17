@@ -53,7 +53,8 @@ public class HtmlToDocConverter {
     private static final int LIST_PARAGRAPH_SPACING = 60;
     // The numbering definitions in DocxUtil define three levels
     private static final int MAX_LIST_LEVEL = 2;
-    // Offset by two so exported content headings sort under the report's own section headings
+    // Offset by two so exported content headings sort under the report's own section headings.
+    // DocxUtil.normalizeHeadingStyles guarantees these styles exist and are visually distinct.
     private static final Map<String, String> HEADING_STYLES = Map.of(
         "h1", "Heading3",
         "h2", "Heading4",
