@@ -18,7 +18,10 @@
                         </nav>
                         <div class="row mt-4 mb-3">
                             <div class="col-12">
-                                <h1 class="page-title text-no-transform fs-2 mb-0" th:text="${incident.name}"></h1>
+                                <h1 class="page-title text-no-transform fs-2 mb-0">
+                                    <span th:text="${incident.name}"></span>
+                                    <span th:if="${incident.draft}" class="badge bg-warning align-middle">Kladde</span>
+                                </h1>
                             </div>
                         </div>
                     </div>
@@ -45,6 +48,7 @@
                                 <div class="toolbar-start d-flex gap-1">
                                     <button id="editDescBtn" th:if="${changeableIncident}" type="button" class="btn btn-secondary btn-lg">Rediger</button>
                                     <button id="cancelBtn" th:if="${changeableIncident}" type="button" class="btn btn-danger btn-lg" style="display: none">Annuller</button>
+                                    <button id="saveDraftBtn" th:if="${changeableIncident and incident.draft}" th:form="${formId}" type="submit" data-draft="true" class="btn btn-secondary btn-lg" style="display: none">Gem som kladde</button>
                                     <button id="saveBtn" th:if="${changeableIncident}" th:form="${formId}" type="submit" class="btn btn-secondary btn-lg" style="display: none">Gem</button>
                                 </div>
                                 <div class="toolbar-end"></div>
@@ -53,6 +57,7 @@
                                 <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post">
                                     <input id="id" th:field="*{id}" type="hidden">
                                     <input th:field="*{name}" type="hidden">
+                                    <input th:field="*{draft}" type="hidden">
                                     <div th:each="response, idx : ${incident.responses}" class="row mt-3">
                                         <th:block th:replace="~{incidents/logs/form_fields :: mandatoryFields(response = ${response}, idx = ${idx.index})}"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'TEXT'} ? ~{incidents/logs/form_fields :: textField(response = ${response}, idx = ${idx.index})} : _"></th:block>

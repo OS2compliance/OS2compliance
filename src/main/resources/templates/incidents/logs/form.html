@@ -7,6 +7,7 @@
         <div class="modal-body">
             <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post" novalidate>
                 <input id="id" th:field="*{id}" type="hidden">
+                <input th:field="*{draft}" type="hidden">
                 <div class="row mt-2" >
                     <label for="title" class="col-sm-4 col-form-label">Titel</label>
                     <div class="col-sm-8">
@@ -34,6 +35,7 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+            <button th:if="${incident.id == null or incident.draft}" type="submit" th:form="${formId}" class="btn btn-outline-primary" data-draft="true">Gem som kladde</button>
             <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
         </div>
     </div>

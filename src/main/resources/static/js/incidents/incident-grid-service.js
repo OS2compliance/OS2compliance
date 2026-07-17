@@ -153,7 +153,7 @@ export default function IncidentGridService () {
             this.incidentGrid,
             ['name', 'allowedActions'],
             ['name', 'createdAt', 'updatedAt', 'allowedActions'],
-            ['id'])
+            ['id', 'draft'])
 
         this.initGridActions()
         initSaveAsExcelButton(customGridFunctions, 'incident', 'incidents', 'Hændelseslog', () => {
@@ -169,7 +169,7 @@ export default function IncidentGridService () {
     this.mapRow = (field) => {
         let columnValues = [];
         let customColumns = this.columns.filter((c) =>
-            c.id !== 'id' && c.id !== 'name' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'allowedActions');
+            c.id !== 'id' && c.id !== 'draft' && c.id !== 'name' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'allowedActions');
         customColumns.forEach(c => {
             let added = false;
             field.responses.forEach(response => {
@@ -188,7 +188,7 @@ export default function IncidentGridService () {
                 columnValues.push("");
             }
         });
-        return [field.id, field.name, field.createdAt, ...columnValues, field.updatedAt, field.allowedActions];
+        return [field.id, field.draft, field.name, field.createdAt, ...columnValues, field.updatedAt, field.allowedActions];
     }
 
     this.buildColumns = (columnNames) => {
@@ -198,11 +198,16 @@ export default function IncidentGridService () {
                 hidden: true,
             },
             {
+                id: "draft",
+                hidden: true,
+            },
+            {
                 id: "name",
                 name: "Titel",
                 formatter: (cell, row) => {
                     const url = '/incidents/logs/' + row.cells[0]['data'];
-                    return formatAsLink(cell, url, false)
+                    const isDraft = row.cells[1]['data'];
+                    return formatAsLink(cell, url, false, isDraft)
                 },
                 width: '250px',
                 canSortFlag: true
@@ -242,7 +247,7 @@ export default function IncidentGridService () {
                 width: '90px',
                 formatter: (cell, row) => {
                     const identifier = row.cells[0]['data'];
-                    const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                    const name = row.cells[2]['data'].replaceAll("'", "\\'");
                     const attributeMap = new Map();
                     attributeMap.set('identifier', identifier);
                     attributeMap.set('name', name);
@@ -271,9 +276,10 @@ export default function IncidentGridService () {
 
 };
 
-function formatAsLink(label, href, shouldOpenInWindow = false) {
+function formatAsLink(label, href, shouldOpenInWindow = false, isDraft = false) {
     const nullSafeLabel = label === null || label === undefined ? '' : label;
     const nullSafeHref = href === null || href === undefined ? '#' : href;
     const target = shouldOpenInWindow ? ' target="_blank" rel="noopener noreferrer"' : '';
-    return gridjs.html(`<a href="${nullSafeHref}" ${target}>${nullSafeLabel}</a>`);
+    const draftBadge = isDraft ? ' <span class="badge bg-warning">Kladde</span>' : '';
+    return gridjs.html(`<a href="${nullSafeHref}" ${target}>${nullSafeLabel}</a>${draftBadge}`);
 }
