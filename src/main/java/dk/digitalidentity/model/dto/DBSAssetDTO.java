@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
-import dk.digitalidentity.model.entity.Asset;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +27,7 @@ public class DBSAssetDTO {
     @JsonFormat(pattern="dd/MM-yyyy")
     private LocalDate lastSync;
 	@ExcelColumn(headerName = "Aktiv(er)", order = 2)
-    private List<Asset> assets;
+    private List<AssetIdNameDTO> assets;
 	@ExcelColumn(headerName = "Leverandør", order = 4)
     private String supplier;
 	@ExcelColumn(headerName = "Databehandleraftale", order = 5)

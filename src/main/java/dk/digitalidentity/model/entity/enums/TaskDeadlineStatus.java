@@ -7,6 +7,7 @@ import lombok.Getter;
 public enum TaskDeadlineStatus implements HasMessage {
     FUTURE("Kommende"),
     EXCEEDED("Overskredet"),
+	IN_PROGRESS("I gang"),
     COMPLETED("Udført");
 
     private final String message;

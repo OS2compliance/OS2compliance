@@ -54,4 +54,7 @@ public class SupplierGrid {
 
 	@Column String responsibleUuid;
 
+	@Column
+	private String country;
+
 }

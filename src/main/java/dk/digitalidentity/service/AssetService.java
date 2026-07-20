@@ -753,6 +753,7 @@ public class AssetService implements TagableService<Asset> {
 	}
 
 	// Helper method to get DBSAssets and avoid duplicated code in export and list
+	@Transactional
 	public Page<DBSAssetGrid> getDbsAssets(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
 		Page<DBSAssetGrid> assets;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
@@ -813,6 +814,7 @@ public class AssetService implements TagableService<Asset> {
 		return assets;
 	}
 
+	@Transactional
 	public List<DBSAssetGrid> findDBSGridByIds(List<Long> ids) {
 		if (ids == null || ids.isEmpty() || !SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			return List.of();

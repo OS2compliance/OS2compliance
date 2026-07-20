@@ -140,7 +140,7 @@ public class IncidentController {
 	@RequireCreateAll
     @PostMapping("log")
     public String createOrUpdateIncident(@ModelAttribute final Incident incident) {
-		if (incident.getResponses().stream().anyMatch(r ->
+		if (!incident.isDraft() && incident.getResponses().stream().anyMatch(r ->
 				r.getIncidentField().isObligatoryAnswer() && (
 						(r.getAnswerText() == null || r.getAnswerText().isEmpty())
 								&& r.getAnswerDate() == null
@@ -155,6 +155,7 @@ public class IncidentController {
             final Incident existingIncident = incidentService.findById(incident.getId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             existingIncident.setName(incident.getName());
+            existingIncident.setDraft(incident.isDraft());
             existingIncident.getResponses().clear();
             existingIncident.getResponses().addAll(incident.getResponses());
             existingIncident.getResponses()

@@ -1,4 +1,5 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
+import {initSaveAsExcelButton} from "../excel-export/excel-export-init.js";
 
 let dbsOversightService = new DBSOversightService();
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -72,7 +73,10 @@ function DBSOversightService() {
                     name: "DBS",
                     sort: false,
                     formatter: (cell, row) => {
-                        var html = '<ul>'
+                        if (!cell) {
+                            return '';
+                        }
+                        let html = '<ul>'
 
                         for (let i = 0; i < cell.length; i++) {
                             html += '<li>' + cell[i].name + '</li>'

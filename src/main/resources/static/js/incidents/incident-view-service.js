@@ -30,6 +30,7 @@ function IncidentViewService() {
         const editDescBtn = document.getElementById("editDescBtn");
         const cancelBtn = document.getElementById("cancelBtn");
         const saveBtn = document.getElementById("saveBtn");
+        const saveDraftBtn = document.getElementById("saveDraftBtn");
 
         editDescBtn?.addEventListener("click", () => {
             this.setEditable('_dm-tabsIncident', true);
@@ -45,15 +46,23 @@ function IncidentViewService() {
             onUnSubmittedService.reset();
         });
 
+        saveDraftBtn?.addEventListener("click", () => {
+            onUnSubmittedService.reset();
+        });
+
         incidentViewService.setEditable(targetId, false);
     }
 
     this.setEditable = (dialogId, editable) => {
         const editDescBtn = document.querySelector('#editDescBtn');
         const saveBtn = document.querySelector('#saveBtn');
+        const saveDraftBtn = document.querySelector('#saveDraftBtn');
         const cancelBtn = document.querySelector('#cancelBtn');
         editDescBtn.style = editable ? 'display: none' : 'display: block';
         saveBtn.style = editable ? 'display: block' : 'display: none';
+        if (saveDraftBtn) {
+            saveDraftBtn.style = editable ? 'display: block' : 'display: none';
+        }
         cancelBtn.style = editable ? 'display: block' : 'display: none';
 
         let dialog = document.getElementById(dialogId);

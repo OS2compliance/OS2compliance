@@ -12,7 +12,8 @@ SELECT s.id,
        prop.prop_value                                                      AS kitos_uuid,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
-       s.responsible_uuid
+       s.responsible_uuid,
+       s.country
 FROM suppliers s
          LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
          LEFT JOIN supplier_tag rt ON rt.supplier_id = s.id
@@ -30,6 +31,8 @@ SELECT t.id,
        t.next_deadline,
        t.repetition,
        t.include_in_report,
+       t.in_progress,
+       t.in_progress_note,
        t.created_at,
        (CASE
             WHEN t.repetition = 'NONE' THEN 10
