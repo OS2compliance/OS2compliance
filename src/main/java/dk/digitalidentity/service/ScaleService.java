@@ -8,9 +8,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -302,6 +306,34 @@ public class ScaleService {
 
     public Map<String, String> getScaleRiskScoreColorMap() {
         return scaleSettingsForType(getScaleType()).colorsMatrix;
+    }
+
+    public Set<RiskAssessment> getPossibleAssessments() {
+        final ScaleSetting scaleSetting = scaleSettingsForType(getScaleType());
+        final BiFunction<Integer, Integer, RiskAssessment> assessmentLookup = scaleSetting.assessmentLookup;
+        final int dimension = scaleSetting.colorsMatrix.keySet().stream()
+            .flatMap(key -> Arrays.stream(key.split(",")))
+            .mapToInt(Integer::parseInt)
+            .max()
+            .orElse(0);
+        final Set<RiskAssessment> found = EnumSet.noneOf(RiskAssessment.class);
+        for (int probability = 1; probability <= dimension; probability++) {
+            for (int consequence = 1; consequence <= dimension; consequence++) {
+                final RiskAssessment assessment = assessmentLookup.apply(probability, consequence);
+                if (assessment != null) {
+                    found.add(assessment);
+                }
+            }
+        }
+
+        final Set<RiskAssessment> ordered = new LinkedHashSet<>();
+        for (final RiskAssessment assessment : List.of(RiskAssessment.RED, RiskAssessment.ORANGE, RiskAssessment.YELLOW, RiskAssessment.LIGHT_GREEN, RiskAssessment.GREEN)) {
+            if (found.contains(assessment)) {
+                ordered.add(assessment);
+            }
+        }
+
+        return ordered;
     }
 
     public String getScaleProbabilityNumberExplainer() {
