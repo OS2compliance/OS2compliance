@@ -88,7 +88,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 {
                     name: "Status",
                     searchable: {
-                        sortKey: 'completed'
+                        sortKey: "completed",
+                        searchKey: 'taskDeadlineStatus',
+                        fieldId: "taskStatusSearchSelector"
                     },
                     formatter: (cell, row) => {
                         let status = "";
@@ -184,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             .render(document.getElementById(taskDatatableId));
 
         //Enables custom column search, serverside sorting and pagination
-        new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId, 'tasksDatatable')
+        new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId, 'tasksDatatable');
 
         new ColumnOptions(
             taskDatatableId,

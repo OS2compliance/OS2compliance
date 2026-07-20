@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="da" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="multiSelectDropdown(selectId, items)"
+     class="dropdown"
+     th:data-multiselect-for="${selectId}">
+    <button type="button"
+            class="custom-select-button form-select text-truncate"
+            aria-expanded="false">Intet filter</button>
+    <th:block th:replace="${items}"></th:block>
+</div>
+
+</body>
+</html>
