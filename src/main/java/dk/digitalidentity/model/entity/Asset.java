@@ -310,6 +310,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			"FROM assets a " +
 			"WHERE a.id = id)")
 	@Enumerated(EnumType.STRING)
+	@NotAudited
 	private DPIACompletionStatus dpiaCompletionStatus;
 
 	@StatisticLabel("Status for risikovurdering")
@@ -328,5 +329,6 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			"FROM assets a " +
 			"WHERE a.id = id)")
 	@Enumerated(EnumType.STRING)
+	@NotAudited
 	private ThreatAssessmentCompletionStatus threatAssessmentCompletionStatus;
 }

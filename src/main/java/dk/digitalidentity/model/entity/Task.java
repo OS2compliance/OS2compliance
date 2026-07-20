@@ -158,6 +158,7 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 			"FROM tasks t " +
 			"WHERE t.id = id)")
 	@Enumerated(EnumType.STRING)
+	@NotAudited
 	private TaskDeadlineStatus status;
 
 	@Override

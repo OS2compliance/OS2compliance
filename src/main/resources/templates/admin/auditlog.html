@@ -43,6 +43,17 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='auditlog')}"></nav>
 </div>
+<div class="modal fade" id="auditHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ændringshistorik</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Luk"></button>
+            </div>
+            <div class="modal-body" id="auditHistoryModalBody"></div>
+        </div>
+    </div>
+</div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true)}"></div>
 </body>
 </html>

@@ -24,6 +24,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -97,6 +98,7 @@ public abstract class Relatable {
     @OneToMany(orphanRemoval = true,
 			cascade = {CascadeType.ALL},
 			mappedBy = "entity")
+	@NotAudited
 	private Set<Property> properties = new HashSet<>();
 
 	@PrePersist

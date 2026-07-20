@@ -27,6 +27,9 @@ public class AuditLogGrid {
 	private String performerUuid;
 
 	@Column
+	private String performerName;
+
+	@Column
 	private String entityId;
 
 	@Column
@@ -34,4 +37,7 @@ public class AuditLogGrid {
 
 	@Column
 	private String entityName;
+
+	@Column
+	private String description;
 }

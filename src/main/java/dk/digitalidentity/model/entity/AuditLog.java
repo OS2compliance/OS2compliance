@@ -32,11 +32,14 @@ public class AuditLog {
 	private String performerName;
 
 	@Column
-	private Long entityId;
+	private String entityId;
 
 	@Column
 	private String entityType;
 
 	@Column
 	private String entityName;
+
+	@Column
+	private String description;
 }
