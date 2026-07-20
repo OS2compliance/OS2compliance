@@ -1,0 +1,2 @@
+ALTER TABLE auditlog ADD COLUMN description TEXT NULL;
+ALTER TABLE auditlog MODIFY COLUMN entity_id VARCHAR(64) NULL;
