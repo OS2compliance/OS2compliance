@@ -1,21 +1,20 @@
-const searchRestUrl = "/rest/admin/log/auditlog/list";
-const historyRestUrl = "/rest/admin/log/auditlog/history";
 const csrfToken = document.getElementsByName("_csrf")[0].getAttribute("content");
 
-let historyModal, historyModalBody;
+// Variables
+const searchRestUrl = "/rest/admin/log/auditlog/list";
+const historyRestUrl = "/rest/admin/log/auditlog/history";
+let historyModal;
+let historyModalBody;
 
 document.addEventListener('DOMContentLoaded', function () {
     init();
 });
 
-// Exposed for the inline onclick handler in the grid action button below.
-// Required because this file is loaded as type="module", so top-level functions are not on window.
-window.showAuditHistory = showAuditHistory;
-
 function init() {
     historyModal = document.getElementById('auditHistoryModal');
     historyModalBody = document.getElementById('auditHistoryModalBody');
     initGrid();
+    buttonHandler();
 }
 
 function initGrid() {
@@ -42,7 +41,7 @@ function initGrid() {
                 formatter: (cell) => dateFormatter(cell)
             },
             {
-                id: "entityType",
+                id: "entityTypeLabel",
                 name: "Entitetstype"
             },
             {
@@ -58,13 +57,18 @@ function initGrid() {
                 name: "Handlinger",
                 sort: false,
                 formatter: (cell, row) => {
-                    const entityType = row.cells[2]['data'];
-                    const entityId = row.cells[6] ? row.cells[6]['data'] : null;
+                    const entityType = row.cells[6] ? row.cells[6]['data'] : null;
+                    const entityId = row.cells[7] ? row.cells[7]['data'] : null;
                     if (!entityType || !entityId) {
                         return "";
                     }
-                    return gridjs.html(`<button type="button" title="Vis historik" class="btn btn-icon btn-xs" data-entity-type="${entityType}" data-entity-id="${entityId}" onclick="showAuditHistory(this)"><i class="ti-eye fs-5"></i></button>`);
+                    return gridjs.html(`<button type="button" title="Vis historik" class="btn btn-icon btn-xs showAuditHistoryButton" data-entity-type="${entityType}" data-entity-id="${entityId}"><i class="ti-eye fs-5"></i></button>`);
                 }
+            },
+            {
+                id: "entityType",
+                name: "entityType",
+                hidden: true
             },
             {
                 id: "entityId",
@@ -81,10 +85,11 @@ function initGrid() {
             then: data => data.content.map(row => [
                 row.performerName,
                 row.createdTimestamp,
-                row.entityType,
+                row.entityTypeLabel,
                 row.entityName,
                 row.description,
                 null,
+                row.entityType,
                 row.entityId
             ]),
             total: data => data.totalCount
@@ -127,23 +132,25 @@ function dateFormatter(rawDate) {
     return "";
 }
 
-function showAuditHistory(elem) {
-    const entityType = elem.dataset.entityType;
-    const entityId = elem.dataset.entityId;
-
-    const params = new URLSearchParams({ entityType, entityId });
-    fetch(`${historyRestUrl}?${params.toString()}`, {
-        headers: { 'X-CSRF-TOKEN': csrfToken }
-    })
-        .then(response => response.json())
-        .then(diffs => {
-            renderHistoryModal(diffs);
-            new bootstrap.Modal(historyModal).show();
+async function showAuditHistory(entityType, entityId) {
+    try {
+        const params = new URLSearchParams({entityType, entityId});
+        const url = `${historyRestUrl}?${params.toString()}`;
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                "Content-Type": "application/json"
+            }
         })
-        .catch(() => {
-            renderHistoryModal([]);
-            new bootstrap.Modal(historyModal).show();
-        });
+
+        const diffs = await response.json();
+        renderHistoryModal(diffs);
+        new bootstrap.Modal(historyModal).show();
+    } catch {
+        renderHistoryModal([]);
+        new bootstrap.Modal(historyModal).show();
+    }
 }
 
 function renderHistoryModal(diffs) {
@@ -172,4 +179,15 @@ function renderHistoryModal(diffs) {
             <tbody>${rows}</tbody>
         </table>
     `;
+}
+
+function buttonHandler() {
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("showAuditHistoryButton")) {
+            const button = event.target;
+            const entityId = button.dataset.entityId;
+            const entityType = button.dataset.entityType;
+            showAuditHistory(entityType, entityId);
+        }
+    });
 }

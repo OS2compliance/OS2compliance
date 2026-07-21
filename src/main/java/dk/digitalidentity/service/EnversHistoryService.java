@@ -1,75 +1,41 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.ChoiceList;
-import dk.digitalidentity.model.entity.DPIA;
-import dk.digitalidentity.model.entity.Document;
-import dk.digitalidentity.model.entity.EmailTemplate;
-import dk.digitalidentity.model.entity.Incident;
-import dk.digitalidentity.model.entity.Register;
-import dk.digitalidentity.model.entity.StandardSection;
-import dk.digitalidentity.model.entity.StandardTemplate;
-import dk.digitalidentity.model.entity.StandardTemplateSection;
-import dk.digitalidentity.model.entity.Supplier;
-import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.User;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.Attribute;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.stereotype.Service;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class EnversHistoryService {
 	private final EntityManager entityManager;
-
-	private static final Map<String, Class<?>> AUDITED_ENTITY_CLASSES_BY_NAME = Map.ofEntries(
-			Map.entry(Asset.class.getSimpleName(), Asset.class),
-			Map.entry(ThreatAssessment.class.getSimpleName(), ThreatAssessment.class),
-			Map.entry(DPIA.class.getSimpleName(), DPIA.class),
-			Map.entry(Incident.class.getSimpleName(), Incident.class),
-			Map.entry(Task.class.getSimpleName(), Task.class),
-			Map.entry(Register.class.getSimpleName(), Register.class),
-			Map.entry(Document.class.getSimpleName(), Document.class),
-			Map.entry(StandardSection.class.getSimpleName(), StandardSection.class),
-			Map.entry(StandardTemplate.class.getSimpleName(), StandardTemplate.class),
-			Map.entry(StandardTemplateSection.class.getSimpleName(), StandardTemplateSection.class),
-			Map.entry(Supplier.class.getSimpleName(), Supplier.class),
-			Map.entry(User.class.getSimpleName(), User.class),
-			Map.entry(ChoiceList.class.getSimpleName(), ChoiceList.class),
-			Map.entry(EmailTemplate.class.getSimpleName(), EmailTemplate.class)
-	);
-
-	private static final Set<Class<?>> DIFFABLE_PROPERTY_TYPES = Set.of(
-			String.class, Boolean.class, boolean.class, Integer.class, int.class, Long.class, long.class,
-			Double.class, double.class, BigDecimal.class, LocalDate.class, LocalDateTime.class
-	);
+	private final MessageSource messageSource;
 
 	public record FieldDiff(String field, String oldValue, String newValue) {
 	}
 
 	public List<FieldDiff> getLatestDiff(final String entityType, final String entityId) {
-		final Class<?> entityClass = AUDITED_ENTITY_CLASSES_BY_NAME.get(entityType);
+		final Class<?> entityClass = AuditedEntityRegistry.resolveClass(entityType);
 		if (entityClass == null) {
 			return List.of();
 		}
 
-		final Object id = resolveId(entityClass, entityId);
+		final Object id = AuditedEntityRegistry.resolveId(entityType, entityId);
 		final AuditReader auditReader = AuditReaderFactory.get(entityManager);
 		final List<Number> revisions = auditReader.getRevisions(entityClass, id);
 		if (revisions.size() < 2) {
@@ -80,29 +46,27 @@ public class EnversHistoryService {
 		final Number latestRevision = revisions.get(revisions.size() - 1);
 		final Object previous = auditReader.find(entityClass, id, previousRevision);
 		final Object latest = auditReader.find(entityClass, id, latestRevision);
-		return diff(previous, latest);
+		return diff(entityClass, previous, latest);
 	}
 
-	private Object resolveId(final Class<?> entityClass, final String entityId) {
-		return switch (entityClass.getSimpleName()) {
-			case "User", "StandardTemplate", "StandardTemplateSection" -> entityId;
-			default -> Long.valueOf(entityId);
-		};
-	}
-
-	private List<FieldDiff> diff(final Object previous, final Object latest) {
+	private List<FieldDiff> diff(final Class<?> entityClass, final Object previous, final Object latest) {
 		final List<FieldDiff> result = new ArrayList<>();
+		final Set<String> mappedColumnNames = basicAttributeNames(entityClass);
 		try {
 			final BeanInfo beanInfo = Introspector.getBeanInfo(latest.getClass(), Object.class);
 			for (final PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
+				if (!mappedColumnNames.contains(descriptor.getName())) {
+					// not an actual @Column, e.g. a computed helper getter like getLocalizedEnumValues()
+					continue;
+				}
 				final Method getter = descriptor.getReadMethod();
-				if (getter == null || !DIFFABLE_PROPERTY_TYPES.contains(getter.getReturnType())) {
+				if (getter == null) {
 					continue;
 				}
 				final Object oldValue = getter.invoke(previous);
 				final Object newValue = getter.invoke(latest);
-				if (!Objects.equals(oldValue, newValue)) {
-					result.add(new FieldDiff(descriptor.getName(),
+				if (!Objects.equals(normalize(oldValue), normalize(newValue))) {
+					result.add(new FieldDiff(translateField(descriptor.getName()),
 							oldValue != null ? oldValue.toString() : null,
 							newValue != null ? newValue.toString() : null));
 				}
@@ -111,5 +75,44 @@ public class EnversHistoryService {
 			throw new IllegalStateException("Kunne ikke sammenligne revisioner", e);
 		}
 		return result;
+	}
+
+	/**
+	 * Only the entity's actual @Column-mapped, non-relational attributes - excludes computed
+	 * helper getters (e.g. getLocalizedEnumValues(), getManagerUuids()) that Introspector would
+	 * otherwise pick up just because they look like bean properties.
+	 */
+	private Set<String> basicAttributeNames(final Class<?> entityClass) {
+		return entityManager.getMetamodel().entity(entityClass).getAttributes().stream()
+				.filter(attribute -> attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC)
+				.map(Attribute::getName)
+				.collect(Collectors.toSet());
+	}
+
+	/**
+	 * Treats a blank string the same as null, so a field that was empty and got clicked into but
+	 * left untouched doesn't show up as a "changed" (nothing-to-nothing) diff row.
+	 */
+	private Object normalize(final Object value) {
+		if (value instanceof String s && s.isBlank()) {
+			return null;
+		}
+		return value;
+	}
+
+	private String translateField(final String propertyName) {
+		try {
+			return messageSource.getMessage("auditlog.field." + propertyName, null, Locale.of("da"));
+		} catch (final NoSuchMessageException e) {
+			return humanize(propertyName);
+		}
+	}
+
+	/**
+	 * Fallback for any property without a messages.properties entry: turns e.g. "someNewField" into "Some new field".
+	 */
+	private String humanize(final String propertyName) {
+		final String spaced = propertyName.replaceAll("([a-z])([A-Z])", "$1 $2").toLowerCase();
+		return Character.toUpperCase(spaced.charAt(0)) + spaced.substring(1);
 	}
 }

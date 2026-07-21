@@ -7,6 +7,8 @@ import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.EnversHistoryService;
 import dk.digitalidentity.service.FilterService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @RestController
@@ -26,6 +29,7 @@ import java.util.Map;
 public class AuditLogRestController {
 	private final AuditLogGridDao auditLogGridDao;
 	private final EnversHistoryService enversHistoryService;
+	private final MessageSource messageSource;
 
 	public record AuditLogGridDTO(
 			Long id,
@@ -33,6 +37,7 @@ public class AuditLogRestController {
 			String performerName,
 			String entityId,
 			String entityType,
+			String entityTypeLabel,
 			String entityName,
 			String description
 	) {
@@ -60,6 +65,7 @@ public class AuditLogRestController {
 					grid.getPerformerName(),
 					grid.getEntityId(),
 					grid.getEntityType(),
+					translateEntityType(grid.getEntityType()),
 					grid.getEntityName(),
 					grid.getDescription()
 			));
@@ -73,5 +79,16 @@ public class AuditLogRestController {
 			@RequestParam("entityId") String entityId
 	) {
 		return enversHistoryService.getLatestDiff(entityType, entityId);
+	}
+
+	private String translateEntityType(final String entityType) {
+		if (entityType == null) {
+			return null;
+		}
+		try {
+			return messageSource.getMessage("auditlog.entityType." + entityType, null, Locale.of("da"));
+		} catch (final NoSuchMessageException e) {
+			return entityType;
+		}
 	}
 }

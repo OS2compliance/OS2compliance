@@ -1,120 +1,138 @@
 package dk.digitalidentity.config;
 
-import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.ChoiceList;
-import dk.digitalidentity.model.entity.DPIA;
-import dk.digitalidentity.model.entity.Document;
-import dk.digitalidentity.model.entity.EmailTemplate;
-import dk.digitalidentity.model.entity.Incident;
-import dk.digitalidentity.model.entity.Register;
-import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.StandardSection;
-import dk.digitalidentity.model.entity.StandardTemplate;
-import dk.digitalidentity.model.entity.StandardTemplateSection;
-import dk.digitalidentity.model.entity.Supplier;
-import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.samlmodule.model.TokenUser;
 import dk.digitalidentity.security.RolePostProcessor;
 import dk.digitalidentity.service.AuditLogService;
-import org.hibernate.event.spi.PostCommitDeleteEventListener;
-import org.hibernate.event.spi.PostCommitInsertEventListener;
-import org.hibernate.event.spi.PostCommitUpdateEventListener;
+import dk.digitalidentity.service.AuditedEntityRegistry;
+import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManagerFactory;
+import lombok.RequiredArgsConstructor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostDeleteEvent;
+import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
+import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
+import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
- * Writes an {@link dk.digitalidentity.model.entity.AuditLog} row for every create/update/delete
- * of an @Audited entity, so each row in the admin auditlog grid can link to its Envers history.
+ * Writes one {@link dk.digitalidentity.model.entity.AuditLog} row per @Audited entity, per
+ * transaction, so the admin auditlog grid shows a single, human-meaningful event ("created",
+ * "updated", "deleted") instead of every individual SQL statement Hibernate happens to issue
+ * (e.g. an insert immediately followed by an update as default related objects are attached).
+ *
+ * Registers itself as a raw Hibernate event listener (Hibernate listeners aren't Spring beans and
+ * can't be wired declaratively), while still being a normal Spring @Component so it can be
+ * constructed with its dependencies and can hook Spring's transaction synchronization.
  */
-public class AuditEntityChangeListener implements PostCommitInsertEventListener, PostCommitUpdateEventListener, PostCommitDeleteEventListener {
-
-	private static final Set<Class<?>> AUDITED_ENTITY_CLASSES = Set.of(
-			Asset.class, ThreatAssessment.class, DPIA.class, Incident.class, Task.class,
-			Register.class, Document.class, StandardSection.class, StandardTemplate.class,
-			StandardTemplateSection.class, Supplier.class, User.class, ChoiceList.class, EmailTemplate.class
-	);
+@Component
+@RequiredArgsConstructor
+public class AuditEntityChangeListener implements PostInsertEventListener, PostUpdateEventListener, PostDeleteEventListener {
 
 	private final AuditLogService auditLogService;
+	private final EntityManagerFactory entityManagerFactory;
 
-	public AuditEntityChangeListener(final AuditLogService auditLogService) {
-		this.auditLogService = auditLogService;
+	private record PendingChange(String performerUuid, String performerName, String entityType, String entityId, String entityName, AuditLogService.ChangeType changeType) {
+	}
+
+	private final ThreadLocal<Map<String, PendingChange>> pendingChanges = ThreadLocal.withInitial(LinkedHashMap::new);
+	private final ThreadLocal<Boolean> synchronizationRegistered = ThreadLocal.withInitial(() -> false);
+
+	@PostConstruct
+	public void register() {
+		final SessionFactoryImplementor sessionFactory = entityManagerFactory.unwrap(SessionFactoryImplementor.class);
+		final EventListenerRegistry registry = sessionFactory.getServiceRegistry().getService(EventListenerRegistry.class);
+		registry.appendListeners(EventType.POST_INSERT, this);
+		registry.appendListeners(EventType.POST_UPDATE, this);
+		registry.appendListeners(EventType.POST_DELETE, this);
 	}
 
 	@Override
 	public void onPostInsert(final PostInsertEvent event) {
-		log(event.getEntity(), event.getId(), AuditLogService.ChangeType.CREATE);
-	}
-
-	@Override
-	public void onPostInsertCommitFailed(final PostInsertEvent event) {
+		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.CREATE);
 	}
 
 	@Override
 	public void onPostUpdate(final PostUpdateEvent event) {
-		log(event.getEntity(), event.getId(), AuditLogService.ChangeType.UPDATE);
-	}
-
-	@Override
-	public void onPostUpdateCommitFailed(final PostUpdateEvent event) {
+		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.UPDATE);
 	}
 
 	@Override
 	public void onPostDelete(final PostDeleteEvent event) {
-		log(event.getEntity(), event.getId(), AuditLogService.ChangeType.DELETE);
-	}
-
-	@Override
-	public void onPostDeleteCommitFailed(final PostDeleteEvent event) {
+		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.DELETE);
 	}
 
 	@Override
 	public boolean requiresPostCommitHandling(final EntityPersister persister) {
-		return AUDITED_ENTITY_CLASSES.contains(persister.getMappedClass());
+		return false;
 	}
 
-	private void log(final Object entity, final Object id, final AuditLogService.ChangeType changeType) {
-		if (!AUDITED_ENTITY_CLASSES.contains(entity.getClass())) {
+	/**
+	 * Buffers the change on this thread instead of writing it immediately, so that several writes
+	 * to the same entity within one transaction (e.g. create-then-attach-defaults) collapse into a
+	 * single auditlog row, flushed only once the transaction actually commits.
+	 */
+	private void accumulate(final Object entity, final Object id, final AuditLogService.ChangeType changeType) {
+		if (!AuditedEntityRegistry.isAudited(entity.getClass())) {
 			return;
 		}
 
-		auditLogService.logEntityChange(
-				currentPerformerUuid(),
-				currentPerformerName(),
-				entity.getClass().getSimpleName(),
-				id != null ? id.toString() : null,
-				extractEntityName(entity),
-				changeType
-		);
+		final String entityType = entity.getClass().getSimpleName();
+		final String entityId = id != null ? id.toString() : null;
+		final String key = entityType + ":" + entityId;
+
+		final Map<String, PendingChange> changes = pendingChanges.get();
+		final PendingChange existing = changes.get(key);
+		if (existing != null && existing.changeType() == AuditLogService.ChangeType.CREATE && changeType == AuditLogService.ChangeType.DELETE) {
+			// created and deleted again within the same transaction - nothing meaningful happened
+			changes.remove(key);
+			return;
+		}
+
+		final AuditLogService.ChangeType effectiveType = existing != null && existing.changeType() == AuditLogService.ChangeType.CREATE
+				? AuditLogService.ChangeType.CREATE
+				: changeType;
+
+		changes.put(key, new PendingChange(currentPerformerUuid(), currentPerformerName(), entityType, entityId, AuditedEntityRegistry.extractName(entity), effectiveType));
+
+		registerFlushOnCommit();
 	}
 
-	private String extractEntityName(final Object entity) {
-		if (entity instanceof Relatable relatable) {
-			return relatable.getName();
+	private void registerFlushOnCommit() {
+		if (synchronizationRegistered.get() || !TransactionSynchronizationManager.isSynchronizationActive()) {
+			return;
 		}
-		if (entity instanceof User user) {
-			return user.getName();
-		}
-		if (entity instanceof StandardTemplate standardTemplate) {
-			return standardTemplate.getName();
-		}
-		if (entity instanceof StandardTemplateSection standardTemplateSection) {
-			return standardTemplateSection.getSection();
-		}
-		if (entity instanceof ChoiceList choiceList) {
-			return choiceList.getName();
-		}
-		if (entity instanceof EmailTemplate emailTemplate) {
-			return emailTemplate.getTitle();
-		}
-		return null;
+		synchronizationRegistered.set(true);
+
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				for (final PendingChange change : pendingChanges.get().values()) {
+					auditLogService.logEntityChange(
+							change.performerUuid(), change.performerName(),
+							change.entityType(), change.entityId(), change.entityName(),
+							change.changeType()
+					);
+				}
+			}
+
+			@Override
+			public void afterCompletion(final int status) {
+				pendingChanges.remove();
+				synchronizationRegistered.remove();
+			}
+		});
 	}
 
 	private String currentPerformerUuid() {

@@ -15,12 +15,12 @@ public class AuditLogService {
 
 	@Transactional
 	public void logLogin(final String performerUuid, final String performerName) {
-		log(performerUuid, performerName, "LOGIN", null, null, performerName + " loggede ind");
+		log(performerUuid, performerName, "Login", null, null, performerName + " loggede ind");
 	}
 
 	@Transactional
 	public void logLogout(final String performerUuid, final String performerName) {
-		log(performerUuid, performerName, "LOGOUT", null, null, performerName + " loggede ud");
+		log(performerUuid, performerName, "Logud", null, null, performerName + " loggede ud");
 	}
 
 	@Transactional
@@ -34,8 +34,7 @@ public class AuditLogService {
 		log(performerUuid, performerName, entityType, entityId, entityName, description);
 	}
 
-	@Transactional
-	public void log(final String performerUuid, final String performerName, final String entityType, final String entityId, final String entityName, final String description) {
+	private void log(final String performerUuid, final String performerName, final String entityType, final String entityId, final String entityName, final String description) {
 		final AuditLog auditLog = new AuditLog();
 		auditLog.setPerformerUuid(performerUuid);
 		auditLog.setPerformerName(performerName);
