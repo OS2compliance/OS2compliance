@@ -4,8 +4,26 @@ let transferToChoice, transferFromChoice, transferFromSelect, transferToSelect, 
 
 const token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
+const defaultClassName = {
+    table: 'table table-striped',
+    search: "form-control",
+    header: "d-flex justify-content-end"
+};
+
+// Entity names for which we transfer responsibilities
+const ENTITY = {
+    ASSET: 'Aktiver',
+    DOCUMENT: 'Dokumenter',
+    REGISTER: 'Foranstaltninger',
+    STANDARD_SECTION: 'Standard sektioner',
+    SUPPLIER: 'Leverandører',
+    TASK: 'Opgaver',
+    THREAT_ASSESSMENT: 'Risikovurderinger'
+}
+
 document.addEventListener("DOMContentLoaded", function(event) {
-    pageLoaded()
+    pageLoaded();
+    initEntityTable();
 });
 
 // Exposed for inline onclick handlers in inactive_users.html and the grid action button below.
@@ -22,7 +40,7 @@ function transferResponsibility() {
                  "transferTo": transferTo
                };
 
-    postData(`/rest/admin/transferresponsibility`, data).then((response) => {
+    postData(`/rest/admin/transfer/responsibilities`, data).then((response) => {
         if (!response.ok) {
             throw new Error(`${response.status} ${response.statusText}`);
         }
@@ -48,6 +66,40 @@ function initModalWithDefaultTransferFrom(elem) {
     transferResponsibilityBootstrapModal.show();
 }
 
+// Hardcoded values since we only need them for filtering when transferring responsibilities
+function initEntityTable() {
+    new gridjs.Grid({
+        className: defaultClassName,
+        sort: {
+            enabled: true,
+            multiColumn: false
+        },
+        columns: [
+            {
+                name: 'Entitetsnavn'
+            },
+            {
+                name: 'Handlinger',
+                formatter: (_, row) => {
+                    return gridjs.html(`<input type="checkbox" data-id="${row.cells[0].data}" />`);
+                }
+            }
+        ],
+        data: [
+            [ENTITY.ASSET],
+            [ENTITY.DOCUMENT],
+            [ENTITY.REGISTER],
+            [ENTITY.REGISTER],
+            [ENTITY.SUPPLIER],
+            [ENTITY.TASK],
+            [ENTITY.REGISTER]
+        ],
+        language: {
+            noRecordsFound: 'Ingen data fundet'
+        }
+    }).render(document.getElementById('entityTable'));
+}
+
 function pageLoaded() {
 
     transferFromSelect = document.getElementById('transferFrom');
@@ -65,12 +117,6 @@ function pageLoaded() {
         transferToChoice.removeActiveItems();
         transferFromChoice.enable();
     });
-
-    const defaultClassName = {
-        table: 'table table-striped',
-        search: "form-control",
-        header: "d-flex justify-content-end"
-    };
 
     new gridjs.Grid({
         className: defaultClassName,

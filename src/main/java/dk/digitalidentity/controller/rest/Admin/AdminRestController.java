@@ -43,7 +43,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
@@ -113,17 +112,18 @@ public class AdminRestController {
     public record TransferResponsibilityDTO(String transferFrom, String transferTo) {}
 	@RequireUpdateAll
     @Transactional
-    @PostMapping("transferresponsibility")
-    public ResponseEntity<?> transferResponsibility(@RequestBody final TransferResponsibilityDTO dto) {
-        User userTo = userService.findByUuid(dto.transferTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        ResponsibleUserView userFrom = responsibleUserViewService.findByUserUuid(dto.transferFrom);
+    @PostMapping("transfer/responsibilities")
+    public ResponseEntity<?> transferResponsibilities(@RequestBody final TransferResponsibilityDTO dto) {
+        User targetUser = userService.findByUuid(dto.transferTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ResponsibleUserView sourceUser = responsibleUserViewService.findByUserUuid(dto.transferFrom);
 
-        // null means the person has no responsibilities
-        if (userFrom == null) {
+        // User has no responsibilities to transfer
+        if (sourceUser == null) {
             return new ResponseEntity<>(HttpStatus.OK);
         }
 
-        List<Long> ids = userFrom.getResponsibleRelatableIds().stream().map(Long::parseLong).collect(Collectors.toList());
+		// Fetch object ids and use them to fetch relatables to transfer
+        List<Long> ids = sourceUser.getResponsibleRelatableIds().stream().map(Long::parseLong).collect(Collectors.toList());
         List<Relatable> relatables = relatableService.findAllById(ids);
 
         for (Relatable responsibleFor : relatables) {
@@ -134,7 +134,7 @@ public class AdminRestController {
                 case ASSET:
                     Asset asset = (Asset) responsibleFor;
                     asset.getResponsibleUsers().removeIf(u -> u.getUuid().equals(dto.transferFrom));
-                    asset.getResponsibleUsers().add(userTo);
+                    asset.getResponsibleUsers().add(targetUser);
                     assetService.save(asset);
                     break;
                 case DOCUMENT:
@@ -144,34 +144,34 @@ public class AdminRestController {
 							.filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
 									.anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
 							).findFirst().map(Task.class::cast).orElse(null);
-                    document.setResponsibleUser(userTo);
+                    document.setResponsibleUser(targetUser);
                     documentService.update(document, relatedTask != null ? relatedTask.getIncludeInReport() : false);
                     break;
                 case REGISTER:
                     Register register = (Register) responsibleFor;
                     register.getResponsibleUsers().removeIf(u -> u.getUuid().equals(dto.transferFrom));
-                    register.getResponsibleUsers().add(userTo);
+                    register.getResponsibleUsers().add(targetUser);
                     registerService.save(register);
                     break;
                 case STANDARD_SECTION:
                     StandardSection standardSection = (StandardSection) responsibleFor;
-                    standardSection.setResponsibleUser(userTo);
+                    standardSection.setResponsibleUser(targetUser);
                     standardSectionService.save(standardSection);
                     break;
                 case SUPPLIER:
                     Supplier supplier = (Supplier) responsibleFor;
-                    supplier.setResponsibleUser(userTo);
+                    supplier.setResponsibleUser(targetUser);
                     supplierService.save(supplier);
                     break;
                 case TASK:
 					Task task = (Task) responsibleFor;
 					task.getResponsibleUsers().clear();
-					task.getResponsibleUsers().add(userTo);
+					task.getResponsibleUsers().add(targetUser);
 					taskService.saveTask(task);
                     break;
                 case THREAT_ASSESSMENT:
                     ThreatAssessment threatAssessment = (ThreatAssessment) responsibleFor;
-                    threatAssessment.setResponsibleUser(userTo);
+                    threatAssessment.setResponsibleUser(targetUser);
                     threatAssessmentService.save(threatAssessment);
                     break;
             }
