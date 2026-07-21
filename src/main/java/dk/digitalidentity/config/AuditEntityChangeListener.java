@@ -146,7 +146,7 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 	private String currentPerformerName() {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication != null && authentication.getDetails() instanceof TokenUser tokenUser) {
-			final Object name = tokenUser.getAttributes().get(RolePostProcessor.ATTRIBUTE_NAME);
+			final Object name = tokenUser.getAttributes() != null ? tokenUser.getAttributes().get(RolePostProcessor.ATTRIBUTE_NAME) : null;
 			return name != null ? name.toString() : tokenUser.getUsername();
 		}
 		return "System";

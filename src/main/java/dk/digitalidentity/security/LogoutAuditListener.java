@@ -16,8 +16,10 @@ public class LogoutAuditListener {
 	public void onLogoutSuccess(final LogoutSuccessEvent event) {
 		if (event.getAuthentication().getDetails() instanceof TokenUser tokenUser) {
 			final String performerUuid = tokenUser.getUsername();
-			final String performerName = (String) tokenUser.getAttributes().get(RolePostProcessor.ATTRIBUTE_NAME);
-			auditLogService.logLogout(performerUuid, performerName);
+			final String performerName = tokenUser.getAttributes() != null
+					? (String) tokenUser.getAttributes().get(RolePostProcessor.ATTRIBUTE_NAME)
+					: null;
+			auditLogService.logLogout(performerUuid, performerName != null ? performerName : performerUuid);
 		}
 	}
 }
