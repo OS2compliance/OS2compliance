@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
+import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.report.riskimage.dto.ThreatRow;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -34,7 +35,8 @@ public class RiskImageService {
 
 	private final ThreatAssessmentService threatAssessmentService;
 
-	public Set<ThreatAssessment> findRelevantThreatAssessments(List<String> includedTypes, List<String> latestOnlyTypes, LocalDate startDate, LocalDate endDate) {
+	public Set<ThreatAssessment> findRelevantThreatAssessments(List<String> includedTypes, List<String> latestOnlyTypes, LocalDate startDate, LocalDate endDate,
+			List<Criticality> criticalities, boolean sociallyCriticalOnly, List<String> departmentUuids) {
 		String assetType = "asset";
 		String registerType = "register";
 		String scenarioType = "scenario";
@@ -71,20 +73,31 @@ public class RiskImageService {
 			}
 		}
 
-		Set<ThreatAssessment> threatAssessments = threatAssessmentService.findAllByTypesAndFromDateToDate(getAllTypes, startDate, endDate);
-		threatAssessments.addAll(findRelevantThreatAssessmentsByLatest(getLatestTypes, startDate, endDate));
+		// The asset filters only exist on assets, so asset assessments need their own query when any of them are active.
+		// Registers and scenarios are unaffected by the asset filters and are included as before.
+		boolean assetFiltersActive = (criticalities != null && !criticalities.isEmpty())
+				|| sociallyCriticalOnly
+				|| (departmentUuids != null && !departmentUuids.isEmpty());
+
+		Set<ThreatAssessment> threatAssessments = new HashSet<>();
+		if (assetFiltersActive && getAllTypes.remove(ThreatAssessmentType.ASSET)) {
+			threatAssessments.addAll(threatAssessmentService.findAllForAssetsFiltered(startDate, endDate, criticalities, sociallyCriticalOnly, departmentUuids));
+		}
+		threatAssessments.addAll(threatAssessmentService.findAllByTypesAndFromDateToDate(getAllTypes, startDate, endDate));
+		threatAssessments.addAll(findRelevantThreatAssessmentsByLatest(getLatestTypes, startDate, endDate, criticalities, sociallyCriticalOnly, departmentUuids));
 
 		return threatAssessments;
 	}
 
-	private Set<ThreatAssessment> findRelevantThreatAssessmentsByLatest(Set<ThreatAssessmentType> getLatestTypes, LocalDate startDate, LocalDate endDate) {
+	private Set<ThreatAssessment> findRelevantThreatAssessmentsByLatest(Set<ThreatAssessmentType> getLatestTypes, LocalDate startDate, LocalDate endDate,
+			List<Criticality> criticalities, boolean sociallyCriticalOnly, List<String> departmentUuids) {
 		Set<ThreatAssessment> threatAssessments = new HashSet<>();
 		for (ThreatAssessmentType type : getLatestTypes) {
 			if (type == ThreatAssessmentType.REGISTER) {
 				threatAssessments.addAll(threatAssessmentService.findLatestForAllRegisters(startDate, endDate));
 			}
 			else if (type == ThreatAssessmentType.ASSET) {
-				threatAssessments.addAll(threatAssessmentService.findLatestForAllAssets(startDate, endDate));
+				threatAssessments.addAll(threatAssessmentService.findLatestForAllAssets(startDate, endDate, criticalities, sociallyCriticalOnly, departmentUuids));
 			}
 		}
 		return threatAssessments;

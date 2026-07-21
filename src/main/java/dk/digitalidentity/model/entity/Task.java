@@ -93,6 +93,12 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
     @Column(name = "include_in_report")
     private Boolean includeInReport = false;
 
+    @Column(name = "in_progress")
+    private Boolean inProgress = false;
+
+    @Column(name = "in_progress_note")
+    private String note;
+
 	@Column(name = "preserved_responsible_users")
 	private String preservedResponsibleUserUuids;
 
@@ -152,6 +158,7 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 
 	@Formula("(SELECT CASE " +
 			"WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = id) THEN 'COMPLETED' " +
+			"WHEN t.in_progress THEN 'IN_PROGRESS' " +
 			"WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE' " +
 			"ELSE 'EXCEEDED' " +
 			"END " +

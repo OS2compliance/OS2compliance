@@ -34,6 +34,10 @@ public class TaskDTO {
 	@ExcelColumn(headerName = "Status", order = 8)
     private boolean completed;
 	@ExcludeFromExport
+	private boolean inProgress;
+	@ExcludeFromExport
+	private String inProgressNote;
+	@ExcludeFromExport
     private String taskResult;
 	@ExcludeFromExport
     private Integer taskResultOrder;

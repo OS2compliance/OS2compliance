@@ -1,6 +1,5 @@
 package dk.digitalidentity.dao;
 
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Incident;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +40,8 @@ public interface IncidentDao extends JpaRepository<Incident, Long> {
 			@Param("to") final LocalDateTime to, final Pageable pageable);
 
 	List<Incident> findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(Long id, LocalDateTime createdAt, LocalDateTime createdAt1);
+
+	List<Incident> findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBeforeAndDraftFalse(Long id, LocalDateTime createdAt, LocalDateTime createdAt1);
 
 	List<Incident> findAllById(Long id);
 }

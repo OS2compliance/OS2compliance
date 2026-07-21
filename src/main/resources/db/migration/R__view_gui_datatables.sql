@@ -31,6 +31,8 @@ SELECT t.id,
        t.next_deadline,
        t.repetition,
        t.include_in_report,
+       t.in_progress,
+       t.in_progress_note,
        t.created_at,
        (CASE
             WHEN t.repetition = 'NONE' THEN 10
@@ -44,6 +46,12 @@ SELECT t.id,
        cv_result.caption                                                               as result,
        cv_result.id                                                                    as task_result_order,
        COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) as `completed`,
+       CASE
+           WHEN COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) = true THEN 'COMPLETED'
+           WHEN t.next_deadline IS NULL THEN NULL
+           WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
+           ELSE 'EXCEEDED'
+       END as task_deadline_status,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
        GROUP_CONCAT(DISTINCT COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,

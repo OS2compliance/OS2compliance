@@ -5,10 +5,10 @@
     <form id="measuresForm" action="#" th:action="@{/assets/measures}" th:object="${measuresForm}" method="post" class="needs-validation" novalidate>
         <div class="row">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
-                <div class="row mb-3 gap-1">
-                    <button id="editMeasureBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right">Rediger foranstaltninger</button>
-                    <button id="cancelMeasureBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" hidden>Annuller</button>
-                    <button id="saveMeasureBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                <div class="mb-3 gap-1">
+                    <button id="editMeasureBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-lg">Rediger</button>
+                    <button id="cancelMeasureBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-lg" hidden>Annuller</button>
+                    <button id="saveMeasureBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-lg" hidden>Gem</button>
                 </div>
                 <input name="assetId" th:value="${asset.id}" hidden>
 

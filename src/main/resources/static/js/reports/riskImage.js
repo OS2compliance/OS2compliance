@@ -7,7 +7,12 @@ export default class RiskImageRapportDialog {
     init() {
         this.#initHiddenCheckboxes()
         this.#initDatePickers()
+        this.#initDepartmentSelect()
         this.#initFormValidation();
+    }
+
+    #initDepartmentSelect() {
+        choiceService.initOUSelect('riskImageDepartmentSelect');
     }
 
     #initHiddenCheckboxes() {

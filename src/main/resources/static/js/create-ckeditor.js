@@ -14,6 +14,7 @@ import {
     List,
     Paragraph,
     SelectAll,
+    SourceEditing,
     Table,
     TableCaption,
     TableCellProperties,
@@ -136,8 +137,21 @@ const editorConfig = {
     }
 };
 
-export function CreateCkEditor (element, callback) {
-    ClassicEditor.create(element, editorConfig).then( editor => {
+export function CreateCkEditor (element, callback, options = {}) {
+    let config = editorConfig;
+    if (options.sourceEditing) {
+        // Source-mode HTML is validated on the way back to visual mode: CKEditor re-parses it
+        // through the editor schema, so tags the enabled plugins do not support are stripped.
+        config = {
+            ...editorConfig,
+            plugins: [...editorConfig.plugins, SourceEditing],
+            toolbar: {
+                ...editorConfig.toolbar,
+                items: [...editorConfig.toolbar.items, '|', 'sourceEditing']
+            }
+        };
+    }
+    ClassicEditor.create(element, config).then( editor => {
         callback(editor);
     }).catch( error => {
         toastService.error(error);

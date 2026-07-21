@@ -100,6 +100,7 @@ public class RiskController {
         model.addAttribute("risk", new ThreatAssessment());
         model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
+        model.addAttribute("possibleRiskAssessments", scaleService.getPossibleAssessments());
         return "risks/index";
     }
 
