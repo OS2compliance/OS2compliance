@@ -262,6 +262,7 @@ CREATE TABLE incidents_aud
     deleted          BIT(1),
     localized_enums  VARCHAR(255),
     created_by_uuid  VARCHAR(16),
+    draft            BOOLEAN,
     PRIMARY KEY (id, rev),
     CONSTRAINT fk_incidents_aud_rev FOREIGN KEY (rev) REFERENCES revinfo (rev)
 );
@@ -292,6 +293,8 @@ CREATE TABLE tasks_aud
     preserved_responsible_users VARCHAR(1000),
     task_description_template   BIGINT,
     notification_reminders      VARCHAR(255),
+    in_progress                 BOOLEAN,
+    in_progress_note            TEXT,
     PRIMARY KEY (id, rev),
     CONSTRAINT fk_tasks_aud_rev FOREIGN KEY (rev) REFERENCES revinfo (rev)
 );
