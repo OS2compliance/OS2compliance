@@ -71,14 +71,21 @@
                     </div>
                 </div>
 
-                <div>
-                    <label>Vælg entiteter</label>
+                <div class="row mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0">Vælg hvad der skal overføres</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="selectedEntityCount" class="text-muted small"></span>
+                            <button type="button" class="btn btn-sm btn-secondary selectAllEntities">Vælg alle</button>
+                            <button type="button" class="btn btn-sm btn-secondary uncheckAllEntities">Fravælg alle</button>
+                        </div>
+                    </div>
                     <div id="entityTable"></div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
-                <button class="btn btn-primary" onclick="transferResponsibility()">Overfør</button>
+                <button class="btn btn-primary transferButton">Overfør (<span id="transferButtonCount">0</span>)</button>
             </div>
         </div>
     </div>

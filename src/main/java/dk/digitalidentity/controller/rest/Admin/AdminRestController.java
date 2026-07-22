@@ -1,7 +1,9 @@
 package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.mapping.RelatableMapper;
 import dk.digitalidentity.model.dto.EmailTemplateDTO;
+import dk.digitalidentity.model.dto.RelatableDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.EmailTemplate;
@@ -34,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,6 +60,7 @@ public class AdminRestController {
     private final UserService userService;
     private final ResponsibleUserViewService responsibleUserViewService;
     private final RelatableService relatableService;
+    private final RelatableMapper relatableMapper;
     private final AssetService assetService;
     private final DocumentService documentService;
     private final RegisterService registerService;
@@ -109,7 +114,23 @@ public class AdminRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    public record TransferResponsibilityDTO(String transferFrom, String transferTo) {}
+    @RequireUpdateAll
+    @GetMapping("responsibilities/{uuid}")
+    public ResponseEntity<List<RelatableDTO>> getResponsibilities(@PathVariable final String uuid) {
+        ResponsibleUserView sourceUser = responsibleUserViewService.findByUserUuid(uuid);
+        if (sourceUser == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<Long> ids = sourceUser.getResponsibleRelatableIds().stream().map(Long::parseLong).collect(Collectors.toList());
+        List<Relatable> relatables = relatableService.findAllById(ids).stream()
+                .filter(relatable -> !relatable.isDeleted())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(relatableMapper.toDTO(relatables));
+    }
+
+    public record TransferResponsibilityDTO(String transferFrom, String transferTo, List<Long> relatableIds) {}
 	@RequireUpdateAll
     @Transactional
     @PostMapping("transfer/responsibilities")
@@ -130,6 +151,12 @@ public class AdminRestController {
             if (responsibleFor.isDeleted()) {
                 continue;
             }
+
+			// We skip it if it wasn't chosen by the user to be transferred
+            if (!dto.relatableIds().contains(responsibleFor.getId())) {
+                continue;
+            }
+
             switch (responsibleFor.getRelationType()) {
                 case ASSET:
                     Asset asset = (Asset) responsibleFor;
@@ -174,6 +201,9 @@ public class AdminRestController {
                     threatAssessment.setResponsibleUser(targetUser);
                     threatAssessmentService.save(threatAssessment);
                     break;
+				default:
+					// Nothing happens
+					break;
             }
         }
 

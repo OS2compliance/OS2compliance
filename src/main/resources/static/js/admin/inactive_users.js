@@ -10,35 +10,23 @@ const defaultClassName = {
     header: "d-flex justify-content-end"
 };
 
-// Entity names for which we transfer responsibilities
-const ENTITY = {
-    ASSET: 'Aktiver',
-    DOCUMENT: 'Dokumenter',
-    REGISTER: 'Foranstaltninger',
-    STANDARD_SECTION: 'Standard sektioner',
-    SUPPLIER: 'Leverandører',
-    TASK: 'Opgaver',
-    THREAT_ASSESSMENT: 'Risikovurderinger'
-}
-
 document.addEventListener("DOMContentLoaded", function(event) {
     pageLoaded();
-    initEntityTable();
+    buttonHandler();
 });
-
-// Exposed for inline onclick handlers in inactive_users.html and the grid action button below.
-// Required because this file is loaded as type="module", so top-level functions are not on window.
-window.transferResponsibility = transferResponsibility;
-window.initModalWithDefaultTransferFrom = initModalWithDefaultTransferFrom;
 
 function transferResponsibility() {
     let transferFrom = transferFromSelect.value;
     let transferTo = transferToSelect.value;
 
+    let relatableIds = Array.from(document.querySelectorAll('#entityTable .entity-checkbox:checked'))
+        .map(checkbox => Number(checkbox.dataset.id));
+
     let data = {
-                 "transferFrom": transferFrom,
-                 "transferTo": transferTo
-               };
+        "transferFrom": transferFrom,
+        "transferTo": transferTo,
+        "relatableIds": relatableIds
+    };
 
     postData(`/rest/admin/transfer/responsibilities`, data).then((response) => {
         if (!response.ok) {
@@ -63,41 +51,95 @@ function initModalWithDefaultTransferFrom(elem) {
     var transferResponsibilityBootstrapModal = new bootstrap.Modal(transferResponsibilityModal);
     transferFromChoice.disable();
 
+    updateEntityListForTransferFrom(uuid);
+
     transferResponsibilityBootstrapModal.show();
 }
 
-// Hardcoded values since we only need them for filtering when transferring responsibilities
-function initEntityTable() {
-    new gridjs.Grid({
-        className: defaultClassName,
-        sort: {
-            enabled: true,
-            multiColumn: false
-        },
-        columns: [
-            {
-                name: 'Entitetsnavn'
-            },
-            {
-                name: 'Handlinger',
-                formatter: (_, row) => {
-                    return gridjs.html(`<input type="checkbox" data-id="${row.cells[0].data}" />`);
-                }
-            }
-        ],
-        data: [
-            [ENTITY.ASSET],
-            [ENTITY.DOCUMENT],
-            [ENTITY.REGISTER],
-            [ENTITY.REGISTER],
-            [ENTITY.SUPPLIER],
-            [ENTITY.TASK],
-            [ENTITY.REGISTER]
-        ],
-        language: {
-            noRecordsFound: 'Ingen data fundet'
+// Fetches everything the chosen transferFrom user is actually responsible for and rebuilds the checkbox list
+function updateEntityListForTransferFrom(uuid) {
+    if (!uuid) {
+        buildEntityList([]);
+        return;
+    }
+
+    fetch(`/rest/admin/responsibilities/${uuid}`)
+        .then(response => response.json())
+        .then(items => buildEntityList(items))
+        .catch(error => toastService.error(error));
+}
+
+// Renders one collapsible group per entity type, with one checkbox per responsibility. All checked by default.
+function buildEntityList(items) {
+    const container = document.getElementById('entityTable');
+    container.innerHTML = '';
+
+    if (!items.length) {
+        container.innerHTML = '<p class="text-muted mb-0">Brugeren er ikke ansvarlig for noget</p>';
+        updateSelectedEntityCount();
+        return;
+    }
+
+    const groups = new Map();
+    items.forEach(item => {
+        if (!groups.has(item.type)) {
+            groups.set(item.type, []);
         }
-    }).render(document.getElementById('entityTable'));
+        groups.get(item.type).push(item);
+    });
+
+    let groupIndex = 0;
+    groups.forEach((groupItems) => {
+        groupIndex++;
+        const groupId = `entityGroup${groupIndex}`;
+        const groupLabel = groupItems[0].typeMessage;
+
+        const itemsHtml = groupItems.map(item => `
+            <div class="form-check">
+                <input class="form-check-input entity-checkbox" type="checkbox" data-id="${item.id}" id="entity-${item.type}-${item.id}" checked>
+                <label class="form-check-label" for="entity-${item.type}-${item.id}">${escapeHtml(item.name)}</label>
+            </div>
+        `).join('');
+
+        container.insertAdjacentHTML('beforeend', `
+            <div class="mb-2">
+                <a class="d-block fw-bold text-decoration-none" data-bs-toggle="collapse" href="#${groupId}" role="button" aria-expanded="true" aria-controls="${groupId}">
+                    ${escapeHtml(groupLabel)} (${groupItems.length})
+                </a>
+                <div class="collapse show ps-3" id="${groupId}">
+                    ${itemsHtml}
+                </div>
+            </div>
+        `);
+    });
+
+    updateSelectedEntityCount();
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function setAllEntitiesChecked(checked) {
+    document.querySelectorAll('#entityTable .entity-checkbox').forEach(checkbox => checkbox.checked = checked);
+    updateSelectedEntityCount();
+}
+
+function updateSelectedEntityCount() {
+    const total = document.querySelectorAll('#entityTable .entity-checkbox').length;
+    const checked = document.querySelectorAll('#entityTable .entity-checkbox:checked').length;
+
+    const countLabel = document.getElementById('selectedEntityCount');
+    if (countLabel) {
+        countLabel.textContent = `${checked} af ${total} valgt`;
+    }
+
+    const transferButtonCount = document.getElementById('transferButtonCount');
+    if (transferButtonCount) {
+        transferButtonCount.textContent = checked;
+    }
 }
 
 function pageLoaded() {
@@ -105,6 +147,7 @@ function pageLoaded() {
     transferFromSelect = document.getElementById('transferFrom');
     if(transferFromSelect !== null) {
         transferFromChoice = choiceService.initUserSelect('transferFrom', false);
+        transferFromSelect.addEventListener('change', (event) => updateEntityListForTransferFrom(event.detail.value));
     }
     transferToSelect = document.getElementById('transferTo');
     if(transferToSelect !== null) {
@@ -189,7 +232,7 @@ function pageLoaded() {
                 formatter: (cell, row) => {
                     const uuid = row.cells[0]['data'];
                     const name = row.cells[1]['data'];
-                    const transferButton = `<button type="button" title="Overfør ansvar" class="btn btn-icon btn-xs me-1" data-name="${name}" data-uuid="${uuid}" onclick="initModalWithDefaultTransferFrom(this)"><i class="ti-angle-double-right fs-5"></i></button>`;
+                    const transferButton = `<button type="button" title="Overfør ansvar" class="btn btn-icon btn-xs me-1 modalInitButton" data-name="${name}" data-uuid="${uuid}"><i class="ti-angle-double-right fs-5"></i></button>`;
                     return gridjs.html(transferButton);
                 }
             }
@@ -219,5 +262,32 @@ function pageLoaded() {
             id: item.uuid,
             name: item.name
         }));
+    });
+}
+
+function buttonHandler() {
+    document.addEventListener('click', (event) => {
+        if (event.target.closest('.uncheckAllEntities')) {
+            setAllEntitiesChecked(false);
+        }
+
+        if (event.target.closest('.selectAllEntities')) {
+            setAllEntitiesChecked(true);
+        }
+
+        if (event.target.closest('.transferButton')) {
+            transferResponsibility();
+        }
+
+        const modalInitButton = event.target.closest('.modalInitButton');
+        if (modalInitButton) {
+            initModalWithDefaultTransferFrom(modalInitButton);
+        }
+    });
+
+    document.addEventListener('change', (event) => {
+        if (event.target.classList.contains('entity-checkbox')) {
+            updateSelectedEntityCount();
+        }
     });
 }
