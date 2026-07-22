@@ -245,6 +245,26 @@ public class KitosClientServiceTest {
         assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation()).isNull();
     }
 
+    @Test
+    public void dpiaSyncStripsEmptyDocumentationLink() {
+        // Given - DPIA event with no name/url
+        final UUID usageUuid = UUID.randomUUID();
+        doReturn(new ItSystemUsageResponseDTO()).when(itSystemUsageApiMock).getSingleItSystemUsageV2GetItSystemUsage(usageUuid);
+        final AssetDPIAKitosEvent event = AssetDPIAKitosEvent.builder()
+                .dpiaName(null)
+                .dpiaUrl(null)
+                .build();
+
+        // When
+        kitosClientService.updateAssetDPIA(usageUuid.toString(), event);
+
+        // Then - empty link is stripped so Kitos does not reject the PATCH
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        assertThat(captor.getValue().getGdpr().getDpiaConducted()).isEqualTo(YesNoDontKnowChoice.YES);
+        assertThat(captor.getValue().getGdpr().getDpiaDocumentation()).isNull();
+    }
+
     private void stubUsage(final UUID usageUuid, final YesNoDontKnowChoice businessCritical, final ArchiveDutyChoice archiveDuty) {
         final ItSystemUsageResponseDTO usage = new ItSystemUsageResponseDTO();
         final GeneralDataResponseDTO general = new GeneralDataResponseDTO();

@@ -32,6 +32,7 @@ import dk.kitos.api.model.YesNoDontKnowChoice;
 import dk.kitos.api.model.YesNoDontKnowIrrelevantChoice;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -288,8 +289,13 @@ public class KitosClientService {
 			runnable.run();
 			log.info("Successfully patched it-system usage {} in Kitos", itSystemUsageUuid);
 		} catch (HttpClientErrorException ex) {
-			log.warn("Could not patch it-system usage {} in Kitos - status={}, response body: {}",
-					itSystemUsageUuid, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+			// Kitos error bodies may echo back field values containing personal data, so the
+			// full body only goes to debug. The warn line is truncated to limit exposure in
+			// production log aggregators while still carrying enough to triage.
+			final String body = ex.getResponseBodyAsString();
+			log.warn("Could not patch it-system usage {} in Kitos - status={}, response body (truncated): {}",
+					itSystemUsageUuid, ex.getStatusCode(), StringUtils.truncate(body, 500));
+			log.debug("Full Kitos error response body for it-system usage {}: {}", itSystemUsageUuid, body, ex);
 		}
 	}
 
