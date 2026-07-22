@@ -1,7 +1,6 @@
 package dk.digitalidentity.model.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import dk.digitalidentity.model.entity.ChoiceValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,7 +40,7 @@ public class AssetEO {
         GREEN, YELLOW, WHITE, RED
     }
 	public enum ArchiveDuty {
-		UNDECIDED,B,K,BK,KD,KB,UNKNOWN,PRESERVEDATACANDISCARDDOCUMENTS
+		UNDECIDED,B,K,BK,KD,KB,DK,DD,UNKNOWN,PRESERVEDATACANDISCARDDOCUMENTS
 	}
 
     @Schema(description = "Internal ID in OS2compliance", accessMode = Schema.AccessMode.READ_ONLY, example = ID_EXAMPLE)
