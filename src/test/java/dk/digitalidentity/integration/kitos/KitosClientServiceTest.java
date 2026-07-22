@@ -1,8 +1,11 @@
 package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.event.AssetDPIAKitosEvent;
+import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.integration.kitos.exception.KitosSynchronizationException;
 import dk.digitalidentity.integration.kitos.mapper.KitosMapperImpl;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.service.SettingsService;
 import dk.kitos.api.DeltaFeedV2Api;
 import dk.kitos.api.ItContractV2Api;
@@ -172,6 +175,74 @@ public class KitosClientServiceTest {
         assertThat(update.getGeneral()).isNull();
         assertThat(update.getArchiving()).isNotNull();
         assertThat(update.getArchiving().getArchiveDuty()).isEqualTo(ArchiveDutyChoice.B);
+    }
+
+    @Test
+    public void riskAssessmentSyncStripsEmptyDocumentationLinkInManualMode() {
+        // Given - manual fill-mode: name and url are null (no threat assessment link)
+        final UUID usageUuid = UUID.randomUUID();
+        doReturn(new ItSystemUsageResponseDTO()).when(itSystemUsageApiMock).getSingleItSystemUsageV2GetItSystemUsage(usageUuid);
+        final AssetRiskKitosEvent event = AssetRiskKitosEvent.builder()
+                .riskAssessmentConducted(true)
+                .result(RiskAssessment.GREEN)
+                .riskAssessmentName(null)
+                .riskAssessmentUrl(null)
+                .build();
+
+        // When
+        kitosClientService.updateAssetRiskAssessment(usageUuid.toString(), event);
+
+        // Then - the empty link must be stripped so Kitos does not reject the whole PATCH
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        assertThat(captor.getValue().getGdpr()).isNotNull();
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation()).isNull();
+    }
+
+    @Test
+    public void riskAssessmentSyncKeepsPopulatedDocumentationLink() {
+        // Given - auto fill-mode: name and url are present
+        final UUID usageUuid = UUID.randomUUID();
+        doReturn(new ItSystemUsageResponseDTO()).when(itSystemUsageApiMock).getSingleItSystemUsageV2GetItSystemUsage(usageUuid);
+        final AssetRiskKitosEvent event = AssetRiskKitosEvent.builder()
+                .riskAssessmentConducted(true)
+                .result(RiskAssessment.RED)
+                .riskAssessmentName("Risikovurdering af Addo Sign")
+                .riskAssessmentUrl("https://example.test/risks/1")
+                .build();
+
+        // When
+        kitosClientService.updateAssetRiskAssessment(usageUuid.toString(), event);
+
+        // Then
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation()).isNotNull();
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation().getName()).isEqualTo("Risikovurdering af Addo Sign");
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation().getUrl()).isEqualTo("https://example.test/risks/1");
+    }
+
+    @Test
+    public void dpiaSyncWritesLinkToDpiaDocumentationNotRiskAssessment() {
+        // Given
+        final UUID usageUuid = UUID.randomUUID();
+        doReturn(new ItSystemUsageResponseDTO()).when(itSystemUsageApiMock).getSingleItSystemUsageV2GetItSystemUsage(usageUuid);
+        final AssetDPIAKitosEvent event = AssetDPIAKitosEvent.builder()
+                .dpiaName("DPIA for Addo Sign")
+                .dpiaUrl("https://example.test/dpia/1")
+                .build();
+
+        // When
+        kitosClientService.updateAssetDPIA(usageUuid.toString(), event);
+
+        // Then - the DPIA link belongs in dpiaDocumentation, not riskAssessmentDocumentation
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        assertThat(captor.getValue().getGdpr().getDpiaConducted()).isEqualTo(YesNoDontKnowChoice.YES);
+        assertThat(captor.getValue().getGdpr().getDpiaDocumentation()).isNotNull();
+        assertThat(captor.getValue().getGdpr().getDpiaDocumentation().getName()).isEqualTo("DPIA for Addo Sign");
+        assertThat(captor.getValue().getGdpr().getDpiaDocumentation().getUrl()).isEqualTo("https://example.test/dpia/1");
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation()).isNull();
     }
 
     private void stubUsage(final UUID usageUuid, final YesNoDontKnowChoice businessCritical, final ArchiveDutyChoice archiveDuty) {
