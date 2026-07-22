@@ -32,6 +32,7 @@ import dk.kitos.api.model.YesNoDontKnowChoice;
 import dk.kitos.api.model.YesNoDontKnowIrrelevantChoice;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -193,7 +194,8 @@ public class KitosClientService {
 			update.getArchiving().setArchiveDuty(wantedArchiveDuty);
 		}
 
-		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update));
+		log.info("Patching general/archiving to Kitos for it-system usage {}: sections={}", itSystemUuid, sections);
+		patchWarnOnError(itSystemUuid, () -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update));
     }
 
 	/**
@@ -206,7 +208,6 @@ public class KitosClientService {
 		if (update.getGdpr() == null) {
 			update.setGdpr(new GDPRWriteRequestDTO());
 		}
-		setGdprFieldsNull(update.getGdpr());
 
 		update.getGdpr().setRiskAssessmentConducted(event.isRiskAssessmentConducted() ? YesNoDontKnowIrrelevantChoice.YES : YesNoDontKnowIrrelevantChoice.NO);
 		update.getGdpr().setRiskAssessmentConductedDate(getOffsetDateTime(event.getRiskAssessmentConductedDate()));
@@ -216,7 +217,15 @@ public class KitosClientService {
 		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getRiskAssessmentUrl());
 		update.getGdpr().setPlannedRiskAssessmentDate(getOffsetDateTime(event.getNextRiskAssessment()));
 
-		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
+		// Strip empty documentation links AFTER setting them - in manual fill-mode name and url
+		// are both null, and Kitos rejects a documentation link without url/name (400). This must
+		// run last so it also covers the link we just set, not only the ones from the round-trip.
+		setGdprFieldsNull(update.getGdpr());
+
+		log.info("Patching risk assessment to Kitos for it-system usage {}: conducted={}, result={}, hasDocLink={}",
+				itSystemUsageUuid, update.getGdpr().getRiskAssessmentConducted(), update.getGdpr().getRiskAssessmentResult(),
+				update.getGdpr().getRiskAssessmentDocumentation() != null);
+		patchWarnOnError(itSystemUsageUuid, () -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
 	}
 
 	/**
@@ -229,15 +238,21 @@ public class KitosClientService {
 		if (update.getGdpr() == null) {
 			update.setGdpr(new GDPRWriteRequestDTO());
 		}
-		setGdprFieldsNull(update.getGdpr());
 
 		update.getGdpr().setDpiaConducted(YesNoDontKnowChoice.YES);
 		update.getGdpr().setDpiaDate(getOffsetDateTime(event.getDpiaDate()));
-		update.getGdpr().setRiskAssessmentDocumentation(new SimpleLinkDTO());
-		update.getGdpr().getRiskAssessmentDocumentation().setName(event.getDpiaName());
-		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getDpiaUrl());
+		// The DPIA link belongs in dpiaDocumentation - it was previously written to
+		// riskAssessmentDocumentation, which overwrote the risk assessment link in Kitos.
+		update.getGdpr().setDpiaDocumentation(new SimpleLinkDTO());
+		update.getGdpr().getDpiaDocumentation().setName(event.getDpiaName());
+		update.getGdpr().getDpiaDocumentation().setUrl(event.getDpiaUrl());
 
-		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
+		// Strip empty documentation links AFTER setting them (see updateAssetRiskAssessment).
+		setGdprFieldsNull(update.getGdpr());
+
+		log.info("Patching DPIA to Kitos for it-system usage {}: dpiaDate={}, hasDocLink={}",
+				itSystemUsageUuid, update.getGdpr().getDpiaDate(), update.getGdpr().getDpiaDocumentation() != null);
+		patchWarnOnError(itSystemUsageUuid, () -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
 	}
 
 	private enum PatchSection { GENERAL, GDPR, ARCHIVING }
@@ -269,11 +284,18 @@ public class KitosClientService {
 		return update;
 	}
 
-	private void patchWarnOnError(Runnable runnable) {
+	private void patchWarnOnError(final String itSystemUsageUuid, final Runnable runnable) {
 		try {
 			runnable.run();
+			log.info("Successfully patched it-system usage {} in Kitos", itSystemUsageUuid);
 		} catch (HttpClientErrorException ex) {
-			log.warn("Could not patch it-system usage", ex);
+			// Kitos error bodies may echo back field values containing personal data, so the
+			// full body only goes to debug. The warn line is truncated to limit exposure in
+			// production log aggregators while still carrying enough to triage.
+			final String body = ex.getResponseBodyAsString();
+			log.warn("Could not patch it-system usage {} in Kitos - status={}, response body (truncated): {}",
+					itSystemUsageUuid, ex.getStatusCode(), StringUtils.truncate(body, 500));
+			log.debug("Full Kitos error response body for it-system usage {}: {}", itSystemUsageUuid, body, ex);
 		}
 	}
 
