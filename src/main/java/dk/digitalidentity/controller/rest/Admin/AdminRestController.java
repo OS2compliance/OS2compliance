@@ -117,14 +117,14 @@ public class AdminRestController {
     @RequireUpdateAll
     @GetMapping("responsibilities/{uuid}")
     public ResponseEntity<List<RelatableDTO>> getResponsibilities(@PathVariable final String uuid) {
-        ResponsibleUserView sourceUser = responsibleUserViewService.findByUserUuid(uuid);
+        final User sourceUser = userService.findByUuidIncludingInactive(uuid).orElse(null);
         if (sourceUser == null) {
             return ResponseEntity.ok(List.of());
         }
 
-        List<Long> ids = sourceUser.getResponsibleRelatableIds().stream().map(Long::parseLong).collect(Collectors.toList());
-        List<Relatable> relatables = relatableService.findAllById(ids).stream()
-                .filter(relatable -> !relatable.isDeleted())
+        final List<Relatable> relatables = relatableService.findAllNotDeleted().stream()
+                .filter(relatable -> relatableService.findResponsibleUsers(relatable).stream()
+                        .anyMatch(user -> user != null && user.getUuid().equals(uuid)))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(relatableMapper.toDTO(relatables));

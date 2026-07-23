@@ -20,7 +20,7 @@ function transferResponsibility() {
     let transferTo = transferToSelect.value;
 
     let relatableIds = Array.from(document.querySelectorAll('#entityTable .entity-checkbox:checked'))
-        .map(checkbox => Number(checkbox.dataset.id));
+        .flatMap(checkbox => checkbox.dataset.ids.split(',').map(Number));
 
     let data = {
         "transferFrom": transferFrom,
@@ -35,7 +35,7 @@ function transferResponsibility() {
         toastService.info("Ansvaret er overført");
         document.querySelector('#transferResponsibilityModal .btn-close').click();
         setTimeout(() => {
-            window.location.reload();
+            location.reload();
         }, 1000);
     }).catch(error => {toastService.error(error)});
 }
@@ -69,7 +69,8 @@ function updateEntityListForTransferFrom(uuid) {
         .catch(error => toastService.error(error));
 }
 
-// Renders one collapsible group per entity type, with one checkbox per responsibility. All checked by default.
+// Renders one row per responsibility type (e.g. "Aktiv"), with a single checkbox per row
+// that selects/deselects every underlying responsibility of that type for transfer.
 function buildEntityList(items) {
     const container = document.getElementById('entityTable');
     container.innerHTML = '';
@@ -85,41 +86,41 @@ function buildEntityList(items) {
         if (!groups.has(item.type)) {
             groups.set(item.type, []);
         }
-        groups.get(item.type).push(item);
+        groups.get(item.type).push(item.id);
     });
 
-    let groupIndex = 0;
-    groups.forEach((groupItems) => {
-        groupIndex++;
-        const groupId = `entityGroup${groupIndex}`;
-        const groupLabel = groupItems[0].typeMessage;
+    const rows = Array.from(groups.entries()).map(([type, ids]) => ({
+        entityName: items.find(item => item.type === type).typeMessage,
+        ids: ids.join(',')
+    }));
 
-        const itemsHtml = groupItems.map(item => `
-            <div class="form-check">
-                <input class="form-check-input entity-checkbox" type="checkbox" data-id="${item.id}" id="entity-${item.type}-${item.id}" checked>
-                <label class="form-check-label" for="entity-${item.type}-${item.id}">${escapeHtml(item.name)}</label>
-            </div>
-        `).join('');
+    const grid = new gridjs.Grid({
+        className: defaultClassName,
+        columns: [
+            {
+                id: "entityName",
+                name: "Ansvarsområde"
+            },
+            {
+                id: "ids",
+                hidden: true
+            },
+            {
+                id: "actions",
+                name: "Handling",
+                width: '90px',
+                formatter: (cell, row) => gridjs.html(`
+                    <input class="form-check-input entity-checkbox" type="checkbox" data-ids="${row.cells[1].data}" checked>
+                `)
+            }
+        ],
+        data: rows,
+        language: {
+            'noRecordsFound': "Ingen data fundet"
+        }
+    }).render(container);
 
-        container.insertAdjacentHTML('beforeend', `
-            <div class="mb-2">
-                <a class="d-block fw-bold text-decoration-none" data-bs-toggle="collapse" href="#${groupId}" role="button" aria-expanded="true" aria-controls="${groupId}">
-                    ${escapeHtml(groupLabel)} (${groupItems.length})
-                </a>
-                <div class="collapse show ps-3" id="${groupId}">
-                    ${itemsHtml}
-                </div>
-            </div>
-        `);
-    });
-
-    updateSelectedEntityCount();
-}
-
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    grid.on('ready', () => updateSelectedEntityCount());
 }
 
 function setAllEntitiesChecked(checked) {
@@ -139,6 +140,11 @@ function updateSelectedEntityCount() {
     const transferButtonCount = document.getElementById('transferButtonCount');
     if (transferButtonCount) {
         transferButtonCount.textContent = checked;
+    }
+
+    const toggleAllButton = document.getElementById('toggleAllEntities');
+    if (toggleAllButton) {
+        toggleAllButton.textContent = checked === total && total > 0 ? 'Fravælg alle' : 'Vælg alle';
     }
 }
 
@@ -267,12 +273,10 @@ function pageLoaded() {
 
 function buttonHandler() {
     document.addEventListener('click', (event) => {
-        if (event.target.closest('.uncheckAllEntities')) {
-            setAllEntitiesChecked(false);
-        }
-
-        if (event.target.closest('.selectAllEntities')) {
-            setAllEntitiesChecked(true);
+        if (event.target.closest('.toggleAllEntities')) {
+            const total = document.querySelectorAll('#entityTable .entity-checkbox').length;
+            const checked = document.querySelectorAll('#entityTable .entity-checkbox:checked').length;
+            setAllEntitiesChecked(!(checked === total && total > 0));
         }
 
         if (event.target.closest('.transferButton')) {
