@@ -20,7 +20,7 @@ function transferResponsibility() {
     let transferTo = transferToSelect.value;
 
     let relatableIds = Array.from(document.querySelectorAll('#entityTable .entity-checkbox:checked'))
-        .flatMap(checkbox => checkbox.dataset.ids.split(',').map(Number));
+        .map(checkbox => Number(checkbox.dataset.id));
 
     let data = {
         "transferFrom": transferFrom,
@@ -69,14 +69,16 @@ function updateEntityListForTransferFrom(uuid) {
         .catch(error => toastService.error(error));
 }
 
-// Renders one row per responsibility type (e.g. "Aktiv"), with a single checkbox per row
-// that selects/deselects every underlying responsibility of that type for transfer.
+// Renders one collapsible group per entity type, with one checkbox per responsibility. All checked by default.
 function buildEntityList(items) {
     const container = document.getElementById('entityTable');
-    container.innerHTML = '';
+    container.replaceChildren();
 
     if (!items.length) {
-        container.innerHTML = '<p class="text-muted mb-0">Brugeren er ikke ansvarlig for noget</p>';
+        const empty = document.createElement('p');
+        empty.className = 'text-muted mb-0';
+        empty.textContent = 'Brugeren er ikke ansvarlig for noget';
+        container.appendChild(empty);
         updateSelectedEntityCount();
         return;
     }
@@ -86,41 +88,58 @@ function buildEntityList(items) {
         if (!groups.has(item.type)) {
             groups.set(item.type, []);
         }
-        groups.get(item.type).push(item.id);
+        groups.get(item.type).push(item);
     });
 
-    const rows = Array.from(groups.entries()).map(([type, ids]) => ({
-        entityName: items.find(item => item.type === type).typeMessage,
-        ids: ids.join(',')
-    }));
+    let groupIndex = 0;
+    groups.forEach((groupItems) => {
+        groupIndex++;
+        const groupId = `entityGroup${groupIndex}`;
 
-    const grid = new gridjs.Grid({
-        className: defaultClassName,
-        columns: [
-            {
-                id: "entityName",
-                name: "Ansvarsområde"
-            },
-            {
-                id: "ids",
-                hidden: true
-            },
-            {
-                id: "actions",
-                name: "Handling",
-                width: '90px',
-                formatter: (cell, row) => gridjs.html(`
-                    <input class="form-check-input entity-checkbox" type="checkbox" data-ids="${row.cells[1].data}" checked>
-                `)
-            }
-        ],
-        data: rows,
-        language: {
-            'noRecordsFound': "Ingen data fundet"
-        }
-    }).render(container);
+        const groupWrapper = document.createElement('div');
+        groupWrapper.className = 'mb-2';
 
-    grid.on('ready', () => updateSelectedEntityCount());
+        const groupToggle = document.createElement('a');
+        groupToggle.className = 'd-block fw-bold text-decoration-none';
+        groupToggle.href = `#${groupId}`;
+        groupToggle.dataset.bsToggle = 'collapse';
+        groupToggle.setAttribute('role', 'button');
+        groupToggle.setAttribute('aria-expanded', 'true');
+        groupToggle.setAttribute('aria-controls', groupId);
+        groupToggle.textContent = `${groupItems[0].typeMessage} (${groupItems.length})`;
+        groupWrapper.appendChild(groupToggle);
+
+        const groupBody = document.createElement('div');
+        groupBody.className = 'collapse show ps-3';
+        groupBody.id = groupId;
+
+        groupItems.forEach(item => {
+            const checkboxId = `entity-${item.type}-${item.id}`;
+
+            const formCheck = document.createElement('div');
+            formCheck.className = 'form-check';
+
+            const checkbox = document.createElement('input');
+            checkbox.className = 'form-check-input entity-checkbox';
+            checkbox.type = 'checkbox';
+            checkbox.id = checkboxId;
+            checkbox.dataset.id = item.id;
+            checkbox.checked = true;
+
+            const label = document.createElement('label');
+            label.className = 'form-check-label';
+            label.htmlFor = checkboxId;
+            label.textContent = item.name;
+
+            formCheck.append(checkbox, label);
+            groupBody.appendChild(formCheck);
+        });
+
+        groupWrapper.appendChild(groupBody);
+        container.appendChild(groupWrapper);
+    });
+
+    updateSelectedEntityCount();
 }
 
 function setAllEntitiesChecked(checked) {
