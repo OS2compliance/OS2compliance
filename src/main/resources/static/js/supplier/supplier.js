@@ -5,6 +5,12 @@ import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 let editDialog;
 
 document.addEventListener("DOMContentLoaded", async function (event) {
+    initForm();
+    initGrid();
+    initAllowedActions();
+});
+
+async function initForm() {
     const form = document.getElementById('formDialog')
     if (form) {
         await fetch(formUrl).then(response => response.text()
@@ -14,16 +20,7 @@ document.addEventListener("DOMContentLoaded", async function (event) {
             }))
             .catch(error => toastService.error(error));
     }
-
-    initGrid()
-
-    initAllowedActions()
-});
-
-const updateUrl = (prev, query) => {
-    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-};
-
+}
 
 function deleteClicked(supplierId, name) {
     Swal.fire({
@@ -38,7 +35,7 @@ function deleteClicked(supplierId, name) {
         if (result.isConfirmed) {
             fetch(`${deleteUrl}${supplierId}`, {method: 'DELETE', headers: {'X-CSRF-TOKEN': token}})
                 .then(() => {
-                    window.location.reload();
+                    location.reload();
                 });
         }
     })
