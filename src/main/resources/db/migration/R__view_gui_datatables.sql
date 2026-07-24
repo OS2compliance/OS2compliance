@@ -296,9 +296,11 @@ SELECT a.id,
         WHERE (rel.relation_a_id = a.id OR rel.relation_b_id = a.id)
           AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER')) as registers,
        (CASE WHEN a.supplier_id IS NOT NULL THEN 1 ELSE 0 END)                       as primary_suppliers,
-       (SELECT COUNT(asup.id)
-        FROM assets_suppliers asup
-        WHERE asup.asset_id = a.id)                                                 as secondary_suppliers,
+       (SELECT COUNT(rel.id)
+        FROM relations rel
+        WHERE ((rel.relation_a_id = a.id AND rel.relation_a_type = 'ASSET')
+            OR (rel.relation_b_id = a.id AND rel.relation_b_type = 'ASSET'))
+          AND (rel.relation_a_type = 'SUPPLIER' OR rel.relation_b_type = 'SUPPLIER')) as secondary_suppliers,
        ta_calcs.avg_probability,
        ta_calcs.avg_consequence_overall,
        ta_calcs.avg_consequence_confidentiality_registered,
