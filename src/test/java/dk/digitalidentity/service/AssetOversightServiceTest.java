@@ -3,6 +3,7 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ChoiceValueDao;
+import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.DBSOversightGridDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
@@ -24,7 +25,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -42,6 +46,7 @@ class AssetOversightServiceTest {
     @Mock private UserService userService;
     @Mock private ChoiceValueDao choiceValueDao;
     @Mock private DBSOversightGridDao dbsOversightGridDao;
+    @Mock private TaskLogDao taskLogDao;
 
     @InjectMocks private AssetOversightService assetOversightService;
 
@@ -126,6 +131,7 @@ class AssetOversightServiceTest {
 
         // A completed tilsyn that was misbooked onto the old CHECK task.
         final TaskLog misbooked = new TaskLog();
+        misbooked.setId(10L);
         misbooked.setName("Tilsyn udført");
         misbooked.setDocumentationLink("http://localhost/assets/" + ASSET_ID);
         misbooked.setCompleted(LocalDate.of(2026, 3, 20));
@@ -138,9 +144,9 @@ class AssetOversightServiceTest {
         final int moved = assetOversightService.repairMisbookedDbsOversightLogs(asset);
 
         assertThat(moved).isEqualTo(1);
-        assertThat(dbsTask.getLogs()).containsExactly(misbooked);
-        assertThat(oldCheck.getLogs()).isEmpty();
-        assertThat(misbooked.getTask()).isSameAs(dbsTask);
+        // The move goes through a direct FK update (never a collection mutation, which would trigger
+        // orphanRemoval and delete the log). See the DB-level test for the actual move semantics.
+        verify(taskLogDao).reassignTask(10L, dbsTask);
     }
 
     @Test
@@ -172,6 +178,7 @@ class AssetOversightServiceTest {
         final int moved = assetOversightService.repairMisbookedDbsOversightLogs(asset);
 
         assertThat(moved).isZero();
+        verify(taskLogDao, never()).reassignTask(any(), any());
         assertThat(oldCheck.getLogs()).containsExactly(strayOnCheck);
         assertThat(dbsTask.getLogs()).containsExactly(existing);
     }

@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ChoiceValueDao;
+import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.DBSOversightGridDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
@@ -49,6 +50,7 @@ public class AssetOversightService {
     private final UserService userService;
 	private final ChoiceValueDao choiceValueDao;
 	private final DBSOversightGridDao dbsOversightGridDao;
+	private final TaskLogDao taskLogDao;
 
 
     public List<AssetOversight> findByAssetOrderByCreationDateDesc(final Asset asset) {
@@ -256,9 +258,12 @@ public class AssetOversightService {
             return 0;
         }
         final String assetLinkSuffix = "/assets/" + asset.getId();
-        // Misbooked "Tilsyn udført" logs sitting on OTHER tilsyn tasks of the same asset, newest first.
+        // Misbooked "Tilsyn udført" logs sitting on NON-DBS tilsyn tasks of the same asset, newest
+        // first. We deliberately never source from another DBS task: a log already on a DBS task is
+        // either correctly placed or was handled elsewhere, and moving it could steal a legitimate
+        // completion.
         final List<TaskLog> strayLogs = tasks.stream()
-            .filter(t -> !openDbsTasks.contains(t))
+            .filter(t -> !isDbsTask(t))
             .flatMap(t -> t.getLogs().stream())
             .filter(l -> "Tilsyn udført".equals(l.getName()))
             .filter(l -> l.getDocumentationLink() != null && l.getDocumentationLink().endsWith(assetLinkSuffix))
@@ -269,7 +274,8 @@ public class AssetOversightService {
         int moved = 0;
         for (final Task dbsTask : openDbsTasks) {
             // Only move a log that was completed after the DBS task was created — a tilsyn cannot
-            // have fulfilled a task that did not yet exist. This protects genuinely older completions.
+            // have fulfilled a task that did not yet exist. This protects genuinely older completions
+            // (e.g. legitimate pre-DBS checks on the generic CHECK task).
             final LocalDate createdOn = dbsTask.getCreatedAt() != null
                 ? dbsTask.getCreatedAt().toLocalDate() : LocalDate.MIN;
             final Optional<TaskLog> match = strayLogs.stream()
@@ -281,11 +287,10 @@ public class AssetOversightService {
             final TaskLog logToMove = match.get();
             strayLogs.remove(logToMove);
             final Task oldTask = logToMove.getTask();
-            if (oldTask != null) {
-                oldTask.getLogs().remove(logToMove);
-            }
-            logToMove.setTask(dbsTask);
-            dbsTask.getLogs().add(logToMove);
+            // Move via a direct FK update, NOT by mutating Task.logs — that collection uses
+            // orphanRemoval, so removing the log there would delete it instead of moving it. This
+            // leaves the old (typically parked, deadline 2099) CHECK task without the spurious log.
+            taskLogDao.reassignTask(logToMove.getId(), dbsTask);
             log.info("Moved oversight log id={} (completed {}) from task id={} '{}' to DBS task id={} '{}' on asset id={} '{}'",
                 logToMove.getId(), logToMove.getCompleted(),
                 oldTask != null ? oldTask.getId() : null, oldTask != null ? oldTask.getName() : null,
