@@ -186,6 +186,7 @@ public class SupplierService implements TagableService<Supplier> {
 		}
 	}
 
+	@Transactional(readOnly = true)
 	public List<Long> findPrimary(Supplier supplier) {
 		if (supplier == null) {
 			return Collections.emptyList();

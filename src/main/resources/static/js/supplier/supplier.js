@@ -163,14 +163,12 @@ function initGrid() {
             },
             {
                 name: "Primære aktiver",
-                width: '95px',
                 searchable: {
                     sortKey: 'primaryAssetCount'
                 },
             },
             {
                 name: "Sekundære aktiver",
-                width: '95px',
                 searchable: {
                     sortKey: 'secondaryAssetCount'
                 },
