@@ -110,7 +110,7 @@ public class DBSService {
 								.map(Optional::get)
 								.filter(t -> t.getTaskType() == TaskType.TASK
 										&& t.getNextDeadline().isAfter(now)
-										&& t.getName().contains("- DBS tilsyn"))
+										&& t.getName().contains(Constants.DBS_TASK_NAME_MARKER))
 								.findFirst().ifPresentOrElse((task) -> {
 											// Task already exists — add oversight to description
 											task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
@@ -179,7 +179,7 @@ public class DBSService {
 
     // Generate task using name format: ”Leverandør” – ”Aktiv” – DBS Tilsyn
     private static String getTaskName(final Asset asset) {
-        return (asset.getSupplier() != null ? (asset.getSupplier().getName() +  " - ") : "") + asset.getName() + " - DBS tilsyn";
+        return (asset.getSupplier() != null ? (asset.getSupplier().getName() +  " - ") : "") + asset.getName() + " " + Constants.DBS_TASK_NAME_MARKER;
     }
 
     private static String baseDBSTaskDescription(final DBSOversight dbsOversight) {
