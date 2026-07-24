@@ -44,6 +44,10 @@ public class AssetDTO {
     private boolean hasThirdCountryTransfer;
 	@ExcelColumn(headerName = "Antal beh.", order = 7)
     private int registers;
+	@ExcelColumn(headerName = "Primære leverandører", order = 26)
+    private int primarySuppliers;
+	@ExcelColumn(headerName = "Sekundære leverandører", order = 27)
+    private int secondarySuppliers;
 	@ExcludeFromExport
 	private Set<AllowedAction> allowedActions;
 	@ExcludeFromExport

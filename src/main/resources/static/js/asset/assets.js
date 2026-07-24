@@ -101,7 +101,7 @@ function initGrid() {
                 formatter: (cell, row) => {
                     const url = viewUrl + row.cells[0]['data'];
                     if(row.cells[1]['data'] == 'true') {
-                        if (row.cells[12]['data'] == true) {
+                        if (row.cells[14]['data'] == true) {
                             return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" class="grayscale">`);
                         }
                         return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" >`);
@@ -200,6 +200,20 @@ function initGrid() {
                 },
             },
             {
+                name: "Primære leverandører",
+                width: '95px',
+                searchable: {
+                    sortKey: 'primarySuppliers'
+                },
+            },
+            {
+                name: "Sekundære leverandører",
+                width: '95px',
+                searchable: {
+                    sortKey: 'secondarySuppliers'
+                },
+            },
+            {
                 name: "Risiko vurdering",
                 searchable: {
                     searchKey: 'assessment',
@@ -288,7 +302,7 @@ function initGrid() {
                     sortKey: 'riskScore'
                 },
                 formatter: (cell, row) => {
-                    const riskData = row.cells[19]['data'];
+                    const riskData = row.cells[21]['data'];
                     return formatRiskAssessment(cell, row, riskData);
                 }
             },
@@ -351,6 +365,8 @@ function initGrid() {
                     asset.updatedAt,
                     asset.lastOversightDate,
                     asset.registers,
+                    asset.primarySuppliers,
+                    asset.secondarySuppliers,
                     asset.assessment,
                     asset.assetStatus,
                     asset.tags,

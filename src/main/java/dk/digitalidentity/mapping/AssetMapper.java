@@ -75,6 +75,8 @@ public interface AssetMapper {
 
             .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos() || assetGrid.isOldKitos())))
 			.registers(nullSafe(assetGrid::getRegisters))
+			.primarySuppliers(nullSafe(assetGrid::getPrimarySuppliers))
+			.secondarySuppliers(nullSafe(assetGrid::getSecondarySuppliers))
             .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
 			.oldKitos(assetGrid.isOldKitos())
 			.active(assetGrid.isActive())
