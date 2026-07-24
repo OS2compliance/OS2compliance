@@ -162,6 +162,20 @@ function initGrid() {
                 },
             },
             {
+                name: "Primære aktiver",
+                width: '95px',
+                searchable: {
+                    sortKey: 'primaryAssetCount'
+                },
+            },
+            {
+                name: "Sekundære aktiver",
+                width: '95px',
+                searchable: {
+                    sortKey: 'secondaryAssetCount'
+                },
+            },
+            {
                 name: "Tags",
                 searchable: {
                     searchKey: 'tagNames',
@@ -191,7 +205,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(supplier =>
-                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.country, supplier.tags, supplier.allowedActions]
+                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.country, supplier.primaryAssetCount, supplier.secondaryAssetCount, supplier.tags, supplier.allowedActions]
             ),
             total: data => data.totalCount
         },

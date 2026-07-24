@@ -10,6 +10,10 @@ SELECT s.id,
                  LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
         WHERE a.supplier_id = s.id)                                         AS last_oversight_date,
        prop.prop_value                                                      AS kitos_uuid,
+       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false) AS primary_asset_count,
+       (SELECT COUNT(1) FROM relations rel
+        WHERE (rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET')
+           OR (rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER' AND rel.relation_a_type = 'ASSET')) AS secondary_asset_count,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
        s.responsible_uuid,
@@ -295,12 +299,6 @@ SELECT a.id,
         FROM relations rel
         WHERE (rel.relation_a_id = a.id OR rel.relation_b_id = a.id)
           AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER')) as registers,
-       (CASE WHEN a.supplier_id IS NOT NULL THEN 1 ELSE 0 END)                       as primary_suppliers,
-       (SELECT COUNT(rel.id)
-        FROM relations rel
-        WHERE ((rel.relation_a_id = a.id AND rel.relation_a_type = 'ASSET')
-            OR (rel.relation_b_id = a.id AND rel.relation_b_type = 'ASSET'))
-          AND (rel.relation_a_type = 'SUPPLIER' OR rel.relation_b_type = 'SUPPLIER')) as secondary_suppliers,
        ta_calcs.avg_probability,
        ta_calcs.avg_consequence_overall,
        ta_calcs.avg_consequence_confidentiality_registered,

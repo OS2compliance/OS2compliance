@@ -82,12 +82,6 @@ public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
     private int registers;
 
     @Column
-    private int primarySuppliers;
-
-    @Column
-    private int secondarySuppliers;
-
-    @Column
     private boolean hasThirdCountryTransfer;
 
 	@Column
