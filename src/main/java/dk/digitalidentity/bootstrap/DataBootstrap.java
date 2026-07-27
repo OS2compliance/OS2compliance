@@ -154,6 +154,29 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(41, this::seedV41);
 		incrementAndPerformIfVersion(42, this::seedV42);
 		incrementAndPerformIfVersion(43, this::seedV43);
+		incrementAndPerformIfVersion(44, this::seedV44);
+	}
+
+	private void seedV44() {
+		// seedV41 booked oversight completions via the then-buggy task selection, so a "Tilsyn udført"
+		// log could land on an older tilsyn task on the same asset while the real "DBS tilsyn" task
+		// stayed overdue. Move such misbooked logs onto the correct, still-open DBS tilsyn task.
+		final List<Asset> dbsAssets = taskService.findAllTasks().stream()
+				.map(taskService::findOversightAsset)
+				.flatMap(Optional::stream)
+				.filter(Asset.class::isInstance)
+				.map(Asset.class::cast)
+				.filter(a -> a.getSupervisoryModel() != null
+						&& a.getSupervisoryModel().getIdentifier() != null
+						&& a.getSupervisoryModel().getIdentifier().startsWith(Constants.DBS_SUPERVISION_MODEL_IDENTIFIER_PREFIX))
+				.distinct()
+				.toList();
+		int moved = 0;
+		for (final Asset asset : dbsAssets) {
+			moved += assetOversightService.repairMisbookedDbsOversightLogs(asset);
+		}
+		log.info("seedV44: moved {} misbooked oversight log(s) onto the correct DBS task across {} DBS asset(s)",
+				moved, dbsAssets.size());
 	}
 
 	private void seedV43() {

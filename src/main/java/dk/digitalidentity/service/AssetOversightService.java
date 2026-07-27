@@ -2,12 +2,12 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ChoiceValueDao;
+import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.DBSOversightGridDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Property;
-import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
@@ -20,17 +20,25 @@ import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
+import static dk.digitalidentity.Constants.DBS_SUPERVISION_MODEL_IDENTIFIER_PREFIX;
+import static dk.digitalidentity.Constants.DBS_TASK_NAME_MARKER;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -42,6 +50,7 @@ public class AssetOversightService {
     private final UserService userService;
 	private final ChoiceValueDao choiceValueDao;
 	private final DBSOversightGridDao dbsOversightGridDao;
+	private final TaskLogDao taskLogDao;
 
 
     public List<AssetOversight> findByAssetOrderByCreationDateDesc(final Asset asset) {
@@ -75,8 +84,7 @@ public class AssetOversightService {
     }
 
     public void createTaskLogForAssociatedTask(final AssetOversight oversight) {
-        final Asset asset = oversight.getAsset();
-        final Task task = findAssociatedOversightCheck(asset);
+        final Task task = findTaskForOversightCompletion(oversight);
 		if (task == null) {
 			return;
 		}
@@ -168,11 +176,128 @@ public class AssetOversightService {
     }
 
     private Task findAssociatedOversightCheck(final Asset asset) {
-        final List<Relatable> relatedTasks = relationService.findAllRelatedTo(asset);
-        return relatedTasks.stream()
+        return findAssociatedOversightTasks(asset).stream().findFirst().orElse(null);
+    }
+
+    /**
+     * All tasks related to the asset that represent an oversight ("tilsyn") task, i.e. carry the
+     * {@code linked_asset} property. This can be both the generic recurring CHECK task and one or
+     * more one-shot "DBS tilsyn" tasks.
+     */
+    private List<Task> findAssociatedOversightTasks(final Asset asset) {
+        return relationService.findAllRelatedTo(asset).stream()
             .filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
-                .anyMatch(p -> ASSOCIATED_INSPECTION_PROPERTY.equals(p.getKey()))
-            ).findFirst().map(Task.class::cast).orElse(null);
+                .anyMatch(p -> ASSOCIATED_INSPECTION_PROPERTY.equals(p.getKey())))
+            .map(Task.class::cast)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Selects the task an oversight completion should be booked onto. When an asset carries several
+     * oversight tasks (e.g. an older generic tilsyn task and a newer "DBS tilsyn" task) the previous
+     * naive {@code findFirst()} would book the completion onto whichever came first — usually the
+     * older one — leaving the actual DBS tilsyn task overdue. This picks the task matching the
+     * oversight's supervision form instead, preferring an open task with the nearest deadline.
+     */
+    Task findTaskForOversightCompletion(final AssetOversight oversight) {
+        final List<Task> candidates = findAssociatedOversightTasks(oversight.getAsset());
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        if (candidates.size() == 1) {
+            return candidates.get(0);
+        }
+        final ChoiceValue model = oversight.getSupervisionModel() != null
+            ? oversight.getSupervisionModel()
+            : oversight.getAsset().getSupervisoryModel();
+        final Predicate<Task> preferred = isDbsModel(model)
+            ? AssetOversightService::isDbsTask
+            : t -> t.getTaskType() == TaskType.CHECK;
+        final Comparator<Task> byDeadline = Comparator.comparing(Task::getNextDeadline,
+            Comparator.nullsLast(Comparator.naturalOrder()));
+        return candidates.stream().filter(preferred).filter(t -> !taskService.isTaskDone(t))
+            .min(byDeadline)
+            .or(() -> candidates.stream().filter(preferred).min(byDeadline))
+            .orElseGet(() -> candidates.get(0));
+    }
+
+    private static boolean isDbsModel(final ChoiceValue model) {
+        return model != null && model.getIdentifier() != null
+            && model.getIdentifier().startsWith(DBS_SUPERVISION_MODEL_IDENTIFIER_PREFIX);
+    }
+
+    private static boolean isDbsTask(final Task task) {
+        return task.getTaskType() == TaskType.TASK
+            && task.getName() != null && task.getName().contains(DBS_TASK_NAME_MARKER);
+    }
+
+    /**
+     * Retroactively repairs oversights that were booked onto the wrong task. On a DBS asset every
+     * "Tilsyn udført" log belongs to a DBS tilsyn task, but due to the old selection bug (and the
+     * earlier {@code seedV41} run that used it) such logs could land on an older tilsyn task on the
+     * same asset, leaving the real "DBS tilsyn" task overdue. This moves a misbooked log onto the
+     * open DBS tilsyn task so it is correctly registered as done. Idempotent: DBS tasks that already
+     * carry a log are left untouched, and no new rows are created. Returns the number of logs moved.
+     */
+    public int repairMisbookedDbsOversightLogs(final Asset asset) {
+        if (!isDbsModel(asset.getSupervisoryModel())) {
+            return 0;
+        }
+        final List<Task> tasks = findAssociatedOversightTasks(asset);
+        if (tasks.size() < 2) {
+            return 0;
+        }
+        // Open (not-yet-completed) DBS tilsyn tasks, newest deadline first.
+        final List<Task> openDbsTasks = tasks.stream()
+            .filter(AssetOversightService::isDbsTask)
+            .filter(t -> t.getLogs().isEmpty())
+            .sorted(Comparator.comparing(Task::getNextDeadline,
+                Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+            .collect(Collectors.toList());
+        if (openDbsTasks.isEmpty()) {
+            return 0;
+        }
+        final String assetLinkSuffix = "/assets/" + asset.getId();
+        // Misbooked "Tilsyn udført" logs sitting on NON-DBS tilsyn tasks of the same asset, newest
+        // first. We deliberately never source from another DBS task: a log already on a DBS task is
+        // either correctly placed or was handled elsewhere, and moving it could steal a legitimate
+        // completion.
+        final List<TaskLog> strayLogs = tasks.stream()
+            .filter(t -> !isDbsTask(t))
+            .flatMap(t -> t.getLogs().stream())
+            .filter(l -> "Tilsyn udført".equals(l.getName()))
+            .filter(l -> l.getDocumentationLink() != null && l.getDocumentationLink().endsWith(assetLinkSuffix))
+            .filter(l -> l.getCompleted() != null)
+            .sorted(Comparator.comparing(TaskLog::getCompleted).reversed())
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        int moved = 0;
+        for (final Task dbsTask : openDbsTasks) {
+            // Only move a log that was completed after the DBS task was created — a tilsyn cannot
+            // have fulfilled a task that did not yet exist. This protects genuinely older completions
+            // (e.g. legitimate pre-DBS checks on the generic CHECK task).
+            final LocalDate createdOn = dbsTask.getCreatedAt() != null
+                ? dbsTask.getCreatedAt().toLocalDate() : LocalDate.MIN;
+            final Optional<TaskLog> match = strayLogs.stream()
+                .filter(l -> !l.getCompleted().isBefore(createdOn))
+                .findFirst();
+            if (match.isEmpty()) {
+                continue;
+            }
+            final TaskLog logToMove = match.get();
+            strayLogs.remove(logToMove);
+            final Task oldTask = logToMove.getTask();
+            // Move via a direct FK update, NOT by mutating Task.logs — that collection uses
+            // orphanRemoval, so removing the log there would delete it instead of moving it. This
+            // leaves the old (typically parked, deadline 2099) CHECK task without the spurious log.
+            taskLogDao.reassignTask(logToMove.getId(), dbsTask);
+            log.info("Moved oversight log id={} (completed {}) from task id={} '{}' to DBS task id={} '{}' on asset id={} '{}'",
+                logToMove.getId(), logToMove.getCompleted(),
+                oldTask != null ? oldTask.getId() : null, oldTask != null ? oldTask.getName() : null,
+                dbsTask.getId(), dbsTask.getName(), asset.getId(), asset.getName());
+            moved++;
+        }
+        return moved;
     }
 
     private void setTaskRevisionInterval(final Asset asset, final Task task) {
