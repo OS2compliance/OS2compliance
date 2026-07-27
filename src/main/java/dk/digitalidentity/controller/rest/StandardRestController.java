@@ -16,6 +16,7 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireStandard;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.util.StandardSectionNumbering;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -47,6 +48,9 @@ public class StandardRestController {
     private final RelationService relationService;
 	private final StandardTemplateSectionDao standardTemplateSectionDao;
 	private final StandardTemplateDao standardTemplateDao;
+
+	/** Afviser absurd store kald foer de rammer findAllById; gruppens faktiske stoerrelse tjekkes bagefter. */
+	private static final int MAX_REORDER_SECTIONS = 1000;
 
 	record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
 	@RequireUpdateAll
@@ -99,66 +103,86 @@ public class StandardRestController {
 	@PostMapping("/section/delete/{identifier}")
 	public ResponseEntity<?> deleteSection(@PathVariable(name = "identifier") final String identifier) {
 		StandardTemplateSection template = standardTemplateSectionDao.findById(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
-		StandardSection relatedSection = standardSectionDao.findByTemplateSectionIdentifier(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
-		standardSectionDao.delete(relatedSection);
+		// Kravet kan mangle sin StandardSection (bad-state fra tidligere fejl) - slet alligevel
+		// template-sektionen, saa brugeren kan komme af med et krav der ellers ikke kan slettes.
+		standardSectionDao.findByTemplateSectionIdentifier(identifier).ifPresent(standardSectionDao::delete);
 		standardTemplateSectionDao.delete(template);
 
 		StandardTemplateSection parent = template.getParent();
-		List<StandardTemplateSection> siblings = standardTemplateSectionDao.findByParentOrderBySortKey(parent);
+		if (parent == null) {
+			return new ResponseEntity<>(HttpStatus.OK);
+		}
+		renumberInOrder(parent, standardTemplateSectionDao.findByParentOrderBySortKey(parent));
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@RequireUpdateAll
+	@Transactional
+	@PostMapping("{templateIdentifier}/section/reorder")
+	public ResponseEntity<?> reorderSections(@PathVariable(name = "templateIdentifier") final String templateIdentifier,
+											 @RequestBody final List<String> identifiers) {
+		if (identifiers == null || identifiers.isEmpty() || identifiers.size() > MAX_REORDER_SECTIONS) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+		// Faerre fundne end sendt = ukendte identifiere eller dubletter; findAllById er distinkt.
+		List<StandardTemplateSection> sections = standardTemplateSectionDao.findAllById(identifiers);
+		if (sections.size() != identifiers.size()) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+		StandardTemplateSection parent = sections.get(0).getParent();
+		if (parent == null) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+		// Uden denne kunne et kald omdoebe de indbyggede ISO 27001-punkter, hvis navne bruges i
+		// relationer, opgaver, rapporter og global soegning.
+		StandardTemplate template = parent.getStandardTemplate();
+		if (template == null || !template.getIdentifier().equals(templateIdentifier) || !template.isSupporting()) {
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		}
+		// Hele gruppen og kun gruppen: omnummerering af en delmaengde ville efterlade dubletter.
+		long siblingCount = standardTemplateSectionDao.findByParentOrderBySortKey(parent).size();
+		if (sections.stream().anyMatch(s -> s.getParent() == null || !s.getParent().getIdentifier().equals(parent.getIdentifier()))
+				|| identifiers.size() != siblingCount) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+		Map<String, StandardTemplateSection> byId = sections.stream()
+				.collect(java.util.stream.Collectors.toMap(StandardTemplateSection::getIdentifier, s -> s));
+		renumberInOrder(parent, identifiers.stream().map(byId::get).toList());
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	/**
+	 * Nummererer gruppens krav 1, 2, 3 ... i listens raekkefoelge. Skriver ogsaa
+	 * StandardSection.name, saa nummeret er det samme i oversigten og de steder navnet bruges -
+	 * relationer, opgaver, rapporter og global soegning.
+	 */
+	private void renumberInOrder(final StandardTemplateSection parent, final List<StandardTemplateSection> ordered) {
+		String baseSection = parent.getSection();
 		List<StandardTemplateSection> toBeUpdatedstandardTemplateSection = new ArrayList<>();
 		List<StandardSection> toBeUpdatedStandardSection = new ArrayList<>();
 		int version = 1;
-		for (StandardTemplateSection sibling : siblings) {
-			StandardSection section = sibling.getStandardSection();
-			if (section == null) {
-				continue;
-			}
-
-			String baseSection = parent.getSection();
+		for (StandardTemplateSection sibling : ordered) {
 			String newSectionName = baseSection + "." + version;
 
-			section.setName(newSectionName + section.getName().replaceFirst("^[^.]+", ""));
-			sibling.setSortKey(Integer.parseInt(baseSection.replace(".", "") + version));
-
 			sibling.setSection(newSectionName);
+			sibling.setSortKey(StandardSectionNumbering.sortKeyOf(baseSection, version));
 			toBeUpdatedstandardTemplateSection.add(sibling);
-			toBeUpdatedStandardSection.add(section);
+
+			// Et krav uden StandardSection (bad-state) nummereres alligevel ovenfor - springes det
+			// over, beholder det sit gamle nummer og kolliderer med et af de nyudstedte.
+			StandardSection section = sibling.getStandardSection();
+			if (section != null) {
+				// Bevar titel-teksten efter det gamle nummer-token (null-sikkert).
+				String title = section.getName() == null ? "" : section.getName().replaceFirst("^\\S+\\s*", "");
+				section.setName(title.isEmpty() ? newSectionName : newSectionName + " " + title);
+				toBeUpdatedStandardSection.add(section);
+			}
 
 			version++;
 		}
 
 		standardSectionDao.saveAll(toBeUpdatedStandardSection);
 		standardTemplateSectionDao.saveAll(toBeUpdatedstandardTemplateSection);
-		return new ResponseEntity<>(HttpStatus.OK);
-	}
-
-	@RequireUpdateAll
-	@Transactional
-	@PostMapping("/section/reorder")
-	public ResponseEntity<?> reorderSections(@RequestBody final List<String> identifiers) {
-		if (identifiers == null || identifiers.isEmpty()) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-		}
-		List<StandardTemplateSection> sections = standardTemplateSectionDao.findAllById(identifiers);
-		if (sections.size() != identifiers.size()) {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-		StandardTemplateSection parent = sections.get(0).getParent();
-		long siblingCount = standardTemplateSectionDao.findByParentOrderBySortKey(parent).size();
-		if (sections.stream().anyMatch(s -> !s.getParent().getIdentifier().equals(parent.getIdentifier()))
-				|| identifiers.size() != siblingCount) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-		}
-		Map<String, StandardTemplateSection> byId = sections.stream()
-				.collect(java.util.stream.Collectors.toMap(StandardTemplateSection::getIdentifier, s -> s));
-		for (int i = 0; i < identifiers.size(); i++) {
-			StandardTemplateSection section = byId.get(identifiers.get(i));
-			String newSection = parent.getSection() + "." + (i + 1);
-			section.setSection(newSection);
-			section.setSortKey(Integer.parseInt(parent.getSection().replace(".", "") + (i + 1)));
-		}
-		standardTemplateSectionDao.saveAll(sections);
-		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	@Transactional
