@@ -59,7 +59,8 @@ function initGrid() {
                 formatter: (cell, row) => {
                     const entityType = row.cells[6] ? row.cells[6]['data'] : null;
                     const entityId = row.cells[7] ? row.cells[7]['data'] : null;
-                    if (!entityType || !entityId) {
+                    const description = row.cells[4] ? row.cells[4]['data'] : null;
+                    if (!entityType || !entityId || !isUpdateDescription(description)) {
                         return "";
                     }
                     return gridjs.html(`<button type="button" title="Vis historik" class="btn btn-icon btn-xs showAuditHistoryButton" data-entity-type="${entityType}" data-entity-id="${entityId}"><i class="ti-eye fs-5"></i></button>`);
@@ -118,6 +119,10 @@ function initGrid() {
     });
 }
 
+function isUpdateDescription(description) {
+    return typeof description === 'string' && description.includes(' opdaterede ');
+}
+
 function dateFormatter(rawDate) {
     const date = new Date(rawDate);
     if (date instanceof Date && !isNaN(date)) {
@@ -130,6 +135,18 @@ function dateFormatter(rawDate) {
         return `${day}/${month}-${year} ${hours}:${minutes}:${seconds}`;
     }
     return "";
+}
+
+const isoDateTimePattern = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?)?$/;
+
+function formatDiffValue(value) {
+    if (value == null) {
+        return '';
+    }
+    if (isoDateTimePattern.test(value)) {
+        return dateFormatter(value);
+    }
+    return value;
 }
 
 async function showAuditHistory(entityType, entityId) {
@@ -162,8 +179,8 @@ function renderHistoryModal(diffs) {
     let rows = diffs.map(diff => `
         <tr>
             <td>${diff.field}</td>
-            <td>${diff.oldValue ?? ''}</td>
-            <td>${diff.newValue ?? ''}</td>
+            <td>${formatDiffValue(diff.oldValue)}</td>
+            <td>${formatDiffValue(diff.newValue)}</td>
         </tr>
     `).join('');
 

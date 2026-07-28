@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class AuditLogService {
@@ -32,6 +34,11 @@ public class AuditLogService {
 		};
 		final String description = "%s %s %s%s".formatted(performerName, verb, entityType, entityName != null ? " \"" + entityName + "\"" : "");
 		log(performerUuid, performerName, entityType, entityId, entityName, description);
+	}
+
+	@Transactional
+	public int deleteOlderThan(final LocalDateTime cutoff) {
+		return auditLogDao.deleteAllByCreatedTimestampBefore(cutoff);
 	}
 
 	private void log(final String performerUuid, final String performerName, final String entityType, final String entityId, final String entityName, final String description) {

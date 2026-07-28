@@ -7,6 +7,7 @@ import dk.digitalidentity.service.AuditedEntityRegistry;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -36,6 +37,7 @@ import java.util.Map;
  * can't be wired declaratively), while still being a normal Spring @Component so it can be
  * constructed with its dependencies and can hook Spring's transaction synchronization.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AuditEntityChangeListener implements PostInsertEventListener, PostUpdateEventListener, PostDeleteEventListener {
@@ -119,11 +121,17 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 			@Override
 			public void afterCommit() {
 				for (final PendingChange change : pendingChanges.get().values()) {
-					auditLogService.logEntityChange(
-							change.performerUuid(), change.performerName(),
-							change.entityType(), change.entityId(), change.entityName(),
-							change.changeType()
-					);
+					try {
+						auditLogService.logEntityChange(
+								change.performerUuid(), change.performerName(),
+								change.entityType(), change.entityId(), change.entityName(),
+								change.changeType()
+						);
+					} catch (final Exception e) {
+						// afterCommit() exceptions are swallowed by Spring's transaction manager (only logged),
+						// so without this the whole auditlog write for this change disappears silently.
+						log.error("Failed to write auditlog row for {}:{} ({})", change.entityType(), change.entityId(), change.changeType(), e);
+					}
 				}
 			}
 
