@@ -24,6 +24,7 @@ import dk.kitos.api.model.IdentityNamePairResponseDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
+import dk.kitos.api.model.ItSystemUsageValidityResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
@@ -36,8 +37,10 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static dk.digitalidentity.Constants.NEEDS_CVR_UPDATE_PROPERTY;
@@ -48,6 +51,13 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Service
 @RequiredArgsConstructor
 public class KitosSyncService {
+
+    // Lifecycle phases that map to active=true; all others map to inactive.
+    private static final Set<ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum> ACTIVE_LIFECYCLE_STATUSES = EnumSet.of(
+        ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum.OPERATIONAL,
+        ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum.PHASINGIN
+    );
+
     private final AssetService assetService;
     private final SupplierService supplierService;
     private final UserService userService;
@@ -187,7 +197,15 @@ public class KitosSyncService {
     }
 
     private void updateAssetWith(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
+        final ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum lifeCycleStatus =
+            nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getLifeCycleStatus());
+
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
+
+        if (lifeCycleStatus != null) {
+            asset.setActive(valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
+        }
+
         if (!valid) {
             return;
         }

@@ -314,6 +314,7 @@ public class AssetsController {
 		}
         model.addAttribute("isKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY) || p.getKey().equals((KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY))));
         model.addAttribute("isOldKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY)));
+        model.addAttribute("isKitosUsage", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY)));
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
@@ -612,8 +613,11 @@ public class AssetsController {
 		existingAsset.setAssetStatus(asset.getAssetStatus());
 		existingAsset.setAssetCategory(asset.getAssetCategory());
 		existingAsset.setAiRisk(asset.getAiRisk());
-		existingAsset.setActive(asset.isActive());
 		existingAsset.setDepartments(asset.getDepartments());
+
+		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY))) {
+			existingAsset.setActive(asset.isActive());
+		}
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
 			existingAsset.getProductLinks().clear();
