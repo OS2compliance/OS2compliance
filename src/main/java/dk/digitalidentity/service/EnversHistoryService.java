@@ -29,23 +29,33 @@ public class EnversHistoryService {
 	public record FieldDiff(String field, String oldValue, String newValue) {
 	}
 
-	public List<FieldDiff> getLatestDiff(final String entityType, final String entityId) {
+	/**
+	 * Diffs the entity's state as of the given revision against its state as of the revision
+	 * immediately preceding it *for that entity* - revision numbers are a global sequence shared
+	 * by every audited entity, so "revision - 1" would not generally be the entity's own previous
+	 * revision.
+	 */
+	public List<FieldDiff> getDiffForRevision(final String entityType, final String entityId, final Integer revision) {
 		final Class<?> entityClass = AuditedEntityRegistry.resolveClass(entityType);
-		if (entityClass == null) {
+		if (entityClass == null || revision == null) {
 			return List.of();
 		}
 
 		final Object id = AuditedEntityRegistry.resolveId(entityType, entityId);
 		final AuditReader auditReader = AuditReaderFactory.get(entityManager);
 		final List<Number> revisions = auditReader.getRevisions(entityClass, id);
-		if (revisions.size() < 2) {
+		final int index = revisions.indexOf(revision);
+		if (index < 0) {
+			return List.of();
+		}
+		if (index == 0) {
+			// this was the entity's creation - nothing to diff against
 			return List.of();
 		}
 
-		final Number previousRevision = revisions.get(revisions.size() - 2);
-		final Number latestRevision = revisions.get(revisions.size() - 1);
+		final Number previousRevision = revisions.get(index - 1);
 		final Object previous = auditReader.find(entityClass, id, previousRevision);
-		final Object latest = auditReader.find(entityClass, id, latestRevision);
+		final Object latest = auditReader.find(entityClass, id, revision);
 		return diff(entityClass, previous, latest);
 	}
 
@@ -63,7 +73,7 @@ public class EnversHistoryService {
 				if (getter == null) {
 					continue;
 				}
-				final Object oldValue = getter.invoke(previous);
+				final Object oldValue = previous != null ? getter.invoke(previous) : null;
 				final Object newValue = getter.invoke(latest);
 				if (!Objects.equals(normalize(oldValue), normalize(newValue))) {
 					result.add(new FieldDiff(translateField(descriptor.getName()),

@@ -252,6 +252,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 
     @JsonIgnore
     @OneToMany(mappedBy="asset", fetch = FetchType.LAZY)
+	@NotAudited
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	private Set<Role> roles = new HashSet<>();

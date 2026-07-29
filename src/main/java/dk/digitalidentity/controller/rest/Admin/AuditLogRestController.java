@@ -10,11 +10,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -39,9 +41,12 @@ public class AuditLogRestController {
 			String entityType,
 			String entityTypeLabel,
 			String entityName,
+			Integer revision,
 			String description
 	) {
 	}
+
+	private static final int MAX_LIMIT = 500;
 
 	@PostMapping("list")
 	public PageDTO<AuditLogGridDTO> list(
@@ -53,7 +58,7 @@ public class AuditLogRestController {
 	) {
 		final Page<AuditLogGrid> logs = auditLogGridDao.findAllWithColumnSearch(
 				FilterService.validateSearchFilters(filters, AuditLogGrid.class),
-				FilterService.buildPageable(page, limit, sortColumn, sortDirection),
+				FilterService.buildPageable(page, Math.min(limit, MAX_LIMIT), sortColumn, sortDirection),
 				AuditLogGrid.class
 		);
 
@@ -67,6 +72,7 @@ public class AuditLogRestController {
 					grid.getEntityType(),
 					translateEntityType(grid.getEntityType()),
 					grid.getEntityName(),
+					grid.getRevision(),
 					grid.getDescription()
 			));
 		}
@@ -76,9 +82,14 @@ public class AuditLogRestController {
 	@GetMapping("history")
 	public List<EnversHistoryService.FieldDiff> history(
 			@RequestParam("entityType") String entityType,
-			@RequestParam("entityId") String entityId
+			@RequestParam("entityId") String entityId,
+			@RequestParam("revision") Integer revision
 	) {
-		return enversHistoryService.getLatestDiff(entityType, entityId);
+		try {
+			return enversHistoryService.getDiffForRevision(entityType, entityId, revision);
+		} catch (final NumberFormatException e) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid entityId", e);
+		}
 	}
 
 	private String translateEntityType(final String entityType) {

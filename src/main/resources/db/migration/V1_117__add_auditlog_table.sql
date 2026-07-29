@@ -6,5 +6,6 @@ CREATE TABLE auditlog (
     entity_id               VARCHAR(36),
     entity_type             VARCHAR(255),
     entity_name             VARCHAR(255),
+    revision                INT NULL,
     description             TEXT NULL
 );

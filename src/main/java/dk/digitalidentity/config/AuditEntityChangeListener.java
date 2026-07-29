@@ -8,8 +8,11 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
@@ -45,7 +48,7 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 	private final AuditLogService auditLogService;
 	private final EntityManagerFactory entityManagerFactory;
 
-	private record PendingChange(String performerUuid, String performerName, String entityType, String entityId, String entityName, AuditLogService.ChangeType changeType) {
+	private record PendingChange(String performerUuid, String performerName, String entityType, String entityId, String entityName, Integer revision, AuditLogService.ChangeType changeType) {
 	}
 
 	private final ThreadLocal<Map<String, PendingChange>> pendingChanges = ThreadLocal.withInitial(LinkedHashMap::new);
@@ -62,17 +65,17 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 
 	@Override
 	public void onPostInsert(final PostInsertEvent event) {
-		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.CREATE);
+		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.CREATE, event.getSession());
 	}
 
 	@Override
 	public void onPostUpdate(final PostUpdateEvent event) {
-		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.UPDATE);
+		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.UPDATE, event.getSession());
 	}
 
 	@Override
 	public void onPostDelete(final PostDeleteEvent event) {
-		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.DELETE);
+		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.DELETE, event.getSession());
 	}
 
 	@Override
@@ -85,8 +88,14 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 	 * to the same entity within one transaction (e.g. create-then-attach-defaults) collapse into a
 	 * single auditlog row, flushed only once the transaction actually commits.
 	 */
-	private void accumulate(final Object entity, final Object id, final AuditLogService.ChangeType changeType) {
+	private void accumulate(final Object entity, final Object id, final AuditLogService.ChangeType changeType, final EventSource session) {
 		if (!AuditedEntityRegistry.isAudited(entity.getClass())) {
+			return;
+		}
+
+		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (!(authentication != null && authentication.getDetails() instanceof TokenUser tokenUser)) {
+			// system/integration-originated change (e.g. scheduled syncs) - not a user action, so not audited
 			return;
 		}
 
@@ -106,9 +115,19 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 				? AuditLogService.ChangeType.CREATE
 				: changeType;
 
-		changes.put(key, new PendingChange(currentPerformerUuid(), currentPerformerName(), entityType, entityId, AuditedEntityRegistry.extractName(entity), effectiveType));
+		final Integer revision = existing != null ? existing.revision() : currentRevision(session);
+
+		changes.put(key, new PendingChange(performerUuid(tokenUser), performerName(tokenUser), entityType, entityId, AuditedEntityRegistry.extractName(entity), revision, effectiveType));
 
 		registerFlushOnCommit();
+	}
+
+	/**
+	 * Envers assigns one revision per transaction; by the time our post-insert/update/delete listener
+	 * fires, Envers' own listener has already persisted the revinfo row for this transaction (persist=false).
+	 */
+	private Integer currentRevision(final EventSource session) {
+		return AuditReaderFactory.get(session).getCurrentRevision(DefaultRevisionEntity.class, false).getId();
 	}
 
 	private void registerFlushOnCommit() {
@@ -125,7 +144,7 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 						auditLogService.logEntityChange(
 								change.performerUuid(), change.performerName(),
 								change.entityType(), change.entityId(), change.entityName(),
-								change.changeType()
+								change.revision(), change.changeType()
 						);
 					} catch (final Exception e) {
 						// afterCommit() exceptions are swallowed by Spring's transaction manager (only logged),
@@ -143,20 +162,12 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 		});
 	}
 
-	private String currentPerformerUuid() {
-		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication != null && authentication.getDetails() instanceof TokenUser tokenUser) {
-			return tokenUser.getUsername();
-		}
-		return "system";
+	private String performerUuid(final TokenUser tokenUser) {
+		return tokenUser.getUsername();
 	}
 
-	private String currentPerformerName() {
-		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication != null && authentication.getDetails() instanceof TokenUser tokenUser) {
-			final Object name = tokenUser.getAttributes() != null ? tokenUser.getAttributes().get(RolePostProcessor.ATTRIBUTE_NAME) : null;
-			return name != null ? name.toString() : tokenUser.getUsername();
-		}
-		return "System";
+	private String performerName(final TokenUser tokenUser) {
+		final Object name = tokenUser.getAttributes() != null ? tokenUser.getAttributes().get(RolePostProcessor.ATTRIBUTE_NAME) : null;
+		return name != null ? name.toString() : tokenUser.getUsername();
 	}
 }

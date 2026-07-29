@@ -42,7 +42,7 @@ public class RelationCleanupTask {
 	private final RelationCleanupService relationCleanupService;
 
 	@Transactional
-	@Scheduled(cron = "${os2complicance.task.relation.cleanup.cron}")
+	@Scheduled(cron = "${os2compliance.task.relation.cleanup.cron}")
 	public void cleanupRelations() {
 		final Map<String, RelationType> CLASS_NAME_TO_TYPE = createClassNameToTypeMap();
 
@@ -75,7 +75,7 @@ public class RelationCleanupTask {
 	}
 
 	@Transactional
-	@Scheduled(cron = "${os2complicance.task.relation.duplicate.cron}")
+	@Scheduled(cron = "${os2compliance.task.relation.duplicate.cron}")
 	public void findDuplicateRelationIds() {
 		Map<RelationType, Collection<? extends Relatable>> duplicateIDRelatable = relationCleanupService.findAllDuplicateIds();
 

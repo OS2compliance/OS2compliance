@@ -39,5 +39,8 @@ public class AuditLogGrid {
 	private String entityName;
 
 	@Column
+	private Integer revision;
+
+	@Column
 	private String description;
 }

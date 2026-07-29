@@ -16,6 +16,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,6 +57,10 @@ public final class AuditedEntityRegistry {
 
 	public static Class<?> resolveClass(final String entityType) {
 		return CLASSES_BY_NAME.get(entityType);
+	}
+
+	public static Collection<Class<?>> allAuditedClasses() {
+		return CLASSES_BY_NAME.values();
 	}
 
 	/**

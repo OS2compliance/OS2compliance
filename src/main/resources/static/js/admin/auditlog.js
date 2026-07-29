@@ -59,11 +59,12 @@ function initGrid() {
                 formatter: (cell, row) => {
                     const entityType = row.cells[6] ? row.cells[6]['data'] : null;
                     const entityId = row.cells[7] ? row.cells[7]['data'] : null;
+                    const revision = row.cells[8] ? row.cells[8]['data'] : null;
                     const description = row.cells[4] ? row.cells[4]['data'] : null;
-                    if (!entityType || !entityId || !isUpdateDescription(description)) {
+                    if (!entityType || !entityId || !revision || !isUpdateDescription(description)) {
                         return "";
                     }
-                    return gridjs.html(`<button type="button" title="Vis historik" class="btn btn-icon btn-xs showAuditHistoryButton" data-entity-type="${entityType}" data-entity-id="${entityId}"><i class="ti-eye fs-5"></i></button>`);
+                    return gridjs.html(`<button type="button" title="Vis historik" class="btn btn-icon btn-xs showAuditHistoryButton" data-entity-type="${entityType}" data-entity-id="${entityId}" data-revision="${revision}"><i class="ti-eye fs-5"></i></button>`);
                 }
             },
             {
@@ -74,6 +75,11 @@ function initGrid() {
             {
                 id: "entityId",
                 name: "entityId",
+                hidden: true
+            },
+            {
+                id: "revision",
+                name: "revision",
                 hidden: true
             }
         ],
@@ -91,7 +97,8 @@ function initGrid() {
                 row.description,
                 null,
                 row.entityType,
-                row.entityId
+                row.entityId,
+                row.revision
             ]),
             total: data => data.totalCount
         },
@@ -149,9 +156,9 @@ function formatDiffValue(value) {
     return value;
 }
 
-async function showAuditHistory(entityType, entityId) {
+async function showAuditHistory(entityType, entityId, revision) {
     try {
-        const params = new URLSearchParams({entityType, entityId});
+        const params = new URLSearchParams({entityType, entityId, revision});
         const url = `${historyRestUrl}?${params.toString()}`;
         const response = await fetch(url, {
             method: "GET",
@@ -170,6 +177,18 @@ async function showAuditHistory(entityType, entityId) {
     }
 }
 
+function escapeHtml(value) {
+    if (value == null) {
+        return '';
+    }
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 function renderHistoryModal(diffs) {
     if (!diffs || diffs.length === 0) {
         historyModalBody.innerHTML = '<p>Ingen tidligere ændringer fundet.</p>';
@@ -178,9 +197,9 @@ function renderHistoryModal(diffs) {
 
     let rows = diffs.map(diff => `
         <tr>
-            <td>${diff.field}</td>
-            <td>${formatDiffValue(diff.oldValue)}</td>
-            <td>${formatDiffValue(diff.newValue)}</td>
+            <td>${escapeHtml(diff.field)}</td>
+            <td>${escapeHtml(formatDiffValue(diff.oldValue))}</td>
+            <td>${escapeHtml(formatDiffValue(diff.newValue))}</td>
         </tr>
     `).join('');
 
@@ -204,7 +223,8 @@ function buttonHandler() {
             const button = event.target;
             const entityId = button.dataset.entityId;
             const entityType = button.dataset.entityType;
-            showAuditHistory(entityType, entityId);
+            const revision = button.dataset.revision;
+            showAuditHistory(entityType, entityId, revision);
         }
     });
 }
