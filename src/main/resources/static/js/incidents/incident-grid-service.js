@@ -2,11 +2,22 @@ import ColumnOptions from "../grid-js-extension/column-options.js";
 import IncidentService from "./incident-service.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 
+// Custom incident fields are addressed by id, never by their column heading: the heading is free text
+// an administrator can rename at any time, which would silently break every saved filter.
+const FIELD_PREFIX = 'field_';
+
+const DATE_FIELD_STORAGE_KEY = 'incidentDateField';
+const SEARCH_DEBOUNCE_MS = 400;
+
 export default function IncidentGridService () {
     this.incidentService = new IncidentService();
 
     this.filterFrom = '';
     this.filterTo = '';
+    this.dateField = 'CREATED';
+    this.customFields = [];
+    this.dateFields = [];
+    this.customGridFunctions = null;
 
     this.init = async () => {
         let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom');
@@ -24,22 +35,23 @@ export default function IncidentGridService () {
             this.filterTo = toPicker.getFormatedDate();
         }
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
-        const columnNames = await this.incidentService.fetchColumnName()
 
+        this.dateField = localStorage.getItem(DATE_FIELD_STORAGE_KEY) || 'CREATED';
 
-            // .then(columnNames => {
-                this.initGrid(columnNames);
-                this.updateSort(this.incidentGrid);
-                this.incidentGrid.updateConfig(this.currentConfig).forceRender();
-            // });
+        this.customFields = await this.incidentService.fetchColumns() || [];
+        this.dateFields = await this.incidentService.fetchDateFields() || [];
+        // Resolve the saved date field before the first fetch, so a field that has since been removed
+        // does not send the grid looking for answers to a field that no longer exists.
+        this.initDateFieldSelect();
+        this.initGrid();
     }
 
     this.generateExcel = () => {
-        window.location.href = `/reports/incidents/excel?from=${this.filterFrom}&to=${this.filterTo}`;
+        window.location.href = `/reports/incidents/excel?${this.reportQuery()}`;
     }
 
     this.generateReport = () => {
-        fetch(`/reports/incidents?from=${this.filterFrom}&to=${this.filterTo}`)
+        fetch(`/reports/incidents?${this.reportQuery()}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`${response.status} ${response.statusText}`);
@@ -54,50 +66,119 @@ export default function IncidentGridService () {
             .catch(error => toastService.error(error));
     }
 
-    this.updateUrl = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
+    /**
+     * The printed report and the Excel extract cover the same range as the grid, filtered on the same
+     * date field.
+     */
+    this.reportQuery = () => {
+        return new URLSearchParams({
+            dateField: this.dateField,
+            from: this.filterFrom,
+            to: this.filterTo
+        }).toString();
+    }
+
+    /**
+     * Pushes the toolbar filters into the grid's search state and reloads. These are not column
+     * filters, but they travel to the server the same way, which keeps them in the Excel export too.
+     */
+    this.applyFilters = () => {
+        if (!this.customGridFunctions) {
+            return;
+        }
+        this.customGridFunctions.updateColumnValue('fromDate', this.filterFrom);
+        this.customGridFunctions.updateColumnValue('toDate', this.filterTo);
+        this.customGridFunctions.updateColumnValue('dateField', this.dateField);
+        // Narrowing the result set while standing on page 4 would otherwise ask the server for a
+        // page that no longer exists, and the grid would come back empty.
+        this.customGridFunctions.state.page = 0;
+        this.customGridFunctions.saveState();
+        this.customGridFunctions.onSearch();
+    }
 
     this.setFilterFrom = (date, formattedDate) => {
-        if (formattedDate == null) {
-            formattedDate = '';
-        }
-        this.filterFrom = formattedDate;
-        this.updateSort(this.incidentGrid);
-        this.incidentGrid.updateConfig(this.currentConfig).forceRender();
+        this.filterFrom = formattedDate == null ? '' : formattedDate;
         localStorage.setItem("incidentFilterFrom", date);
+        this.applyFilters();
     }
 
     this.setFilterTo = (date, formattedDate) => {
-        if (formattedDate == null) {
-            formattedDate = '';
-        }
-        this.filterTo = formattedDate;
-        this.updateSort(this.incidentGrid);
-        this.incidentGrid.updateConfig(this.currentConfig).forceRender();
+        this.filterTo = formattedDate == null ? '' : formattedDate;
         localStorage.setItem("incidentFilterTo", date);
+        this.applyFilters();
     }
 
-    this.initGrid = (columnNames) => {
-        let self = this;
+    /**
+     * Fills the "Filtrer efter dato" picker with the two built-in timestamps plus the obligatory date
+     * fields, so a setup that records an incident date can filter on that instead of on when the
+     * incident happened to be typed in.
+     */
+    this.initDateFieldSelect = () => {
+        const select = document.getElementById("dateFieldSelect");
+        if (!select) {
+            return;
+        }
+
+        for (const field of this.dateFields) {
+            const option = document.createElement("option");
+            option.value = FIELD_PREFIX + field.id;
+            option.textContent = columnLabel(field);
+            select.appendChild(option);
+        }
+
+        // A field can be removed or made optional after the choice was saved, so fall back to the default.
+        if (Array.from(select.options).some(option => option.value === this.dateField)) {
+            select.value = this.dateField;
+        } else {
+            this.dateField = 'CREATED';
+            localStorage.removeItem(DATE_FIELD_STORAGE_KEY);
+        }
+
+        select.addEventListener("change", (event) => {
+            this.dateField = event.target.value;
+            localStorage.setItem(DATE_FIELD_STORAGE_KEY, this.dateField);
+            this.applyFilters();
+        });
+    }
+
+    /**
+     * Free text across the title and every answer. GridJS' own search box is client side only and
+     * CustomGridFunctions turns it off, so the input lives in the template instead.
+     */
+    this.initSearch = () => {
+        const input = document.getElementById("incidentSearch");
+        if (!input) {
+            return;
+        }
+        input.value = this.customGridFunctions.state.searchValues['search'] || '';
+
+        let debounce;
+        input.addEventListener("input", (event) => {
+            clearTimeout(debounce);
+            const value = event.target.value;
+            debounce = setTimeout(() => {
+                this.customGridFunctions.updateColumnValue('search', value);
+                this.customGridFunctions.state.page = 0;
+                this.customGridFunctions.saveState();
+                this.customGridFunctions.onSearch();
+            }, SEARCH_DEBOUNCE_MS);
+        });
+    }
+
+    this.initGrid = () => {
         const defaultClassName = {
             table: 'table table-striped',
             search: "form-control",
             header: "d-flex justify-content-end"
         };
-        this.buildColumns(columnNames);
+        this.buildColumns();
         this.currentConfig = {
             className: defaultClassName,
+            columns: this.columns,
             pagination: {
-                limit: 50,
-                server: {
-                    url: (prev, page, size) => this.updateUrl(prev, `size=${size}&page=${page}&fromDate=${this.filterFrom}&toDate=${this.filterTo}`)
-                }
+                limit: 50
             },
             language: {
-                'search': {
-                    'placeholder': 'Søg...'
-                },
                 'pagination': {
                     'previous': 'Forrige',
                     'next': 'Næste',
@@ -108,27 +189,6 @@ export default function IncidentGridService () {
                 },
                 'noRecordsFound': 'Ingen hændelser fundet'
             },
-            search: {
-                keyword: searchService.getSavedSearch(),
-                server: {
-                    url: (prev, keyword) => this.updateUrl(prev, `search=${keyword}&fromDate=${this.filterFrom}&toDate=${this.filterTo}`)
-                },
-                debounceTimeout: 1000
-            },
-            sort: {
-                enabled: true,
-                multiColumn: false,
-                server: {
-                    url: (prev, columns) => {
-                        if (!columns.length) return prev;
-                        const columnIds = this.columns.map(c => c.id);
-                        const col = columns[0]; // multiColumn false
-                        const order = columnIds[col.index];
-                        return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
-                    }
-                }
-            },
-            columns: this.columns,
             server: {
                 url: restUrl + 'list',
                 method: 'POST',
@@ -145,8 +205,9 @@ export default function IncidentGridService () {
         const datatableId = 'incidentsTable';
         this.incidentGrid = new gridjs.Grid(this.currentConfig);
         this.incidentGrid.render(document.getElementById(datatableId));
-        searchService.initSearch(this.incidentGrid, this.currentConfig);
-        const customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', restUrl + 'export', incidentsTable);
+
+        this.customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', datatableId,
+            {sortDirection: 'DESC', sortColumn: 'createdAt'});
 
         new ColumnOptions(
             datatableId,
@@ -155,43 +216,28 @@ export default function IncidentGridService () {
             ['name', 'createdAt', 'updatedAt', 'allowedActions'],
             ['id', 'draft'])
 
+        this.initSearch()
         this.initGridActions()
-        initSaveAsExcelButton(customGridFunctions, 'incident', 'incidents', 'Hændelseslog', () => {
-            // Return additional filters including dates
-            return {
-                fromDate: this.filterFrom || '',
-                toDate: this.filterTo || '',
-                search: searchService.getSavedSearch() || ''
-            };
-        });
+        initSaveAsExcelButton(this.customGridFunctions, 'incident', 'incidents', 'Hændelseslog');
+        this.applyFilters();
     }
 
     this.mapRow = (field) => {
-        let columnValues = [];
-        let customColumns = this.columns.filter((c) =>
-            c.id !== 'id' && c.id !== 'draft' && c.id !== 'name' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'allowedActions');
-        customColumns.forEach(c => {
-            let added = false;
-            field.responses.forEach(response => {
-                if (c.id === response.indexColumnName) {
-
-                    let value = response.answerValue
-                    if (response.linkable) {
-                        value = formatAsLink(value, value, true)
-                    }
-
-                    columnValues.push(value);
-                    added = true;
-                }
-            });
-            if (!added) {
-                columnValues.push("");
+        // Answers are matched on the field id, not on the column heading, so renaming a heading does
+        // not empty out the column.
+        const columnValues = this.customFields.map(customField => {
+            const response = field.responses.find(r => r.fieldId === customField.id);
+            if (!response) {
+                return "";
             }
+            return response.linkable
+                ? formatAsLink(response.answerValue, response.answerValue, true)
+                : response.answerValue;
         });
         return [field.id, field.draft, field.name, field.createdAt, ...columnValues, field.updatedAt, field.allowedActions];
     }
 
-    this.buildColumns = (columnNames) => {
+    this.buildColumns = () => {
         const columns = [
             {
                 id: "id",
@@ -204,31 +250,38 @@ export default function IncidentGridService () {
             {
                 id: "name",
                 name: "Titel",
+                searchable: {
+                    searchKey: 'name'
+                },
                 formatter: (cell, row) => {
                     const url = '/incidents/logs/' + row.cells[0]['data'];
                     const isDraft = row.cells[1]['data'];
                     return formatAsLink(cell, url, false, isDraft)
                 },
-                width: '250px',
-                canSortFlag: true
+                width: '250px'
             },
             {
                 id: "createdAt",
                 name: "Oprettet",
                 width: '120px',
-                sort: {
-                    enabled: true
-                },
-                canSortFlag: true
+                searchable: {
+                    searchKey: 'createdAt'
+                }
             }
         ]
 
-        columnNames.forEach(c => {
+        this.customFields.forEach(field => {
             columns.push({
-                id: c,
-                name: c,
-                sort: {
-                    enabled: false
+                // The column id stays the heading, because ColumnOptions keys saved column visibility
+                // on it: switching to field_<id> would make every already saved incident log come back
+                // with all custom columns hidden. Only the server contract uses the field id.
+                id: columnLabel(field),
+                name: columnLabel(field),
+                searchable: {
+                    searchKey: FIELD_PREFIX + field.id,
+                    // Answers live in their own table and cannot be reached from a Pageable, so these
+                    // columns filter but do not sort.
+                    sortKey: null
                 }
             })
         });
@@ -236,7 +289,9 @@ export default function IncidentGridService () {
             {
                 id: "updatedAt",
                 name: "Opdateret",
-                canSortFlag: true
+                searchable: {
+                    searchKey: 'updatedAt'
+                }
             }
         )
         columns.push(
@@ -259,14 +314,6 @@ export default function IncidentGridService () {
         this.columns = columns;
     }
 
-    this.updateSort = () => {
-        this.currentConfig.columns.forEach(column => {
-            column.columns.forEach(subcolumn => {
-                subcolumn.sort = column.canSortFlag !== undefined
-            })
-        })
-    }
-
     this.initGridActions = () => {
         delegateListItemActions('incidentsTable',
             (id, elem) => this.incidentService.editIncident('editIncidentDialog', id),
@@ -275,6 +322,10 @@ export default function IncidentGridService () {
     }
 
 };
+
+function columnLabel(field) {
+    return field.indexColumnName || field.question;
+}
 
 function formatAsLink(label, href, shouldOpenInWindow = false, isDraft = false) {
     const nullSafeLabel = label === null || label === undefined ? '' : label;

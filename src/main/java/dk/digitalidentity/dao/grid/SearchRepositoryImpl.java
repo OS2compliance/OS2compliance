@@ -96,6 +96,42 @@ public class SearchRepositoryImpl implements SearchRepository {
 		return new PageImpl<>(query.getResultList(), page, totalRows);
 	}
 
+	/**
+	 * Column search with caller supplied restrictions. {@code queryPredicates} also get hold of the
+	 * {@link CriteriaQuery}, which is what a predicate needs to build a subquery of its own.
+	 */
+	@Override
+	public <T> Page<T> findAllWithColumnSearch(final Map<String, String> searchableProperties,
+			final Pageable page,
+			final Class<T> entityClass,
+			final List<PredicateBuilder<T>> extraPredicates,
+			final List<QueryPredicateBuilder<T>> queryPredicates) {
+		final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		final CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+
+		final Root<T> root = criteriaQuery.from(entityClass);
+
+		final List<Predicate> predicates = new ArrayList<>();
+		predicates.add(buildSearchPredicates(searchableProperties, criteriaBuilder, root, false));
+		extraPredicates.forEach(p -> predicates.add(p.build(criteriaBuilder, root)));
+		queryPredicates.forEach(p -> predicates.add(p.build(criteriaBuilder, criteriaQuery, root)));
+
+		// A filter on a joined property multiplies the rows, a filter on the root does not
+		final boolean hasJoinFilter = searchableProperties.keySet().stream().anyMatch(k -> k.contains("."));
+		criteriaQuery.select(root).where(predicates.toArray(new Predicate[0])).distinct(hasJoinFilter);
+
+		criteriaQuery.orderBy(buildOrderBy(page, criteriaBuilder, root));
+
+		final TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
+
+		final int totalRows = query.getResultList().size();
+
+		query.setFirstResult(page.getPageNumber() * page.getPageSize());
+		query.setMaxResults(page.getPageSize());
+
+		return new PageImpl<>(query.getResultList(), page, totalRows);
+	}
+
 	private <T> Predicate buildSearchPredicates(final Map<String, String> searchableProperties, CriteriaBuilder criteriaBuilder, Root<T> root, boolean orSearch) {
 		final List<Predicate> predicates = new ArrayList<>();
 		for (final Map.Entry<String, String> searchEntry : searchableProperties.entrySet()) {

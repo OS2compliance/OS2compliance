@@ -5,6 +5,8 @@ import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.dto.IncidentDTO;
+import dk.digitalidentity.model.dto.IncidentDateFilter;
+import dk.digitalidentity.model.dto.IncidentQuery;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.DPIA;
@@ -52,7 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -163,11 +166,10 @@ public class ReportController {
 	@RequireReadOwnerOnly
     @GetMapping("incidents")
     public String incidents(final Model model,
+                            @RequestParam(value = "dateField", required = false) final String dateField,
                             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
                             @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
-        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0, 0);
-        final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
+        final Page<Incident> allIncidents = incidentsForReport(dateField, from, to);
         model.addAttribute("incidents", incidentMapper.toDTOs(allIncidents.getContent()));
         model.addAttribute("from", from);
         model.addAttribute("to", to);
@@ -177,21 +179,32 @@ public class ReportController {
 	@RequireReadOwnerOnly
     @GetMapping("incidents/excel")
     public ModelAndView incidentsExcel(final HttpServletResponse response,
+                                       @RequestParam(value = "dateField", required = false) final String dateField,
                                        @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
                                        @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
-        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0, 0);
-        final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
+        final Page<Incident> allIncidents = incidentsForReport(dateField, from, to);
         final List<IncidentDTO> allIncidentDTOs = incidentMapper.toDTOs(allIncidents.getContent());
         response.setContentType("application/ms-excel");
         response.setHeader("Content-Disposition", "attachment; filename=\"Incidents.xls\"");
         final Map<String, Object> model = new HashMap<>();
         model.put("incidents", allIncidentDTOs);
         model.put("fields", incidentService.getAllFields());
-        model.put("from", fromDT);
-        model.put("to", toDT);
+        model.put("from", from);
+        model.put("to", to);
 
         return new ModelAndView(new IncidentsXlsView(), model);
+    }
+
+    /**
+     * Both incident reports honour the date field and range picked on the log, which is what the
+     * extract was wrong about. The grid's free text search and column filters are deliberately not
+     * carried over — the reports have always covered every incident within the range.
+     */
+    private Page<Incident> incidentsForReport(final String dateField, final LocalDate from, final LocalDate to) {
+        final IncidentQuery query = new IncidentQuery(IncidentDateFilter.parse(dateField),
+            from, to, null, Map.of(), Map.of());
+        return incidentService.findIncidents(query,
+            PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.DESC, "createdAt")));
     }
 
 

@@ -61,8 +61,23 @@ export default function IncidentService() {
         });
     }
 
-    this.fetchColumnName = async () => {
+    /**
+     * The custom fields shown as columns in the grid, in form order.
+     */
+    this.fetchColumns = async () => {
         return jsonCall('GET', restUrl + 'columns', null)
+            .then((response) => {
+                defaultResponseErrorHandler(response);
+                return response.json();
+            })
+            .catch(defaultErrorHandler)
+    }
+
+    /**
+     * The obligatory date fields the from/to range can filter on, on top of created and updated.
+     */
+    this.fetchDateFields = async () => {
+        return jsonCall('GET', restUrl + 'datefields', null)
             .then((response) => {
                 defaultResponseErrorHandler(response);
                 return response.json();

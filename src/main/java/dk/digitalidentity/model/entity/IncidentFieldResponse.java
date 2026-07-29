@@ -69,7 +69,9 @@ public class IncidentFieldResponse implements StatisticEnabled {
     @DateTimeFormat(pattern = "d/M-yyyy")
     private LocalDate answerDate;
 
-    @Column
+    // The name is spelled out so it matches answerElementIdsRaw below: two mappings of one physical
+    // column must agree on the logical name, or Hibernate refuses to build its metadata at startup.
+    @Column(name = "answer_element_ids")
     @Convert(converter = StringListNullSafeConverter.class)
 	@Builder.Default
     private List<String> answerElementIds = new ArrayList<>();
@@ -78,6 +80,16 @@ public class IncidentFieldResponse implements StatisticEnabled {
     @Convert(converter = StringListNullSafeConverter.class)
 	@Builder.Default
     private List<String> answerChoiceValues = new ArrayList<>();
+
+    // Read-only views of the two CSV columns above. The converted List<String> mappings cannot be used
+    // in Criteria string expressions, so column filtering and search read the raw column through these.
+    @JsonIgnore
+    @Column(name = "answer_element_ids", insertable = false, updatable = false)
+    private String answerElementIdsRaw;
+
+    @JsonIgnore
+    @Column(name = "answer_choice_values", insertable = false, updatable = false)
+    private String answerChoiceValuesRaw;
 
     @ManyToOne
     @JoinColumn(name = "incident_id")

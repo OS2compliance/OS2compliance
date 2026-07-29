@@ -12,7 +12,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +29,10 @@ public class IncidentsXlsView extends AbstractXlsView {
         //noinspection unchecked
         final List<IncidentField> allFields = (List<IncidentField>) model.get("fields");
         final List<IncidentField> sortedFields = allFields.stream().sorted(Comparator.comparing(IncidentField::getSortKey)).toList();
-        final LocalDateTime fromDT = (LocalDateTime) model.get("from");
-        final LocalDateTime toDT = (LocalDateTime) model.get("to");
+        final LocalDate from = (LocalDate) model.get("from");
+        final LocalDate to = (LocalDate) model.get("to");
 
-        final Sheet sheet = workbook.createSheet("Hændelser " + fromDT.getYear() + "-" + toDT.getYear());
+        final Sheet sheet = workbook.createSheet(sheetName(from, to));
         final CellStyle style = workbook.createCellStyle();
 
         createMainHeader(workbook, sheet, sortedFields);
@@ -57,6 +57,19 @@ public class IncidentsXlsView extends AbstractXlsView {
         for (int i = 0; i < allFields.size() + 2; i++) {
             sheet.autoSizeColumn(i);
         }
+    }
+
+    /**
+     * Either bound may be absent when the user has not narrowed the range, so the year span is only
+     * added when there is one to show.
+     */
+    private static String sheetName(final LocalDate from, final LocalDate to) {
+        if (from == null && to == null) {
+            return "Hændelser";
+        }
+        final String firstYear = from != null ? String.valueOf(from.getYear()) : "";
+        final String lastYear = to != null ? String.valueOf(to.getYear()) : "";
+        return "Hændelser " + firstYear + "-" + lastYear;
     }
 
     private void createMainHeader(final Workbook workbook, final Sheet sheet, final List<IncidentField> sortedFields) {
