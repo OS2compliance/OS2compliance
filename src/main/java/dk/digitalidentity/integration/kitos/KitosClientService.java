@@ -138,8 +138,13 @@ public class KitosClientService {
      * contracts has expired — the delta feed only carries the contracts that actually changed.
      */
     public List<ItContractResponseDTO> fetchContractsForSystemUsage(final UUID systemUsageUuid) {
-        return contractApi.getManyItContractV2GetItContracts(null, null, systemUsageUuid, null, null,
-            null, null, null, null, null, 0, KitosConstants.PAGE_SIZE);
+        final List<ItContractResponseDTO> contracts = contractApi.getManyItContractV2GetItContracts(null, null,
+            systemUsageUuid, null, null, null, null, null, null, null, 0, KitosConstants.MAX_PAGE_SIZE);
+        if (contracts != null && contracts.size() == KitosConstants.MAX_PAGE_SIZE) {
+            log.warn("It-system usage {} has at least {} contracts, only the first page was read",
+                systemUsageUuid, KitosConstants.MAX_PAGE_SIZE);
+        }
+        return contracts == null ? List.of() : contracts;
     }
 
     /**

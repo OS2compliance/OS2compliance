@@ -38,6 +38,9 @@ public interface KitosConstants {
 
     Integer PAGE_SIZE = 100;
 
+    /** Largest page size the Kitos v2 endpoints accept. */
+    Integer MAX_PAGE_SIZE = 250;
+
     Integer MAX_PAGE_REQUEST = 100;
 
 
