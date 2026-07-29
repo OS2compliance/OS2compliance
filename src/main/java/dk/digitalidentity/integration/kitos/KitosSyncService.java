@@ -24,7 +24,7 @@ import dk.kitos.api.model.IdentityNamePairResponseDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
-import dk.kitos.api.model.ItSystemUsageValidityResponseDTO;
+import dk.kitos.api.model.LifeCycleStatusChoice;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
@@ -52,10 +52,13 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @RequiredArgsConstructor
 public class KitosSyncService {
 
-    // Lifecycle phases that map to active=true; all others map to inactive.
-    private static final Set<ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum> ACTIVE_LIFECYCLE_STATUSES = EnumSet.of(
-        ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum.OPERATIONAL,
-        ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum.PHASINGIN
+    // Lifecycle phases that map to active=true; all others (UNDECIDED, NOT_IN_USE) map to inactive.
+    // Systems being phased out or piloted are still in operation and count as active.
+    private static final Set<LifeCycleStatusChoice> ACTIVE_LIFECYCLE_STATUSES = EnumSet.of(
+        LifeCycleStatusChoice.OPERATIONAL,
+        LifeCycleStatusChoice.PHASING_IN,
+        LifeCycleStatusChoice.PHASING_OUT,
+        LifeCycleStatusChoice.PILOT
     );
 
     private final AssetService assetService;
@@ -197,7 +200,7 @@ public class KitosSyncService {
     }
 
     private void updateAssetWith(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
-        final ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum lifeCycleStatus =
+        final LifeCycleStatusChoice lifeCycleStatus =
             nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getLifeCycleStatus());
 
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
