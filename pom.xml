@@ -20,14 +20,16 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>21</java.version>
 		<!--
-			Docker Engine API version Testcontainers talks to. Without this, docker-java negotiates
-			1.32, which daemons from Docker 25 onwards reject outright ("client version 1.32 is too
-			old"), and Testcontainers reports it as the misleading "Could not find a valid Docker
-			environment". 1.40 is the oldest version new daemons accept and is supported by every
-			daemon since Docker 19.03, so it works on both old and new hosts. Override with
-			-Ddocker.api.version=... if a host ever needs something else.
+			Docker Engine API version Testcontainers talks to. Without this, its shaded docker-java
+			defaults to 1.32, which Docker 29 daemons reject outright ("client version 1.32 is too
+			old") — surfaced as the misleading "Could not find a valid Docker environment".
+			Known upstream bug: testcontainers-java#11212. Upstream's own fix (PR #11216, released in
+			Testcontainers 2.0.2) sets the default to 1.44, so we use the same value; different
+			Docker 29 builds report minimum 1.40 or 1.44, and 1.44 satisfies both. Cannot be solved
+			by upgrading Testcontainers on the 1.x line: 1.21.3 still defaults to 1.32 (verified).
+			Override with -Ddocker.api.version=... on a host that needs something else.
 		-->
-		<docker.api.version>1.40</docker.api.version>
+		<docker.api.version>1.44</docker.api.version>
 	</properties>
 
     <dependencyManagement>
