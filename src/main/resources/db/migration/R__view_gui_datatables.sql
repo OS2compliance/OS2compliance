@@ -10,6 +10,10 @@ SELECT s.id,
                  LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
         WHERE a.supplier_id = s.id)                                         AS last_oversight_date,
        prop.prop_value                                                      AS kitos_uuid,
+       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false) AS primary_asset_count,
+       (SELECT COUNT(1) FROM relations rel
+        WHERE (rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET')
+           OR (rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER' AND rel.relation_a_type = 'ASSET')) AS secondary_asset_count,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
        s.responsible_uuid,
@@ -630,7 +634,7 @@ FROM assets a
                              INNER JOIN (SELECT asset_id, MAX(creation_date) as max_date
                                          FROM assets_oversight
                                          GROUP BY asset_id) ao_max ON ao.asset_id = ao_max.asset_id AND ao.creation_date = ao_max.max_date) latest_ao ON latest_ao.asset_id = a.id
-         LEFT JOIN choice_values cv_supervisory ON cv_supervisory.id = latest_ao.supervision_model
+         LEFT JOIN choice_values cv_supervisory ON cv_supervisory.id = a.supervisory_model
          LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
          LEFT JOIN dbs_asset da on r.relation_a_id = da.id OR r.relation_b_id = da.id
          LEFT JOIN relations r1 on ((r1.relation_a_id = da.id OR r1.relation_b_id = da.id) AND (r1.relation_a_type = 'TASK' OR r1.relation_b_type = 'TASK'))

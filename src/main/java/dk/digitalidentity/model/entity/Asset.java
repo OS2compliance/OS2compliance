@@ -250,13 +250,6 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
     @JoinColumn(name = "oversight_responsible_uuid")
     private User oversightResponsibleUser;
 
-    @JsonIgnore
-    @OneToMany(mappedBy="asset", fetch = FetchType.LAZY)
-	@NotAudited
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private Set<Role> roles = new HashSet<>();
-
 	@OneToMany(mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
