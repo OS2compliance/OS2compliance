@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.AuditLogDao;
 import dk.digitalidentity.model.entity.AuditLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -25,7 +26,13 @@ public class AuditLogService {
 		log(performerUuid, performerName, "Logud", null, null, null, performerName + " loggede ud");
 	}
 
-	@Transactional
+	/**
+	 * REQUIRES_NEW because this is called from AuditEntityChangeListener's afterCommit() callback -
+	 * the original transaction has just committed and its resources aren't fully unbound yet, so a
+	 * plain @Transactional(REQUIRED) here can join that stale, already-completed transaction instead
+	 * of opening a real one, silently discarding the write.
+	 */
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void logEntityChange(final String performerUuid, final String performerName, final String entityType, final String entityId, final String entityName, final Integer revision, final ChangeType changeType) {
 		final String verb = switch (changeType) {
 			case CREATE -> "oprettede";

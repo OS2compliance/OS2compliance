@@ -33,24 +33,29 @@ function initGrid() {
         columns: [
             {
                 id: "performerName",
-                name: "Brugernavn"
+                name: "Brugernavn",
+                searchable: { searchKey: 'performerName' }
             },
             {
                 id: "createdTimestamp",
                 name: "Tidspunkt",
-                formatter: (cell) => dateFormatter(cell)
+                formatter: (cell) => dateFormatter(cell),
+                searchable: { searchKey: 'createdTimestamp' }
             },
             {
                 id: "entityTypeLabel",
-                name: "Entitetstype"
+                name: "Entitetstype",
+                searchable: { searchKey: 'entityType' }
             },
             {
                 id: "entityName",
-                name: "Entitetsnavn"
+                name: "Entitetsnavn",
+                searchable: { searchKey: 'entityName' }
             },
             {
                 id: "description",
-                name: "Beskrivelse"
+                name: "Beskrivelse",
+                searchable: { searchKey: 'description' }
             },
             {
                 id: "actions",
@@ -60,10 +65,6 @@ function initGrid() {
                     const entityType = row.cells[6] ? row.cells[6]['data'] : null;
                     const entityId = row.cells[7] ? row.cells[7]['data'] : null;
                     const revision = row.cells[8] ? row.cells[8]['data'] : null;
-                    const description = row.cells[4] ? row.cells[4]['data'] : null;
-                    if (!entityType || !entityId || !revision || !isUpdateDescription(description)) {
-                        return "";
-                    }
                     return gridjs.html(`<button type="button" title="Vis historik" class="btn btn-icon btn-xs showAuditHistoryButton" data-entity-type="${entityType}" data-entity-id="${entityId}" data-revision="${revision}"><i class="ti-eye fs-5"></i></button>`);
                 }
             },
@@ -124,10 +125,6 @@ function initGrid() {
         sortDirection: 'DESC',
         sortColumn: 'createdTimestamp'
     });
-}
-
-function isUpdateDescription(description) {
-    return typeof description === 'string' && description.includes(' opdaterede ');
 }
 
 function dateFormatter(rawDate) {

@@ -123,11 +123,15 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 	}
 
 	/**
-	 * Envers assigns one revision per transaction; by the time our post-insert/update/delete listener
-	 * fires, Envers' own listener has already persisted the revinfo row for this transaction (persist=false).
+	 * Envers caches one revision entity per transaction/session and hands out that same instance to
+	 * every caller, regardless of who asks first - so forcing creation here (persist=true) is safe:
+	 * if Envers' own listener already created it, this just returns that same cached instance; if it
+	 * hasn't yet (listener ordering isn't guaranteed), this creates it and Envers reuses it afterwards.
+	 * persist=false only returns an already-created revision, otherwise silently handing back a blank
+	 * (id=0) instance - which is what caused every auditlog row to record revision 0.
 	 */
 	private Integer currentRevision(final EventSource session) {
-		return AuditReaderFactory.get(session).getCurrentRevision(DefaultRevisionEntity.class, false).getId();
+		return AuditReaderFactory.get(session).getCurrentRevision(DefaultRevisionEntity.class, true).getId();
 	}
 
 	private void registerFlushOnCommit() {
