@@ -5,6 +5,7 @@ import dk.digitalidentity.model.dto.IncidentFieldResponseDTO;
 import dk.digitalidentity.model.entity.IncidentField;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
@@ -21,6 +22,13 @@ import java.util.Objects;
 import static dk.digitalidentity.report.XlsUtil.createCell;
 
 public class IncidentsXlsView extends AbstractXlsView {
+
+    /**
+     * {@link AbstractXlsView} writes the legacy .xls format, whose sheets end here. Asking POI for a row
+     * past it throws, so the extract stops instead — the caller is expected to have capped the query
+     * long before this, and this is the backstop.
+     */
+    private static final int LAST_ROW_INDEX = SpreadsheetVersion.EXCEL97.getLastRowIndex();
 
     @Override
     protected void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -39,6 +47,9 @@ public class IncidentsXlsView extends AbstractXlsView {
 
         int rowCount = 1;
         for (IncidentDTO incident : allIncidents) {
+            if (rowCount > LAST_ROW_INDEX) {
+                break;
+            }
             final Row row = sheet.createRow(rowCount++);
             createCell(row, 0, incident.getName(), style);
             createCell(row, 1, incident.getDraftText(), style);

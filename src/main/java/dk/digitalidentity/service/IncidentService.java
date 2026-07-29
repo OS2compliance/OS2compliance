@@ -166,11 +166,36 @@ public class IncidentService {
         if (StringUtils.isNotBlank(query.search())) {
             queryPredicates.add(IncidentPredicates.matchesAnywhere(query.search()));
         }
-        query.fieldFilters().forEach((fieldId, value) ->
+        filtersOnVisibleColumns(query.fieldFilters()).forEach((fieldId, value) ->
             queryPredicates.add(IncidentPredicates.fieldMatches(fieldId, value)));
 
         return incidentDao.findAllWithColumnSearch(query.columnFilters(), pageable, Incident.class,
             predicates, queryPredicates);
+    }
+
+    /**
+     * Drops column filters naming a field that no longer exists, or that no longer appears as a column
+     * because an administrator cleared its overview name.
+     * <p>
+     * Such a filter matches nothing, and the column it belongs to is no longer on screen — the user
+     * would be left with an empty log and no filter box to clear it from. The filters are remembered in
+     * the browser, so this is reachable by ordinary use. A stale filter has to widen the result set,
+     * never narrow it to nothing.
+     */
+    private Map<Long, String> filtersOnVisibleColumns(final Map<Long, String> fieldFilters) {
+        if (fieldFilters.isEmpty()) {
+            return fieldFilters;
+        }
+        final Set<Long> visible = new HashSet<>();
+        incidentFieldDao.findAllById(fieldFilters.keySet())
+            .forEach(field -> {
+                if (StringUtils.isNotEmpty(field.getIndexColumnName())) {
+                    visible.add(field.getId());
+                }
+            });
+        return fieldFilters.entrySet().stream()
+            .filter(entry -> visible.contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     /**
@@ -263,7 +288,6 @@ public class IncidentService {
             .sortKey(f.getSortKey())
             .build();
     }
-
 
 	public List<Incident> getIncidentsMatching(Long incidentFieldId, LocalDateTime fromDate, LocalDateTime toDate) {
 		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(incidentFieldId, fromDate, toDate);

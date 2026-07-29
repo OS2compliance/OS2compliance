@@ -167,8 +167,10 @@ public final class IncidentPredicates {
      * Guards a match against the answer's own type, so a plain text answer does not pay for four
      * correlated lookups against users, units, assets and suppliers.
      * <p>
-     * Rows with no recorded type keep the old behaviour of trying every match — the column is
-     * nullable, and an answer written before the type was recorded should not silently stop matching.
+     * The type is read off the answer, not off the field, so an answer written before an administrator
+     * changed the field's type still matches the column it actually populated. A null type falls
+     * through to every match: the column is nullable, and search should not be the place that decides
+     * such a row does not exist.
      */
     private static Predicate ofType(final CriteriaBuilder cb, final Path<IncidentType> type,
                                     final Predicate match, final IncidentType... applicable) {

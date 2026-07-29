@@ -109,6 +109,36 @@ public class IncidentFilterTest extends BaseIntegrationTest {
     }
 
     @Test
+    public void dropsAColumnFilterOnAFieldThatIsGone() {
+        // The filter lives in the browser and there is no filter box left on screen for a deleted
+        // field, so honouring it would leave the user with an empty log and no way to clear it.
+        saveIncident("Sag A", response(location, "Rådhuset"));
+
+        Page<Incident> result = incidentService.findIncidents(
+                new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, null,
+                        Map.of(), Map.of(999_999L, "hvad som helst")),
+                FIRST_PAGE);
+
+        assertThat(result.getContent()).extracting(Incident::getName).containsExactly("Sag A");
+    }
+
+    @Test
+    public void dropsAColumnFilterOnAFieldNoLongerShownAsAColumn() {
+        // Clearing a field's overview name removes its column, and with it the filter box.
+        IncidentField hidden = saveField(IncidentType.TEXT, "Skjult", false);
+        hidden.setIndexColumnName(null);
+        incidentFieldDao.save(hidden);
+        saveIncident("Sag A", response(hidden, "Rådhuset"));
+
+        Page<Incident> result = incidentService.findIncidents(
+                new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, null,
+                        Map.of(), Map.of(hidden.getId(), "biblioteket")),
+                FIRST_PAGE);
+
+        assertThat(result.getContent()).extracting(Incident::getName).containsExactly("Sag A");
+    }
+
+    @Test
     public void combinesFiltersOnTwoDifferentFields() {
         // A join based implementation cannot satisfy both of these at once, because one response row
         // can only match one of them.

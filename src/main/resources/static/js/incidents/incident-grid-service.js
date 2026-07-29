@@ -27,6 +27,9 @@ export default function IncidentGridService () {
             this.filterFrom = fromPicker.getFormatedDate();
         }
         fromPicker.onSelect((date, formatedDate) => this.setFilterFrom(date, formatedDate));
+        // "Ryd" empties the input without firing onSelect, so without this the box goes blank while
+        // the grid, the export and localStorage all keep filtering on the old date.
+        fromPicker.onClear(() => this.setFilterFrom(null, ''));
 
         let toPicker = initDatepicker('#filterToBtn', '#filterTo');
         let filterTo = localStorage.getItem("incidentFilterTo");
@@ -35,6 +38,7 @@ export default function IncidentGridService () {
             this.filterTo = toPicker.getFormatedDate();
         }
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
+        toPicker.onClear(() => this.setFilterTo(null, ''));
 
         this.dateField = localStorage.getItem(DATE_FIELD_STORAGE_KEY) || 'CREATED';
 
@@ -67,8 +71,10 @@ export default function IncidentGridService () {
     }
 
     /**
-     * The printed report and the Excel extract cover the same range as the grid, filtered on the same
-     * date field.
+     * "Print rapport" and "Hent excel fil" cover the same date range as the grid, filtered on the same
+     * date field. They deliberately ignore the free text search and the column filters — the reports
+     * have always covered every incident within the range. "Gem som Excel" is the one that mirrors the
+     * grid exactly, filters included.
      */
     this.reportQuery = () => {
         return new URLSearchParams({
@@ -81,14 +87,25 @@ export default function IncidentGridService () {
     /**
      * Pushes the toolbar filters into the grid's search state and reloads. These are not column
      * filters, but they travel to the server the same way, which keeps them in the Excel export too.
+     * <p>
+     * The grid state is persisted, so on a plain reload it already holds these three values and there
+     * is nothing to reload — the grid has fetched with them once already by the time we get here.
      */
     this.applyFilters = () => {
         if (!this.customGridFunctions) {
             return;
         }
+        const saved = this.customGridFunctions.state.searchValues;
+        const unchanged = (saved['fromDate'] || '') === this.filterFrom
+            && (saved['toDate'] || '') === this.filterTo
+            && (saved['dateField'] || 'CREATED') === this.dateField;
+
         this.customGridFunctions.updateColumnValue('fromDate', this.filterFrom);
         this.customGridFunctions.updateColumnValue('toDate', this.filterTo);
         this.customGridFunctions.updateColumnValue('dateField', this.dateField);
+        if (unchanged) {
+            return;
+        }
         // Narrowing the result set while standing on page 4 would otherwise ask the server for a
         // page that no longer exists, and the grid would come back empty.
         this.customGridFunctions.state.page = 0;

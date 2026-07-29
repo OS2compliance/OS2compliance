@@ -69,8 +69,8 @@ public class IncidentFieldResponse implements StatisticEnabled {
     @DateTimeFormat(pattern = "d/M-yyyy")
     private LocalDate answerDate;
 
-    // The name is spelled out so it matches answerElementIdsRaw below: two mappings of one physical
-    // column must agree on the logical name, or Hibernate refuses to build its metadata at startup.
+    // The name is spelled out to make the pairing with answerElementIdsRaw below obvious. It matches
+    // what the naming strategy derives anyway, so it is documentation, not configuration.
     @Column(name = "answer_element_ids")
     @Convert(converter = StringListNullSafeConverter.class)
 	@Builder.Default
@@ -83,6 +83,8 @@ public class IncidentFieldResponse implements StatisticEnabled {
 
     // Read-only views of the two CSV columns above. The converted List<String> mappings cannot be used
     // in Criteria string expressions, so column filtering and search read the raw column through these.
+    // insertable/updatable=false is what makes mapping the same physical column twice legal: Hibernate
+    // only checks writable properties for duplicate columns. Writing still goes through the lists above.
     @JsonIgnore
     @Column(name = "answer_element_ids", insertable = false, updatable = false)
     private String answerElementIdsRaw;

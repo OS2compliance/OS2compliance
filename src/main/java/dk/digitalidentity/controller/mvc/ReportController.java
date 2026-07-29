@@ -196,6 +196,13 @@ public class ReportController {
     }
 
     /**
+     * As many incidents as the .xls format can hold, one row of which is the header. The old limit of
+     * 1000 was low enough to hit in normal use and said nothing when it did; this one is the format's
+     * own ceiling, and reaching it is logged.
+     */
+    private static final int MAX_REPORT_INCIDENTS = 65_535;
+
+    /**
      * Both incident reports honour the date field and range picked on the log, which is what the
      * extract was wrong about. The grid's free text search and column filters are deliberately not
      * carried over — the reports have always covered every incident within the range.
@@ -203,10 +210,14 @@ public class ReportController {
     private Page<Incident> incidentsForReport(final String dateField, final LocalDate from, final LocalDate to) {
         final IncidentQuery query = new IncidentQuery(IncidentDateFilter.parse(dateField),
             from, to, null, Map.of(), Map.of());
-        return incidentService.findIncidents(query,
-            PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.DESC, "createdAt")));
+        final Page<Incident> incidents = incidentService.findIncidents(query,
+            PageRequest.of(0, MAX_REPORT_INCIDENTS, Sort.by(Sort.Direction.DESC, "createdAt")));
+        if (incidents.getTotalElements() > incidents.getNumberOfElements()) {
+            log.warn("Incident report covers {} of {} incidents, the rest does not fit the report format",
+                incidents.getNumberOfElements(), incidents.getTotalElements());
+        }
+        return incidents;
     }
-
 
 	@RequireReadOwnerOnly
 	@GetMapping("/threat-assessment/{id}/excel")
