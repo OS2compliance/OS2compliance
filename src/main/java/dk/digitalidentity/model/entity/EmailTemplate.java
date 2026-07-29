@@ -12,13 +12,14 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.envers.Audited;
 
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "email_templates")
+@Audited
 public class EmailTemplate {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

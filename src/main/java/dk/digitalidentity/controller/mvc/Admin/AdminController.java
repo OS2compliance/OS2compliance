@@ -48,5 +48,9 @@ public class AdminController {
         return "admin/mailtemplates";
     }
 
+	@GetMapping("auditlog")
+	public String auditLog(final Model model) {
+		return "admin/auditlog";
+	}
 
 }

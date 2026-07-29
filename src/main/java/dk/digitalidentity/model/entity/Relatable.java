@@ -23,7 +23,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedBy;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -35,8 +36,9 @@ import java.util.Set;
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Audited
 @EntityListeners(AuditingEntityListener.class)
-abstract public class Relatable {
+public abstract class Relatable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.TABLE)
@@ -96,6 +98,7 @@ abstract public class Relatable {
     @OneToMany(orphanRemoval = true,
 			cascade = {CascadeType.ALL},
 			mappedBy = "entity")
+	@NotAudited
 	private Set<Property> properties = new HashSet<>();
 
 	@PrePersist
