@@ -196,11 +196,13 @@ public class ReportController {
     }
 
     /**
-     * As many incidents as the .xls format can hold, one row of which is the header. The old limit of
-     * 1000 was low enough to hit in normal use and said nothing when it did; this one is the format's
-     * own ceiling, and reaching it is logged.
+     * The old limit of 1000 was low enough to hit in normal use and said nothing when it did. This one
+     * is higher, and reaching it is logged, but it is deliberately not the .xls format's own ceiling of
+     * 65 535: every incident is mapped through {@link IncidentMapper}, which resolves each referenced
+     * user, unit, asset and supplier one lookup at a time, so the row count decides how many queries
+     * the report costs. Ten thousand rows is what that mapping can carry.
      */
-    private static final int MAX_REPORT_INCIDENTS = 65_535;
+    private static final int MAX_REPORT_INCIDENTS = 10_000;
 
     /**
      * Both incident reports honour the date field and range picked on the log, which is what the
@@ -213,7 +215,7 @@ public class ReportController {
         final Page<Incident> incidents = incidentService.findIncidents(query,
             PageRequest.of(0, MAX_REPORT_INCIDENTS, Sort.by(Sort.Direction.DESC, "createdAt")));
         if (incidents.getTotalElements() > incidents.getNumberOfElements()) {
-            log.warn("Incident report covers {} of {} incidents, the rest does not fit the report format",
+            log.warn("Incident report covers {} of {} incidents, the rest is above the report row limit",
                 incidents.getNumberOfElements(), incidents.getTotalElements());
         }
         return incidents;

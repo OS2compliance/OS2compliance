@@ -250,6 +250,24 @@ public class IncidentFilterTest extends BaseIntegrationTest {
         assertThat(dateFields).extracting(IncidentField::getQuestion).containsExactly("Hændelsesdato");
     }
 
+    @Test
+    public void countsEveryMatchNotJustThePageBeingShown() {
+        // The total is counted in the database, by a query that has to rebuild the filters against its
+        // own root. Getting that wrong gives a total the grid cannot page through.
+        saveIncident("Sag A", response(location, "Rådhuset"));
+        saveIncident("Sag B", response(location, "Rådhuset"));
+        saveIncident("Sag C", response(location, "Rådhuset"));
+        saveIncident("Sag D", response(location, "Biblioteket"));
+
+        Page<Incident> result = incidentService.findIncidents(
+                new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, null,
+                        Map.of(), Map.of(location.getId(), "råd")),
+                PageRequest.of(0, 2));
+
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(3);
+    }
+
     private IncidentQuery query(final IncidentDateFilter dateFilter, final LocalDate from, final LocalDate to) {
         return new IncidentQuery(dateFilter, from, to, null, Map.of(), Map.of());
     }
