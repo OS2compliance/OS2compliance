@@ -201,11 +201,12 @@ public class KitosSyncService {
         final ItSystemUsageValidityResponseDTO.LifeCycleStatusEnum lifeCycleStatus =
             nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getLifeCycleStatus());
 
+        final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
+
         if (lifeCycleStatus != null) {
-            asset.setActive(ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
+            asset.setActive(valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
         }
 
-        final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
         if (!valid) {
             return;
         }
