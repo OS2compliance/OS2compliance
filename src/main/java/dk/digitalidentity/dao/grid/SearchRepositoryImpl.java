@@ -96,6 +96,79 @@ public class SearchRepositoryImpl implements SearchRepository {
 		return new PageImpl<>(query.getResultList(), page, totalRows);
 	}
 
+	/**
+	 * Column search with caller supplied restrictions. {@code queryPredicates} also get hold of the
+	 * {@link CriteriaQuery}, which is what a predicate needs to build a subquery of its own.
+	 */
+	@Override
+	public <T> Page<T> findAllWithColumnSearch(final Map<String, String> searchableProperties,
+			final Pageable page,
+			final Class<T> entityClass,
+			final List<PredicateBuilder<T>> extraPredicates,
+			final List<QueryPredicateBuilder<T>> queryPredicates) {
+		final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+
+		// A filter on a joined property multiplies the rows, a filter on the root does not
+		final boolean hasJoinFilter = searchableProperties.keySet().stream().anyMatch(k -> k.contains("."));
+
+		final CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+		final Root<T> root = criteriaQuery.from(entityClass);
+		criteriaQuery.select(root)
+				.where(restrictions(searchableProperties, extraPredicates, queryPredicates, criteriaBuilder, criteriaQuery, root))
+				.distinct(hasJoinFilter);
+		criteriaQuery.orderBy(buildOrderBy(page, criteriaBuilder, root));
+
+		final TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
+		query.setFirstResult(page.getPageNumber() * page.getPageSize());
+		query.setMaxResults(page.getPageSize());
+
+		final long totalRows = countMatching(searchableProperties, entityClass, extraPredicates,
+				queryPredicates, criteriaBuilder, hasJoinFilter);
+
+		return new PageImpl<>(query.getResultList(), page, totalRows);
+	}
+
+	/**
+	 * Assembles the column filters and the caller's own restrictions. A predicate is bound to the root
+	 * it was built against, so the count query has to build its own set rather than borrow the page
+	 * query's.
+	 */
+	private <T> Predicate[] restrictions(final Map<String, String> searchableProperties,
+			final List<PredicateBuilder<T>> extraPredicates,
+			final List<QueryPredicateBuilder<T>> queryPredicates,
+			final CriteriaBuilder criteriaBuilder,
+			final CriteriaQuery<?> criteriaQuery,
+			final Root<T> root) {
+		final List<Predicate> predicates = new ArrayList<>();
+		predicates.add(buildSearchPredicates(searchableProperties, criteriaBuilder, root, false));
+		extraPredicates.forEach(p -> predicates.add(p.build(criteriaBuilder, root)));
+		queryPredicates.forEach(p -> predicates.add(p.build(criteriaBuilder, criteriaQuery, root)));
+		return predicates.toArray(new Predicate[0]);
+	}
+
+	/**
+	 * Counts in the database rather than fetching every match to call {@code size()} on it. The other
+	 * overloads in here still do the latter; this one cannot, because the reports and the Excel export
+	 * ask for page sizes in the thousands — fetching the whole result set just to arrive at a number
+	 * would load it twice over.
+	 * <p>
+	 * {@code distinct} has to mirror the page query's: counting rows the page query would collapse
+	 * gives a total the grid cannot page through.
+	 */
+	private <T> long countMatching(final Map<String, String> searchableProperties,
+			final Class<T> entityClass,
+			final List<PredicateBuilder<T>> extraPredicates,
+			final List<QueryPredicateBuilder<T>> queryPredicates,
+			final CriteriaBuilder criteriaBuilder,
+			final boolean distinct) {
+		final CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+		final Root<T> countRoot = countQuery.from(entityClass);
+		countQuery.select(distinct ? criteriaBuilder.countDistinct(countRoot) : criteriaBuilder.count(countRoot))
+				.where(restrictions(searchableProperties, extraPredicates, queryPredicates,
+						criteriaBuilder, countQuery, countRoot));
+		return entityManager.createQuery(countQuery).getSingleResult();
+	}
+
 	private <T> Predicate buildSearchPredicates(final Map<String, String> searchableProperties, CriteriaBuilder criteriaBuilder, Root<T> root, boolean orSearch) {
 		final List<Predicate> predicates = new ArrayList<>();
 		for (final Map.Entry<String, String> searchEntry : searchableProperties.entrySet()) {

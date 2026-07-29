@@ -357,7 +357,10 @@ class CustomGridFunctions {
         for (const column of updatedConfig) {
             let searchFieldHTML = '<div style="display:none;"></div>'
 
-            column.sort = !!column.searchable;
+            // An explicit `sortKey: null` means "filterable but not sortable" — without this the
+            // header still renders a sort arrow, and clicking it silently discards the user's
+            // current sort while the server falls back to its default order.
+            column.sort = !!column.searchable && column.searchable.sortKey !== null;
 
             if (column.searchable && column.searchable.searchKey) {
                 if (column.searchable.fieldId) {
@@ -554,7 +557,7 @@ class CustomGridFunctions {
      */
     onSearch() {
         this.grid.config.columns.forEach(column => {
-            column.columns.forEach(subcolumn => {subcolumn.sort = !!column.searchable;})
+            column.columns.forEach(subcolumn => {subcolumn.sort = !!column.searchable && column.searchable.sortKey !== null;})
         })
         this.grid.updateConfig({
             server: {
