@@ -19,6 +19,15 @@
         <m2e.apt.activation>jdt_apt</m2e.apt.activation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>21</java.version>
+		<!--
+			Docker Engine API version Testcontainers talks to. Without this, docker-java negotiates
+			1.32, which daemons from Docker 25 onwards reject outright ("client version 1.32 is too
+			old"), and Testcontainers reports it as the misleading "Could not find a valid Docker
+			environment". 1.40 is the oldest version new daemons accept and is supported by every
+			daemon since Docker 19.03, so it works on both old and new hosts. Override with
+			-Ddocker.api.version=... if a host ever needs something else.
+		-->
+		<docker.api.version>1.40</docker.api.version>
 	</properties>
 
     <dependencyManagement>
@@ -324,6 +333,19 @@
 							<version>${lombok.version}</version>
 						</path>
 					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<systemPropertyVariables>
+						<!-- Read by docker-java in the forked test JVM. The DOCKER_API_VERSION
+							 environment variable does NOT work: docker-java maps DOCKER_* to
+							 docker.*, so it arrives as docker.api.version and is ignored. -->
+						<api.version>${docker.api.version}</api.version>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 
