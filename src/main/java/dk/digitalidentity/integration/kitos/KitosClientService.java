@@ -133,6 +133,16 @@ public class KitosClientService {
     }
 
     /**
+     * Fetch every it-contract associated with the given it-system usage, regardless of when it was last
+     * changed. Used to tell whether an asset is still governed by a valid contract when one of its
+     * contracts has expired — the delta feed only carries the contracts that actually changed.
+     */
+    public List<ItContractResponseDTO> fetchContractsForSystemUsage(final UUID systemUsageUuid) {
+        return contractApi.getManyItContractV2GetItContracts(null, null, systemUsageUuid, null, null,
+            null, null, null, null, null, 0, KitosConstants.PAGE_SIZE);
+    }
+
+    /**
      * Fetch all it-systems in use by the current municipal
      */
     public List<ItSystemResponseDTO> fetchChangedItSystems(final UUID municipalUuid, final boolean reimport) {
