@@ -52,10 +52,13 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @RequiredArgsConstructor
 public class KitosSyncService {
 
-    // Lifecycle phases that map to active=true; all others map to inactive.
+    // Lifecycle phases that map to active=true; all others (UNDECIDED, NOT_IN_USE) map to inactive.
+    // Systems being phased out or piloted are still in operation and count as active.
     private static final Set<LifeCycleStatusChoice> ACTIVE_LIFECYCLE_STATUSES = EnumSet.of(
         LifeCycleStatusChoice.OPERATIONAL,
-        LifeCycleStatusChoice.PHASING_IN
+        LifeCycleStatusChoice.PHASING_IN,
+        LifeCycleStatusChoice.PHASING_OUT,
+        LifeCycleStatusChoice.PILOT
     );
 
     private final AssetService assetService;
