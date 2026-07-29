@@ -6,48 +6,24 @@ import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 // an administrator can rename at any time, which would silently break every saved filter.
 const FIELD_PREFIX = 'field_';
 
-const DATE_FIELD_STORAGE_KEY = 'incidentDateField';
-const SEARCH_DEBOUNCE_MS = 400;
+const SEARCH_DEBOUNCE_MS = 1000;
 
 export default function IncidentGridService () {
     this.incidentService = new IncidentService();
 
-    this.filterFrom = '';
-    this.filterTo = '';
-    this.dateField = 'CREATED';
     this.customFields = [];
     this.dateFields = [];
     this.customGridFunctions = null;
 
     this.init = async () => {
-        let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom');
-        let filterFrom = localStorage.getItem("incidentFilterFrom");
-        if (filterFrom != null && filterFrom !== "null") {
-            fromPicker.setFullDate(new Date(filterFrom));
-            this.filterFrom = fromPicker.getFormatedDate();
-        }
-        fromPicker.onSelect((date, formatedDate) => this.setFilterFrom(date, formatedDate));
-        // "Ryd" empties the input without firing onSelect, so without this the box goes blank while
-        // the grid, the export and localStorage all keep filtering on the old date.
-        fromPicker.onClear(() => this.setFilterFrom(null, ''));
-
-        let toPicker = initDatepicker('#filterToBtn', '#filterTo');
-        let filterTo = localStorage.getItem("incidentFilterTo");
-        if (filterTo != null && filterTo !== "null") {
-            toPicker.setFullDate(new Date(filterTo));
-            this.filterTo = toPicker.getFormatedDate();
-        }
-        toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
-        toPicker.onClear(() => this.setFilterTo(null, ''));
-
-        this.dateField = localStorage.getItem(DATE_FIELD_STORAGE_KEY) || 'CREATED';
-
         this.customFields = await this.incidentService.fetchColumns() || [];
         this.dateFields = await this.incidentService.fetchDateFields() || [];
-        // Resolve the saved date field before the first fetch, so a field that has since been removed
-        // does not send the grid looking for answers to a field that no longer exists.
-        this.initDateFieldSelect();
+        // The grid goes up first: CustomGridFunctions restores the persisted filters and fetches with
+        // them, and the toolbar controls below read their values back out of that same state.
         this.initGrid();
+        this.initDateFieldSelect();
+        this.initDatePickers();
+        this.initSearch();
     }
 
     this.generateExcel = () => {
@@ -78,34 +54,21 @@ export default function IncidentGridService () {
      */
     this.reportQuery = () => {
         return new URLSearchParams({
-            dateField: this.dateField,
-            from: this.filterFrom,
-            to: this.filterTo
+            dateField: this.filterValue('dateField') || 'CREATED',
+            from: this.filterValue('fromDate'),
+            to: this.filterValue('toDate')
         }).toString();
     }
 
     /**
-     * Pushes the toolbar filters into the grid's search state and reloads. These are not column
-     * filters, but they travel to the server the same way, which keeps them in the Excel export too.
-     * <p>
-     * The grid state is persisted, so on a plain reload it already holds these three values and there
-     * is nothing to reload — the grid has fetched with them once already by the time we get here.
+     * The toolbar filters are kept in the grid's own search state, the same place the column filters
+     * live. That is what carries them to the server and into the Excel export, and CustomGridFunctions
+     * persists it, so there is no second copy to keep in step.
      */
-    this.applyFilters = () => {
-        if (!this.customGridFunctions) {
-            return;
-        }
-        const saved = this.customGridFunctions.state.searchValues;
-        const unchanged = (saved['fromDate'] || '') === this.filterFrom
-            && (saved['toDate'] || '') === this.filterTo
-            && (saved['dateField'] || 'CREATED') === this.dateField;
+    this.filterValue = (key) => this.customGridFunctions.state.searchValues[key] || '';
 
-        this.customGridFunctions.updateColumnValue('fromDate', this.filterFrom);
-        this.customGridFunctions.updateColumnValue('toDate', this.filterTo);
-        this.customGridFunctions.updateColumnValue('dateField', this.dateField);
-        if (unchanged) {
-            return;
-        }
+    this.setFilter = (key, value) => {
+        this.customGridFunctions.updateColumnValue(key, value || '');
         // Narrowing the result set while standing on page 4 would otherwise ask the server for a
         // page that no longer exists, and the grid would come back empty.
         this.customGridFunctions.state.page = 0;
@@ -113,16 +76,21 @@ export default function IncidentGridService () {
         this.customGridFunctions.onSearch();
     }
 
-    this.setFilterFrom = (date, formattedDate) => {
-        this.filterFrom = formattedDate == null ? '' : formattedDate;
-        localStorage.setItem("incidentFilterFrom", date);
-        this.applyFilters();
+    this.initDatePickers = () => {
+        this.initDatePicker('#filterFromBtn', '#filterFrom', 'fromDate');
+        this.initDatePicker('#filterToBtn', '#filterTo', 'toDate');
     }
 
-    this.setFilterTo = (date, formattedDate) => {
-        this.filterTo = formattedDate == null ? '' : formattedDate;
-        localStorage.setItem("incidentFilterTo", date);
-        this.applyFilters();
+    this.initDatePicker = (buttonSelector, inputSelector, filterKey) => {
+        const picker = initDatepicker(buttonSelector, inputSelector);
+        const saved = parseDkDate(this.filterValue(filterKey));
+        if (saved) {
+            picker.setFullDate(saved);
+        }
+        picker.onSelect((date, formatedDate) => this.setFilter(filterKey, formatedDate));
+        // "Ryd" empties the input without firing onSelect, so without this the box goes blank while
+        // the grid and the reports keep filtering on the old date.
+        picker.onClear(() => this.setFilter(filterKey, ''));
     }
 
     /**
@@ -143,19 +111,18 @@ export default function IncidentGridService () {
             select.appendChild(option);
         }
 
-        // A field can be removed or made optional after the choice was saved, so fall back to the default.
-        if (Array.from(select.options).some(option => option.value === this.dateField)) {
-            select.value = this.dateField;
+        // A field can be removed or made optional after the choice was saved. The grid has already
+        // fetched by now, but the server falls back to the creation date for a field it cannot use, so
+        // the rows on screen are the right ones — only the saved value needs correcting.
+        const saved = this.filterValue('dateField') || 'CREATED';
+        if (Array.from(select.options).some(option => option.value === saved)) {
+            select.value = saved;
         } else {
-            this.dateField = 'CREATED';
-            localStorage.removeItem(DATE_FIELD_STORAGE_KEY);
+            this.customGridFunctions.updateColumnValue('dateField', 'CREATED');
+            this.customGridFunctions.saveState();
         }
 
-        select.addEventListener("change", (event) => {
-            this.dateField = event.target.value;
-            localStorage.setItem(DATE_FIELD_STORAGE_KEY, this.dateField);
-            this.applyFilters();
-        });
+        select.addEventListener("change", (event) => this.setFilter('dateField', event.target.value));
     }
 
     /**
@@ -167,18 +134,13 @@ export default function IncidentGridService () {
         if (!input) {
             return;
         }
-        input.value = this.customGridFunctions.state.searchValues['search'] || '';
+        input.value = this.filterValue('search');
 
         let debounce;
         input.addEventListener("input", (event) => {
             clearTimeout(debounce);
             const value = event.target.value;
-            debounce = setTimeout(() => {
-                this.customGridFunctions.updateColumnValue('search', value);
-                this.customGridFunctions.state.page = 0;
-                this.customGridFunctions.saveState();
-                this.customGridFunctions.onSearch();
-            }, SEARCH_DEBOUNCE_MS);
+            debounce = setTimeout(() => this.setFilter('search', value), SEARCH_DEBOUNCE_MS);
         });
     }
 
@@ -233,10 +195,8 @@ export default function IncidentGridService () {
             ['name', 'createdAt', 'updatedAt', 'allowedActions'],
             ['id', 'draft'])
 
-        this.initSearch()
         this.initGridActions()
         initSaveAsExcelButton(this.customGridFunctions, 'incident', 'incidents', 'Hændelseslog');
-        this.applyFilters();
     }
 
     this.mapRow = (field) => {
@@ -342,6 +302,15 @@ export default function IncidentGridService () {
 
 function columnLabel(field) {
     return field.indexColumnName || field.question;
+}
+
+/**
+ * Reads back a date the grid state holds in the format the datepicker writes it, so the picker can be
+ * restored from the same value the server filters on.
+ */
+function parseDkDate(value) {
+    const parts = /^(\d{2})\/(\d{2})-(\d{4})$/.exec(value);
+    return parts ? new Date(Number(parts[3]), Number(parts[2]) - 1, Number(parts[1])) : null;
 }
 
 function formatAsLink(label, href, shouldOpenInWindow = false, isDraft = false) {
