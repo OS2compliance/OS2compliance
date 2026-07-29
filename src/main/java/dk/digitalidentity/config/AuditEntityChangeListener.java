@@ -5,14 +5,14 @@ import dk.digitalidentity.security.RolePostProcessor;
 import dk.digitalidentity.service.AuditLogService;
 import dk.digitalidentity.service.AuditedEntityRegistry;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
@@ -28,6 +28,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -48,7 +49,7 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 	private final AuditLogService auditLogService;
 	private final EntityManagerFactory entityManagerFactory;
 
-	private record PendingChange(String performerUuid, String performerName, String entityType, String entityId, String entityName, Integer revision, AuditLogService.ChangeType changeType) {
+	private record PendingChange(String performerUuid, String performerName, String entityType, String entityId, String entityName, AuditLogService.ChangeType changeType) {
 	}
 
 	private final ThreadLocal<Map<String, PendingChange>> pendingChanges = ThreadLocal.withInitial(LinkedHashMap::new);
@@ -65,17 +66,17 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 
 	@Override
 	public void onPostInsert(final PostInsertEvent event) {
-		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.CREATE, event.getSession());
+		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.CREATE);
 	}
 
 	@Override
 	public void onPostUpdate(final PostUpdateEvent event) {
-		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.UPDATE, event.getSession());
+		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.UPDATE);
 	}
 
 	@Override
 	public void onPostDelete(final PostDeleteEvent event) {
-		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.DELETE, event.getSession());
+		accumulate(event.getEntity(), event.getId(), AuditLogService.ChangeType.DELETE);
 	}
 
 	@Override
@@ -87,8 +88,14 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 	 * Buffers the change on this thread instead of writing it immediately, so that several writes
 	 * to the same entity within one transaction (e.g. create-then-attach-defaults) collapse into a
 	 * single auditlog row, flushed only once the transaction actually commits.
+	 *
+	 * Deliberately does no Envers/AuditReader work here: this runs synchronously from inside
+	 * Hibernate's post-insert/update/delete event handling, i.e. mid-flush. Forcing Envers to read
+	 * (or worse, create) a revision at that point caused a reentrant flush that corrupted the action
+	 * queue and produced duplicate-key errors on unrelated TABLE-generated ids (Register, Asset, ...).
+	 * The revision is looked up afterwards, once the transaction has actually committed.
 	 */
-	private void accumulate(final Object entity, final Object id, final AuditLogService.ChangeType changeType, final EventSource session) {
+	private void accumulate(final Object entity, final Object id, final AuditLogService.ChangeType changeType) {
 		if (!AuditedEntityRegistry.isAudited(entity.getClass())) {
 			return;
 		}
@@ -115,23 +122,32 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 				? AuditLogService.ChangeType.CREATE
 				: changeType;
 
-		final Integer revision = existing != null ? existing.revision() : currentRevision(session);
-
-		changes.put(key, new PendingChange(performerUuid(tokenUser), performerName(tokenUser), entityType, entityId, AuditedEntityRegistry.extractName(entity), revision, effectiveType));
+		changes.put(key, new PendingChange(performerUuid(tokenUser), performerName(tokenUser), entityType, entityId, AuditedEntityRegistry.extractName(entity), effectiveType));
 
 		registerFlushOnCommit();
 	}
 
 	/**
-	 * Envers caches one revision entity per transaction/session and hands out that same instance to
-	 * every caller, regardless of who asks first - so forcing creation here (persist=true) is safe:
-	 * if Envers' own listener already created it, this just returns that same cached instance; if it
-	 * hasn't yet (listener ordering isn't guaranteed), this creates it and Envers reuses it afterwards.
-	 * persist=false only returns an already-created revision, otherwise silently handing back a blank
-	 * (id=0) instance - which is what caused every auditlog row to record revision 0.
+	 * Looks up the revision Envers just committed for this entity, using a fresh, standalone
+	 * EntityManager rather than the (by now closed) session the original change happened on. Runs
+	 * well after the transaction/flush that made the change has fully completed, so there's no risk
+	 * of interfering with it.
 	 */
-	private Integer currentRevision(final EventSource session) {
-		return AuditReaderFactory.get(session).getCurrentRevision(DefaultRevisionEntity.class, true).getId();
+	private Integer latestRevision(final String entityType, final String entityId) {
+		final Class<?> entityClass = AuditedEntityRegistry.resolveClass(entityType);
+		if (entityClass == null) {
+			return null;
+		}
+
+		final EntityManager entityManager = entityManagerFactory.createEntityManager();
+		try {
+			final Object id = AuditedEntityRegistry.resolveId(entityType, entityId);
+			final AuditReader auditReader = AuditReaderFactory.get(entityManager);
+			final List<Number> revisions = auditReader.getRevisions(entityClass, id);
+			return revisions.isEmpty() ? null : revisions.getLast().intValue();
+		} finally {
+			entityManager.close();
+		}
 	}
 
 	private void registerFlushOnCommit() {
@@ -145,10 +161,11 @@ public class AuditEntityChangeListener implements PostInsertEventListener, PostU
 			public void afterCommit() {
 				for (final PendingChange change : pendingChanges.get().values()) {
 					try {
+						final Integer revision = latestRevision(change.entityType(), change.entityId());
 						auditLogService.logEntityChange(
 								change.performerUuid(), change.performerName(),
 								change.entityType(), change.entityId(), change.entityName(),
-								change.revision(), change.changeType()
+								revision, change.changeType()
 						);
 					} catch (final Exception e) {
 						// afterCommit() exceptions are swallowed by Spring's transaction manager (only logged),

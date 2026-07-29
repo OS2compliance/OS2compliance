@@ -56,6 +56,10 @@ public class EnversHistoryService {
 		final Number previousRevision = revisions.get(index - 1);
 		final Object previous = auditReader.find(entityClass, id, previousRevision);
 		final Object latest = auditReader.find(entityClass, id, revision);
+		if (latest == null) {
+			// this revision is the entity's deletion - Envers has no state to diff at that point
+			return List.of();
+		}
 		return diff(entityClass, previous, latest);
 	}
 

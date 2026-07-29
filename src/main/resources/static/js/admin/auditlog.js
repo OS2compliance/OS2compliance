@@ -65,6 +65,10 @@ function initGrid() {
                     const entityType = row.cells[6] ? row.cells[6]['data'] : null;
                     const entityId = row.cells[7] ? row.cells[7]['data'] : null;
                     const revision = row.cells[8] ? row.cells[8]['data'] : null;
+                    const description = row.cells[4] ? row.cells[4]['data'] : null;
+                    if (!entityType || !entityId || !revision || isDeleteDescription(description)) {
+                        return "";
+                    }
                     return gridjs.html(`<button type="button" title="Vis historik" class="btn btn-icon btn-xs showAuditHistoryButton" data-entity-type="${entityType}" data-entity-id="${entityId}" data-revision="${revision}"><i class="ti-eye fs-5"></i></button>`);
                 }
             },
@@ -125,6 +129,10 @@ function initGrid() {
         sortDirection: 'DESC',
         sortColumn: 'createdTimestamp'
     });
+}
+
+function isDeleteDescription(description) {
+    return typeof description === 'string' && description.includes(' slettede ');
 }
 
 function dateFormatter(rawDate) {
