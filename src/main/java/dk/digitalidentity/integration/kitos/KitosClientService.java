@@ -136,6 +136,10 @@ public class KitosClientService {
      * Fetch every it-contract associated with the given it-system usage, regardless of when it was last
      * changed. Used to tell whether an asset is still governed by a valid contract when one of its
      * contracts has expired — the delta feed only carries the contracts that actually changed.
+     * <p>
+     * Reads a single page, so the result is capped at {@link KitosConstants#MAX_PAGE_SIZE}. A response
+     * of exactly that size means the list is truncated and callers must treat it as incomplete rather
+     * than as "these are all the contracts".
      */
     public List<ItContractResponseDTO> fetchContractsForSystemUsage(final UUID systemUsageUuid) {
         final List<ItContractResponseDTO> contracts = contractApi.getManyItContractV2GetItContracts(null, null,

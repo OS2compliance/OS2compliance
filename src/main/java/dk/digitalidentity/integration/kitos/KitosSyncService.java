@@ -35,6 +35,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,6 +77,7 @@ public class KitosSyncService {
     private final KitosRolesDao rolesDao;
     private final ChoiceService choiceService;
     private final KitosClientService kitosClientService;
+    private final PlatformTransactionManager transactionManager;
 
     @Transactional
     public void syncDeletedItSystems(final List<TrackingEventResponseDTO> deletionEvents) {
@@ -96,9 +100,34 @@ public class KitosSyncService {
         roles.forEach(this::syncSingleRole);
     }
 
-    @Transactional
+    /**
+     * Not {@code @Transactional}: telling whether a usage still has a running contract needs a Kitos
+     * lookup per usage, and holding a database connection across those network round trips can exhaust
+     * the pool on a large batch. The lookups therefore run first, and only the writes are wrapped.
+     */
     public void syncItContracts(final List<ItContractResponseDTO> itContracts) {
-        groupByItSystemUsage(itContracts).forEach(this::syncContractsForSystemUsage);
+        final Map<UUID, List<ItContractResponseDTO>> contractsByUsage = groupByItSystemUsage(itContracts);
+        final Set<UUID> runningOutsideBatch = usagesWithRunningContractOutsideBatch(contractsByUsage);
+        new TransactionTemplate(transactionManager).executeWithoutResult(status ->
+            contractsByUsage.forEach((usageUuid, contracts) ->
+                syncContractsForSystemUsage(usageUuid, contracts, runningOutsideBatch.contains(usageUuid))));
+    }
+
+    /**
+     * The usages whose contracts have all ended in this batch, but that Kitos says still have a running
+     * contract elsewhere. Only those usages need a lookup, and only when we actually know the asset —
+     * so an unknown usage costs no network call, exactly as when the check was done inline.
+     */
+    private Set<UUID> usagesWithRunningContractOutsideBatch(final Map<UUID, List<ItContractResponseDTO>> contractsByUsage) {
+        final Set<UUID> runningOutsideBatch = new LinkedHashSet<>();
+        contractsByUsage.forEach((usageUuid, contracts) -> {
+            if (contracts.stream().allMatch(KitosSyncService::hasEnded)
+                && findAssetByUsage(usageUuid).isPresent()
+                && hasRunningContractOutsideBatch(contracts, usageUuid)) {
+                runningOutsideBatch.add(usageUuid);
+            }
+        });
+        return runningOutsideBatch;
     }
 
     @Transactional
@@ -165,8 +194,13 @@ public class KitosSyncService {
         return contractsByUsage;
     }
 
-    private void syncContractsForSystemUsage(final UUID systemUsageUuid, final List<ItContractResponseDTO> contracts) {
-        final Optional<Asset> asset = assetService.findByProperty(KITOS_USAGE_UUID_PROPERTY_KEY, systemUsageUuid.toString());
+    private Optional<Asset> findAssetByUsage(final UUID systemUsageUuid) {
+        return assetService.findByProperty(KITOS_USAGE_UUID_PROPERTY_KEY, systemUsageUuid.toString());
+    }
+
+    private void syncContractsForSystemUsage(final UUID systemUsageUuid, final List<ItContractResponseDTO> contracts,
+                                             final boolean runningContractOutsideBatch) {
+        final Optional<Asset> asset = findAssetByUsage(systemUsageUuid);
         if (asset.isEmpty()) {
             return;
         }
@@ -180,7 +214,7 @@ public class KitosSyncService {
             return;
         }
 
-        if (hasRunningContractOutsideBatch(contracts, systemUsageUuid)) {
+        if (runningContractOutsideBatch) {
             // Let that contract supply the data — overwriting it with an ended contract's dates would
             // make the asset look like it has no running agreement.
             return;
@@ -226,7 +260,15 @@ public class KitosSyncService {
     private boolean hasRunningContractOutsideBatch(final List<ItContractResponseDTO> batch, final UUID systemUsageUuid) {
         final Set<UUID> batchUuids = batch.stream().map(ItContractResponseDTO::getUuid).collect(Collectors.toSet());
         try {
-            return kitosClientService.fetchContractsForSystemUsage(systemUsageUuid).stream()
+            final List<ItContractResponseDTO> siblings = kitosClientService.fetchContractsForSystemUsage(systemUsageUuid);
+            if (siblings.size() >= KitosConstants.MAX_PAGE_SIZE) {
+                // The response was capped, so a running contract may sit past the page boundary. Treat
+                // it like a failed lookup rather than risk deactivating a system that is still in use.
+                log.warn("Contract list for it-system usage {} was capped at {}, leaving asset active",
+                    systemUsageUuid, KitosConstants.MAX_PAGE_SIZE);
+                return true;
+            }
+            return siblings.stream()
                 .filter(contract -> !batchUuids.contains(contract.getUuid()))
                 .anyMatch(contract -> !hasEnded(contract));
         } catch (final RuntimeException ex) {
@@ -237,13 +279,14 @@ public class KitosSyncService {
     }
 
     /**
-     * The ended contract with the most recent end date, so the asset shows the agreement that ran last.
+     * The contract with the most recent end date, so the asset shows the agreement that ran last.
+     * Only called once every contract in the list has ended.
      */
-    private static ItContractResponseDTO latestEnded(final List<ItContractResponseDTO> endedContracts) {
-        return endedContracts.stream()
+    private static ItContractResponseDTO latestEnded(final List<ItContractResponseDTO> contracts) {
+        return contracts.stream()
             .max(Comparator.comparing(contract -> nullSafe(() -> contract.getGeneral().getValidity().getValidTo().toLocalDate()),
                 Comparator.nullsFirst(Comparator.naturalOrder())))
-            .orElseThrow();
+            .orElseThrow(() -> new IllegalStateException("latestEnded called with an empty contract list"));
     }
 
     private void syncSingleItSystemUsage(final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {

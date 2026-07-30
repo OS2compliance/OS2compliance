@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.time.LocalDate;
@@ -29,6 +30,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
@@ -56,6 +58,7 @@ class KitosSyncServiceContractTest {
     @Mock private KitosRolesDao rolesDao;
     @Mock private ChoiceService choiceService;
     @Mock private KitosClientService kitosClientService;
+    @Mock private PlatformTransactionManager transactionManager;
 
     @InjectMocks private KitosSyncService kitosSyncService;
 
@@ -64,6 +67,9 @@ class KitosSyncServiceContractTest {
     private static final UUID SYSTEM_UUID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final LocalDate VALID_FROM = LocalDate.of(2020, 1, 1);
     private static final LocalDate ENDED_ON = LocalDate.of(2026, 1, 31);
+    // Fixed past date: the fallback branch compares against LocalDate.now(), so deriving the fixture
+    // from now() too would share the clock with the code under test and hide an off-by-one.
+    private static final LocalDate ENDED_BEFORE_FALLBACK = LocalDate.of(2024, 6, 15);
 
     private Asset asset() {
         final Asset asset = new Asset();
@@ -205,7 +211,7 @@ class KitosSyncServiceContractTest {
         final ContractValidityResponseDTO endedWithoutErrors = new ContractValidityResponseDTO()
             .valid(false)
             .validFrom(offset(VALID_FROM))
-            .validTo(offset(LocalDate.now().minusDays(1)));
+            .validTo(offset(ENDED_BEFORE_FALLBACK));
         when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID)).thenReturn(List.of());
 
         kitosSyncService.syncItContracts(List.of(contract(endedWithoutErrors)));
@@ -253,6 +259,23 @@ class KitosSyncServiceContractTest {
         kitosSyncService.syncItContracts(List.of(endedContract));
 
         assertThat(asset.isActive()).isFalse();
+    }
+
+    @Test
+    void cappedContractListLeavesAssetActive() {
+        // A full page means Kitos truncated the list, so a running contract may sit past the boundary.
+        // Deactivating on incomplete data would take a system in use offline.
+        final Asset asset = asset();
+        assetFoundFor(USAGE_UUID, asset);
+        final List<ItContractResponseDTO> fullPage = IntStream
+            .range(0, KitosConstants.MAX_PAGE_SIZE)
+            .mapToObj(i -> contract(ended()))
+            .toList();
+        when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID)).thenReturn(fullPage);
+
+        kitosSyncService.syncItContracts(List.of(contract(ended())));
+
+        assertThat(asset.isActive()).isTrue();
     }
 
     @Test
