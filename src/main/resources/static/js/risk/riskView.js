@@ -46,6 +46,16 @@ function notRelevantSelectInit(elem) {
     setStyleNotRelevant(selected, rowId, 'rowId' + rowId);
 }
 
+function notRelevantCellClicked(event) {
+    if (event.target.closest('select')) {
+        return;
+    }
+    const select = this.querySelector('.notRelevantSelect');
+    if (select && typeof select.showPicker === 'function') {
+        select.showPicker();
+    }
+}
+
 this.initCommentField = ()=> {
     const commentFieldElement = document.getElementById('riskCommentArea')
     commentFieldElement.addEventListener('change', async (event)=> {
@@ -612,6 +622,11 @@ function pageLoaded() {
     for (let i = 0; i < notRelevantSelects.length; i++) {
         notRelevantSelects[i].addEventListener('change', notRelevantSelectChanged, false);
         notRelevantSelectInit(notRelevantSelects[i]);
+    }
+
+    const notRelevantCells = document.querySelectorAll('.notRelevantCell');
+    for (let i = 0; i < notRelevantCells.length; i++) {
+        notRelevantCells[i].addEventListener('click', notRelevantCellClicked, false);
     }
 
     const numberSelects = document.querySelectorAll('.rowNumbers');

@@ -68,6 +68,13 @@ select {
     box-shadow: inset 0 0 4px #7586AF;
 }
 
+.notRelevantCell {
+    cursor: pointer;
+    text-align: center;
+    vertical-align: middle;
+}
+
+
 /* For IE10 */
 select::-ms-expand {
   display: none;
