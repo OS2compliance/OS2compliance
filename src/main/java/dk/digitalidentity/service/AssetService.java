@@ -561,8 +561,9 @@ public class AssetService implements TagableService<Asset> {
 					.sorted(Comparator.comparing(DPIATemplateQuestion::getSortKey))
 					.toList();
 
-			// a section where every question has been deleted from the template has nothing to report
-			if (questions.isEmpty()) {
+			// a section where every question has been deleted from the template has nothing to report,
+			// except the scope section which also renders rows that do not come from the template
+			if (questions.isEmpty() && !Constants.DPIA_SCOPE_SECTION_IDENTIFIER.equals(templateSection.getIdentifier())) {
 				continue;
 			}
 

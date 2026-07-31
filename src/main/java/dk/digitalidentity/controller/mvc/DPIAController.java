@@ -237,6 +237,13 @@ public class DPIAController {
                 .filter(q -> !q.isDeleted())
                 .sorted(Comparator.comparing(DPIATemplateQuestion::getSortKey))
                 .toList();
+
+            // a section where every question has been deleted from the template has nothing to fill in,
+            // except the scope section which also renders rows that do not come from the template
+            if (questions.isEmpty() && !Constants.DPIA_SCOPE_SECTION_IDENTIFIER.equals(templateSection.getIdentifier())) {
+                continue;
+            }
+
             for (DPIATemplateQuestion templateQuestion : questions) {
                 DPIAResponseSectionAnswer matchAnswer = matchSection == null ? null : matchSection.getDpiaResponseSectionAnswers().stream().filter(s -> s.getDpiaTemplateQuestion().getId() == templateQuestion.getId()).findAny().orElse(null);
 
