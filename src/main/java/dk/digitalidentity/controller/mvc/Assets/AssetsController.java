@@ -939,16 +939,17 @@ public class AssetsController {
         List<TemplateSectionDTO> templateSectionDTOS = new ArrayList<>();
         for (DPIATemplateSection section : templateSections) {
             List<DPIATemplateQuestion> questions = section.getDpiaTemplateQuestions().stream().filter(q -> !q.isDeleted()).sorted(Comparator.comparing(DPIATemplateQuestion::getSortKey)).collect(Collectors.toList());
-            long minSortKey = questions.get(0).getSortKey();
-            long maxSortKey = questions.get(questions.size() - 1).getSortKey();
+            // all questions in a section may have been deleted, the sort keys are then irrelevant as there is nothing to reorder
+            long minSortKey = questions.isEmpty() ? 0 : questions.getFirst().getSortKey();
+            long maxSortKey = questions.isEmpty() ? 0 : questions.getLast().getSortKey();
             TemplateSectionDTO dto = new TemplateSectionDTO(section.getId(), section.getSortKey(), section.getIdentifier(), section.getHeading(),
                 section.getExplainer(), section.isCanOptOut(), section.isHasOptedOut(), questions, minSortKey, maxSortKey);
             templateSectionDTOS.add(dto);
         }
 
         model.addAttribute("templateSections", templateSectionDTOS);
-        model.addAttribute("minSectionSortKey", templateSections.get(0).getSortKey());
-        model.addAttribute("maxSectionSortKey", templateSections.get(templateSections.size() - 1).getSortKey());
+        model.addAttribute("minSectionSortKey", templateSections.isEmpty() ? 0 : templateSections.getFirst().getSortKey());
+        model.addAttribute("maxSectionSortKey", templateSections.isEmpty() ? 0 : templateSections.getLast().getSortKey());
         return "dpia/fragments/dpiaTemplateFragment";
     }
 
