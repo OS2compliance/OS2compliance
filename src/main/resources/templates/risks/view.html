@@ -182,10 +182,12 @@
                                             <td class="riskViewTd"  th:text="${row.index} + 1" rowspan="6"></td>
                                             <td class="riskViewTd preserve-linebreaks align-top" th:text="${row.threat}" rowspan="6"></td>
                                             <td style="height: inherit" class="riskViewTd editCell notRelevantCell" rowspan="6" >
-                                                <select class="notRelevantSelect setField" th:id="'notRelevant' + ${row.index}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="NOT_RELEVANT" th:value="${row.notRelevant}">
-                                                        <option value="false" th:selected="${row.notRelevant} == false"></option>
-                                                        <option value="true" th:selected="${row.notRelevant} == true">Ikke relevant</option>
-                                                </select>
+                                                <div class="notRelevantSelectWrapper">
+                                                    <select class="notRelevantSelect setField" th:id="'notRelevant' + ${row.index}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="NOT_RELEVANT" th:value="${row.notRelevant}">
+                                                        <option value="false" th:selected="${!row.notRelevant}"></option>
+                                                        <option value="true" th:selected="${row.notRelevant}">Ikke relevant</option>
+                                                    </select>
+                                                </div>
                                             </td>
                                             <td class="riskViewTd"></td>
                                             <td class="riskViewTd editCell" >

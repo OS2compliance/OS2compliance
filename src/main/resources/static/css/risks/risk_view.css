@@ -74,6 +74,41 @@ select {
     vertical-align: middle;
 }
 
+.notRelevantSelectWrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.notRelevantSelect {
+    border: 1px solid #d5dbe0 !important;
+    border-radius: 3px;
+    padding: 4px 20px 4px 8px;
+}
+
+.notRelevantSelectWrapper::after {
+    content: "";
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #75868f;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.notRelevantSelect.notRelevantChosen {
+    border-color: transparent !important;
+    padding-right: 8px;
+}
+
+.notRelevantSelectWrapper.notRelevantChosen::after {
+    display: none;
+}
+
 
 /* For IE10 */
 select::-ms-expand {
