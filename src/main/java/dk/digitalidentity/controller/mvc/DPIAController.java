@@ -234,6 +234,7 @@ public class DPIAController {
             List<DPIAQuestionDTO> questionDTOS = new ArrayList<>();
             DPIAResponseSection matchSection = dpia.getDpiaResponseSections().stream().filter(s -> s.getDpiaTemplateSection().getId() == templateSection.getId()).findAny().orElse(null);
             List<DPIATemplateQuestion> questions = templateSection.getDpiaTemplateQuestions().stream()
+                .filter(q -> !q.isDeleted())
                 .sorted(Comparator.comparing(DPIATemplateQuestion::getSortKey))
                 .toList();
             for (DPIATemplateQuestion templateQuestion : questions) {
