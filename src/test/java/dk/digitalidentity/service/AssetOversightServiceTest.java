@@ -121,6 +121,33 @@ class AssetOversightServiceTest {
         assertThat(selected).isSameAs(oldCheck);
     }
 
+    /**
+     * The DBS import appends a new oversight to the newest open DBS task and resets its deadline, so
+     * the completion must land on that same task. Picking by deadline instead would send the
+     * completion to the oldest, most overdue duplicate — leaving the task that actually carries the
+     * oversight open, and the abandoned duplicates alive forever.
+     */
+    @Test
+    void booksOntoNewestDbsTaskWhenSeveralDuplicatesAreOpen() {
+        final Task abandonedDbsTask = oversightTask(1L, TaskType.TASK,
+            "Supplier - Foo - DBS tilsyn", LocalDate.of(2025, 7, 1));
+        abandonedDbsTask.setCreatedAt(LocalDateTime.of(2025, 6, 1, 0, 0));
+        final Task liveDbsTask = oversightTask(2L, TaskType.TASK,
+            "Supplier - Foo - DBS tilsyn", LocalDate.of(2026, 9, 2));
+        liveDbsTask.setCreatedAt(LocalDateTime.of(2026, 1, 10, 0, 0));
+        final Asset asset = asset(dbsModel());
+        when(relationService.findAllRelatedTo(asset))
+            .thenReturn(List.<Relatable>of(abandonedDbsTask, liveDbsTask));
+
+        final AssetOversight oversight = new AssetOversight();
+        oversight.setAsset(asset);
+        oversight.setSupervisionModel(dbsModel());
+
+        final Task selected = assetOversightService.findTaskForOversightCompletion(oversight);
+
+        assertThat(selected).isSameAs(liveDbsTask);
+    }
+
     @Test
     void movesMisbookedLogFromOldTaskToOpenDbsTask() {
         final Task oldCheck = oversightTask(1L, TaskType.CHECK,

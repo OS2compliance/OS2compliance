@@ -98,10 +98,19 @@ public class AssetOversightService {
 		taskLog.setComment(comment);
         taskLog.setCompleted(oversight.getCreationDate());
         taskLog.setDocumentationLink(samlConfiguration.getSp().getBaseUrl() + "/assets/" + oversight.getAsset().getId());
-        User responsibleUser = oversight.getResponsibleUser();
+        // assets_oversight.responsible_uuid has no FK constraint, so a deleted user leaves a dangling
+        // reference and getResponsibleUser() returns null. Fall back to the asset's oversight
+        // responsible rather than leaving the log unattributed — responsibleUserUserId is @NotNull, so
+        // an empty log would only trade the NPE for a ConstraintViolationException at flush.
+        final User responsibleUser = oversight.getResponsibleUser() != null
+            ? oversight.getResponsibleUser()
+            : oversight.getAsset().getOversightResponsibleUser();
         if (responsibleUser != null) {
             taskLog.setResponsibleUserName(responsibleUser.getName());
             taskLog.setResponsibleUserUserId(responsibleUser.getUserId());
+        } else {
+            taskLog.setResponsibleUserName("Ukendt");
+            taskLog.setResponsibleUserUserId("");
         }
         taskLog.setDeadline(task.getNextDeadline());
         taskService.completeTask(task, taskLog);
@@ -199,7 +208,8 @@ public class AssetOversightService {
      * oversight tasks (e.g. an older generic tilsyn task and a newer "DBS tilsyn" task) the previous
      * naive {@code findFirst()} would book the completion onto whichever came first — usually the
      * older one — leaving the actual DBS tilsyn task overdue. This picks the task matching the
-     * oversight's supervision form instead, preferring an open task with the nearest deadline.
+     * oversight's supervision form instead, preferring the newest open one ({@link TaskService#NEWEST_FIRST}
+     * — the same rule the DBS import uses when it appends a new oversight to an existing task).
      */
     Task findTaskForOversightCompletion(final AssetOversight oversight) {
         final List<Task> candidates = findAssociatedOversightTasks(oversight.getAsset());
@@ -215,11 +225,9 @@ public class AssetOversightService {
         final Predicate<Task> preferred = isDbsModel(model)
             ? AssetOversightService::isDbsTask
             : t -> t.getTaskType() == TaskType.CHECK;
-        final Comparator<Task> byDeadline = Comparator.comparing(Task::getNextDeadline,
-            Comparator.nullsLast(Comparator.naturalOrder()));
         return candidates.stream().filter(preferred).filter(t -> !taskService.isTaskDone(t))
-            .min(byDeadline)
-            .or(() -> candidates.stream().filter(preferred).min(byDeadline))
+            .max(TaskService.NEWEST_FIRST)
+            .or(() -> candidates.stream().filter(preferred).max(TaskService.NEWEST_FIRST))
             .orElseGet(() -> candidates.get(0));
     }
 
@@ -249,12 +257,11 @@ public class AssetOversightService {
         if (tasks.size() < 2) {
             return 0;
         }
-        // Open (not-yet-completed) DBS tilsyn tasks, newest deadline first.
+        // Open (not-yet-completed) DBS tilsyn tasks, newest first — same rule as the live selector.
         final List<Task> openDbsTasks = tasks.stream()
             .filter(AssetOversightService::isDbsTask)
             .filter(t -> t.getLogs().isEmpty())
-            .sorted(Comparator.comparing(Task::getNextDeadline,
-                Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+            .sorted(TaskService.NEWEST_FIRST.reversed())
             .collect(Collectors.toList());
         if (openDbsTasks.isEmpty()) {
             return 0;
