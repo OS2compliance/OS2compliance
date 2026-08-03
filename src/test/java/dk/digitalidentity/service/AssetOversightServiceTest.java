@@ -176,6 +176,91 @@ class AssetOversightServiceTest {
         verify(taskLogDao).reassignTask(10L, dbsTask);
     }
 
+    /**
+     * The common shape in customer data: the old selector consistently booked onto the oldest DBS task,
+     * so a tilsyn registered weeks after a newer task had been imported piled up on the older one while
+     * the newer stood overdue. The older task keeps a log of its own here, so donating is safe.
+     */
+    @Test
+    void movesMisbookedLogFromOlderDbsTaskWhenItKeepsALogOfItsOwn() {
+        final Task olderDbsTask = oversightTask(1L, TaskType.TASK,
+            "Supplier - Foo - DBS tilsyn", LocalDate.of(2026, 4, 2));
+        olderDbsTask.setCreatedAt(LocalDateTime.of(2026, 3, 3, 9, 25));
+        final Task newerDbsTask = oversightTask(2L, TaskType.TASK,
+            "Supplier - Foo - DBS tilsyn", LocalDate.of(2026, 8, 6));
+        newerDbsTask.setCreatedAt(LocalDateTime.of(2026, 7, 7, 16, 58));
+
+        // Two oversights registered after the newer task existed, both booked onto the older one.
+        olderDbsTask.getLogs().add(oversightLog(10L, olderDbsTask, LocalDate.of(2026, 7, 21)));
+        olderDbsTask.getLogs().add(oversightLog(11L, olderDbsTask, LocalDate.of(2026, 7, 8)));
+
+        final Asset asset = asset(dbsModel());
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(olderDbsTask, newerDbsTask));
+
+        final int moved = assetOversightService.repairMisbookedDbsOversightLogs(asset);
+
+        // The newest misbooked log moves; the older task keeps the other one and stays completed.
+        assertThat(moved).isEqualTo(1);
+        verify(taskLogDao).reassignTask(10L, newerDbsTask);
+        verify(taskLogDao, never()).reassignTask(11L, newerDbsTask);
+    }
+
+    /**
+     * When the older DBS task holds only one log, moving it would empty it and turn a completed task
+     * back into an open, overdue one. We cannot tell from the data whether its own tilsyn was ever
+     * performed, so these are left for a human.
+     */
+    @Test
+    void leavesOlderDbsTaskAloneWhenItWouldBeEmptied() {
+        final Task olderDbsTask = oversightTask(1L, TaskType.TASK,
+            "Supplier - Foo - DBS tilsyn", LocalDate.of(2026, 4, 2));
+        olderDbsTask.setCreatedAt(LocalDateTime.of(2026, 3, 3, 9, 25));
+        final Task newerDbsTask = oversightTask(2L, TaskType.TASK,
+            "Supplier - Foo - DBS tilsyn", LocalDate.of(2026, 8, 6));
+        newerDbsTask.setCreatedAt(LocalDateTime.of(2026, 7, 7, 16, 58));
+        olderDbsTask.getLogs().add(oversightLog(10L, olderDbsTask, LocalDate.of(2026, 7, 21)));
+
+        final Asset asset = asset(dbsModel());
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(olderDbsTask, newerDbsTask));
+
+        final int moved = assetOversightService.repairMisbookedDbsOversightLogs(asset);
+
+        assertThat(moved).isZero();
+        verify(taskLogDao, never()).reassignTask(any(), any());
+    }
+
+    /** A newer DBS task must never be robbed to fill an older, still-open one. */
+    @Test
+    void doesNotMoveLogFromNewerDbsTaskToOlderOpenTask() {
+        final Task olderOpenDbsTask = oversightTask(1L, TaskType.TASK,
+            "Supplier - Foo - DBS tilsyn", LocalDate.of(2026, 4, 2));
+        olderOpenDbsTask.setCreatedAt(LocalDateTime.of(2026, 3, 3, 9, 25));
+        final Task newerCompletedDbsTask = oversightTask(2L, TaskType.TASK,
+            "Supplier - Foo - DBS tilsyn", LocalDate.of(2026, 8, 6));
+        newerCompletedDbsTask.setCreatedAt(LocalDateTime.of(2026, 7, 7, 16, 58));
+        newerCompletedDbsTask.getLogs().add(oversightLog(10L, newerCompletedDbsTask, LocalDate.of(2026, 7, 21)));
+        newerCompletedDbsTask.getLogs().add(oversightLog(11L, newerCompletedDbsTask, LocalDate.of(2026, 7, 24)));
+
+        final Asset asset = asset(dbsModel());
+        when(relationService.findAllRelatedTo(asset))
+            .thenReturn(List.<Relatable>of(olderOpenDbsTask, newerCompletedDbsTask));
+
+        final int moved = assetOversightService.repairMisbookedDbsOversightLogs(asset);
+
+        assertThat(moved).isZero();
+        verify(taskLogDao, never()).reassignTask(any(), any());
+    }
+
+    private TaskLog oversightLog(final long id, final Task task, final LocalDate completed) {
+        final TaskLog taskLog = new TaskLog();
+        taskLog.setId(id);
+        taskLog.setName("Tilsyn udført");
+        taskLog.setDocumentationLink("http://localhost/assets/" + ASSET_ID);
+        taskLog.setCompleted(completed);
+        taskLog.setTask(task);
+        return taskLog;
+    }
+
     @Test
     void doesNotTouchAlreadyCompletedDbsTask() {
         final Task oldCheck = oversightTask(1L, TaskType.CHECK,

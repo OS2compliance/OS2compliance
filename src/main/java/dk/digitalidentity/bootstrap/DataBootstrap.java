@@ -155,12 +155,27 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(42, this::seedV42);
 		incrementAndPerformIfVersion(43, this::seedV43);
 		incrementAndPerformIfVersion(44, this::seedV44);
+		incrementAndPerformIfVersion(45, this::seedV45);
+	}
+
+	private void seedV45() {
+		// Same repair as seedV44, re-run because repairMisbookedDbsOversightLogs has since been widened
+		// to also move a log off an older DBS tilsyn task — not just off the generic CHECK task. That is
+		// the far more common case: the old selector consistently picked the oldest tilsyn task, so a
+		// tilsyn registered after a newer task had been imported was booked onto the older one and left
+		// the newer one standing overdue. Environments that already ran seedV44 would otherwise never
+		// get the widened pass. The repair is idempotent, so running it again is harmless.
+		repairMisbookedOversightLogs("seedV45");
 	}
 
 	private void seedV44() {
 		// seedV41 booked oversight completions via the then-buggy task selection, so a "Tilsyn udført"
 		// log could land on an older tilsyn task on the same asset while the real "DBS tilsyn" task
 		// stayed overdue. Move such misbooked logs onto the correct, still-open DBS tilsyn task.
+		repairMisbookedOversightLogs("seedV44");
+	}
+
+	private void repairMisbookedOversightLogs(final String seedName) {
 		final List<Asset> dbsAssets = taskService.findAllTasks().stream()
 				.map(taskService::findOversightAsset)
 				.flatMap(Optional::stream)
@@ -175,8 +190,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		for (final Asset asset : dbsAssets) {
 			moved += assetOversightService.repairMisbookedDbsOversightLogs(asset);
 		}
-		log.info("seedV44: moved {} misbooked oversight log(s) onto the correct DBS task across {} DBS asset(s)",
-				moved, dbsAssets.size());
+		log.info("{}: moved {} misbooked oversight log(s) onto the correct DBS task across {} DBS asset(s)",
+				seedName, moved, dbsAssets.size());
 	}
 
 	private void seedV43() {

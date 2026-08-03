@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -242,12 +243,15 @@ public class AssetOversightService {
     }
 
     /**
-     * Retroactively repairs oversights that were booked onto the wrong task. On a DBS asset every
-     * "Tilsyn udført" log belongs to a DBS tilsyn task, but due to the old selection bug (and the
-     * earlier {@code seedV41} run that used it) such logs could land on an older tilsyn task on the
-     * same asset, leaving the real "DBS tilsyn" task overdue. This moves a misbooked log onto the
-     * open DBS tilsyn task so it is correctly registered as done. Idempotent: DBS tasks that already
-     * carry a log are left untouched, and no new rows are created. Returns the number of logs moved.
+     * Retroactively repairs oversights that were booked onto the wrong task. Due to the old selection
+     * bug the completion path picked whichever tilsyn task came first in relation order, so a
+     * registered tilsyn could land on an older task on the same asset — either the generic CHECK task
+     * or an older DBS tilsyn task — leaving the task it actually belonged to overdue. This moves such a
+     * log onto the open DBS tilsyn task so it is correctly registered as done.
+     * <p>
+     * Idempotent: DBS tasks that already carry a log are never receivers, no new rows are created, and
+     * a donor is only tapped while it keeps a log of its own ({@link #canDonate}). Returns the number
+     * of logs moved.
      */
     public int repairMisbookedDbsOversightLogs(final Asset asset) {
         if (!isDbsModel(asset.getSupervisoryModel())) {
@@ -267,18 +271,19 @@ public class AssetOversightService {
             return 0;
         }
         final String assetLinkSuffix = "/assets/" + asset.getId();
-        // Misbooked "Tilsyn udført" logs sitting on NON-DBS tilsyn tasks of the same asset, newest
-        // first. We deliberately never source from another DBS task: a log already on a DBS task is
-        // either correctly placed or was handled elsewhere, and moving it could steal a legitimate
-        // completion.
+        // Candidate misbooked "Tilsyn udført" logs on the asset's other tilsyn tasks, newest first.
+        // The link suffix and the name are the signature of the oversight flow: a log created by
+        // createTaskLogForAssociatedTask, not one a user wrote by completing a task by hand.
         final List<TaskLog> strayLogs = tasks.stream()
-            .filter(t -> !isDbsTask(t))
             .flatMap(t -> t.getLogs().stream())
             .filter(l -> "Tilsyn udført".equals(l.getName()))
             .filter(l -> l.getDocumentationLink() != null && l.getDocumentationLink().endsWith(assetLinkSuffix))
             .filter(l -> l.getCompleted() != null)
             .sorted(Comparator.comparing(TaskLog::getCompleted).reversed())
             .collect(Collectors.toCollection(ArrayList::new));
+        // How many logs each task still holds, so donating never empties a completed task.
+        final Map<Long, Integer> remainingLogs = tasks.stream()
+            .collect(Collectors.toMap(Task::getId, t -> t.getLogs().size()));
 
         int moved = 0;
         for (final Task dbsTask : openDbsTasks) {
@@ -289,6 +294,7 @@ public class AssetOversightService {
                 ? dbsTask.getCreatedAt().toLocalDate() : LocalDate.MIN;
             final Optional<TaskLog> match = strayLogs.stream()
                 .filter(l -> !l.getCompleted().isBefore(createdOn))
+                .filter(l -> canDonate(l.getTask(), dbsTask, remainingLogs))
                 .findFirst();
             if (match.isEmpty()) {
                 continue;
@@ -296,6 +302,7 @@ public class AssetOversightService {
             final TaskLog logToMove = match.get();
             strayLogs.remove(logToMove);
             final Task oldTask = logToMove.getTask();
+            remainingLogs.merge(oldTask.getId(), -1, Integer::sum);
             // Move via a direct FK update, NOT by mutating Task.logs — that collection uses
             // orphanRemoval, so removing the log there would delete it instead of moving it. This
             // leaves the old (typically parked, deadline 2099) CHECK task without the spurious log.
@@ -307,6 +314,33 @@ public class AssetOversightService {
             moved++;
         }
         return moved;
+    }
+
+    /**
+     * Whether {@code donor} may give up an oversight log to {@code receiver}.
+     * <p>
+     * A non-DBS tilsyn task can always give one up: on a DBS asset every "Tilsyn udført" belongs to a
+     * DBS tilsyn task, so a log sitting on the generic CHECK task is misplaced by definition.
+     * <p>
+     * An older DBS task may also donate — before the selection was fixed, the completion path picked
+     * whichever task came first in relation order, so a tilsyn registered after a newer task already
+     * existed was booked onto the older one and left the newer overdue. But only if the donor keeps at
+     * least one log afterwards. Emptying it would turn a completed task back into an open, overdue one,
+     * and we cannot know from the data whether that task's own tilsyn was ever performed — trading one
+     * wrong red task for another is not a repair. Those cases are left for a human to decide.
+     */
+    private static boolean canDonate(final Task donor, final Task receiver, final Map<Long, Integer> remainingLogs) {
+        if (donor == null) {
+            return false;
+        }
+        if (!isDbsTask(donor)) {
+            return true;
+        }
+        if (donor.getCreatedAt() == null || receiver.getCreatedAt() == null
+            || !donor.getCreatedAt().isBefore(receiver.getCreatedAt())) {
+            return false;
+        }
+        return remainingLogs.getOrDefault(donor.getId(), 0) > 1;
     }
 
     private void setTaskRevisionInterval(final Asset asset, final Task task) {
