@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -36,6 +37,10 @@ import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 @Service
 @RequiredArgsConstructor
 public class DBSService {
+	private static final Comparator<Task> NEWEST_TASK_FIRST = Comparator
+			.comparing(Task::getCreatedAt)
+			.thenComparing(Task::getId);
+
     private final DBSOversightDao dbsOversightDao;
     private final RelationService relationService;
     private final AssetService assetService;
@@ -111,9 +116,21 @@ public class DBSService {
 								.filter(t -> t.getTaskType() == TaskType.TASK
 										&& !taskService.isTaskDone(t)
 										&& t.getName().contains(Constants.DBS_TASK_NAME_MARKER))
-								.findFirst().ifPresentOrElse((task) -> {
+								// An asset can carry more than one unfinished DBS task (historic duplicates from back
+								// when overdue tasks were skipped), so do not let the relation order decide. The newest
+								// task is the live one — the one the responsible user was notified about — while the
+								// older ones are abandoned leftovers we should not revive.
+								.max(NEWEST_TASK_FIRST)
+								.ifPresentOrElse((task) -> {
 											// Task already exists — add oversight to description
 											task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
+
+											// Unfinished tasks now include overdue ones. Reset the deadline when it has
+											// passed, so the new oversight is actionable instead of being appended to a
+											// task that is already red and forgotten.
+											if (task.getNextDeadline() == null || !task.getNextDeadline().isAfter(now)) {
+												task.setNextDeadline(nowPlus30Days);
+											}
 
 											//set link to the folder containing the documents
 											String url = "https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId();
