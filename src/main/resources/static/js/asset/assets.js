@@ -2,6 +2,7 @@ import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { formatThreatTypes, formatThreatCatalogs, formatRiskAssessment } from "../risk-assessment-formatter.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
+import { formatColorStatus } from "./asset-color-status-formatter.js";
 
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
@@ -14,6 +15,20 @@ const defaultClassName = {
 const updateUrl = (prev, query) => {
     return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 };
+
+function formatShortDate(cell) {
+    if (!cell || cell.trim() === '') {
+        return gridjs.html(`<span>-</span>`);
+    }
+
+    const dateParts = cell.split('-');
+    if (dateParts.length === 3) {
+        const formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+        return gridjs.html(`<span>${formattedDate}</span>`);
+    }
+
+    return gridjs.html(`<span>${cell}</span>`);
+}
 
 
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -117,7 +132,8 @@ function initGrid() {
                 }
             },
             {
-                name: "Aktiv",
+                id: 'aktiv',
+                name: "Aktiv/Inaktiv",
                 searchable: {
                     searchKey: 'active',
                     fieldId : 'activeAssetSelector'
@@ -200,7 +216,8 @@ function initGrid() {
                 },
             },
             {
-                name: "Risiko vurdering",
+                id: 'risikoVurdering',
+                name: "Risikovurdering",
                 searchable: {
                     searchKey: 'assessment',
                     fieldId:'assetRiskSearchSelector'
@@ -309,6 +326,172 @@ function initGrid() {
                     attributeMap.set('name', name);
                     return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                 }
+            },
+            {
+                id: 'departments',
+                hidden: true,
+                name: "Ansvarlige forvaltninger",
+                searchable: {
+                    searchKey: 'departments'
+                }
+            },
+            {
+                id: 'assetCategory',
+                hidden: true,
+                name: "Kategori",
+                width: '110px',
+                searchable: {
+                    searchKey: 'assetCategory'
+                },
+                formatter: (cell, row) => formatColorStatus(cell)
+            },
+            {
+                id: 'description',
+                hidden: true,
+                name: "Beskrivelse",
+                width: '250px',
+                searchable: {
+                    searchKey: 'description'
+                },
+                formatter: (cell, row) => {
+                    if (!cell) {
+                        return '';
+                    }
+                    return gridjs.html(`<span class="d-inline-block text-truncate" style="max-width: 250px;" title="${cell.replace(/"/g, '&quot;')}">${cell}</span>`);
+                }
+            },
+            {
+                id: 'operationResponsible',
+                hidden: true,
+                name: operationResponsibleLabel,
+                searchable: {
+                    searchKey: 'operationResponsibleUsers'
+                }
+            },
+            {
+                id: 'criticality',
+                hidden: true,
+                name: "Kritikalitet",
+                width: '110px',
+                searchable: {
+                    searchKey: 'criticality',
+                    sortKey: 'criticalityOrder'
+                }
+            },
+            {
+                id: 'sociallyCritical',
+                hidden: true,
+                name: "Samfundskritisk",
+                width: '120px',
+                searchable: {
+                    searchKey: 'sociallyCritical'
+                },
+                formatter: (cell, row) => cell ? 'Ja' : 'Nej'
+            },
+            {
+                id: 'aiStatus',
+                hidden: true,
+                name: "Anvender løsningen AI",
+                width: '120px',
+                searchable: {
+                    searchKey: 'aiStatus'
+                }
+            },
+            {
+                id: 'contractDate',
+                hidden: true,
+                name: "Kontraktdato",
+                width: '90px',
+                searchable: {
+                    searchKey: 'contractDate'
+                },
+                formatter: (cell, row) => formatShortDate(cell)
+            },
+            {
+                id: 'contractTermination',
+                hidden: true,
+                name: "Kontraktophør",
+                width: '90px',
+                searchable: {
+                    searchKey: 'contractTermination'
+                },
+                formatter: (cell, row) => formatShortDate(cell)
+            },
+            {
+                id: 'terminationNotice',
+                hidden: true,
+                name: "Opsigelsesvarsel",
+                searchable: {
+                    searchKey: 'terminationNotice'
+                }
+            },
+            {
+                id: 'dataProcessingAgreementStatus',
+                hidden: true,
+                name: "Er der indgået databehandleraftale",
+                width: '120px',
+                searchable: {
+                    searchKey: 'dataProcessingAgreementStatus'
+                }
+            },
+            {
+                id: 'dataProcessingAgreementDate',
+                hidden: true,
+                name: "Databehandleraftale dato",
+                width: '90px',
+                searchable: {
+                    searchKey: 'dataProcessingAgreementDate'
+                },
+                formatter: (cell, row) => formatShortDate(cell)
+            },
+            {
+                id: 'securityMeasuresStatus',
+                hidden: true,
+                name: "Vurdering af foranstaltninger",
+                width: '130px',
+                searchable: {
+                    sortKey: 'assetMeasureStatusOrder'
+                },
+                formatter: (cell, row) => formatColorStatus(cell)
+            },
+            {
+                id: 'riskAssessmentOptOutStatus',
+                hidden: true,
+                name: "Risikovurdering fravalgt",
+                width: '130px',
+                searchable: {
+                    sortKey: 'riskAssessmentOptOutStatusOrder'
+                },
+                formatter: (cell, row) => formatColorStatus(cell)
+            },
+            {
+                id: 'dpiaStatus',
+                hidden: true,
+                name: "DPIA",
+                width: '110px',
+                searchable: {
+                    sortKey: 'dpiaStatusOrder'
+                },
+                formatter: (cell, row) => formatColorStatus(cell)
+            },
+            {
+                id: 'tiaStatus',
+                hidden: true,
+                name: "TIA vurdering",
+                width: '110px',
+                searchable: {
+                    sortKey: 'tiaStatusOrder'
+                },
+                formatter: (cell, row) => formatColorStatus(cell)
+            },
+            {
+                id: 'archive',
+                hidden: true,
+                name: "Systemet skal arkiveres",
+                width: '140px',
+                searchable: {
+                    searchKey: 'archive'
+                }
             }
         ],
         server:{
@@ -360,6 +543,23 @@ function initGrid() {
                     null, // placeholder for risk assessment formatter
                     riskData, // hidden column with all risk data
                     asset.allowedActions,
+                    asset.departments,
+                    asset.assetCategory,
+                    asset.description,
+                    asset.operationResponsibleUsers,
+                    asset.criticality,
+                    asset.sociallyCritical,
+                    asset.aiStatus,
+                    asset.contractDate,
+                    asset.contractTermination,
+                    asset.terminationNotice,
+                    asset.dataProcessingAgreementStatus,
+                    asset.dataProcessingAgreementDate,
+                    asset.securityMeasuresStatus,
+                    asset.riskAssessmentOptOutStatus,
+                    asset.dpiaStatus,
+                    asset.tiaStatus,
+                    asset.archive,
                     asset.oldKitos
                 ];
             }),

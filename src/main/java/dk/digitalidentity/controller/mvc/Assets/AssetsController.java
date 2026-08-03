@@ -154,7 +154,8 @@ public class AssetsController {
 
 	@RequireReadOwnerOnly
 	@GetMapping
-	public String assetsList() {
+	public String assetsList(final Model model) {
+		model.addAttribute("customSystemOperationResponsibleInput", settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));
 		return "assets/index";
 	}
 

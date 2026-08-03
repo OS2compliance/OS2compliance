@@ -317,7 +317,60 @@ SELECT a.id,
            WHEN ta_calcs.avg_probability IS NOT NULL AND ta_calcs.avg_consequence_overall IS NOT NULL
            THEN ROUND(ta_calcs.avg_probability * ta_calcs.avg_consequence_overall, 2)
            ELSE NULL
-       END) as risk_score
+       END) as risk_score,
+       departments.department_names,
+       a.description,
+       operation_responsible.operation_responsible_user_names,
+       a.criticality,
+       (CASE
+            WHEN a.criticality = 'CRITICAL' THEN 1
+            WHEN a.criticality = 'NON_CRITICAL' THEN 2
+           END
+           )                                                                as criticality_order,
+       a.socially_critical,
+       a.ai_status,
+       a.contract_date,
+       a.contract_termination,
+       a.termination_notice,
+       a.data_processing_agreement_status,
+       a.data_processing_agreement_date,
+       a.archive,
+       a.asset_measure_status,
+       (CASE
+            WHEN a.asset_measure_status = 'GREEN' THEN 1
+            WHEN a.asset_measure_status = 'YELLOW' THEN 2
+            WHEN a.asset_measure_status = 'RED' THEN 3
+           END
+           )                                                                as asset_measure_status_order,
+       a.threat_assessment_opt_out,
+       (CASE
+            WHEN a.threat_assessment_opt_out = true THEN 0
+            WHEN ta.assessment = 'GREEN' THEN 1
+            WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
+            WHEN ta.assessment = 'YELLOW' THEN 3
+            WHEN ta.assessment = 'ORANGE' THEN 4
+            WHEN ta.assessment = 'RED' THEN 5
+           END
+           )                                                                as risk_assessment_opt_out_status_order,
+       a.dpia_opt_out,
+       dpia_latest.dpia_screening_conclusion,
+       (CASE
+            WHEN a.dpia_opt_out = true THEN 0
+            WHEN dpia_latest.dpia_screening_conclusion = 'GREEN' THEN 1
+            WHEN dpia_latest.dpia_screening_conclusion = 'YELLOW' THEN 2
+            WHEN dpia_latest.dpia_screening_conclusion = 'RED' THEN 3
+            WHEN dpia_latest.dpia_screening_conclusion = 'GREY' THEN 4
+           END
+           )                                                                as dpia_status_order,
+       a.tia_opt_out,
+       tia.assessment                                                       as tia_assessment,
+       (CASE
+            WHEN a.tia_opt_out = true THEN 0
+            WHEN tia.assessment = 'GREEN' THEN 1
+            WHEN tia.assessment = 'YELLOW' THEN 2
+            WHEN tia.assessment = 'RED' THEN 3
+           END
+           )                                                                as tia_status_order
 FROM assets a
          LEFT JOIN suppliers s on s.id = a.supplier_id
          LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
@@ -405,6 +458,37 @@ FROM assets a
          LEFT JOIN assets_users_mapping aum ON aum.asset_id = a.id
          LEFT JOIN users mu ON aum.user_uuid = mu.uuid
          LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
+         LEFT JOIN (
+             SELECT adm.asset_id,
+                    GROUP_CONCAT(DISTINCT ou.name ORDER BY ou.name SEPARATOR ',') AS department_names
+             FROM assets_departments_mapping adm
+                      JOIN ous ou ON ou.uuid = adm.ou_uuid
+             GROUP BY adm.asset_id
+         ) departments ON departments.asset_id = a.id
+         LEFT JOIN (
+             SELECT orum.asset_id,
+                    GROUP_CONCAT(DISTINCT oru.name ORDER BY oru.name SEPARATOR ',') AS operation_responsible_user_names
+             FROM assets_operation_responsible_users_mapping orum
+                      JOIN users oru ON oru.uuid = orum.user_uuid
+             GROUP BY orum.asset_id
+         ) operation_responsible ON operation_responsible.asset_id = a.id
+         LEFT JOIN (
+             SELECT daa.asset_id, ds.conclusion AS dpia_screening_conclusion
+             FROM dpia_asset daa
+                      JOIN dpia d ON d.id = daa.dpia_id
+                      LEFT JOIN dpia_screening ds ON ds.dpia_id = d.id
+             WHERE d.deleted = false
+               AND d.id = (
+                   SELECT db.id
+                   FROM dpia db
+                            JOIN dpia_asset daa2 ON daa2.dpia_id = db.id
+                   WHERE daa2.asset_id = daa.asset_id
+                     AND db.deleted = false
+                   ORDER BY db.created_at DESC
+                   LIMIT 1
+               )
+         ) dpia_latest ON dpia_latest.asset_id = a.id
+         LEFT JOIN tia ON tia.asset_id = a.id
 WHERE a.deleted = false
 GROUP BY a.id;
 
