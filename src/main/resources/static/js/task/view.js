@@ -107,6 +107,52 @@ function ViewTaskService() {
         );
 
         this.initInProgressNoteToggle();
+        this.initCompleteAndStay();
+    }
+
+    this.initCompleteAndStay = function() {
+        const form = document.getElementById('completeTaskForm');
+        const completeAndStayBtn = document.getElementById('completeAndStayBtn');
+
+        if (!form || !completeAndStayBtn) {
+            return;
+        }
+
+        const token = document.getElementsByName('_csrf')[0].getAttribute('content');
+
+        form.addEventListener('submit', event => {
+            if (event.submitter !== completeAndStayBtn || event.defaultPrevented) {
+                return;
+            }
+
+            event.preventDefault();
+
+            fetch(completeStayUrl, { method: 'POST', body: new FormData(form), headers: { 'X-CSRF-TOKEN': token } })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`${response.status} ${response.statusText}`);
+                    }
+
+                    bootstrap.Modal.getInstance(document.getElementById('completeTaskModal'))?.hide();
+                    form.reset();
+                    form.classList.remove('was-validated');
+                    toastService.info('Opgaven blev udført');
+
+                    const historyTabBtn = document.querySelector('[data-bs-target="#_dm-tabsHistorik"]');
+                    if (historyTabBtn) {
+                        fetchHtml(timelineUrl, 'timelinePlaceholder').then(() => {
+                            bootstrap.Tab.getOrCreateInstance(historyTabBtn).show();
+                        });
+                        const badge = historyTabBtn.querySelector('.badge');
+                        if (badge) {
+                            badge.textContent = String(parseInt(badge.textContent, 10) + 1);
+                        }
+                    } else {
+                        window.location.reload();
+                    }
+                })
+                .catch(defaultErrorHandler);
+        });
     }
 
     this.initInProgressNoteToggle = function() {
