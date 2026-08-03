@@ -572,7 +572,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 
     // (WORD) Label identifies which subject (R=Registered, O=Organisation, S=Society) and dimension
     // (F=Fortrolighed/Confidentiality, I=Integritet/Integrity, T=Tilgængelighed/Availability, A=Autenticitet/Authenticity)
-    // the highest consequence value came from, e.g. "O-I".
+    // the highest consequence value came from, e.g. "O: 3 · I".
     public ConsequenceResult findHighestConsequenceWithLabel(final Integer rf, final Integer ri, final Integer rt, final Integer of, final Integer oi, final Integer ot, final Integer sf, final Integer si, final Integer st, final Integer sa) {
         record Entry(Integer value, String label) {}
 
