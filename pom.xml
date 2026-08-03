@@ -19,6 +19,17 @@
         <m2e.apt.activation>jdt_apt</m2e.apt.activation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>21</java.version>
+		<!--
+			Docker Engine API version Testcontainers talks to. Without this, its shaded docker-java
+			defaults to 1.32, which Docker 29 daemons reject outright ("client version 1.32 is too
+			old") — surfaced as the misleading "Could not find a valid Docker environment".
+			Known upstream bug: testcontainers-java#11212. Upstream's own fix (PR #11216, released in
+			Testcontainers 2.0.2) sets the default to 1.44, so we use the same value; different
+			Docker 29 builds report minimum 1.40 or 1.44, and 1.44 satisfies both. Cannot be solved
+			by upgrading Testcontainers on the 1.x line: 1.21.3 still defaults to 1.32 (verified).
+			Override with -Ddocker.api.version=... on a host that needs something else.
+		-->
+		<docker.api.version>1.44</docker.api.version>
 	</properties>
 
     <dependencyManagement>
@@ -165,7 +176,7 @@
         <dependency>
             <groupId>dk.digitalidentity</groupId>
             <artifactId>kitos-client</artifactId>
-            <version>release-1.0.16</version>
+            <version>release-1.3.2</version>
         </dependency>
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>
@@ -252,6 +263,10 @@
 			<artifactId>dbs-platfom-client</artifactId>
 			<version>1.0.4</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-envers</artifactId>
+		</dependency>
     </dependencies>
 
 	<build>
@@ -324,6 +339,19 @@
 							<version>${lombok.version}</version>
 						</path>
 					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<systemPropertyVariables>
+						<!-- Read by docker-java in the forked test JVM. The DOCKER_API_VERSION
+							 environment variable does NOT work: docker-java maps DOCKER_* to
+							 docker.*, so it arrives as docker.api.version and is ignored. -->
+						<api.version>${docker.api.version}</api.version>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 

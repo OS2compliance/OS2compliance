@@ -7,25 +7,32 @@ import dk.digitalidentity.integration.kitos.mapper.KitosMapper;
 import dk.digitalidentity.model.api.AssetEO;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.service.SettingsService;
-import dk.kitos.api.ApiV2DeltaFeedApi;
-import dk.kitos.api.ApiV2ItContractApi;
-import dk.kitos.api.ApiV2ItSystemApi;
-import dk.kitos.api.ApiV2ItSystemUsageApi;
-import dk.kitos.api.ApiV2ItSystemUsageRoleTypeApi;
-import dk.kitos.api.ApiV2OrganizationApi;
+import dk.kitos.api.DeltaFeedV2Api;
+import dk.kitos.api.ItContractV2Api;
+import dk.kitos.api.ItSystemUsageRoleTypeV2Api;
+import dk.kitos.api.ItSystemUsageV2Api;
+import dk.kitos.api.ItSystemV2Api;
+import dk.kitos.api.OrganizationV2Api;
+import dk.kitos.api.model.ArchiveDutyChoice;
 import dk.kitos.api.model.ArchivingUpdateRequestDTO;
 import dk.kitos.api.model.GDPRWriteRequestDTO;
+import dk.kitos.api.model.GeneralDataUpdateRequestDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
+import dk.kitos.api.model.RiskLevelChoice;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.SimpleLinkDTO;
+import dk.kitos.api.model.TrackedEntityTypeChoice;
 import dk.kitos.api.model.TrackingEventResponseDTO;
 import dk.kitos.api.model.UpdateItSystemUsageRequestDTO;
+import dk.kitos.api.model.YesNoDontKnowChoice;
+import dk.kitos.api.model.YesNoDontKnowIrrelevantChoice;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -36,15 +43,14 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_CONTRACT_OFFSET_SETTING_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_DELETION_OFFSET_USAGE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_ENTITY_TYPE;
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_OFFSET_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_ENTITY_TYPE;
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_OFFSET_SETTING_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM_OFFSET;
@@ -54,12 +60,12 @@ import static dk.digitalidentity.integration.kitos.KitosConstants.USAGE_DELETION
 @Service
 @RequiredArgsConstructor
 public class KitosClientService {
-    private final ApiV2ItSystemApi itSystemApi;
-    private final ApiV2ItSystemUsageApi itSystemUsageApi;
-    private final ApiV2OrganizationApi organizationApi;
-    private final ApiV2ItSystemUsageRoleTypeApi systemUsageRoleTypeApi;
-    private final ApiV2ItContractApi contractApi;
-    private final ApiV2DeltaFeedApi deltaFeedApi;
+    private final ItSystemV2Api itSystemApi;
+    private final ItSystemUsageV2Api itSystemUsageApi;
+    private final OrganizationV2Api organizationApi;
+    private final ItSystemUsageRoleTypeV2Api systemUsageRoleTypeApi;
+    private final ItContractV2Api contractApi;
+    private final DeltaFeedV2Api deltaFeedApi;
     private final SettingsService settingsService;
     private final KitosMapper kitosMapper;
 
@@ -101,7 +107,7 @@ public class KitosClientService {
      */
     public List<TrackingEventResponseDTO> fetchDeletedSystemUsages(final boolean reimport) {
         return deltaFetch(USAGE_DELETION_OFFSET_USAGE_SETTING_KEY,
-            pageAndOffset -> deltaFeedApi.getManyDeltaFeedV2GetDeletedObjects(IT_SYSTEM_USAGE_ENTITY_TYPE, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
+            pageAndOffset -> deltaFeedApi.getManyDeltaFeedV2GetDeletedObjects(TrackedEntityTypeChoice.IT_SYSTEM_USAGE, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             TrackingEventResponseDTO::getOccurredAtUtc
         );
     }
@@ -111,7 +117,7 @@ public class KitosClientService {
      */
     public List<TrackingEventResponseDTO> fetchDeletedItSystems(final boolean reimport) {
         return deltaFetch(IT_SYSTEM_DELETION_OFFSET_USAGE_SETTING_KEY,
-            pageAndOffset -> deltaFeedApi.getManyDeltaFeedV2GetDeletedObjects(IT_SYSTEM_ENTITY_TYPE, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
+            pageAndOffset -> deltaFeedApi.getManyDeltaFeedV2GetDeletedObjects(TrackedEntityTypeChoice.IT_SYSTEM, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             TrackingEventResponseDTO::getOccurredAtUtc
         );
     }
@@ -150,34 +156,46 @@ public class KitosClientService {
 
     /**
      * Update business criticality and archiving for an it-system usage
+     *
+     * @param archiveDuty wanted archive duty; null means "leave archiving untouched in Kitos"
+     *                    — an existing value cannot be cleared through this method
      */
     public void updateBusinessCriticalAndArchiveDuty(final String itSystemUuid, boolean critical, AssetEO.ArchiveDuty archiveDuty) {
         final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUuid));
-        final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
 
+		// Business critical moved from GDPR to General in the Kitos v2 API.
+		final YesNoDontKnowChoice wantedCritical = critical ? YesNoDontKnowChoice.YES : YesNoDontKnowChoice.NO;
+		final ArchiveDutyChoice wantedArchiveDuty = archiveDuty != null ? toArchiveDutyChoice(archiveDuty) : null;
 
-		if (update.getGdpr() == null) {
-            update.setGdpr(new GDPRWriteRequestDTO());
-        }
-        final GDPRWriteRequestDTO gdpr = update.getGdpr();
-		setGdprFieldsNull(gdpr);
+		// Only patch sections whose value actually changed, so concurrent
+		// Kitos-side edits are not overwritten with stale data from the last sync.
+		final EnumSet<PatchSection> sections = EnumSet.noneOf(PatchSection.class);
+		if (originalUsage.getGeneral() == null || wantedCritical != originalUsage.getGeneral().getIsBusinessCritical()) {
+			sections.add(PatchSection.GENERAL);
+		}
+		if (wantedArchiveDuty != null && (originalUsage.getArchiving() == null || wantedArchiveDuty != originalUsage.getArchiving().getArchiveDuty())) {
+			sections.add(PatchSection.ARCHIVING);
+		}
+		if (sections.isEmpty()) {
+			return;
+		}
 
-		if (archiveDuty != null) {
+		final UpdateItSystemUsageRequestDTO update = toPatchRequest(originalUsage, sections);
+		if (sections.contains(PatchSection.GENERAL)) {
+			if (update.getGeneral() == null) {
+				update.setGeneral(new GeneralDataUpdateRequestDTO());
+			}
+			update.getGeneral().setIsBusinessCritical(wantedCritical);
+		}
+		if (sections.contains(PatchSection.ARCHIVING)) {
 			if (update.getArchiving() == null) {
 				update.setArchiving(new ArchivingUpdateRequestDTO());
 			}
-			update.getArchiving().setArchiveDuty(toArchiveDutyEnum(archiveDuty));
+			update.getArchiving().setArchiveDuty(wantedArchiveDuty);
 		}
 
-        // Only send
-        update.setGeneral(null);
-        update.setLocalKleDeviations(null);
-        update.setOrganizationUsage(null);
-        update.setExternalReferences(null);
-        update.setRoles(null);
-        update.getGdpr().setBusinessCritical(critical ? GDPRWriteRequestDTO.BusinessCriticalEnum.YES : GDPRWriteRequestDTO.BusinessCriticalEnum.NO);
-
-		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update));
+		log.info("Patching general/archiving to Kitos for it-system usage {}: sections={}", itSystemUuid, sections);
+		patchWarnOnError(itSystemUuid, () -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update));
     }
 
 	/**
@@ -185,21 +203,13 @@ public class KitosClientService {
 	 */
 	public void updateAssetRiskAssessment(String itSystemUsageUuid, AssetRiskKitosEvent event) {
 		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUsageUuid));
-		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+		final UpdateItSystemUsageRequestDTO update = toPatchRequest(originalUsage, EnumSet.of(PatchSection.GDPR));
 
 		if (update.getGdpr() == null) {
 			update.setGdpr(new GDPRWriteRequestDTO());
 		}
-		final GDPRWriteRequestDTO gdpr = update.getGdpr();
-		setGdprFieldsNull(gdpr);
 
-		// Only send
-		update.setGeneral(null);
-		update.setLocalKleDeviations(null);
-		update.setOrganizationUsage(null);
-		update.setExternalReferences(null);
-		update.setRoles(null);
-		update.getGdpr().setRiskAssessmentConducted(event.isRiskAssessmentConducted() ? GDPRWriteRequestDTO.RiskAssessmentConductedEnum.YES : GDPRWriteRequestDTO.RiskAssessmentConductedEnum.NO);
+		update.getGdpr().setRiskAssessmentConducted(event.isRiskAssessmentConducted() ? YesNoDontKnowIrrelevantChoice.YES : YesNoDontKnowIrrelevantChoice.NO);
 		update.getGdpr().setRiskAssessmentConductedDate(getOffsetDateTime(event.getRiskAssessmentConductedDate()));
 		update.getGdpr().setRiskAssessmentResult(getRiskAssessmentResult(event.getResult()));
 		update.getGdpr().setRiskAssessmentDocumentation(new SimpleLinkDTO());
@@ -207,7 +217,15 @@ public class KitosClientService {
 		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getRiskAssessmentUrl());
 		update.getGdpr().setPlannedRiskAssessmentDate(getOffsetDateTime(event.getNextRiskAssessment()));
 
-		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
+		// Strip empty documentation links AFTER setting them - in manual fill-mode name and url
+		// are both null, and Kitos rejects a documentation link without url/name (400). This must
+		// run last so it also covers the link we just set, not only the ones from the round-trip.
+		setGdprFieldsNull(update.getGdpr());
+
+		log.info("Patching risk assessment to Kitos for it-system usage {}: conducted={}, result={}, hasDocLink={}",
+				itSystemUsageUuid, update.getGdpr().getRiskAssessmentConducted(), update.getGdpr().getRiskAssessmentResult(),
+				update.getGdpr().getRiskAssessmentDocumentation() != null);
+		patchWarnOnError(itSystemUsageUuid, () -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
 	}
 
 	/**
@@ -215,34 +233,69 @@ public class KitosClientService {
 	 */
 	public void updateAssetDPIA(String itSystemUsageUuid, AssetDPIAKitosEvent event) {
 		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUsageUuid));
-		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+		final UpdateItSystemUsageRequestDTO update = toPatchRequest(originalUsage, EnumSet.of(PatchSection.GDPR));
 
 		if (update.getGdpr() == null) {
 			update.setGdpr(new GDPRWriteRequestDTO());
 		}
-		final GDPRWriteRequestDTO gdpr = update.getGdpr();
-		setGdprFieldsNull(gdpr);
 
-		// Only send
-		update.setGeneral(null);
+		update.getGdpr().setDpiaConducted(YesNoDontKnowChoice.YES);
+		update.getGdpr().setDpiaDate(getOffsetDateTime(event.getDpiaDate()));
+		// The DPIA link belongs in dpiaDocumentation - it was previously written to
+		// riskAssessmentDocumentation, which overwrote the risk assessment link in Kitos.
+		update.getGdpr().setDpiaDocumentation(new SimpleLinkDTO());
+		update.getGdpr().getDpiaDocumentation().setName(event.getDpiaName());
+		update.getGdpr().getDpiaDocumentation().setUrl(event.getDpiaUrl());
+
+		// Strip empty documentation links AFTER setting them (see updateAssetRiskAssessment).
+		setGdprFieldsNull(update.getGdpr());
+
+		log.info("Patching DPIA to Kitos for it-system usage {}: dpiaDate={}, hasDocLink={}",
+				itSystemUsageUuid, update.getGdpr().getDpiaDate(), update.getGdpr().getDpiaDocumentation() != null);
+		patchWarnOnError(itSystemUsageUuid, () -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
+	}
+
+	private enum PatchSection { GENERAL, GDPR, ARCHIVING }
+
+	/**
+	 * Map the original usage to a PATCH request containing only the given sections.
+	 * Kitos PATCH replaces a provided section wholesale and leaves omitted sections
+	 * unchanged, so every section not being patched must be nulled (= omitted).
+	 */
+	private UpdateItSystemUsageRequestDTO toPatchRequest(final ItSystemUsageResponseDTO originalUsage, final EnumSet<PatchSection> sections) {
+		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+		if (!sections.contains(PatchSection.GENERAL)) {
+			update.setGeneral(null);
+		}
+		if (!sections.contains(PatchSection.GDPR)) {
+			update.setGdpr(null);
+		}
+		if (!sections.contains(PatchSection.ARCHIVING)) {
+			update.setArchiving(null);
+		}
+		// The remaining root sections are never patched by OS2compliance and must be
+		// omitted (nulled) so Kitos leaves them unchanged. If a future client version
+		// adds a new root section, MapStruct will populate it (compile error only if
+		// the response has no matching field) — it must then be added to this list.
 		update.setLocalKleDeviations(null);
 		update.setOrganizationUsage(null);
 		update.setExternalReferences(null);
 		update.setRoles(null);
-		update.getGdpr().setDpiaConducted(GDPRWriteRequestDTO.DpiaConductedEnum.YES);
-		update.getGdpr().setDpiaDate(getOffsetDateTime(event.getDpiaDate()));
-		update.getGdpr().setRiskAssessmentDocumentation(new SimpleLinkDTO());
-		update.getGdpr().getRiskAssessmentDocumentation().setName(event.getDpiaName());
-		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getDpiaUrl());
-
-		patchWarnOnError(() -> itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update));
+		return update;
 	}
 
-	private void patchWarnOnError(Runnable runnable) {
+	private void patchWarnOnError(final String itSystemUsageUuid, final Runnable runnable) {
 		try {
 			runnable.run();
+			log.info("Successfully patched it-system usage {} in Kitos", itSystemUsageUuid);
 		} catch (HttpClientErrorException ex) {
-			log.warn("Could not patch it-system usage", ex);
+			// Kitos error bodies may echo back field values containing personal data, so the
+			// full body only goes to debug. The warn line is truncated to limit exposure in
+			// production log aggregators while still carrying enough to triage.
+			final String body = ex.getResponseBodyAsString();
+			log.warn("Could not patch it-system usage {} in Kitos - status={}, response body (truncated): {}",
+					itSystemUsageUuid, ex.getStatusCode(), StringUtils.truncate(body, 500));
+			log.debug("Full Kitos error response body for it-system usage {}: {}", itSystemUsageUuid, body, ex);
 		}
 	}
 
@@ -264,16 +317,16 @@ public class KitosClientService {
 		}
 	}
 
-	private GDPRWriteRequestDTO.RiskAssessmentResultEnum getRiskAssessmentResult(RiskAssessment result) {
+	private RiskLevelChoice getRiskAssessmentResult(RiskAssessment result) {
 		if (result == null) {
-			return GDPRWriteRequestDTO.RiskAssessmentResultEnum.UNDECIDED;
+			return RiskLevelChoice.UNDECIDED;
 		}
 
 		// the api only have three possible results, OS2compliance has five. We are rounding up
 		return switch (result) {
-			case LIGHT_GREEN, GREEN -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.LOW;
-			case YELLOW -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.MEDIUM;
-			case ORANGE, RED -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.HIGH;
+			case LIGHT_GREEN, GREEN -> RiskLevelChoice.LOW;
+			case YELLOW -> RiskLevelChoice.MEDIUM;
+			case ORANGE, RED -> RiskLevelChoice.HIGH;
 		};
 	}
 
@@ -284,26 +337,19 @@ public class KitosClientService {
 		return date.toInstant().atZone(ZoneId.systemDefault()).toOffsetDateTime();
 	}
 
-	private ArchivingUpdateRequestDTO.ArchiveDutyEnum toArchiveDutyEnum(AssetEO.ArchiveDuty archiveDuty) {
-		switch (archiveDuty) {
-			case K -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.K;
-			}
-			case B -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.B;
-			}
-			case UNDECIDED -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNDECIDED;
-			}
-			case UNKNOWN -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNKNOWN;
-			}
-			case PRESERVEDATACANDISCARDDOCUMENTS -> {
-				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.PRESERVEDATACANDISCARDDOCUMENTS;
-			}
-		}
-
-		return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNDECIDED;
+	private ArchiveDutyChoice toArchiveDutyChoice(AssetEO.ArchiveDuty archiveDuty) {
+		return switch (archiveDuty) {
+			case K -> ArchiveDutyChoice.K;
+			case B -> ArchiveDutyChoice.B;
+			case BK -> ArchiveDutyChoice.BK;
+			case KD -> ArchiveDutyChoice.KD;
+			case KB -> ArchiveDutyChoice.KB;
+			case DK -> ArchiveDutyChoice.DK;
+			case DD -> ArchiveDutyChoice.DD;
+			case UNDECIDED -> ArchiveDutyChoice.UNDECIDED;
+			case UNKNOWN -> ArchiveDutyChoice.UNKNOWN;
+			case PRESERVEDATACANDISCARDDOCUMENTS -> ArchiveDutyChoice.PRESERVE_DATA_CAN_DISCARD_DOCUMENTS;
+		};
 	}
 
 	private boolean isEmpty(final SimpleLinkDTO simpleLinkDTO) {

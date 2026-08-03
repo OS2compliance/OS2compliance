@@ -229,11 +229,16 @@
                                             </div>
 
                                             <div class="row mb-3">
-                                                <label for="activeAsset" class="col-sm-3 col-form-label">Aktiv/Inaktiv</label>
+                                                <label for="activeAsset" class="col-sm-3 col-form-label">
+                                                    Aktiv/Inaktiv
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select editField"
                                                             th:field="*{active}" id="activeAsset"
-                                                            tabindex="-1" disabled>
+                                                            tabindex="-1" disabled
+                                                            th:attr="data-kitos-locked=${isKitosUsage}">
                                                         <option th:value="true">Aktiv</option>
                                                         <option th:value="false">Inaktiv</option>
                                                     </select>
@@ -843,6 +848,7 @@
         /*[+
             var isKitos = [[${isKitos}]];
             var isOldKitos = [[${isOldKitos}]];
+            var isKitosUsage = [[${isKitosUsage}]];
             var scaleMap = [[${scale}]];
             var scaleColorMap = [[${riskScoreColorMap}]];
             var riskProfiles = [[${riskProfiles}]];

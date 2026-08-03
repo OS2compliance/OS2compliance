@@ -106,10 +106,12 @@ public class SupplierController {
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .toList();
 
+		final List<Long> primaryFor = supplierService.findPrimary(supplier);
 
 		model.addAttribute("assetRelationListDTOs", mapToSupplierAssetListDTO(supplier, assetsWithMappings, assetRelated));
 
         model.addAttribute("oversights", assetOversights);
+		model.addAttribute("primaryFor", primaryFor);
         model.addAttribute("changeableSupplier", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) );
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);

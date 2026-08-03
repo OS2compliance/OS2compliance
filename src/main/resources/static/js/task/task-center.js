@@ -188,12 +188,14 @@ function initGrid() {
             {
                 name: "Status",
                 searchable: {
-                    sortKey: 'completed'
+                    sortKey: 'completed',
+                    searchKey: 'taskDeadlineStatus',
+                    fieldId: "taskStatusSearchSelector"
                 },
-                width: '100px',
                 formatter: (cell, row) => {
-                    let status = "";
+                    let status = '';
                     let type = row.cells[2]['data'];
+                    let deadline = row.cells[7]['data'] || null;
                     let inProgress = row.cells[13]['data'];
                     let note = row.cells[14]['data'];
                     let completed = (cell && type === "Opgave") || row.cells[11]['data'] === true;
@@ -204,28 +206,37 @@ function initGrid() {
                     } else if (inProgress === true) {
                         let noteAttribute = note ? ` title="${escapeAttribute(note)}"` : '';
                         status = `<div class="d-block badge bg-lightblue"${noteAttribute}>I gang</div>`
-                    } else {
-                        let deadline = row.cells[7]['data'];
+                    } else if (deadline) {
                         let dateString = deadline.replace(" ", "/");
                         dateString = dateString.replace("-", "/");
                         let dateSplit = dateString.split("/");
-                        let deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
-                        let diff = DateDiff.inDays(today, deadlineAsDate);
-                        let statusText = 'Ikke udført';
-                        if(row.cells[9]['data'] === 'NO_ERROR') {
-                            statusText = 'Ingen fejl';
-                        } else if (row.cells[9]['data'] === 'NO_CRITICAL_ERROR') {
-                            statusText = 'Ingen kritiske fejl';
-                        } else if (row.cells[9]['data'] === 'CRITICAL_ERROR') {
-                            statusText = 'Kritiske fejl';
-                        }
 
-                        if (diff < 0) {
-                            status = `<div class="d-block badge bg-danger">${statusText}</div>`;
-                        } else if (diff < 31 && diff >= 0) {
-                            status = `<div class="d-block badge bg-warning">${statusText}</div>`;
-                        } else {
-                            status = `<div class="d-block badge bg-gray-800">${statusText}</div>`;
+                        if (dateSplit.length >= 3) {
+                            let deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                            let today= new Date();
+                            let statusText = 'Ikke udført';
+
+                            if (deadlineAsDate < today) {
+                                statusText = 'Overskredet';
+                            }
+
+                            const taskRepetition = row.cells[9]['data'];
+                            if(taskRepetition === 'NO_ERROR') {
+                                statusText = 'Ingen fejl';
+                            } else if (taskRepetition === 'NO_CRITICAL_ERROR') {
+                                statusText = 'Ingen kritiske fejl';
+                            } else if (taskRepetition === 'CRITICAL_ERROR') {
+                                statusText = 'Kritiske fejl';
+                            }
+
+                            let diff = DateDiff.inDays(today, deadlineAsDate);
+                            if (diff < 0) {
+                                status = `<div class="d-block badge bg-danger">${statusText}</div>`;
+                            } else if (diff < 31 && diff >= 0) {
+                                status = `<div class="d-block badge bg-warning">${statusText}</div>`;
+                            } else {
+                                status = `<div class="d-block badge bg-gray-800">${statusText}</div>`;
+                            }
                         }
                     }
 

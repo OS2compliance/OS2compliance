@@ -91,7 +91,8 @@ const dragAndDropService = (() => {
                 row.before(...getRowGroup(draggedRow));
             }
 
-            const groupRows = [...tbody.querySelectorAll('.' + rowClass + '[data-parent="' + draggedRow.dataset.parent + '"]')];
+            const groupRows = [...tbody.querySelectorAll(
+                `.${rowClass}[data-parent="${CSS.escape(draggedRow.dataset.parent)}"]`)];
             const identifiers = groupRows.map(r => r.dataset.identifier);
 
             onReorder(identifiers, draggedRow);

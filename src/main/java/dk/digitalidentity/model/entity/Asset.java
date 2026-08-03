@@ -41,6 +41,9 @@ import lombok.ToString;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -55,6 +58,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @ToString
+@Audited
 @SQLDelete(sql = "UPDATE assets SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers, StatisticEnabled, Ownable, Tagable {
 
@@ -81,6 +85,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 
     @ManyToOne
     @JoinColumn(name = "asset_type", nullable = false)
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private ChoiceValue assetType;
 
     @Column
@@ -97,6 +102,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 	@Nullable
 	@ManyToOne
 	@JoinColumn(name = "supervisory_model")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private ChoiceValue supervisoryModel;
 
 	@ManyToMany
@@ -107,6 +113,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 	)
 	@ToString.Exclude
 	@JsonIgnore
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<ChoiceValue> additionalSupervisoryModels = new HashSet<>();
 
     @Column
@@ -164,6 +171,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 	@EqualsAndHashCode.Exclude
 	@OneToMany(orphanRemoval = true, mappedBy = "asset", cascade = CascadeType.ALL)
     @JsonIgnore
+	@NotAudited
 	private List<AssetSupplierMapping> suppliers = new ArrayList<>();
 
     @ManyToMany
@@ -188,6 +196,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "data_processing_id", referencedColumnName = "id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private DataProcessing dataProcessing;
 
 	@Column
@@ -197,9 +206,11 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToMany(orphanRemoval = true, mappedBy = "asset", cascade = CascadeType.ALL)
+    @NotAudited
     private List<AssetMeasure> measures = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
+    @NotAudited
     private TransferImpactAssessment tia;
 
     @Column
@@ -232,21 +243,17 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToMany(orphanRemoval = true, mappedBy = "asset", cascade = CascadeType.ALL)
+    @NotAudited
     private List<AssetOversight> assetOversights = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "oversight_responsible_uuid")
     private User oversightResponsibleUser;
 
-    @JsonIgnore
-    @OneToMany(mappedBy="asset", fetch = FetchType.LAZY)
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private Set<Role> roles = new HashSet<>();
-
 	@OneToMany(mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
+	@NotAudited
 	private List<AssetProductLink> productLinks = new ArrayList<>();
 
 	@ManyToMany
@@ -274,10 +281,12 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			joinColumns = { @JoinColumn(name = "asset_id") },
 			inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
 	)
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private List<OrganisationUnit> departments;
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
 	@JoinTable(name = "asset_tag", joinColumns = { @JoinColumn(name = "asset_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<Tag> tags = new HashSet<>();
 
 	@Transient
@@ -295,6 +304,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			"FROM assets a " +
 			"WHERE a.id = id)")
 	@Enumerated(EnumType.STRING)
+	@NotAudited
 	private DPIACompletionStatus dpiaCompletionStatus;
 
 	@StatisticLabel("Status for risikovurdering")
@@ -313,5 +323,6 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			"FROM assets a " +
 			"WHERE a.id = id)")
 	@Enumerated(EnumType.STRING)
+	@NotAudited
 	private ThreatAssessmentCompletionStatus threatAssessmentCompletionStatus;
 }

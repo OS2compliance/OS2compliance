@@ -342,13 +342,16 @@ function editMode(enabled, responsibleFieldChangeable) {
         document.getElementById('cancelBtn').hidden = false;
         document.getElementById('editAssetBtn').hidden = true;
 
+        if (isKitosUsage) {
+            active.disabled = true;
+        }
+
         if (!isKitos) {
             if (responsibleFieldChangeable=== 'true') {
                 managersChoicesEditSelect.enable();
                 responsibleChoicesEditSelect.enable();
                 operationResponsibleChoicesEditSelect.enable();
             }
-            active.disabled = false;
             document.getElementById("productLinksViewContainer").hidden = true;
             document.getElementById("productLinksEditContainer").hidden = false;
             document.getElementById("addProductLinkBtn").hidden = false;

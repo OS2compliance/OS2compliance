@@ -26,6 +26,10 @@ public interface Constants {
     String ASSOCIATED_THREAT_ASSESSMENT_PROPERTY = "linked_threat";
     String ASSOCIATED_ASSET_DPIA_PROPERTY = "linked_dpia";
     String ASSOCIATED_INSPECTION_PROPERTY = "linked_asset";
+    String DBS_SUPERVISION_MODEL_IDENTIFIER_PREFIX = "supervision-model-dbs-123456";
+    // the scope section is rendered with rows taken from the asset, not from the DPIA template
+    String DPIA_SCOPE_SECTION_IDENTIFIER = "scope";
+    String DBS_TASK_NAME_MARKER = "- DBS tilsyn";
     ZoneId LOCAL_TZ_ID = ZoneId.of("Europe/Copenhagen");
     String SYSTEM_USERID = "System";
     String DATA_MIGRATION_VERSION_SETTING = "seed_version";

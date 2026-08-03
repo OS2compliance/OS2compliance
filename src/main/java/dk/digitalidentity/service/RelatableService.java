@@ -18,6 +18,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -41,6 +42,10 @@ public class RelatableService {
             return Collections.emptyList();
         }
         return relatableDao.findAllById(relationIds);
+    }
+
+    public List<Relatable> findAllNotDeleted() {
+        return relatableDao.findAllByDeletedFalse(Pageable.unpaged()).getContent();
     }
 
     /**
