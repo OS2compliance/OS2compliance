@@ -21,6 +21,8 @@ export default class ColumnOptions {
     optionsMenuContainerClass = 'columnOptionsMenuContainer'
     toggleOptionsButtonClass = 'toggleColumnOptionsButton';
     confirmButtonClass = 'columnOptionsConfirmButton';
+    limitInfoClass = 'columnOptionsLimitInfo';
+    maxVisibleColumns = null;
 
     /**
      * Creates a GridColumn instantiation for the given grid, with the configs provided
@@ -31,8 +33,11 @@ export default class ColumnOptions {
      * @param neverShowIds a list of column Id's for columns that should always be hidden for the user
      * @param buttonContainerSelector An optional selector for the container which houses the option toggle.
      * If the container is not found, the toggle is placed right before the table container
+     * @param maxVisibleColumns An optional cap on how many columns (including always-shown ones) may be
+     * visible at once. When the cap is reached, further columns must be hidden before new ones can be shown.
+     * Pass null (default) for no limit.
      */
-    constructor(tableElementId, grid, alwaysShowIds = [], defaultShowingIds = [], neverShowIds = ['id'], buttonContainerSelector = '.tableOptionsContainer') {
+    constructor(tableElementId, grid, alwaysShowIds = [], defaultShowingIds = [], neverShowIds = ['id'], buttonContainerSelector = '.tableOptionsContainer', maxVisibleColumns = null) {
         if (!tableElementId || !grid) {
             throw new Error('ColumnOptions was not provided with required arguments');
         }
@@ -43,6 +48,7 @@ export default class ColumnOptions {
         this.itemTemplate = document.getElementById(this.optionItemTemplateId);
         this.tableElementId = tableElementId
         this.buttonContainerSelector = buttonContainerSelector
+        this.maxVisibleColumns = maxVisibleColumns
 
         this.getInitialState(defaultShowingIds);
         this.createOptionsContainer()
@@ -165,6 +171,60 @@ export default class ColumnOptions {
             }
         }
 
+        this.updateLimitInfo()
+    }
+
+    /**
+     * Counts how many columns are currently visible, taking any not-yet-confirmed
+     * toggles in tempState into account.
+     * @returns {number}
+     */
+    countVisibleColumns() {
+        let count = 0
+        for (const [id, column] of Object.entries(this.state)) {
+            const pendingHidden = this.tempState.hasOwnProperty(id) ? this.tempState[id] : column.hidden
+            if (!pendingHidden) {
+                count++
+            }
+        }
+        return count
+    }
+
+    /**
+     * Renders (or removes) the "x of y columns shown" indicator, and lets the user know
+     * when the configured maximum has been reached.
+     */
+    updateLimitInfo() {
+        if (!this.maxVisibleColumns || !this.optionsContainer) {
+            return;
+        }
+
+        const optionMenuContainer = this.optionsContainer.querySelector(`.${this.optionsMenuContainerClass}`);
+        if (!optionMenuContainer) {
+            return;
+        }
+
+        let limitInfo = this.optionsContainer.querySelector(`.${this.limitInfoClass}`);
+        if (!limitInfo) {
+            limitInfo = document.createElement('div');
+            limitInfo.className = `${this.limitInfoClass} small text-muted px-2 pt-1`;
+            optionMenuContainer.before(limitInfo);
+        }
+
+        const visibleCount = this.countVisibleColumns();
+        limitInfo.textContent = `${visibleCount} af maks. ${this.maxVisibleColumns} kolonner valgt`;
+    }
+
+    /**
+     * Shows feedback when the user tries to show more columns than allowed
+     */
+    showMaxColumnsReachedWarning() {
+        const message = `Du kan højst vise ${this.maxVisibleColumns} kolonner ad gangen. Fjern en kolonne for at tilføje en anden.`;
+        if (typeof toastService !== 'undefined' && toastService?.error) {
+            toastService.error(message);
+        } else {
+            console.warn(message);
+        }
     }
 
     /**
@@ -212,10 +272,16 @@ export default class ColumnOptions {
                 iconElement.classList.add('ti-minus')
                 this.tempState[id] = true
             } else {
+                if (this.maxVisibleColumns && this.countVisibleColumns() >= this.maxVisibleColumns) {
+                    this.showMaxColumnsReachedWarning();
+                    return;
+                }
                 iconElement.classList.add('ti-check')
                 iconElement.classList.remove('ti-minus')
                 this.tempState[id] = false
             }
+
+            this.updateLimitInfo()
         } else {
             console.info("Attempted to toggle option, but no element was passed")
         }

@@ -138,7 +138,6 @@ function initGrid() {
                     searchKey: 'active',
                     fieldId : 'activeAssetSelector'
                 },
-                width: '150px',
                 formatter: (cell, row) => {
                     if (cell) {
                         return 'Ja';
@@ -153,7 +152,6 @@ function initGrid() {
                     searchKey: 'hasThirdCountryTransfer',
                     fieldId : 'assetThirdCountrySelector'
                 },
-                width: '150px',
                 formatter: (cell, row) => {
                     if (cell) {
                         return 'Ja';
@@ -164,7 +162,6 @@ function initGrid() {
             },
             {
                 name: "Type",
-                width: '100px',
                 searchable: {
                     searchKey: 'assetType'
                 },
@@ -186,14 +183,12 @@ function initGrid() {
                 searchable: {
                     searchKey: 'updatedAt'
                 },
-                width: '100px'
             },
             {
                 name: "Sidste tilsyn",
                 searchable: {
                     searchKey: 'lastOversightDate'
                 },
-                width: '90px',
                 formatter: (cell, row) => {
                     if (!cell || cell.trim() === '') {
                         return gridjs.html(`<span>-</span>`);
@@ -210,7 +205,6 @@ function initGrid() {
             },
             {
                 name: "Antal beh.",
-                width: '95px',
                 searchable: {
                     sortKey: 'registers'
                 },
@@ -222,7 +216,6 @@ function initGrid() {
                     searchKey: 'assessment',
                     fieldId:'assetRiskSearchSelector'
                 },
-                width: '130px',
                 formatter: (cell, row) => {
                     var assessment = [];
                     if (cell === "Grøn") {
@@ -255,7 +248,6 @@ function initGrid() {
                     searchKey: 'assetStatus',
                     fieldId : 'assetStatusSearchSelector'
                 },
-                width: '120px',
                 formatter: (cell, row) => {
                     var status = cell;
                     if (cell === "Ikke startet") {
@@ -281,7 +273,6 @@ function initGrid() {
                 searchable: {
                     searchKey: 'threatTypeList'
                 },
-                width: '200px',
                 formatter: (cell, row) => formatThreatTypes(cell)
             },
             {
@@ -290,7 +281,6 @@ function initGrid() {
                 searchable: {
                     searchKey: 'catalogList'
                 },
-                width: '200px',
                 formatter: (cell, row) => formatThreatCatalogs(cell)
             },
             {
@@ -300,7 +290,6 @@ function initGrid() {
             {
                 name: "Gennemsnitlig risiko",
                 hidden: true,
-                width: '150px',
                 searchable: {
                     sortKey: 'riskScore'
                 },
@@ -317,7 +306,6 @@ function initGrid() {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
-                width: '90px',
                 formatter: (cell, row) => {
                     const attributeMap = new Map();
                     const identifier = row.cells[0]['data'];
@@ -339,7 +327,6 @@ function initGrid() {
                 id: 'assetCategory',
                 hidden: true,
                 name: "Kategori",
-                width: '110px',
                 searchable: {
                     searchKey: 'assetCategory'
                 },
@@ -349,7 +336,6 @@ function initGrid() {
                 id: 'description',
                 hidden: true,
                 name: "Beskrivelse",
-                width: '250px',
                 searchable: {
                     searchKey: 'description'
                 },
@@ -372,7 +358,6 @@ function initGrid() {
                 id: 'criticality',
                 hidden: true,
                 name: "Kritikalitet",
-                width: '110px',
                 searchable: {
                     searchKey: 'criticality',
                     sortKey: 'criticalityOrder'
@@ -382,7 +367,6 @@ function initGrid() {
                 id: 'sociallyCritical',
                 hidden: true,
                 name: "Samfundskritisk",
-                width: '120px',
                 searchable: {
                     searchKey: 'sociallyCritical'
                 },
@@ -392,7 +376,6 @@ function initGrid() {
                 id: 'aiStatus',
                 hidden: true,
                 name: "Anvender løsningen AI",
-                width: '120px',
                 searchable: {
                     searchKey: 'aiStatus'
                 }
@@ -401,7 +384,6 @@ function initGrid() {
                 id: 'contractDate',
                 hidden: true,
                 name: "Kontraktdato",
-                width: '90px',
                 searchable: {
                     searchKey: 'contractDate'
                 },
@@ -411,7 +393,6 @@ function initGrid() {
                 id: 'contractTermination',
                 hidden: true,
                 name: "Kontraktophør",
-                width: '90px',
                 searchable: {
                     searchKey: 'contractTermination'
                 },
@@ -429,7 +410,6 @@ function initGrid() {
                 id: 'dataProcessingAgreementStatus',
                 hidden: true,
                 name: "Er der indgået databehandleraftale",
-                width: '120px',
                 searchable: {
                     searchKey: 'dataProcessingAgreementStatus'
                 }
@@ -438,7 +418,6 @@ function initGrid() {
                 id: 'dataProcessingAgreementDate',
                 hidden: true,
                 name: "Databehandleraftale dato",
-                width: '90px',
                 searchable: {
                     searchKey: 'dataProcessingAgreementDate'
                 },
@@ -448,7 +427,6 @@ function initGrid() {
                 id: 'securityMeasuresStatus',
                 hidden: true,
                 name: "Vurdering af foranstaltninger",
-                width: '130px',
                 searchable: {
                     sortKey: 'assetMeasureStatusOrder'
                 },
@@ -458,7 +436,6 @@ function initGrid() {
                 id: 'riskAssessmentOptOutStatus',
                 hidden: true,
                 name: "Risikovurdering fravalgt",
-                width: '130px',
                 searchable: {
                     sortKey: 'riskAssessmentOptOutStatusOrder'
                 },
@@ -468,7 +445,6 @@ function initGrid() {
                 id: 'dpiaStatus',
                 hidden: true,
                 name: "DPIA",
-                width: '110px',
                 searchable: {
                     sortKey: 'dpiaStatusOrder'
                 },
@@ -478,7 +454,6 @@ function initGrid() {
                 id: 'tiaStatus',
                 hidden: true,
                 name: "TIA vurdering",
-                width: '110px',
                 searchable: {
                     sortKey: 'tiaStatusOrder'
                 },
@@ -488,7 +463,6 @@ function initGrid() {
                 id: 'archive',
                 hidden: true,
                 name: "Systemet skal arkiveres",
-                width: '140px',
                 searchable: {
                     searchKey: 'archive'
                 }
@@ -586,7 +560,7 @@ function initGrid() {
 
     const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, datatableId);
 
-    new ColumnOptions(datatableId, grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos', 'riskScore', 'riskData'])
+    new ColumnOptions(datatableId, grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos', 'riskScore', 'riskData'], '.tableOptionsContainer', 10)
 
     initSaveAsExcelButton(customGridFunctions, 'asset', 'assets', 'Aktiver')
 }
