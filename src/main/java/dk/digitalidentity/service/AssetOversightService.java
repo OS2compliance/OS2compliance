@@ -99,8 +99,10 @@ public class AssetOversightService {
         taskLog.setCompleted(oversight.getCreationDate());
         taskLog.setDocumentationLink(samlConfiguration.getSp().getBaseUrl() + "/assets/" + oversight.getAsset().getId());
         User responsibleUser = oversight.getResponsibleUser();
-        taskLog.setResponsibleUserName(responsibleUser.getName());
-        taskLog.setResponsibleUserUserId(responsibleUser.getUserId());
+        if (responsibleUser != null) {
+            taskLog.setResponsibleUserName(responsibleUser.getName());
+            taskLog.setResponsibleUserUserId(responsibleUser.getUserId());
+        }
         taskLog.setDeadline(task.getNextDeadline());
         taskService.completeTask(task, taskLog);
 		if (oversight.getNewInspectionDate() != null) {
