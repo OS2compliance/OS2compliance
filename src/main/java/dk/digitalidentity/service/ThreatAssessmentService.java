@@ -483,14 +483,14 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         final Map<String, List<ThreatDTO>> threatMap = buildThreatList(threatAssessment);
         for (final Map.Entry<String, List<ThreatDTO>> entry : threatMap.entrySet()) {
             for (final ThreatDTO threat: entry.getValue()) {
-                final ConsequenceResult highestConsequence = findHighestConsequenceWithLabel(threat);
+                final int highestConsequence = findHighestConsequence(threat);
                 final int probability = threat.getProbability();
 
-				if (probability < 1 || highestConsequence.value() < 1) {
+				if (probability < 1 || highestConsequence < 1) {
 					continue;
 				}
 
-				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence.value(), buildConsequenceBreakdown(threat), probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
+				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, buildConsequenceBreakdown(threat), probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
             }
         }
         return riskProfiles;
@@ -564,35 +564,13 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         dto.setTasks(taskDTOS);
     }
 
-    private ConsequenceResult findHighestConsequenceWithLabel(final ThreatDTO threat) {
-        return findHighestConsequenceWithLabel(threat.getRf(), threat.getRi(), threat.getRt(), threat.getOf(), threat.getOi(), threat.getOt(), threat.getSf(), threat.getSi(), threat.getSt(), threat.getSa());
+    private int findHighestConsequence(final ThreatDTO threat) {
+        return findHighestConsequence(threat.getRf(), threat.getRi(), threat.getRt(), threat.getOf(), threat.getOi(), threat.getOt(), threat.getSf(), threat.getSi(), threat.getSt(), threat.getSa());
     }
 
-    public record ConsequenceResult(int value, String label) {}
-
-    // (WORD) Label identifies which subject (R=Registered, O=Organisation, S=Society) and dimension
-    // (F=Fortrolighed/Confidentiality, I=Integritet/Integrity, T=Tilgængelighed/Availability, A=Autenticitet/Authenticity)
-    // the highest consequence value came from, e.g. "O: 3 · I".
-    public ConsequenceResult findHighestConsequenceWithLabel(final Integer rf, final Integer ri, final Integer rt, final Integer of, final Integer oi, final Integer ot, final Integer sf, final Integer si, final Integer st, final Integer sa) {
-        record Entry(Integer value, String label) {}
-
-		List<Entry> entries = List.of(
-				new Entry(rf, "R-F"), new Entry(ri, "R-I"), new Entry(rt, "R-T"),
-				new Entry(of, "O-F"), new Entry(oi, "O-I"), new Entry(ot, "O-T"),
-				new Entry(sf, "S-F"), new Entry(si, "S-I"), new Entry(st, "S-T"),
-				new Entry(sa, "S-A")
-		);
-
-		return entries.stream()
-				.filter(e -> e.value() != null)
-				.max(Comparator.comparingInt(Entry::value))
-				.map(e -> new ConsequenceResult(e.value(), e.label()))
-				.orElse(new ConsequenceResult(0, ""));
-    }
-
-    // (PDF) One line per subject (R=Registered, O=Organisation, S=Society) showing that subject's own highest
-    // consequence value and which dimension (F=Fortrolighed, I=Integritet, T=Tilgængelighed)
-    // it came from, e.g. "R: 3 · I".
+    // One line per subject (R=Registered, O=Organisation, S=Society) showing that subject's own highest
+    // consequence value and which dimension (F=Fortrolighed, I=Integritet, T=Tilgængelighed, A=Autenticitet
+    // — society only) it came from, e.g. "R: 3 · I". Subjects with no answered value are omitted.
     private String buildConsequenceBreakdown(final ThreatDTO threat) {
         final List<String> lines = new ArrayList<>();
         addConsequenceBreakdownLine(lines, "R", threat.getRf(), threat.getRi(), threat.getRt(), -1);
@@ -602,17 +580,16 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
     }
 
     private void addConsequenceBreakdownLine(final List<String> lines, final String subject, final int f, final int i, final int t, final int a) {
-        int highest = 0;
-        String dimension = null;
+        final Map<String, Integer> dimensions = new LinkedHashMap<>();
+        dimensions.put("F", f);
+        dimensions.put("I", i);
+        dimensions.put("T", t);
+        dimensions.put("A", a);
 
-        if (f > highest) { highest = f; dimension = "F"; }
-        if (i > highest) { highest = i; dimension = "I"; }
-        if (t > highest) { highest = t; dimension = "T"; }
-        if (a > highest) { highest = a; dimension = "A"; }
-
-        if (highest > 0) {
-            lines.add(subject + ": " + highest + " · " + dimension);
-        }
+        dimensions.entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .filter(highest -> highest.getValue() > 0)
+            .ifPresent(highest -> lines.add(subject + ": " + highest.getValue() + " · " + highest.getKey()));
     }
 
     public void setThreatAssessmentColor(final ThreatAssessment savedThreatAssessment) {
