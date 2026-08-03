@@ -72,6 +72,10 @@ public class RelationService {
 		final List<Relation> related = relationDao.findAllRelatedTo(relatable.getId());
 		return related.stream()
 				.map(r -> Objects.equals(r.getRelationAId(), relatable.getId()) ? r.getRelationBId() : r.getRelationAId())
+				// The same pair can be stored more than once — relations carry no unique constraint, and
+				// addRelation used to save blindly. Without this, the related entity is listed once per
+				// row, so users see the same task or asset several times in the relation lists.
+				.distinct()
 				.map(rid -> relatableDao.findById(rid).orElseGet(() -> {
 					log.warn("Could not look up related entity {}, source relation type {}, id {}", rid, relatable.getRelationType(), relatable.getId());
 					return null;
@@ -146,8 +150,30 @@ public class RelationService {
 						.build()));
 	}
 
+	/**
+	 * Relates a and b, or returns the existing relation if they are already related. Idempotent
+	 * because several call sites re-add relations they cannot know are already there, and a duplicate
+	 * row has no meaning of its own — it only makes the entity show up twice in the relation lists.
+	 */
 	@Transactional
 	public Relation addRelation(final Relatable a, final Relatable b) {
+		return findExistingRelation(a.getId(), b.getId())
+				.orElseGet(() -> relationDao.save(newRelation(a, b)));
+	}
+
+	@Transactional
+	public void addRelations(final Relatable a, final List<Relatable> bs) {
+		// Seeded with what a is already related to, so add() both skips existing relations and
+		// collapses duplicates within bs itself.
+		final Set<Long> alreadyRelated = relatedIds(a.getId());
+		final List<Relation> relations = bs.stream()
+				.filter(b -> alreadyRelated.add(b.getId()))
+				.map(b -> newRelation(a, b))
+				.toList();
+		relationDao.saveAll(relations);
+	}
+
+	private Relation newRelation(final Relatable a, final Relatable b) {
 		final Relation relation = new Relation();
 		relation.setRelationAId(a.getId());
 		relation.setRelationAType(a.getRelationType());
@@ -155,22 +181,21 @@ public class RelationService {
 		relation.setRelationBId(b.getId());
 		relation.setRelationBType(b.getRelationType());
 		relation.setRelationBName(b.getName());
-		return relationDao.save(relation);
+		return relation;
 	}
 
-	@Transactional
-	public void addRelations(final Relatable a, final List<Relatable> bs) {
-		final List<Relation> relations = bs.stream().map(b -> {
-			final Relation relation = new Relation();
-			relation.setRelationAId(a.getId());
-			relation.setRelationAType(a.getRelationType());
-			relation.setRelationAName(a.getName());
-			relation.setRelationBId(b.getId());
-			relation.setRelationBType(b.getRelationType());
-			relation.setRelationBName(b.getName());
-			return relation;
-		}).toList();
-		relationDao.saveAll(relations);
+	/** Looks for an existing relation between the two ids, in either direction. */
+	private Optional<Relation> findExistingRelation(final Long aId, final Long bId) {
+		return relationDao.findAllRelatedTo(aId).stream()
+				.filter(r -> (Objects.equals(r.getRelationAId(), aId) && Objects.equals(r.getRelationBId(), bId))
+						|| (Objects.equals(r.getRelationAId(), bId) && Objects.equals(r.getRelationBId(), aId)))
+				.findFirst();
+	}
+
+	private Set<Long> relatedIds(final Long id) {
+		return relationDao.findAllRelatedTo(id).stream()
+				.map(r -> Objects.equals(r.getRelationAId(), id) ? r.getRelationBId() : r.getRelationAId())
+				.collect(Collectors.toCollection(HashSet::new));
 	}
 
 	public void deleteRelatedTo(final Long lid) {
