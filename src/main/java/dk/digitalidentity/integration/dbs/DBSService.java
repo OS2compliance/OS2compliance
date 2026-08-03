@@ -109,7 +109,7 @@ public class DBSService {
 								.filter(Optional::isPresent)
 								.map(Optional::get)
 								.filter(t -> t.getTaskType() == TaskType.TASK
-										&& t.getNextDeadline().isAfter(now)
+										&& !taskService.isTaskDone(t)
 										&& t.getName().contains(Constants.DBS_TASK_NAME_MARKER))
 								.findFirst().ifPresentOrElse((task) -> {
 											// Task already exists — add oversight to description
