@@ -254,6 +254,7 @@ public class RiskController {
         savedThreatAssessment.setName(assessment.getName());
 		savedThreatAssessment.setResponsibleUser(assessment.getResponsibleUser());
 		savedThreatAssessment.setResponsibleOu(assessment.getResponsibleOu());
+		savedThreatAssessment.setComment(assessment.getComment());
 		if (presentUserUuids != null && !presentUserUuids.isEmpty()) {
 			savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
 		}

@@ -126,7 +126,7 @@ public class DPIAService implements TagableService<DPIA> {
         dpia = save(dpia);
 
         //find all templated answers
-        List<DPIATemplateQuestion> dpiaTemplateQuestions = dpiaTemplateQuestionService.findByAnswerTemplateNotNull();
+        List<DPIATemplateQuestion> dpiaTemplateQuestions = dpiaTemplateQuestionService.findActiveByAnswerTemplateNotNull();
         List<PlaceholderInfo> placeholderInfo = assets.stream().map(assetService::getDPIAResponsePlaceholderInfo).toList();
         for (DPIATemplateQuestion templateQuestion : dpiaTemplateQuestions) {
             String templateAnswer = templateQuestion.getAnswerTemplate()
