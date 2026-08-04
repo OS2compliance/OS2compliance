@@ -1,7 +1,6 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.RelatableDao;
-import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.RelatableMapper;
 import dk.digitalidentity.model.dto.PageDTO;
@@ -9,7 +8,6 @@ import dk.digitalidentity.model.dto.RelatableDTO;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -58,7 +56,6 @@ import java.util.Set;
 public class RelatableRestController {
     private final RelatableDao relatableDao;
     private final RelatableMapper mapper;
-    private final RelationDao relationDao;
     private final RelationService relationService;
     private final TagDao tagDao;
     private final ThreatAssessmentService threatAssessmentService;
@@ -209,15 +206,8 @@ public class RelatableRestController {
 		dto.relations().stream()
 				.map(relatedId -> relatableDao.findById(relatedId)
 						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet")))
-				.map(relatable -> Relation.builder()
-						.relationAId(relateTo.getId())
-						.relationAType(relateTo.getRelationType())
-						.relationAName(relateTo.getName())
-						.relationBId(relatable.getId())
-						.relationBType(relatable.getRelationType())
-						.relationBName(relatable.getName())
-						.build())
-				.forEach(relationDao::save);
+				// Via addRelation, so an already existing relation is reused instead of duplicated.
+				.forEach(relatable -> relationService.addRelation(relateTo, relatable));
 
         final Set<Long> addedIds = new HashSet<>();
         final List<AddedRelationDTO> relationsToReturn = new ArrayList<>();
