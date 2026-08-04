@@ -129,6 +129,21 @@ public class SearchRepositoryImpl implements SearchRepository {
 	}
 
 	/**
+	 * Same restrictions as {@link #findAllWithColumnSearch(Map, Pageable, Class, List, List)}, but only
+	 * the count — for callers that need an exact match total without paging through the rows.
+	 */
+	@Override
+	public <T> long countWithColumnSearch(final Map<String, String> searchableProperties,
+			final Class<T> entityClass,
+			final List<PredicateBuilder<T>> extraPredicates,
+			final List<QueryPredicateBuilder<T>> queryPredicates) {
+		final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		final boolean hasJoinFilter = searchableProperties.keySet().stream().anyMatch(k -> k.contains("."));
+		return countMatching(searchableProperties, entityClass, extraPredicates, queryPredicates,
+				criteriaBuilder, hasJoinFilter);
+	}
+
+	/**
 	 * Assembles the column filters and the caller's own restrictions. A predicate is bound to the root
 	 * it was built against, so the count query has to build its own set rather than borrow the page
 	 * query's.

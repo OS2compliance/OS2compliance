@@ -21,6 +21,11 @@ public interface SearchRepository {
 										final List<PredicateBuilder<T>> extraPredicates,
 										final List<QueryPredicateBuilder<T>> queryPredicates);
 
+	<T> long countWithColumnSearch(final Map<String, String> searchableProperties,
+									final Class<T> entityClass,
+									final List<PredicateBuilder<T>> extraPredicates,
+									final List<QueryPredicateBuilder<T>> queryPredicates);
+
 	<T> Page<T> findAllWithAssignedUser (Map<String, String> searchableProperties, User user, Pageable page, Class<T> entityClass);
 
 	<T> Page<T> findAllWithGlobalSearchAndUserFilter(

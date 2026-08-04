@@ -59,8 +59,8 @@
                                 </p>
                                 <div th:if="${incidentCount != null}">
                                     <span>Hændelser sidste 12 måneder: </span>
-                                    <i th:if="${incidentCount == 0}" th:text="${incidentCount}" style="margin-bottom: 0px;"></i>
-                                    <a th:if="${incidentCount > 0}" th:href="@{/incidents/logs(from=${incidentDateFrom},to=${incidentDateTo})}" th:text="${incidentCount}" style="margin-bottom: 0px;"></a>
+                                    <i th:if="${incidentCount == 0}" th:text="${incidentCount}" class="mb-0"></i>
+                                    <a th:if="${incidentCount > 0}" th:href="@{/incidents/logs(from=${incidentDateFrom},to=${incidentDateTo},assetIds=${incidentAssetIds})}" th:text="${incidentCount}" class="mb-0"></a>
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6">

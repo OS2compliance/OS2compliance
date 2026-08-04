@@ -372,6 +372,7 @@ public class RiskController {
                 .toList();
             final long incidentCount = incidentService.countIncidentsForAssetsLastYear(assetIds);
             model.addAttribute("incidentCount", incidentCount);
+            model.addAttribute("incidentAssetIds", assetIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
         }
 
         return "risks/view";
