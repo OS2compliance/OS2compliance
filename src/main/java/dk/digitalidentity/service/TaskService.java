@@ -56,6 +56,18 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RequiredArgsConstructor
 public class TaskService implements TagableService<Task> {
+    /**
+     * Orders tasks oldest first, so {@code max()} yields the newest. When an asset carries several
+     * auto-generated tasks for the same obligation (historic duplicates), the newest one is the live
+     * one — it was created by the most recent import and is the one the responsible user was notified
+     * about — while the older ones are abandoned leftovers. Every selector that has to choose between
+     * such duplicates must use this same rule, otherwise one code path books work onto a task another
+     * path considers dead.
+     */
+    public static final Comparator<Task> NEWEST_FIRST = Comparator
+            .comparing(Task::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(Task::getId, Comparator.nullsFirst(Comparator.naturalOrder()));
+
     private final DocumentDao documentDao;
     private final TaskDao taskDao;
     private final TaskLogDao taskLogDao;
