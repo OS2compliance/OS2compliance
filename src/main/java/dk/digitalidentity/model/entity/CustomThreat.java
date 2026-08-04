@@ -17,8 +17,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CustomThreat {
+    /**
+     * Draws from the same {@code default} segment as the whole {@link Relatable} hierarchy. Giving it
+     * its own segment would restart allocation at 1 and collide with the rows already in
+     * custom_threats.
+     */
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = Relatable.ID_GENERATOR)
     private Long id;
 
     @Column
