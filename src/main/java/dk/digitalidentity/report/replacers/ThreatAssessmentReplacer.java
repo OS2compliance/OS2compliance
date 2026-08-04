@@ -312,7 +312,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                     final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
                     final int score = profile.getProbability() * profile.getConsequence();
                     setCellTextSmallCentered(row, 3, "" + profile.getProbability());
-                    setCellTextSmallCentered(row, 4, "" + profile.getConsequence());
+                    setCellTextSmallCenteredMultiLine(row, 4, profile.getConsequenceBreakdown());
                     setCellTextSmallCentered(row, 5, "" + score);
                     setCellBackgroundColor(row.getCell(5), color);
                     setCellTextSmall(row, 6, t.getProblem());
@@ -406,6 +406,20 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         paragraph.setAlignment(ParagraphAlignment.CENTER);
         paragraph.setStyle(SMALL_TEXT);
         addTextRun(text, paragraph);
+    }
+
+    private static void setCellTextSmallCenteredMultiLine(final XWPFTableRow row, final int cellIdx, final String text) {
+        final XWPFTableCell cell = getCell(row, cellIdx);
+        final XWPFParagraph paragraph = cell.getParagraphs().get(0);
+        paragraph.setAlignment(ParagraphAlignment.CENTER);
+        paragraph.setStyle(SMALL_TEXT);
+        final String[] lines = text.split("\n");
+        for (int i = 0; i < lines.length; i++) {
+            final XWPFRun run = addTextRun(lines[i], paragraph);
+            if (i < lines.length - 1) {
+                run.addBreak();
+            }
+        }
     }
 
     private void addRiskExplanations(final XWPFDocument document, final XmlCursor cursor) {
