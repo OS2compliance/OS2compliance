@@ -14,7 +14,9 @@ public enum EmailTemplateType {
 	TASK_REMINDER("Påmindelse om en opgaves deadline", Arrays.asList(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.DAYS_TILL_DEADLINE)),
 	INACTIVE_USERS("Mail omkring nye inaktive ansvarlige", Arrays.asList(EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.USER_LIST)),
     DPIA_REPORT("Send DPIA-rapport", Arrays.asList(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER, EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.MESSAGE_FROM_SENDER, EmailTemplatePlaceholder.SENDER)),
-    DPIA_REPORT_TO_SIGN("Send DPIA-rapport til signering", Arrays.asList(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.MESSAGE_FROM_SENDER, EmailTemplatePlaceholder.SENDER));
+    DPIA_REPORT_TO_SIGN("Send DPIA-rapport til signering", Arrays.asList(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.MESSAGE_FROM_SENDER, EmailTemplatePlaceholder.SENDER)),
+    KITOS_SYSTEM_SYNCED("Mail ved nyt system synkroniseret fra KITOS", Arrays.asList(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.KITOS_UUID_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.EVENT_TIME_PLACEHOLDER)),
+    KITOS_SYSTEM_INACTIVATED("Mail ved system inaktiveret fra KITOS", Arrays.asList(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.KITOS_UUID_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.EVENT_TIME_PLACEHOLDER));
 
 
     private final String message;

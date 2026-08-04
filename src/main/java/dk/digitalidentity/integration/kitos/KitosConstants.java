@@ -33,6 +33,10 @@ public interface KitosConstants {
 
 	String KITOS_ENABLE_SYNC_ITSYSTEMS = "kitos_enable_sync_itsystems";
 
+	String KITOS_NOTIFICATION_RECIPIENT_EMAIL = "kitos_notification_recipient_email";
+	String KITOS_NOTIFY_ON_SYSTEM_SYNCED = "kitos_notify_on_system_synced";
+	String KITOS_NOTIFY_ON_SYSTEM_INACTIVATED = "kitos_notify_on_system_inactivated";
+
     ZonedDateTime KITOS_DELTA_START_FROM = OffsetDateTime.of(1970, 1, 1, 0, 0, 0 ,0, ZoneOffset.UTC).toZonedDateTime();
     OffsetDateTime KITOS_DELTA_START_FROM_OFFSET = KITOS_DELTA_START_FROM.toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);
 

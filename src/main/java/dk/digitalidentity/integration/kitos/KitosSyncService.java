@@ -17,6 +17,7 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.NotifyService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -67,6 +69,7 @@ public class KitosSyncService {
     private final SettingsService settingsService;
     private final KitosRolesDao rolesDao;
     private final ChoiceService choiceService;
+    private final NotifyService notifyService;
 
     @Transactional
     public void syncDeletedItSystems(final List<TrackingEventResponseDTO> deletionEvents) {
@@ -206,7 +209,11 @@ public class KitosSyncService {
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
 
         if (lifeCycleStatus != null) {
+            final boolean wasActive = asset.isActive();
             asset.setActive(valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
+            if (wasActive && !asset.isActive()) {
+                notifyService.notifyKitosSystemInactivated(asset, ZonedDateTime.now());
+            }
         }
 
         if (!valid) {
@@ -344,6 +351,7 @@ public class KitosSyncService {
 		setLinksFromKitosSystem(responseDTO, asset);
 
 		assetService.create(asset);
+		notifyService.notifyKitosSystemSynced(asset);
     }
 
 	private Supplier findOrCreateSupplier(final ItSystemResponseDTO responseDTO) {
@@ -389,6 +397,7 @@ public class KitosSyncService {
     }
 
     private void removeKitosUuid(final Asset asset) {
+        final boolean wasActive = asset.isActive();
         final List<Property> listCopy = new ArrayList<>(asset.getProperties());
         listCopy.stream()
             .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY) || p.getKey().equals(KITOS_USAGE_UUID_PROPERTY_KEY))
@@ -401,6 +410,9 @@ public class KitosSyncService {
 				asset.setActive(false);
 				asset.getProperties().remove(property);
 			});
+        if (wasActive && !asset.isActive()) {
+            notifyService.notifyKitosSystemInactivated(asset, ZonedDateTime.now());
+        }
     }
 
     private Optional<Asset> findItSystem(final String kitosUuid) {

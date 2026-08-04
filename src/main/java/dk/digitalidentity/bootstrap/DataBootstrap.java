@@ -156,6 +156,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(43, this::seedV43);
 		incrementAndPerformIfVersion(44, this::seedV44);
 		incrementAndPerformIfVersion(45, this::seedV45);
+		incrementAndPerformIfVersion(46, this::seedV46);
+	}
+
+	private void seedV46() {
+		settingsService.createSetting(KitosConstants.KITOS_NOTIFICATION_RECIPIENT_EMAIL, "", "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_NOTIFY_ON_SYSTEM_SYNCED, "false", "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_NOTIFY_ON_SYSTEM_INACTIVATED, "false", "kitos", true);
 	}
 
 	private void seedV45() {

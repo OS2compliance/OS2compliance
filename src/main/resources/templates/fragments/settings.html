@@ -388,6 +388,43 @@
                                             </select>
                                         </div>
                                     </div>
+                                    <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_NOTIFICATION_RECIPIENT_EMAIL}">
+                                        <div class="row mt-1" style="padding: 0px 8px;">
+                                            <label for="kitosNotificationRecipientEmailInput" class="col-sm-10 col-form-label"
+                                                   style="color: black;padding: 10px 0px;">KITOS-notifikationer: modtager(e) (adskil flere med komma eller semikolon)</label>
+                                            <input style="color:black;" class="form-control"
+                                                   id="kitosNotificationRecipientEmailInput"
+                                                   th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                        </div>
+                                    </div>
+                                    <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_NOTIFY_ON_SYSTEM_SYNCED}">
+                                        <div class="row mt-1" style="padding: 0px 8px;">
+                                            <span class="col-1">
+                                                <input type="checkbox" th:value="true"
+                                                       th:name="${'settingsList['+__${itemStat.index}__+'].settingKey'}"
+                                                       th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'"
+                                                       style="color:black;" class="form-check-input"
+                                                       th:id="${setting.settingKey + '_input'}"
+                                                       th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                            </span>
+                                            <label th:for="${setting.settingKey + '_input'}" class="col form-check-label"
+                                                   style="color: black;">Send notifikation når nyt system synkroniseres fra KITOS</label>
+                                        </div>
+                                    </div>
+                                    <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_NOTIFY_ON_SYSTEM_INACTIVATED}">
+                                        <div class="row mt-1" style="padding: 0px 8px;">
+                                            <span class="col-1">
+                                                <input type="checkbox" th:value="true"
+                                                       th:name="${'settingsList['+__${itemStat.index}__+'].settingKey'}"
+                                                       th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'"
+                                                       style="color:black;" class="form-check-input"
+                                                       th:id="${setting.settingKey + '_input'}"
+                                                       th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                            </span>
+                                            <label th:for="${setting.settingKey + '_input'}" class="col form-check-label"
+                                                   style="color: black;">Send notifikation når et system inaktiveres fordi det er inaktivt i KITOS</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

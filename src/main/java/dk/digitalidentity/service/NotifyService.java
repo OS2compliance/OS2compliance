@@ -2,6 +2,8 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.integration.kitos.KitosConstants;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
@@ -127,6 +131,61 @@ public class NotifyService {
                 }
             }
         }
+    }
+
+    public void notifyKitosSystemSynced(Asset asset) {
+        notifyKitosEvent(asset, ZonedDateTime.now(), EmailTemplateType.KITOS_SYSTEM_SYNCED,
+            KitosConstants.KITOS_NOTIFY_ON_SYSTEM_SYNCED);
+    }
+
+    public void notifyKitosSystemInactivated(Asset asset, ZonedDateTime inactivatedAt) {
+        notifyKitosEvent(asset, inactivatedAt, EmailTemplateType.KITOS_SYSTEM_INACTIVATED,
+            KitosConstants.KITOS_NOTIFY_ON_SYSTEM_INACTIVATED);
+    }
+
+    private void notifyKitosEvent(Asset asset, ZonedDateTime eventTime, EmailTemplateType templateType, String notifyToggleSettingKey) {
+        if (!settingsService.getBoolean(notifyToggleSettingKey, false)) {
+            return;
+        }
+        String email = settingsService.getString(KitosConstants.KITOS_NOTIFICATION_RECIPIENT_EMAIL, null);
+        if (!StringUtils.hasLength(email)) {
+            return;
+        }
+        EmailTemplate template = emailTemplateService.findByTemplateType(templateType);
+        if (!template.isEnabled()) {
+            log.info("Email template with type {} is disabled. Email was not sent.", template.getTemplateType());
+            return;
+        }
+
+        String kitosUuid = asset.getProperties().stream()
+            .filter(p -> KitosConstants.KITOS_UUID_PROPERTY_KEY.equals(p.getKey())
+                || KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY.equals(p.getKey()))
+            .map(p -> p.getValue())
+            .findFirst()
+            .orElse("");
+        final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
+        final String url = baseUrl + "/assets/" + asset.getId();
+        final String link = "<a href=\"" + url + "\">" + url + "</a>";
+        final String eventTimeText = eventTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));
+
+        String title = template.getTitle()
+            .replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), asset.getName())
+            .replace(EmailTemplatePlaceholder.KITOS_UUID_PLACEHOLDER.getPlaceholder(), kitosUuid)
+            .replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link)
+            .replace(EmailTemplatePlaceholder.EVENT_TIME_PLACEHOLDER.getPlaceholder(), eventTimeText);
+
+        String message = template.getMessage()
+            .replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), asset.getName())
+            .replace(EmailTemplatePlaceholder.KITOS_UUID_PLACEHOLDER.getPlaceholder(), kitosUuid)
+            .replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link)
+            .replace(EmailTemplatePlaceholder.EVENT_TIME_PLACEHOLDER.getPlaceholder(), eventTimeText);
+
+        eventPublisher.publishEvent(EmailEvent.builder()
+            .message(message)
+            .subject(title)
+            .email(email)
+            .templateType(template.getTemplateType())
+            .build());
     }
 
 	private void sendTaskEmail(EmailTemplate template, Task task, String recipientName, String recipientEmail) {
