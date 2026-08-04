@@ -109,11 +109,37 @@ public class DBSService {
 								.filter(Optional::isPresent)
 								.map(Optional::get)
 								.filter(t -> t.getTaskType() == TaskType.TASK
-										&& t.getNextDeadline().isAfter(now)
+										&& !taskService.isTaskDone(t)
 										&& t.getName().contains(Constants.DBS_TASK_NAME_MARKER))
-								.findFirst().ifPresentOrElse((task) -> {
+								// An asset can carry more than one unfinished DBS task (historic duplicates from back
+								// when overdue tasks were skipped), so do not let the relation order decide. Same rule
+								// as AssetOversightService uses when booking a completion, so the two never disagree
+								// about which task is the live one.
+								.max(TaskService.NEWEST_FIRST)
+								.ifPresentOrElse((task) -> {
 											// Task already exists — add oversight to description
 											task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
+
+											// Unfinished tasks now include overdue ones. Reset the deadline when it has
+											// passed, so the new oversight is actionable instead of being appended to a
+											// task that is already red and forgotten.
+											if (task.getNextDeadline() == null || !task.getNextDeadline().isAfter(now)) {
+												task.setNextDeadline(nowPlus30Days);
+											}
+
+											// Tasks created before the asset link was introduced carry no
+											// ASSOCIATED_INSPECTION_PROPERTY, and AssetOversightService finds oversight
+											// tasks through exactly that property. Without it the task can never be
+											// completed from the oversight flow, so it would stay unfinished forever and
+											// — now that we reuse overdue tasks — be reused forever. Backfill it.
+											if (task.getProperties().stream().noneMatch(p -> ASSOCIATED_INSPECTION_PROPERTY.equals(p.getKey()))) {
+												task.getProperties().add(Property.builder()
+														.key(ASSOCIATED_INSPECTION_PROPERTY)
+														.value(asset.getId().toString())
+														.entity(task)
+														.build());
+												log.info("Backfilled missing asset link on DBS task id={} for asset id={}", task.getId(), asset.getId());
+											}
 
 											//set link to the folder containing the documents
 											String url = "https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId();
