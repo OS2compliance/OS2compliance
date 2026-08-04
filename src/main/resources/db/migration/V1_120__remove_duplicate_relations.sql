@@ -28,27 +28,35 @@
 --    efter en omdoebning, har den nyeste raekke det friske navn og den aeldste et forael­det. Navnet
 --    vises i `related_entities` i R__view_gui_datatables.sql, saa naar properties ikke peger paa en
 --    bestemt raekke, beholder vi den NYESTE.
+--
+-- WITH-blokken ligger inde i IN-subquerien, ikke foran DELETE. MariaDB (10.6 i drift) tillader kun
+-- WITH foran en SELECT, saa `WITH ... DELETE` — som MySQL 8 accepterer — fejler med 1064. Formen her
+-- har den sidegevinst at begge CTE'er materialiseres (`normalized` refereres to gange,
+-- `duplicate_groups` har GROUP BY), saa vi ikke rammer 1093 ved at laese `relations` mens vi sletter
+-- i den.
 
-WITH normalized AS (SELECT r.id,
-                           LEAST(CONCAT(LPAD(r.relation_a_id, 20, '0'), ':', r.relation_a_type),
-                                 CONCAT(LPAD(r.relation_b_id, 20, '0'), ':', r.relation_b_type))    AS low_key,
-                           GREATEST(CONCAT(LPAD(r.relation_a_id, 20, '0'), ':', r.relation_a_type),
-                                    CONCAT(LPAD(r.relation_b_id, 20, '0'), ':', r.relation_b_type)) AS high_key,
-                           EXISTS (SELECT 1
-                                   FROM relation_properties p
-                                   WHERE p.relation_id = r.id)                                      AS has_properties
-                    FROM relations r),
-     duplicate_groups AS (SELECT low_key,
-                                 high_key,
-                                 MIN(CASE WHEN has_properties = 1 THEN id END) AS keep_with_properties,
-                                 MAX(id)                                       AS keep_newest
-                          FROM normalized
-                          GROUP BY low_key, high_key
-                          HAVING COUNT(*) > 1
-                             AND SUM(has_properties) <= 1)
 DELETE
 FROM relations
-WHERE id IN (SELECT n.id
+WHERE id IN (WITH normalized AS (SELECT r.id,
+                                        LEAST(CONCAT(LPAD(r.relation_a_id, 20, '0'), ':', r.relation_a_type),
+                                              CONCAT(LPAD(r.relation_b_id, 20, '0'), ':',
+                                                     r.relation_b_type))    AS low_key,
+                                        GREATEST(CONCAT(LPAD(r.relation_a_id, 20, '0'), ':', r.relation_a_type),
+                                                 CONCAT(LPAD(r.relation_b_id, 20, '0'), ':',
+                                                        r.relation_b_type)) AS high_key,
+                                        EXISTS (SELECT 1
+                                                FROM relation_properties p
+                                                WHERE p.relation_id = r.id) AS has_properties
+                                 FROM relations r),
+                  duplicate_groups AS (SELECT low_key,
+                                              high_key,
+                                              MIN(CASE WHEN has_properties = 1 THEN id END) AS keep_with_properties,
+                                              MAX(id)                                       AS keep_newest
+                                       FROM normalized
+                                       GROUP BY low_key, high_key
+                                       HAVING COUNT(*) > 1
+                                          AND SUM(has_properties) <= 1)
+             SELECT n.id
              FROM normalized n
                       JOIN duplicate_groups g
                            ON g.low_key = n.low_key AND g.high_key = n.high_key
