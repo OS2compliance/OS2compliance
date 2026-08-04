@@ -6,7 +6,6 @@ import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
