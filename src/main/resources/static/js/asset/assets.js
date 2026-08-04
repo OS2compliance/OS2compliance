@@ -5,7 +5,6 @@ import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 import { formatColorStatus } from "./asset-color-status-formatter.js";
 
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-let operationResponsibleLabel;
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -33,7 +32,6 @@ function formatShortDate(cell) {
 
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    operationResponsibleLabel = document.getElementById('assetsDatatable').dataset.operationResponsible;
     initFormDialog();
     initGrid();
     initGridActionButtons();
@@ -352,7 +350,7 @@ function initGrid() {
             {
                 id: 'operationResponsible',
                 hidden: true,
-                name: operationResponsibleLabel,
+                name: "Driftsansvarlig",
                 searchable: {
                     searchKey: 'operationResponsibleUsers'
                 }
