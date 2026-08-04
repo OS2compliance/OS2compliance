@@ -51,15 +51,24 @@ def titles_by_number(workbook)
   titles
 end
 
-# {aktivitetsnummer => {"kleMainGroups" => Set, ...}}
+# Koder KL selv har markeret som udgåede i emnetitlen. De findes ikke i KLE's
+# emneplan - hverken i vores bundtede eller på api.kle-online.dk - så de kan aldrig
+# slås op. De holdes ude af rapportens liste over ukendte koder, så den liste kun
+# indeholder det der faktisk kan handles på: en for gammel emneplan.
+RETIRED_MARKER = '[udgået]'
+
+# {aktivitetsnummer => {"kleMainGroups" => Set, ...}}, plus sættet af udgåede koder
 def kle_by_number(workbook)
   kle = {}
+  retired = Set.new
   unknown_levels = Set.new
   workbook.rows(KLE_SHEET) do |rownum, cells|
     next if rownum < 2
 
     level, code, number = cells['B'], cells['C'], cells['E']
     next unless level && code && number
+
+    retired << code if cells['D'].to_s.include?(RETIRED_MARKER)
 
     field = LEVELS[level]
     unknown_levels << level and next unless field
@@ -68,7 +77,7 @@ def kle_by_number(workbook)
     kle[number][field] << code
   end
   warn "ukendte niveauer i kolonne B: #{unknown_levels.to_a.join(', ')}" if unknown_levels.any?
-  kle
+  [kle, retired]
 end
 
 # KLE-nummeret bærer sit eget hierarki: emnet 00.07.45 hører under gruppen 00.07 og
@@ -98,7 +107,7 @@ end
 
 # Koder appen ikke kender bliver droppet lydløst ved import: KLESubjectService
 # slår op på nummer og finder ingenting, uden at det fejler nogen steder.
-def report_unknown_codes(kle)
+def report_unknown_codes(kle, retired)
   valid = valid_kle_codes
   return puts "kunne ikke tjekke koder - #{EMNEPLAN} findes ikke" unless valid
 
@@ -106,7 +115,11 @@ def report_unknown_codes(kle)
   LEVELS.values.each do |field|
     used = kle.values.reduce(Set.new) { |all, entry| all | entry[field] }
     unknown = (used - valid[field]).to_a.sort
-    puts "   #{field}: #{used.size} brugt, #{unknown.size} ukendte#{unknown.any? ? " #{unknown.join(', ')}" : ''}"
+    aktuelle = unknown - retired.to_a
+    udgaaede = unknown & retired.to_a
+    puts "   #{field}: #{used.size} brugt"
+    puts "      #{aktuelle.size} ukendte#{aktuelle.any? ? " - opdater emneplanen: #{aktuelle.join(', ')}" : ''}"
+    puts "      #{udgaaede.size} markeret #{RETIRED_MARKER} i arket#{udgaaede.any? ? " (forventet, kan ikke slås op): #{udgaaede.join(', ')}" : ''}"
   end
 end
 
@@ -118,7 +131,7 @@ args.delete('--ud')
 
 workbook = Xlsx.new(locate_workbook(args.first))
 titles = titles_by_number(workbook)
-kle = kle_by_number(workbook)
+kle, retired = kle_by_number(workbook)
 derived = complete_hierarchy(kle)
 puts "aktiviteter med KLE: #{kle.size} af #{titles.size}"
 puts "forælder-koder udledt af emne-/gruppenummer (manglede i arket): #{derived}"
@@ -127,7 +140,7 @@ puts "uden KLE i arket: #{missing_kle.any? ? missing_kle.join(', ') : 'ingen'}"
 
 unknown_activities = kle.keys - titles.keys
 puts "KLE-rækker på ukendt aktivitetsnummer: #{unknown_activities.any? ? unknown_activities.join(', ') : 'ingen'}"
-report_unknown_codes(kle)
+report_unknown_codes(kle, retired)
 
 kle_by_title = kle.to_h { |number, fields| [normalise(titles[number]), fields] }
 
