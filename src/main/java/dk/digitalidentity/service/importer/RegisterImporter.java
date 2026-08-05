@@ -66,6 +66,48 @@ public class RegisterImporter {
 
 	}
 
+	/**
+	 * Adds the KLE codes from the package that the register is missing, and removes nothing.
+	 * <p>
+	 * {@link #enrichWithKLE} can only associate codes that exist in the KLE tables at the moment it
+	 * runs, and it runs once, at bootstrap, right after the bundled {@code data/kle-emneplan.xml} has
+	 * been loaded. A package referring to a code that KLE published after that snapshot was taken
+	 * therefore loses it silently - the lookup simply finds nothing. The nightly {@code KLEApiTask}
+	 * adds the code to the database later the same day, but nothing revisits the association.
+	 * <p>
+	 * This fills that gap after a KLE sync has brought in new codes. It is deliberately additive: a
+	 * municipality may have adjusted the KLE on a KL register itself, and repairing our own omission
+	 * must not undo their work. Removing a code that KL dropped from the mapping belongs to the
+	 * package update in {@code DataBootstrap}, not here.
+	 *
+	 * @return the number of codes added across all three levels
+	 */
+	@Transactional
+	public int backfillMissingKLE(final Resource resource) throws IOException {
+		final String jsonString = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+		final RegisterDTO registerDTO = objectMapper.readValue(jsonString, RegisterDTO.class);
+
+		return registerService.findByName(registerDTO.getName()).map(register -> {
+			final Set<KLEMainGroup> mainGroups = kleMainGroupService.getAllByMainGroupNumbers(registerDTO.getKleMainGroups());
+			final Set<KLEGroup> groups = kleGroupService.getAllByGroupNumbers(registerDTO.getKleGroups());
+			final Set<KLESubject> subjects = kleSubjectService.findAllBySubjectNumbers(registerDTO.getKleSubjects());
+			int added = 0;
+			for (final KLEMainGroup mainGroup : mainGroups) {
+				added += register.getKleMainGroups().add(mainGroup) ? 1 : 0;
+			}
+			for (final KLEGroup group : groups) {
+				added += register.getKleGroups().add(group) ? 1 : 0;
+			}
+			for (final KLESubject subject : subjects) {
+				added += register.getKleSubjects().add(subject) ? 1 : 0;
+			}
+			if (added > 0) {
+				log.info("Backfilled {} KLE code(s) on register '{}'", added, register.getName());
+			}
+			return added;
+		}).orElse(0);
+	}
+
     @Transactional
     public void updateRegisterGdprChoices(final Resource resource) throws IOException {
         final String jsonString = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
