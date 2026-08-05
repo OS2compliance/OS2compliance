@@ -51,7 +51,7 @@ public class KLEApiTask {
 			final KLEEmneplanKomponent emneplan = kleService.fetchAllFromApi();
 			kleService.syncToDatabase(emneplan);
 			log.info("Finished syncing data from KLE API");
-			backfillRegisterKLE(emneplan);
+			backfillRegisterKLEIfNewPublication(emneplan);
 		}
 		catch (JAXBException e) {
 			log.error(e.getMessage(), e);
@@ -67,13 +67,14 @@ public class KLEApiTask {
 	 * this sync is the first moment the code exists in the database. Without this, only a new release
 	 * of the bundled snapshot would repair it, and only for installations created after that release.
 	 * <p>
-	 * Runs at most once per KLE publication: the emneplan carries an UdgivelsesDato, and a new date is
-	 * the only thing that can bring new codes. Nothing happens on the following nights, so the additive
-	 * write cannot grow into a nightly overwrite of the KLE a municipality has adjusted itself. For the
+	 * Called after every sync but does the work at most once per KLE publication: the emneplan carries
+	 * an UdgivelsesDato, and a new date is the only thing that can bring new codes, so a run on an
+	 * unchanged date costs one settings lookup and stops. That matters - without the gate the additive
+	 * write would grow into a nightly overwrite of the KLE a municipality has adjusted itself. For the
 	 * same reason it only adds: removing a code KL has dropped from its mapping belongs to the package
 	 * update in {@code DataBootstrap}, where it is a deliberate, reviewed change.
 	 */
-	private void backfillRegisterKLE(final KLEEmneplanKomponent emneplan) {
+	private void backfillRegisterKLEIfNewPublication(final KLEEmneplanKomponent emneplan) {
 		if (emneplan.getUdgivelsesDato() == null) {
 			return;
 		}
