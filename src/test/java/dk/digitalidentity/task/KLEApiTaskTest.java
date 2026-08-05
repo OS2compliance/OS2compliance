@@ -79,17 +79,20 @@ class KLEApiTaskTest {
 	}
 
 	/**
-	 * An unreadable package must leave the emneplan unmarked, so the next run gets another go at what
-	 * was missed instead of the omission becoming permanent.
+	 * A package that cannot be read must not leave the emneplan unmarked. The next night would repeat
+	 * the whole pass, and a code the municipality had removed in the meantime would be added back -
+	 * every night, for as long as the package stays unreadable. So the remaining packages are still
+	 * attempted, the failure is logged, and there is no retry.
 	 */
 	@Test
-	void leavesTheEmneplanUnmarkedWhenAPackageCannotBeRead() throws IOException {
+	void marksTheEmneplanHandledEvenWhenAPackageCannotBeRead() throws IOException {
 		doReturn("").when(settingsService).getString(Constants.KLE_BACKFILL_EMNEPLAN_DATE_SETTING, "");
 		doThrow(new IOException("unreadable")).when(registerImporter).backfillMissingKLE(any());
 
 		task.fetchAllFromKLEAPI();
 
-		verify(settingsService, never()).setString(any(), any());
+		verify(registerImporter, times(2)).backfillMissingKLE(any());
+		verify(settingsService).setString(Constants.KLE_BACKFILL_EMNEPLAN_DATE_SETTING, PUBLISHED);
 	}
 
 	private static Resource packageResource(final String filename) {

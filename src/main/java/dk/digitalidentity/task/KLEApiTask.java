@@ -70,9 +70,11 @@ public class KLEApiTask {
 	 * Called after every sync but does the work at most once per KLE publication: the emneplan carries
 	 * an UdgivelsesDato, and a new date is the only thing that can bring new codes, so a run on an
 	 * unchanged date costs one settings lookup and stops. That matters - without the gate the additive
-	 * write would grow into a nightly overwrite of the KLE a municipality has adjusted itself. For the
-	 * same reason it only adds: removing a code KL has dropped from its mapping belongs to the package
-	 * update in {@code DataBootstrap}, where it is a deliberate, reviewed change.
+	 * write would grow into a nightly overwrite of the KLE a municipality has adjusted itself, and it is
+	 * also why the date is written even when a package could not be read: a pass that ended early would
+	 * leave the date unwritten and repeat every night, which is that same overwrite by another route.
+	 * For the same reason it only adds: removing a code KL has dropped from its mapping belongs to the
+	 * package update in {@code DataBootstrap}, where it is a deliberate, reviewed change.
 	 */
 	private void backfillRegisterKLEIfNewPublication(final KLEEmneplanKomponent emneplan) {
 		if (emneplan.getUdgivelsesDato() == null) {
@@ -87,19 +89,31 @@ public class KLEApiTask {
 				.sorted(Comparator.comparing(Resource::getFilename))
 				.toList();
 		int added = 0;
+		int failed = 0;
 		for (final Resource register : sortedResources) {
 			try {
 				added += registerImporter.backfillMissingKLE(register);
 			}
 			catch (IOException e) {
-				// An unreadable package must not stop the rest - and the emneplan must not be marked as
-				// handled, so the next run gets another go at what was missed
+				// Log and carry on. The emneplan is marked as handled below even when this happens, and
+				// that is the important part: a run that ended early would leave the date unwritten, and
+				// then the next night would repeat the whole pass. Codes a municipality had deliberately
+				// removed in the meantime would be added back, every night - exactly the overwrite the
+				// gate exists to prevent. An unreadable classpath resource is a packaging defect that
+				// needs a human, not a retry, and the register gets its codes from the package update in
+				// DataBootstrap when the fix is released.
 				log.error("Could not backfill KLE from package {}", register.getFilename(), e);
-				return;
+				failed++;
 			}
 		}
 		settingsService.setString(Constants.KLE_BACKFILL_EMNEPLAN_DATE_SETTING, publishedDate);
-		log.info("Backfilled {} missing KLE code(s) across {} KL register package(s) for emneplan {}",
-				added, sortedResources.size(), publishedDate);
+		if (failed > 0) {
+			log.error("Backfilled {} missing KLE code(s) for emneplan {}, but {} of {} package(s) could not be read"
+					+ " - they will not be retried", added, publishedDate, failed, sortedResources.size());
+		}
+		else {
+			log.info("Backfilled {} missing KLE code(s) across {} KL register package(s) for emneplan {}",
+					added, sortedResources.size(), publishedDate);
+		}
 	}
 }
