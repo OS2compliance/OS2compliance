@@ -23,6 +23,7 @@ export default class ColumnOptions {
     confirmButtonClass = 'columnOptionsConfirmButton';
     limitInfoClass = 'columnOptionsLimitInfo';
     maxVisibleColumns = null;
+    sortOptionsAlphabetically = false;
 
     /**
      * Creates a GridColumn instantiation for the given grid, with the configs provided
@@ -36,8 +37,10 @@ export default class ColumnOptions {
      * @param maxVisibleColumns An optional cap on how many columns (including always-shown ones) may be
      * visible at once. When the cap is reached, further columns must be hidden before new ones can be shown.
      * Pass null (default) for no limit.
+     * @param sortOptionsAlphabetically When true, the option list is sorted alphabetically by column name
+     * instead of following the column order in the grid config. Defaults to false.
      */
-    constructor(tableElementId, grid, alwaysShowIds = [], defaultShowingIds = [], neverShowIds = ['id'], buttonContainerSelector = '.tableOptionsContainer', maxVisibleColumns = null) {
+    constructor(tableElementId, grid, alwaysShowIds = [], defaultShowingIds = [], neverShowIds = ['id'], buttonContainerSelector = '.tableOptionsContainer', maxVisibleColumns = null, sortOptionsAlphabetically = false) {
         if (!tableElementId || !grid) {
             throw new Error('ColumnOptions was not provided with required arguments');
         }
@@ -49,6 +52,7 @@ export default class ColumnOptions {
         this.tableElementId = tableElementId
         this.buttonContainerSelector = buttonContainerSelector
         this.maxVisibleColumns = maxVisibleColumns
+        this.sortOptionsAlphabetically = sortOptionsAlphabetically
 
         this.getInitialState(defaultShowingIds);
         this.createOptionsContainer()
@@ -159,8 +163,13 @@ export default class ColumnOptions {
         optionMenuContainer.innerHTML = '';
         this.tempState = {}
 
+        let entries = Object.entries(this.state)
+        if (this.sortOptionsAlphabetically) {
+            entries = entries.sort(([, a], [, b]) => a.name.localeCompare(b.name, 'da'))
+        }
+
         // create item for all that can possibly be shown
-        for (const [id, column] of Object.entries(this.state)) {
+        for (const [id, column] of entries) {
             // do not show columns that cannot be changed
             if (!column.neverShow && !column.alwaysShow) {
                 const item = this.createItem(id, column.name, !column.hidden);

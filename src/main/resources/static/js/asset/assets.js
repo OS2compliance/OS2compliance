@@ -573,7 +573,7 @@ function initGrid() {
 
     const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, datatableId);
 
-    new ColumnOptions(datatableId, grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos', 'riskScore', 'riskData'], '.tableOptionsContainer', 10)
+    new ColumnOptions(datatableId, grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos', 'riskScore', 'riskData'], '.tableOptionsContainer', 10, true)
 
     initSaveAsExcelButton(customGridFunctions, 'asset', 'assets', 'Aktiver')
 }
