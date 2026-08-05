@@ -215,7 +215,7 @@ function initGrid() {
                 },
             },
             {
-                id: 'risikoVurdering',
+                id: 'threatAssessment',
                 name: "Risikovurdering",
                 searchable: {
                     searchKey: 'assessment',
@@ -235,8 +235,7 @@ function initGrid() {
                     }
 
                     const badge = document.createElement('div');
-                    badge.className = `d-block badge ${badgeClassByAssessment[cell]}`;
-                    badge.style.width = '60px';
+                    badge.className = `d-block badge badge-style-sm ${badgeClassByAssessment[cell]}`;
                     badge.textContent = cell;
 
                     return gridjs.html(badge.outerHTML, 'div')
