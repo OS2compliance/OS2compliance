@@ -172,6 +172,7 @@ export default class ColumnOptions {
         }
 
         this.updateLimitInfo()
+        this.updateOptionItemStates()
     }
 
     /**
@@ -216,14 +217,27 @@ export default class ColumnOptions {
     }
 
     /**
-     * Shows feedback when the user tries to show more columns than allowed
+     * Disables the option items for hidden columns once the maximum number of visible columns is
+     * reached, so the user cannot show more until one is hidden again. Items for already-shown
+     * columns stay enabled so they can still be hidden.
      */
-    showMaxColumnsReachedWarning() {
-        const message = `Du kan højst vise ${this.maxVisibleColumns} kolonner ad gangen. Fjern en kolonne for at tilføje en anden.`;
-        if (typeof toastService !== 'undefined' && toastService?.error) {
-            toastService.error(message);
-        } else {
-            console.warn(message);
+    updateOptionItemStates() {
+        if (!this.maxVisibleColumns || !this.optionsContainer) {
+            return;
+        }
+
+        const optionMenuContainer = this.optionsContainer.querySelector(`.${this.optionsMenuContainerClass}`);
+        if (!optionMenuContainer) {
+            return;
+        }
+
+        const atLimit = this.countVisibleColumns() >= this.maxVisibleColumns;
+
+        for (const item of optionMenuContainer.querySelectorAll(`.${this.optionItemClass}`)) {
+            const isShown = !this.tempState[item.dataset.columnId];
+            const disable = atLimit && !isShown;
+            item.classList.toggle('disabled', disable);
+            item.setAttribute('aria-disabled', String(disable));
         }
     }
 
@@ -263,25 +277,26 @@ export default class ColumnOptions {
      */
     toggleOption(element) {
         if (element) {
+            if (element.classList.contains('disabled')) {
+                return;
+            }
+
             const iconElement = element.querySelector(`.${this.optionIconClass}`)
             const id = element.dataset.columnId
-            const isCurrentlyShown = !this.state[id].hidden
+            const isCurrentlyShown = !this.tempState[id]
 
             if (isCurrentlyShown) {
                 iconElement.classList.remove('ti-check')
                 iconElement.classList.add('ti-minus')
                 this.tempState[id] = true
             } else {
-                if (this.maxVisibleColumns && this.countVisibleColumns() >= this.maxVisibleColumns) {
-                    this.showMaxColumnsReachedWarning();
-                    return;
-                }
                 iconElement.classList.add('ti-check')
                 iconElement.classList.remove('ti-minus')
                 this.tempState[id] = false
             }
 
             this.updateLimitInfo()
+            this.updateOptionItemStates()
         } else {
             console.info("Attempted to toggle option, but no element was passed")
         }

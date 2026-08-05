@@ -17,17 +17,21 @@ const updateUrl = (prev, query) => {
 };
 
 function formatShortDate(cell) {
+    const span = document.createElement('span');
+
     if (!cell || cell.trim() === '') {
-        return gridjs.html(`<span>-</span>`);
+        span.textContent = '-';
+        return gridjs.html(span.outerHTML);
     }
 
     const dateParts = cell.split('-');
     if (dateParts.length === 3) {
-        const formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
-        return gridjs.html(`<span>${formattedDate}</span>`);
+        span.textContent = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+        return gridjs.html(span.outerHTML);
     }
 
-    return gridjs.html(`<span>${cell}</span>`);
+    span.textContent = cell;
+    return gridjs.html(span.outerHTML);
 }
 
 
@@ -116,14 +120,26 @@ function initGrid() {
                 },
                 formatter: (cell, row) => {
                     const url = viewUrl + row.cells[0]['data'];
-                    if(row.cells[1]['data'] == 'true') {
+
+                    const container = document.createElement('span');
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.textContent = cell;
+                    container.appendChild(link);
+
+                    if (row.cells[1]['data'] == 'true') {
+                        container.appendChild(document.createTextNode(' '));
+                        const img = document.createElement('img');
+                        img.src = '/img/kitos_icon.svg';
+                        img.alt = 'OS2kitos Logo';
+                        img.width = 40;
                         if (row.cells[12]['data'] == true) {
-                            return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" class="grayscale">`);
+                            img.classList.add('grayscale');
                         }
-                        return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" >`);
-                    } else {
-                        return gridjs.html(`<a href="${url}">${cell}</a>`);
+                        container.appendChild(img);
                     }
+
+                    return gridjs.html(container.innerHTML);
                 }
             },
             {
@@ -133,7 +149,7 @@ function initGrid() {
                 }
             },
             {
-                id: 'aktiv',
+                id: 'asset',
                 name: "Aktiv/Inaktiv",
                 searchable: {
                     searchKey: 'active',
@@ -190,19 +206,7 @@ function initGrid() {
                 searchable: {
                     searchKey: 'lastOversightDate'
                 },
-                formatter: (cell, row) => {
-                    if (!cell || cell.trim() === '') {
-                        return gridjs.html(`<span>-</span>`);
-                    }
-
-                    var dateParts = cell.split('-');
-                    if (dateParts.length === 3) {
-                        var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
-                        return gridjs.html(`<span>${formattedDate}</span>`);
-                    }
-
-                return gridjs.html(`<span>${cell}</span>`);
-                }
+                formatter: (cell, row) => formatShortDate(cell)
             },
             {
                 name: "Antal beh.",
@@ -218,29 +222,24 @@ function initGrid() {
                     fieldId:'assetRiskSearchSelector'
                 },
                 formatter: (cell, row) => {
-                    var assessment = [];
-                    if (cell === "Grøn") {
-                        assessment = [
-                            '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
-                        ]
-                    } else if (cell === "Lysgrøn") {
-                        assessment = [
-                            '<div class="d-block badge bg-green-300" style="width: 60px">' + cell + '</div>'
-                        ]
-                    } else if (cell === "Gul") {
-                        assessment = [
-                            '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
-                        ]
-                    } else if (cell === "Orange") {
-                        assessment = [
-                            '<div class="d-block badge bg-orange" style="width: 60px">' + cell + '</div>'
-                        ]
-                    } else if (cell === "Rød") {
-                        assessment = [
-                            '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
-                        ]
+                    const badgeClassByAssessment = {
+                        'Grøn': 'bg-green',
+                        'Lysgrøn': 'bg-green-300',
+                        'Gul': 'bg-yellow-500',
+                        'Orange': 'bg-orange',
+                        'Rød': 'bg-red'
+                    };
+
+                    if (!badgeClassByAssessment.hasOwnProperty(cell)) {
+                        return gridjs.html('', 'div');
                     }
-                    return gridjs.html(''.concat(...assessment), 'div')
+
+                    const badge = document.createElement('div');
+                    badge.className = `d-block badge ${badgeClassByAssessment[cell]}`;
+                    badge.style.width = '60px';
+                    badge.textContent = cell;
+
+                    return gridjs.html(badge.outerHTML, 'div')
                 },
             },
             {
@@ -250,15 +249,21 @@ function initGrid() {
                     fieldId : 'assetStatusSearchSelector'
                 },
                 formatter: (cell, row) => {
-                    var status = cell;
-                    if (cell === "Ikke startet") {
-                        status = '<div class="d-block badge bg-warning">' + cell + '</div>'
-                    } else if (cell === "I gang") {
-                        status = '<div class="d-block badge bg-info">' + cell + '</div>'
-                    } else if (cell === "Klar") {
-                        status = '<div class="d-block badge bg-success">' + cell + '</div>'
+                    const badgeClassByStatus = {
+                        'Ikke startet': 'bg-warning',
+                        'I gang': 'bg-info',
+                        'Klar': 'bg-success'
+                    };
+
+                    if (!badgeClassByStatus.hasOwnProperty(cell)) {
+                        return gridjs.html(cell, 'div');
                     }
-                    return gridjs.html(status, 'div');
+
+                    const badge = document.createElement('div');
+                    badge.className = `d-block badge ${badgeClassByStatus[cell]}`;
+                    badge.textContent = cell;
+
+                    return gridjs.html(badge.outerHTML, 'div');
                 },
             },
             {
@@ -344,7 +349,14 @@ function initGrid() {
                     if (!cell) {
                         return '';
                     }
-                    return gridjs.html(`<span class="d-inline-block text-truncate" style="max-width: 250px;" title="${cell.replace(/"/g, '&quot;')}">${cell}</span>`);
+
+                    const span = document.createElement('span');
+                    span.className = 'd-inline-block text-truncate';
+                    span.style.maxWidth = '250px';
+                    span.title = cell;
+                    span.textContent = cell;
+
+                    return gridjs.html(span.outerHTML);
                 }
             },
             {

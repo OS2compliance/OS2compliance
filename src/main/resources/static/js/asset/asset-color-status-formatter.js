@@ -19,5 +19,9 @@ export function formatColorStatus(cell) {
         return '';
     }
 
-    return gridjs.html(`<div class="d-block badge ${badgeClassByValue[cell]}" style="width: 90px">${cell}</div>`, 'div');
+    const badge = document.createElement('div');
+    badge.className = `d-block badge badge-style ${badgeClassByValue[cell]}`;
+    badge.textContent = cell;
+
+    return gridjs.html(badge.outerHTML, 'div');
 }
