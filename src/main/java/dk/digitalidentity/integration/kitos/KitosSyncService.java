@@ -307,7 +307,9 @@ public class KitosSyncService {
 		} else {
 			desired = Collections.emptyList();
 		}
-		if (!new HashSet<>(asset.getResponsibleUsers()).equals(new HashSet<>(desired))) {
+		final Set<String> existingUuids = asset.getResponsibleUsers().stream().map(User::getUuid).collect(Collectors.toSet());
+		final Set<String> desiredUuids = desired.stream().map(User::getUuid).collect(Collectors.toSet());
+		if (!existingUuids.equals(desiredUuids)) {
 			asset.getResponsibleUsers().clear();
 			asset.getResponsibleUsers().addAll(desired);
 		}
