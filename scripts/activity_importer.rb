@@ -27,6 +27,12 @@ require_relative 'xlsx'
 SHEET = 'Behandlingsaktiviteter'
 FIRST_DATA_ROW = 3
 
+# KL beholder udgåede aktiviteter i arket og markerer dem i nummeret, fx "81 - UDGÅET".
+# De skal ikke blive pakker: en pakke bliver oprettet som fortegnelse hos hver kunde, og en
+# fortegnelse med UDGÅET i titlen er ikke noget nogen skal have i sin oversigt. Arket er
+# stadig kilden - vi undlader bare at gøre en udgået aktivitet til en fortegnelse.
+RETIRED_ACTIVITY = /udgået/i
+
 GDPR_MAIN = { 'K' => 'valp6', 'R' => 'valp7', 'AC' => 'valp8', 'AD' => 'valp9',
               'AE' => 'valp10', 'AF' => 'valp11', 'AG' => 'valp12', 'AH' => 'valp13',
               'AI' => 'valp14' }.freeze
@@ -68,6 +74,11 @@ def read_activities(path)
     # pakke. Sig det højt frem for at skrive "name": null ned i en fil.
     if cells['D'].nil?
       warn "række #{rownum}: aktivitet #{number} har ingen titel i kolonne D - sprunget over"
+      next
+    end
+
+    if "#{number} #{cells['D']}".match?(RETIRED_ACTIVITY)
+      puts "udgået aktivitet sprunget over: #{number}"
       next
     end
 

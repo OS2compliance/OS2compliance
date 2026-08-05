@@ -42,11 +42,19 @@ def locate_workbook(argument)
   end
 end
 
-# {aktivitetsnummer => titel}
+# Udgåede aktiviteter er markeret i nummeret, fx "81 - UDGÅET". activity_importer.rb laver
+# ikke pakker af dem, så de holdes også ude her - ellers ville rapporten hver gang melde en
+# aktivitet uden KLE, som vi bevidst har sprunget over.
+RETIRED_ACTIVITY = /udgået/i
+
+# {aktivitetsnummer => titel}, uden de udgåede aktiviteter
 def titles_by_number(workbook)
   titles = {}
   workbook.rows(ACTIVITY_SHEET) do |rownum, cells|
-    titles[cells['B']] = cells['D'] if rownum >= 3 && cells['B'] && cells['D']
+    next if rownum < 3 || cells['B'].nil? || cells['D'].nil?
+    next if "#{cells['B']} #{cells['D']}".match?(RETIRED_ACTIVITY)
+
+    titles[cells['B']] = cells['D']
   end
   titles
 end
