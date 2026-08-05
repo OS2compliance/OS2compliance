@@ -292,7 +292,10 @@ export default class ColumnOptions {
 
             const iconElement = element.querySelector(`.${this.optionIconClass}`)
             const id = element.dataset.columnId
-            const isCurrentlyShown = !this.tempState[id]
+            const isCurrentlyShown = this.tempState.hasOwnProperty(id)
+                ? !this.tempState[id]
+                : !this.state[id].hidden;
+
 
             if (isCurrentlyShown) {
                 iconElement.classList.remove('ti-check')
