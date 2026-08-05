@@ -225,7 +225,6 @@ public interface AssetMapper {
         @Mapping(target = "dpiaOptOutReason", ignore = true),
         @Mapping(target = "oversightResponsibleUser", ignore = true),
         @Mapping(target = "assetType", ignore = true),
-		@Mapping(target = "aiStatus", ignore = true),
 		@Mapping(target = "aiRisk", ignore = true),
 		@Mapping(target = "active", ignore = true),
 		@Mapping(target = "dpiaCompletionStatus", ignore = true),

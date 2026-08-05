@@ -84,17 +84,17 @@ public class EmailTemplateService {
                         "<p>Personen har skrevet denne besked til dig:</p><p>{besked}</p>" +
                         "<p>Rapporten skal signeres. Det kan du gøre ved at følge dette link: {link}</p>";
                     break;
-                case KITOS_SYSTEM_SYNCED:
-                    title = "Nyt system synkroniseret fra KITOS: {objekt}";
-                    message = "<p>Et nyt IT-system er blevet synkroniseret fra KITOS til OS2compliance.</p>" +
-                        "<p>System: {objekt} (KITOS-UUID: {kitos_uuid})</p>" +
+                case ASSET_SYSTEM_CREATED:
+                    title = "Nyt system registreret automatisk: {objekt}";
+                    message = "<p>Et nyt IT-system er blevet registreret automatisk i OS2compliance.</p>" +
+                        "<p>System: {objekt} (id: {ekstern_id})</p>" +
                         "<p>Tidspunkt: {tidspunkt}</p>" +
                         "<p>Du kan finde aktivet her: {link}</p>";
                     break;
-                case KITOS_SYSTEM_INACTIVATED:
-                    title = "System inaktiveret i KITOS: {objekt}";
-                    message = "<p>Et IT-system er blevet markeret som inaktivt i KITOS og er derfor inaktiveret i OS2compliance.</p>" +
-                        "<p>System: {objekt} (KITOS-UUID: {kitos_uuid})</p>" +
+                case ASSET_SYSTEM_DEACTIVATED:
+                    title = "System inaktiveret automatisk: {objekt}";
+                    message = "<p>Et IT-system er blevet inaktiveret automatisk i OS2compliance.</p>" +
+                        "<p>System: {objekt} (id: {ekstern_id})</p>" +
                         "<p>Tidspunkt: {tidspunkt}</p>" +
                         "<p>Du kan finde aktivet her: {link}</p>";
                     break;

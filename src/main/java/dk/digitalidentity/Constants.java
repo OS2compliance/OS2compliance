@@ -54,6 +54,10 @@ public interface Constants {
 
 	String DBS_OVERSIGHT_RECIPIENT_SETTING = "dbsOversightRecipient";
 
+	String ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL = "asset_sync_notification_recipient_email";
+	String ASSET_SYNC_NOTIFY_ON_CREATED = "asset_sync_notify_on_created";
+	String ASSET_SYNC_NOTIFY_ON_DEACTIVATED = "asset_sync_notify_on_deactivated";
+
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendValue(DAY_OF_MONTH, 2)

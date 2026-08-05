@@ -616,7 +616,7 @@ public class AssetsController {
 		existingAsset.setDepartments(asset.getDepartments());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY))) {
-			existingAsset.setActive(asset.isActive());
+			assetService.setActive(existingAsset, asset.isActive());
 		}
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {

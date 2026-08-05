@@ -160,9 +160,9 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	}
 
 	private void seedV46() {
-		settingsService.createSetting(KitosConstants.KITOS_NOTIFICATION_RECIPIENT_EMAIL, "", "kitos", true);
-		settingsService.createSetting(KitosConstants.KITOS_NOTIFY_ON_SYSTEM_SYNCED, "false", "kitos", true);
-		settingsService.createSetting(KitosConstants.KITOS_NOTIFY_ON_SYSTEM_INACTIVATED, "false", "kitos", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL, "", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_CREATED, "false", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_DEACTIVATED, "false", "assetsync", true);
 	}
 
 	private void seedV45() {

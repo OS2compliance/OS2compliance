@@ -133,21 +133,21 @@ public class NotifyService {
         }
     }
 
-    public void notifyKitosSystemSynced(Asset asset) {
-        notifyKitosEvent(asset, ZonedDateTime.now(), EmailTemplateType.KITOS_SYSTEM_SYNCED,
-            KitosConstants.KITOS_NOTIFY_ON_SYSTEM_SYNCED);
+    public void notifyAssetSystemCreated(Asset asset) {
+        notifyAssetSyncEvent(asset, ZonedDateTime.now(), EmailTemplateType.ASSET_SYSTEM_CREATED,
+            Constants.ASSET_SYNC_NOTIFY_ON_CREATED);
     }
 
-    public void notifyKitosSystemInactivated(Asset asset, ZonedDateTime inactivatedAt) {
-        notifyKitosEvent(asset, inactivatedAt, EmailTemplateType.KITOS_SYSTEM_INACTIVATED,
-            KitosConstants.KITOS_NOTIFY_ON_SYSTEM_INACTIVATED);
+    public void notifyAssetSystemDeactivated(Asset asset) {
+        notifyAssetSyncEvent(asset, ZonedDateTime.now(), EmailTemplateType.ASSET_SYSTEM_DEACTIVATED,
+            Constants.ASSET_SYNC_NOTIFY_ON_DEACTIVATED);
     }
 
-    private void notifyKitosEvent(Asset asset, ZonedDateTime eventTime, EmailTemplateType templateType, String notifyToggleSettingKey) {
+    private void notifyAssetSyncEvent(Asset asset, ZonedDateTime eventTime, EmailTemplateType templateType, String notifyToggleSettingKey) {
         if (!settingsService.getBoolean(notifyToggleSettingKey, false)) {
             return;
         }
-        String email = settingsService.getString(KitosConstants.KITOS_NOTIFICATION_RECIPIENT_EMAIL, null);
+        String email = settingsService.getString(Constants.ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL, null);
         if (!StringUtils.hasLength(email)) {
             return;
         }
@@ -157,7 +157,7 @@ public class NotifyService {
             return;
         }
 
-        String kitosUuid = asset.getProperties().stream()
+        String sourceId = asset.getProperties().stream()
             .filter(p -> KitosConstants.KITOS_UUID_PROPERTY_KEY.equals(p.getKey())
                 || KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY.equals(p.getKey()))
             .map(p -> p.getValue())
@@ -170,13 +170,13 @@ public class NotifyService {
 
         String title = template.getTitle()
             .replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), asset.getName())
-            .replace(EmailTemplatePlaceholder.KITOS_UUID_PLACEHOLDER.getPlaceholder(), kitosUuid)
+            .replace(EmailTemplatePlaceholder.SOURCE_ID_PLACEHOLDER.getPlaceholder(), sourceId)
             .replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link)
             .replace(EmailTemplatePlaceholder.EVENT_TIME_PLACEHOLDER.getPlaceholder(), eventTimeText);
 
         String message = template.getMessage()
             .replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), asset.getName())
-            .replace(EmailTemplatePlaceholder.KITOS_UUID_PLACEHOLDER.getPlaceholder(), kitosUuid)
+            .replace(EmailTemplatePlaceholder.SOURCE_ID_PLACEHOLDER.getPlaceholder(), sourceId)
             .replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link)
             .replace(EmailTemplatePlaceholder.EVENT_TIME_PLACEHOLDER.getPlaceholder(), eventTimeText);
 
