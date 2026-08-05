@@ -16,12 +16,12 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static dk.digitalidentity.integration.dbs.DBSConstants.PLATFORM_LAST_SYNC;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class DBSPlatformSyncTask {
-	static final String LAST_SYNC_SETTING = "dbs_platform_last_sync";
-
 	private final DBSPlatformSyncService syncService;
 	private final OS2complianceConfiguration configuration;
 	private final SettingsService settingsService;
@@ -42,7 +42,7 @@ public class DBSPlatformSyncTask {
 		long startTime = System.currentTimeMillis();
 
 		try {
-			ZonedDateTime lastSync = settingsService.getZonedDateTime(LAST_SYNC_SETTING, null);
+			ZonedDateTime lastSync = settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null);
 			LocalDate backfillFrom = configuration.getIntegrations().getDbs().getBackfillFrom();
 
 			if (lastSync == null && backfillFrom == null) {
@@ -62,7 +62,14 @@ public class DBSPlatformSyncTask {
 
 			Optional<ZonedDateTime> newestPublished = syncService.findNewestPublishedDate(audits);
 			syncService.synchronize(audits);
-			newestPublished.ifPresent(ts -> settingsService.setZonedDateTime(LAST_SYNC_SETTING, ts));
+
+			// Vandmærket rykker frem uanset om nogen audits blev sprunget over. API'et kan kun hente
+			// audits udgivet efter et tidspunkt, så holder vi det tilbage for en audit vi ikke kunne
+			// gemme, vokser hentevinduet i det uendelige - uden at auditen bliver mere synkroniserbar,
+			// for en audit uden leverandør er defekt i DBS, ikke hos os. En oversprunget audit logges
+			// som ERROR med sit id på dropstedet i DBSPlatformSyncService, og genopretningen er at
+			// nulstille denne indstilling, hvorefter vinduet spoles tilbage og auditen hentes igen.
+			newestPublished.ifPresent(ts -> settingsService.setZonedDateTime(PLATFORM_LAST_SYNC, ts));
 
 			long duration = System.currentTimeMillis() - startTime;
 			log.info("Finished: DBS Platform Sync in {} ms", duration);

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
-import static dk.digitalidentity.integration.dbs.DBSPlatformSyncTask.LAST_SYNC_SETTING;
+import static dk.digitalidentity.integration.dbs.DBSConstants.PLATFORM_LAST_SYNC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -71,7 +71,7 @@ class DBSPlatformSyncTaskTest {
 		LocalDate backfillFrom = LocalDate.of(2025, 6, 1);
 		dbsConfig.setBackfillFrom(backfillFrom);
 
-		when(settingsService.getZonedDateTime(LAST_SYNC_SETTING, null)).thenReturn(null);
+		when(settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null)).thenReturn(null);
 		when(syncService.fetchAllAudits(any())).thenReturn(Collections.emptyList());
 		when(syncService.findNewestPublishedDate(any())).thenReturn(Optional.empty());
 
@@ -88,7 +88,7 @@ class DBSPlatformSyncTaskTest {
 	void syncTask_usesLastSync_whenTimestampExists() {
 		// Given
 		ZonedDateTime lastSync = ZonedDateTime.of(2026, 5, 20, 3, 0, 0, 0, LOCAL_TZ_ID);
-		when(settingsService.getZonedDateTime(LAST_SYNC_SETTING, null)).thenReturn(lastSync);
+		when(settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null)).thenReturn(lastSync);
 		when(syncService.fetchAllAudits(any())).thenReturn(Collections.emptyList());
 		when(syncService.findNewestPublishedDate(any())).thenReturn(Optional.empty());
 
@@ -105,7 +105,7 @@ class DBSPlatformSyncTaskTest {
 	void syncTask_skips_whenNoLastSyncAndNoBackfillFrom() {
 		// Given
 		dbsConfig.setBackfillFrom(null);
-		when(settingsService.getZonedDateTime(LAST_SYNC_SETTING, null)).thenReturn(null);
+		when(settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null)).thenReturn(null);
 
 		// When
 		syncTask.syncTask();
@@ -122,7 +122,7 @@ class DBSPlatformSyncTaskTest {
 		dbsConfig.setBackfillFrom(backfillFrom);
 
 		ZonedDateTime newestPublished = ZonedDateTime.of(2026, 3, 15, 10, 0, 0, 0, LOCAL_TZ_ID);
-		when(settingsService.getZonedDateTime(LAST_SYNC_SETTING, null)).thenReturn(null);
+		when(settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null)).thenReturn(null);
 		when(syncService.fetchAllAudits(any())).thenReturn(List.of(new AuditDto()));
 		when(syncService.findNewestPublishedDate(any())).thenReturn(Optional.of(newestPublished));
 
@@ -130,7 +130,7 @@ class DBSPlatformSyncTaskTest {
 		syncTask.syncTask();
 
 		// Then
-		verify(settingsService).setZonedDateTime(LAST_SYNC_SETTING, newestPublished);
+		verify(settingsService).setZonedDateTime(PLATFORM_LAST_SYNC, newestPublished);
 	}
 
 	@Test
@@ -139,7 +139,7 @@ class DBSPlatformSyncTaskTest {
 		LocalDate backfillFrom = LocalDate.of(2025, 6, 1);
 		dbsConfig.setBackfillFrom(backfillFrom);
 
-		when(settingsService.getZonedDateTime(LAST_SYNC_SETTING, null)).thenReturn(null);
+		when(settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null)).thenReturn(null);
 		when(syncService.fetchAllAudits(any())).thenReturn(Collections.emptyList());
 		when(syncService.findNewestPublishedDate(any())).thenReturn(Optional.empty());
 
@@ -147,7 +147,7 @@ class DBSPlatformSyncTaskTest {
 		syncTask.syncTask();
 
 		// Then
-		verify(settingsService, never()).setZonedDateTime(eq(LAST_SYNC_SETTING), any());
+		verify(settingsService, never()).setZonedDateTime(eq(PLATFORM_LAST_SYNC), any());
 	}
 
 	// ========== Guards ==========
@@ -184,7 +184,7 @@ class DBSPlatformSyncTaskTest {
 		LocalDate backfillFrom = LocalDate.of(2025, 6, 1);
 		dbsConfig.setBackfillFrom(backfillFrom);
 
-		when(settingsService.getZonedDateTime(LAST_SYNC_SETTING, null)).thenReturn(null);
+		when(settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null)).thenReturn(null);
 		when(syncService.fetchAllAudits(any()))
 				.thenThrow(new RestClientResponseException("Unauthorized", 401, "Unauthorized", null, null, null));
 
@@ -193,7 +193,7 @@ class DBSPlatformSyncTaskTest {
 
 		// Then — no timestamp saved, no sync attempted
 		verify(syncService, never()).synchronize(any());
-		verify(settingsService, never()).setZonedDateTime(eq(LAST_SYNC_SETTING), any());
+		verify(settingsService, never()).setZonedDateTime(eq(PLATFORM_LAST_SYNC), any());
 	}
 
 	@Test
@@ -202,7 +202,7 @@ class DBSPlatformSyncTaskTest {
 		LocalDate backfillFrom = LocalDate.of(2025, 6, 1);
 		dbsConfig.setBackfillFrom(backfillFrom);
 
-		when(settingsService.getZonedDateTime(LAST_SYNC_SETTING, null)).thenReturn(null);
+		when(settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null)).thenReturn(null);
 		when(syncService.fetchAllAudits(any())).thenThrow(new RuntimeException("Something unexpected"));
 
 		// When — should not throw
