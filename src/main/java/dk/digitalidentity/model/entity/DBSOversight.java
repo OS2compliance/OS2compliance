@@ -1,6 +1,8 @@
 package dk.digitalidentity.model.entity;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +11,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -55,5 +59,16 @@ public class DBSOversight {
 
 	@Column(name = "audit_link")
 	private String auditLink;
+
+	/**
+	 * De DBS-systemer auditens systems[] dækker. Tom mængde betyder en ældre række uden
+	 * systemdata - opgavejobbet falder da tilbage til alle leverandørens aktiver, som var
+	 * adfærden før koblingen fandtes.
+	 */
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "dbs_oversight_assets",
+			joinColumns = @JoinColumn(name = "dbs_oversight_id"),
+			inverseJoinColumns = @JoinColumn(name = "dbs_asset_id"))
+	private Set<DBSAsset> assets = new HashSet<>();
 
 }

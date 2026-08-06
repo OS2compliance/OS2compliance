@@ -248,6 +248,10 @@ public class DBSPlatformSyncService {
 				existing.ifPresent(o -> o.setDbsId(auditId));
 			}
 
+			// Systemerne er synkroniseret tidligere i samme kørsel (synchronizeSystems), så
+			// opslagene rammer også systemer der først kom ind med denne batch.
+			Set<DBSAsset> auditAssets = resolveAuditAssets(audit);
+
 			if (existing.isPresent()) {
 				DBSOversight oversight = existing.get();
 				claimedOversightIds.add(oversight.getId());
@@ -258,6 +262,9 @@ public class DBSPlatformSyncService {
 				}
 				if (!Objects.equals(oversight.getAuditLink(), audit.getAuditLink())) {
 					oversight.setAuditLink(audit.getAuditLink());
+					changed = true;
+				}
+				if (updateOversightAssets(oversight, auditAssets)) {
 					changed = true;
 				}
 
@@ -321,12 +328,50 @@ public class DBSPlatformSyncService {
 				oversight.setSupplier(supplier.get());
 				oversight.setTaskCreated(false);
 				oversight.setAuditLink(audit.getAuditLink());
+				oversight.getAssets().addAll(auditAssets);
 				dbsOversightDao.save(oversight);
 				created++;
 			}
 		}
 		log.debug("Oversights: {} created, {} updated, {} republished", created, updated, republished);
 		return new OversightSyncResult(created, updated, republished);
+	}
+
+	/**
+	 * Slår auditens systems[] op som DBSAssets via deres dbsId. Systemer der (endnu) ikke findes
+	 * lokalt udelades - de er enten sprunget over i synchronizeSystems (manglende leverandør,
+	 * logget dér) eller ukendte for os.
+	 */
+	private Set<DBSAsset> resolveAuditAssets(AuditDto audit) {
+		if (audit.getSystems() == null) {
+			return Set.of();
+		}
+		return audit.getSystems().stream()
+				.map(system -> dbsAssetDao.findByDbsId(String.valueOf(system.getId())))
+				.flatMap(Optional::stream)
+				.collect(Collectors.toSet());
+	}
+
+	/**
+	 * Erstatter oversightens systemkobling med auditens, sammenlignet på id.
+	 * En tom auditAssets efterlader en eksisterende kobling urørt: auditen kan mangle systems[]
+	 * i et enkelt API-svar, og en tømning ville sende opgavejobbet tilbage til den
+	 * leverandør-brede fallback.
+	 *
+	 * @return true hvis koblingen blev ændret
+	 */
+	private boolean updateOversightAssets(DBSOversight oversight, Set<DBSAsset> auditAssets) {
+		if (auditAssets.isEmpty()) {
+			return false;
+		}
+		Set<Long> currentIds = oversight.getAssets().stream().map(DBSAsset::getId).collect(Collectors.toSet());
+		Set<Long> incomingIds = auditAssets.stream().map(DBSAsset::getId).collect(Collectors.toSet());
+		if (currentIds.equals(incomingIds)) {
+			return false;
+		}
+		oversight.getAssets().clear();
+		oversight.getAssets().addAll(auditAssets);
+		return true;
 	}
 
 	private record SystemWithSupplier(AuditSystemDto system, AuditSupplierDto supplier, String kitosUuid) {}

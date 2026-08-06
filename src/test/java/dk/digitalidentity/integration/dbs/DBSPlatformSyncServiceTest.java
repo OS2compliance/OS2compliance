@@ -472,6 +472,112 @@ class DBSPlatformSyncServiceTest {
 		assertThat(existingOversight.isTaskCreated()).isFalse();
 	}
 
+	// ========== Oversight/system-kobling ==========
+
+	@Test
+	void synchronize_couplesOversightToAuditSystems_onCreate() {
+		// Given — auditens systems[] fortæller hvilke systemer tilsynet dækker. Uden koblingen
+		// fanner opgavejobbet ud til alle leverandørens aktiver, og auditlinks lander på opgaver
+		// for systemer auditen ikke dækker.
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		DBSAsset dbsAsset = new DBSAsset();
+		dbsAsset.setId(300L);
+		dbsAsset.setDbsId("200");
+		dbsAsset.setName("System");
+
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport 2026", 100, "Supplier", 200, "System", null);
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.of(dbsAsset));
+		when(relationService.findAllRelatedTo(dbsAsset)).thenReturn(Collections.emptyList());
+		when(dbsOversightDao.findAll()).thenReturn(Collections.emptyList());
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then
+		ArgumentCaptor<DBSOversight> captor = ArgumentCaptor.forClass(DBSOversight.class);
+		verify(dbsOversightDao).save(captor.capture());
+		assertThat(captor.getValue().getAssets()).containsExactly(dbsAsset);
+	}
+
+	@Test
+	void synchronize_updatesOversightAssets_whenAuditSystemsChange() {
+		// Given — kendt audit hvis systems[] har ændret sig siden sidst: koblingen skal følge med.
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		DBSAsset previousAsset = new DBSAsset();
+		previousAsset.setId(301L);
+		previousAsset.setDbsId("999");
+		DBSAsset currentAsset = new DBSAsset();
+		currentAsset.setId(300L);
+		currentAsset.setDbsId("200");
+
+		LocalDateTime published = LocalDateTime.of(2026, 7, 24, 9, 43, 48);
+		DBSOversight existingOversight = new DBSOversight();
+		existingOversight.setDbsId(1L);
+		existingOversight.setName("Tilsynsrapport Supplier");
+		existingOversight.setSupplier(supplier);
+		existingOversight.setCreated(published);
+		existingOversight.setPublishedDate(published);
+		existingOversight.setTaskCreated(true);
+		existingOversight.getAssets().add(previousAsset);
+
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport Supplier", 100, "Supplier", 200, "System", null);
+		audit.setPublishedDate(published.atOffset(ZoneOffset.ofHours(2)));
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.of(currentAsset));
+		when(relationService.findAllRelatedTo(currentAsset)).thenReturn(Collections.emptyList());
+		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(existingOversight)));
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then — koblingen erstattet, uden at taskCreated røres
+		assertThat(existingOversight.getAssets()).containsExactly(currentAsset);
+		assertThat(existingOversight.isTaskCreated()).isTrue();
+		verify(dbsOversightDao).save(existingOversight);
+	}
+
+	@Test
+	void synchronize_keepsOversightAssets_whenAuditHasNoSystems() {
+		// Given — et API-svar uden systems[] må ikke tømme en eksisterende kobling: en tømning
+		// ville sende opgavejobbet tilbage til den leverandør-brede fallback.
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		DBSAsset coupledAsset = new DBSAsset();
+		coupledAsset.setId(300L);
+		coupledAsset.setDbsId("200");
+
+		LocalDateTime published = LocalDateTime.of(2026, 7, 24, 9, 43, 48);
+		DBSOversight existingOversight = new DBSOversight();
+		existingOversight.setDbsId(1L);
+		existingOversight.setName("Tilsynsrapport Supplier");
+		existingOversight.setSupplier(supplier);
+		existingOversight.setCreated(published);
+		existingOversight.setPublishedDate(published);
+		existingOversight.setTaskCreated(true);
+		existingOversight.getAssets().add(coupledAsset);
+
+		AuditSupplierDto supplierDto = new AuditSupplierDto();
+		supplierDto.setId(100);
+		supplierDto.setName("Supplier");
+		AuditDto audit = new AuditDto();
+		audit.setId(1);
+		audit.setName("Tilsynsrapport Supplier");
+		audit.setSupplier(supplierDto);
+		audit.setPublishedDate(published.atOffset(ZoneOffset.ofHours(2)));
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(existingOversight)));
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then — kobling urørt, intet at gemme
+		assertThat(existingOversight.getAssets()).containsExactly(coupledAsset);
+		verify(dbsOversightDao, never()).save(any(DBSOversight.class));
+	}
+
 	// ========== Skipped audits ==========
 
 	@Test

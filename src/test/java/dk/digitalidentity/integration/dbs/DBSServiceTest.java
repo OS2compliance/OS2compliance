@@ -36,6 +36,8 @@ import static dk.digitalidentity.Constants.DBS_TASK_NAME_MARKER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -68,6 +70,7 @@ class DBSServiceTest {
 	private DBSService dbsService;
 
 	private DBSOversight oversight;
+	private DBSAsset dbsAsset;
 	private Task openTask;
 
 	@BeforeEach
@@ -84,7 +87,7 @@ class DBSServiceTest {
 		supplier.setDbsId(4711L);
 		supplier.setName("EKSEMPEL ApS");
 
-		DBSAsset dbsAsset = new DBSAsset();
+		dbsAsset = new DBSAsset();
 		dbsAsset.setId(DBS_ASSET_ID);
 		dbsAsset.setName("eReolen");
 		dbsAsset.setStatus("published");
@@ -188,6 +191,52 @@ class DBSServiceTest {
 		// Then - even when the description is left untouched, the oversight must not be picked up
 		// again on the next run.
 		assertThat(oversight.isTaskCreated()).isTrue();
+	}
+
+	@Test
+	void oversightResponsible_visitsOnlyAuditSystems_whenOversightIsCoupled() {
+		// Given - leverandøren har to systemer, men auditen dækker kun det ene. Uden koblingen
+		// (fallback) besøges begge, og auditens link/opgave lander også på det system auditen
+		// ikke dækker.
+		DBSAsset otherAsset = new DBSAsset();
+		otherAsset.setId(999L);
+		otherAsset.setName("Andet system");
+		otherAsset.setStatus("published");
+		otherAsset.setSupplier(oversight.getSupplier());
+		oversight.getSupplier().getAssets().add(otherAsset);
+		oversight.getAssets().add(dbsAsset);
+
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then - kun auditens eget system besøges
+		verify(relationService, never()).findRelatedToWithType(eq(otherAsset), eq(RelationType.ASSET));
+		assertThat(openTask.getDescription()).endsWith("\n - " + AUDIT_NAME);
+	}
+
+	@Test
+	void oversightResponsible_fallsBackToAllSupplierAssets_whenOversightHasNoCoupling() {
+		// Given - ældre række uden systemdata: begge leverandørens systemer besøges, som før
+		// koblingen fandtes. dbsAsset nr. 2 har ingen relaterede aktiver og giver derfor ingen
+		// opgave, men den SKAL besøges.
+		DBSAsset otherAsset = new DBSAsset();
+		otherAsset.setId(999L);
+		otherAsset.setName("Andet system");
+		otherAsset.setStatus("published");
+		otherAsset.setSupplier(oversight.getSupplier());
+		oversight.getSupplier().getAssets().add(otherAsset);
+		// oversight.getAssets() er tom
+
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then - begge systemer besøges (any(DBSAsset.class)-stubs dækker også otherAsset)
+		verify(relationService).findRelatedToWithType(eq(otherAsset), eq(RelationType.ASSET));
+		assertThat(openTask.getDescription()).endsWith("\n - " + AUDIT_NAME);
 	}
 
 	private static Relation relation(long aId, RelationType aType, long bId, RelationType bType) {

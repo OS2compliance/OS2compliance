@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -63,9 +64,16 @@ public class DBSService {
 		log.debug("Found {} oversights that need a task.", oversights.size());
 
 		for (DBSOversight dbsOversight : oversights) {
-			log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
+			// Auditens egne systemer når platform-syncen har koblet dem; ellers alle leverandørens
+			// aktiver (rækker fra før koblingen fandtes). Den brede fallback lagde auditlinks og
+			// opgaver på systemer auditen ikke dækker, når en leverandør har flere systemer.
+			final Collection<DBSAsset> oversightAssets = !dbsOversight.getAssets().isEmpty()
+					? dbsOversight.getAssets()
+					: dbsOversight.getSupplier().getAssets();
+			log.debug("Oversight {} has {} assigned assets ({}).", dbsOversight.getId(), oversightAssets.size(),
+					dbsOversight.getAssets().isEmpty() ? "supplier-wide fallback" : "audit systems");
 
-			for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
+			for (DBSAsset dbsAsset : oversightAssets) {
 
 				//Only update/create related task if itsystem status changes to published
 				if (dbsAsset.getStatus() != null && dbsAsset.getStatus().equals("published")) {
