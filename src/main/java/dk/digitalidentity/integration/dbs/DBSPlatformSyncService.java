@@ -256,6 +256,26 @@ public class DBSPlatformSyncService {
 				DBSOversight oversight = existing.get();
 				claimedOversightIds.add(oversight.getId());
 				boolean changed = false;
+
+				// Selv-heling efter dbsId-kollisioner: gamle dokument-rækker delte talrum med
+				// platformens audit-id'er og kunne kapres af en audit hos en anden leverandør
+				// (navn og link overskrevet, leverandøren beholdt - V1_123 fjerner årsagen).
+				// Peger rækken på en anden leverandør end auditens, re-pointes den her, så
+				// allerede kaprede rækker rettes ved næste sync der ser auditen.
+				long auditSupplierDbsId = audit.getSupplier().getId().longValue();
+				if (oversight.getSupplier() == null
+						|| !Objects.equals(oversight.getSupplier().getDbsId(), auditSupplierDbsId)) {
+					Optional<DBSSupplier> correctSupplier = dbsSupplierDao.findByDbsId(auditSupplierDbsId);
+					if (correctSupplier.isPresent()) {
+						log.warn("Oversight {} (audit {}) pointed at supplier '{}' but the audit belongs to '{}' - re-pointing",
+								oversight.getId(), auditId,
+								oversight.getSupplier() != null ? oversight.getSupplier().getName() : null,
+								correctSupplier.get().getName());
+						oversight.setSupplier(correctSupplier.get());
+						changed = true;
+					}
+				}
+
 				if (!Objects.equals(oversight.getName(), audit.getName())) {
 					oversight.setName(audit.getName());
 					changed = true;

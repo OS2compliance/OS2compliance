@@ -472,6 +472,42 @@ class DBSPlatformSyncServiceTest {
 		assertThat(existingOversight.isTaskCreated()).isFalse();
 	}
 
+	@Test
+	void synchronize_repointsSupplier_whenOversightWasHijackedByIdCollision() {
+		// Given — gammel dokument-række hvis dbs_id kolliderede med et audit-id: navn og link er
+		// allerede auditens (overskrevet ved kapringen), men rækken peger på den forkerte
+		// leverandør. Set hos Kalundborg 6/8-2026: EasyIQ-audit under Gyldendal, Plan2learn-audit
+		// under itm8 - auditens link fannede derfra ud til den forkerte leverandørs opgaver.
+		// V1_123 fjerner årsagen (nuller legacy dbs_id); denne vej reparerer allerede kaprede
+		// rækker næste gang syncen ser auditen.
+		DBSSupplier wrongSupplier = createDbsSupplier(13734L, "Gyldendal A/S");
+		DBSSupplier correctSupplier = createDbsSupplier(13570L, "EasyIQ A/S");
+
+		LocalDateTime published = LocalDateTime.of(2026, 7, 24, 9, 43, 48);
+		DBSOversight hijacked = new DBSOversight();
+		hijacked.setDbsId(1367L);
+		hijacked.setName("Q3 2025 EasyIQ A/S");
+		hijacked.setSupplier(wrongSupplier);
+		hijacked.setCreated(published);
+		hijacked.setPublishedDate(published);
+		hijacked.setTaskCreated(true);
+
+		AuditDto audit = createAuditWithSupplierAndSystem(1367, "Q3 2025 EasyIQ A/S", 13570, "EasyIQ A/S", 200, "System", null);
+		audit.setPublishedDate(published.atOffset(ZoneOffset.ofHours(2)));
+
+		when(dbsSupplierDao.findByDbsId(13570L)).thenReturn(Optional.of(correctSupplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(hijacked)));
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then — leverandøren re-pointes, uden at taskCreated røres
+		assertThat(hijacked.getSupplier()).isEqualTo(correctSupplier);
+		assertThat(hijacked.isTaskCreated()).isTrue();
+		verify(dbsOversightDao).save(hijacked);
+	}
+
 	// ========== Oversight/system-kobling ==========
 
 	@Test
