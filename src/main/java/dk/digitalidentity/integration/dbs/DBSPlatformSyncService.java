@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
+import static dk.digitalidentity.integration.dbs.DBSConstants.PLATFORM_LAST_SYNC;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
 
 @Slf4j
@@ -87,10 +88,12 @@ public class DBSPlatformSyncService {
 
 		int suppliersCreated = synchronizeSuppliers(audits);
 		int systemsCreated = synchronizeSystems(audits);
-		int[] oversightResult = synchronizeOversights(audits);
+		OversightSyncResult oversightResult = synchronizeOversights(audits);
 
-		log.info("DBS Platform sync result: {} new suppliers, {} new systems, {} new oversights, {} updated oversights",
-				suppliersCreated, systemsCreated, oversightResult[0], oversightResult[1]);
+		// updated er antal gemte oversights, og en genudgivelse taeller med der - derfor "of which".
+		log.info("DBS Platform sync result: {} new suppliers, {} new systems, {} new oversights, {} updated oversights (of which {} republished)",
+				suppliersCreated, systemsCreated, oversightResult.created(), oversightResult.updated(),
+				oversightResult.republished());
 	}
 
 	private int synchronizeSuppliers(List<AuditDto> audits) {
@@ -208,16 +211,23 @@ public class DBSPlatformSyncService {
 		return created;
 	}
 
-	private int[] synchronizeOversights(List<AuditDto> audits) {
+	private OversightSyncResult synchronizeOversights(List<AuditDto> audits) {
 		List<DBSOversight> existingOversights = dbsOversightDao.findAll();
 		int created = 0;
 		int updated = 0;
+		int republished = 0;
 		// Rows already matched or adopted in this run must not be adopted again by a later
 		// same-named audit - that would overwrite the dbsId just assigned.
 		Set<Long> claimedOversightIds = new HashSet<>();
 
 		for (AuditDto audit : audits) {
+			// Vandmaerket rykker frem uanset, saa en audit vi springer over hentes ikke igen af sig selv
+			// (API'et kan kun hente audits udgivet efter et tidspunkt, se DBSPlatformSyncTask). Derfor
+			// ERROR og ikke WARN: der bliver ingen oversight og dermed ingen tilsynsopgave, og
+			// genopretningen kraever en manuel nulstilling af vandmaerket.
 			if (audit.getSupplier() == null) {
+				log.error("Audit {} '{}' has no supplier - no oversight and no task created. Reset {} to re-import it once the supplier is fixed in DBS.",
+						audit.getId(), audit.getName(), PLATFORM_LAST_SYNC);
 				continue;
 			}
 
@@ -250,6 +260,36 @@ public class DBSPlatformSyncService {
 					oversight.setAuditLink(audit.getAuditLink());
 					changed = true;
 				}
+
+				// Samme konvertering som ved oprettelse nedenfor - ellers ville hver kørsel se en
+				// offset-forskel på den samme dato og nulstille taskCreated igen, hvilket ville give
+				// dublerede opgaver hver nat.
+				LocalDateTime published = audit.getPublishedDate() != null
+						? audit.getPublishedDate().toLocalDateTime()
+						: null;
+				if (published != null && oversight.getCreated() == null) {
+					// Rækken har aldrig haft en dato - det kan forekomme på rækker fra den tidligere
+					// integration. Vi kan ikke vide om auditen er genudgivet siden, så udfyld kun
+					// datoen og lad taskCreated stå: nulstiller vi den, får et tilsyn der allerede er
+					// afsluttet en dubleret opgave ved første kørsel efter deploy.
+					log.info("Oversight {} (audit {}) had no created, backfilling {} and leaving taskCreated={}",
+							oversight.getId(), auditId, published, oversight.isTaskCreated());
+					oversight.setCreated(published);
+					changed = true;
+				} else if (published != null && published.isAfter(oversight.getCreated())) {
+					// DBS genudgiver den samme audit når der kommer en ny tilsynsrapport på den. Så er
+					// det et nyt tilsyn der skal give en ny opgave. Uden dette beholder rækken sin
+					// oprindelige dato: den falder uden for opgavejobbets vindue (DBSService bruger
+					// backfillFrom som nedre grænse), ligger med taskCreated=false og bliver filtreret
+					// væk hver time for evigt.
+					log.info("Oversight {} (audit {}) republished: created {} -> {}, resetting taskCreated",
+							oversight.getId(), auditId, oversight.getCreated(), published);
+					oversight.setCreated(published);
+					oversight.setTaskCreated(false);
+					changed = true;
+					republished++;
+				}
+
 				if (changed) {
 					dbsOversightDao.save(oversight);
 					updated++;
@@ -257,7 +297,9 @@ public class DBSPlatformSyncService {
 			} else {
 				Optional<DBSSupplier> supplier = dbsSupplierDao.findByDbsId(audit.getSupplier().getId().longValue());
 				if (supplier.isEmpty()) {
-					log.warn("Supplier {} not found for audit {}, skipping oversight", audit.getSupplier().getId(), audit.getId());
+					log.error("Supplier {} not found for audit {} '{}' - no oversight and no task created. Reset {} to re-import it once the supplier is fixed in DBS.",
+							audit.getSupplier().getId(), audit.getId(), audit.getName(),
+							PLATFORM_LAST_SYNC);
 					continue;
 				}
 
@@ -273,11 +315,13 @@ public class DBSPlatformSyncService {
 				created++;
 			}
 		}
-		log.debug("Oversights: {} created, {} updated", created, updated);
-		return new int[]{created, updated};
+		log.debug("Oversights: {} created, {} updated, {} republished", created, updated, republished);
+		return new OversightSyncResult(created, updated, republished);
 	}
 
 	private record SystemWithSupplier(AuditSystemDto system, AuditSupplierDto supplier, String kitosUuid) {}
+
+	private record OversightSyncResult(int created, int updated, int republished) {}
 
 	private Optional<DBSSupplier> findSupplierByNameForCutover(String name) {
 		List<DBSSupplier> candidates = dbsSupplierDao.findByName(name);

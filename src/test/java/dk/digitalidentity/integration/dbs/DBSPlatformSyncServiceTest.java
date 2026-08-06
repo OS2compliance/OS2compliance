@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -254,12 +255,16 @@ class DBSPlatformSyncServiceTest {
 	void synchronize_skipsOversightUpdate_whenNameUnchanged() {
 		// Given
 		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		OffsetDateTime published = OffsetDateTime.of(2026, 3, 15, 10, 0, 0, 0, ZoneOffset.UTC);
 		DBSOversight existingOversight = new DBSOversight();
 		existingOversight.setDbsId(1L);
 		existingOversight.setName("Same Name");
 		existingOversight.setSupplier(supplier);
+		// created skal matche auditens publishedDate, ellers er auditen genudgivet og SKAL gemmes
+		existingOversight.setCreated(published.toLocalDateTime());
 
 		AuditDto audit = createAuditWithSupplierAndSystem(1, "Same Name", 100, "Supplier", 200, "System", null);
+		audit.setPublishedDate(published);
 		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
 		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
 		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(existingOversight)));
@@ -268,6 +273,154 @@ class DBSPlatformSyncServiceTest {
 		syncService.synchronize(List.of(audit));
 
 		// Then — save called for new system, NOT for the unchanged oversight
+		verify(dbsOversightDao, never()).save(any(DBSOversight.class));
+	}
+
+	// ========== Republished oversights ==========
+
+	@Test
+	void synchronize_refreshesCreatedAndResetsTaskCreated_whenAuditRepublished() {
+		// Given — kendt audit hvor DBS har lagt en ny tilsynsrapport på: publishedDate er nyere end
+		// den created vi har gemt, og opgaven er allerede oprettet for den forrige rapport.
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		DBSOversight existingOversight = new DBSOversight();
+		existingOversight.setDbsId(1L);
+		existingOversight.setName("Tilsynsrapport Supplier");
+		existingOversight.setSupplier(supplier);
+		existingOversight.setCreated(LocalDateTime.of(2024, 5, 27, 19, 21, 32));
+		existingOversight.setTaskCreated(true);
+
+		OffsetDateTime republished = OffsetDateTime.of(2026, 7, 24, 9, 43, 48, 0, ZoneOffset.ofHours(2));
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport Supplier", 100, "Supplier", 200, "System", null);
+		audit.setPublishedDate(republished);
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(existingOversight)));
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then
+		assertThat(existingOversight.getCreated()).isEqualTo(republished.toLocalDateTime());
+		assertThat(existingOversight.isTaskCreated()).isFalse();
+		verify(dbsOversightDao).save(existingOversight);
+	}
+
+	@Test
+	void synchronize_leavesCreatedAndTaskCreated_whenPublishedDateUnchanged() {
+		// Given — samme audit hentet igen. Rører vi created eller taskCreated her, ville hver kørsel
+		// af det samme vindue give en ny opgave.
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		LocalDateTime alreadyKnown = LocalDateTime.of(2026, 7, 24, 9, 43, 48);
+		DBSOversight existingOversight = new DBSOversight();
+		existingOversight.setDbsId(1L);
+		existingOversight.setName("Tilsynsrapport Supplier");
+		existingOversight.setSupplier(supplier);
+		existingOversight.setCreated(alreadyKnown);
+		existingOversight.setTaskCreated(true);
+
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport Supplier", 100, "Supplier", 200, "System", null);
+		audit.setPublishedDate(alreadyKnown.atOffset(ZoneOffset.ofHours(2)));
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(existingOversight)));
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then
+		assertThat(existingOversight.getCreated()).isEqualTo(alreadyKnown);
+		assertThat(existingOversight.isTaskCreated()).isTrue();
+		verify(dbsOversightDao, never()).save(any(DBSOversight.class));
+	}
+
+	@Test
+	void synchronize_backfillsCreatedWithoutResettingTaskCreated_whenExistingOversightHasNoCreated() {
+		// Given — gamle rækker fra den forrige integration kan mangle created helt, og opgaven kan
+		// være oprettet og afsluttet dengang. Uden nogen dato at sammenligne med kan vi ikke vide om
+		// auditen er genudgivet siden, så taskCreated skal stå urørt - ellers ville første kørsel
+		// efter deploy give en dubleret opgave for et tilsyn der allerede er afsluttet.
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		DBSOversight existingOversight = new DBSOversight();
+		existingOversight.setDbsId(1L);
+		existingOversight.setName("Tilsynsrapport Supplier");
+		existingOversight.setSupplier(supplier);
+		existingOversight.setCreated(null);
+		existingOversight.setTaskCreated(true);
+
+		OffsetDateTime published = OffsetDateTime.of(2026, 7, 24, 9, 43, 48, 0, ZoneOffset.ofHours(2));
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport Supplier", 100, "Supplier", 200, "System", null);
+		audit.setPublishedDate(published);
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(existingOversight)));
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then
+		assertThat(existingOversight.getCreated()).isEqualTo(published.toLocalDateTime());
+		assertThat(existingOversight.isTaskCreated()).isTrue();
+		verify(dbsOversightDao).save(existingOversight);
+	}
+
+	@Test
+	void synchronize_republishesAfterBackfill_whenPublishedDateLaterMovesForward() {
+		// Given — rækken har fået sin dato udfyldt af backfillen ovenfor, og DBS lægger DEREFTER en ny
+		// tilsynsrapport på. Så skal den normale republish-vej slå til og give en ny opgave.
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		DBSOversight existingOversight = new DBSOversight();
+		existingOversight.setDbsId(1L);
+		existingOversight.setName("Tilsynsrapport Supplier");
+		existingOversight.setSupplier(supplier);
+		existingOversight.setCreated(LocalDateTime.of(2026, 7, 24, 9, 43, 48));
+		existingOversight.setTaskCreated(true);
+
+		OffsetDateTime republished = OffsetDateTime.of(2026, 10, 1, 8, 0, 0, 0, ZoneOffset.ofHours(2));
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport Supplier", 100, "Supplier", 200, "System", null);
+		audit.setPublishedDate(republished);
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(existingOversight)));
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then
+		assertThat(existingOversight.getCreated()).isEqualTo(republished.toLocalDateTime());
+		assertThat(existingOversight.isTaskCreated()).isFalse();
+	}
+
+	// ========== Skipped audits ==========
+
+	@Test
+	void synchronize_createsNoOversight_whenAuditHasNoSupplier() {
+		// Given — en oversight kan ikke hænges op uden leverandør (dbs_supplier_id er NOT NULL)
+		AuditDto audit = createAudit(1, "Audit uden leverandør");
+		when(dbsOversightDao.findAll()).thenReturn(Collections.emptyList());
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then — auditen springes over, og det logges som ERROR på dropstedet
+		verify(dbsOversightDao, never()).save(any(DBSOversight.class));
+	}
+
+	@Test
+	void synchronize_createsNoOversight_whenSupplierCannotBeResolved() {
+		// Given — leverandøren blev ikke oprettet, så oversighten kan ikke hænges op
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Audit", 100, "Supplier", 200, "System", null);
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(Collections.emptyList());
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then
 		verify(dbsOversightDao, never()).save(any(DBSOversight.class));
 	}
 
