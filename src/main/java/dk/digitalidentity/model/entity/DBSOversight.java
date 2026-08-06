@@ -43,6 +43,16 @@ public class DBSOversight {
     @Column
     private LocalDateTime created;
 
+	/**
+	 * Auditens publishedDate som platform-API'et senest har vist den. Adskilt fra created, fordi
+	 * created på rækker adopteret fra den gamle integration stammer fra det gamle systems
+	 * dokumentdato og ikke kan sammenlignes med platformens publishedDate. Genudgivelser opdages
+	 * som et fremadrettet hop i netop dette felt; null betyder at platform-syncen ikke har set
+	 * rækken endnu.
+	 */
+	@Column(name = "published_date")
+	private LocalDateTime publishedDate;
+
 	@Column(name = "audit_link")
 	private String auditLink;
 

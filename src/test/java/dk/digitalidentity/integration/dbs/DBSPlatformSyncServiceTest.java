@@ -225,6 +225,7 @@ class DBSPlatformSyncServiceTest {
 		assertThat(saved.getDbsId()).isEqualTo(1L);
 		assertThat(saved.getName()).isEqualTo("Tilsynsrapport 2026");
 		assertThat(saved.getCreated()).isEqualTo(publishedDate.toLocalDateTime());
+		assertThat(saved.getPublishedDate()).isEqualTo(publishedDate.toLocalDateTime());
 		assertThat(saved.isLocked()).isFalse();
 		assertThat(saved.isTaskCreated()).isFalse();
 		assertThat(saved.getSupplier()).isEqualTo(supplier);
@@ -260,8 +261,9 @@ class DBSPlatformSyncServiceTest {
 		existingOversight.setDbsId(1L);
 		existingOversight.setName("Same Name");
 		existingOversight.setSupplier(supplier);
-		// created skal matche auditens publishedDate, ellers er auditen genudgivet og SKAL gemmes
+		// publishedDate skal matche auditens, ellers er auditen genudgivet (eller uset) og SKAL gemmes
 		existingOversight.setCreated(published.toLocalDateTime());
+		existingOversight.setPublishedDate(published.toLocalDateTime());
 
 		AuditDto audit = createAuditWithSupplierAndSystem(1, "Same Name", 100, "Supplier", 200, "System", null);
 		audit.setPublishedDate(published);
@@ -279,15 +281,18 @@ class DBSPlatformSyncServiceTest {
 	// ========== Republished oversights ==========
 
 	@Test
-	void synchronize_refreshesCreatedAndResetsTaskCreated_whenAuditRepublished() {
-		// Given — kendt audit hvor DBS har lagt en ny tilsynsrapport på: publishedDate er nyere end
-		// den created vi har gemt, og opgaven er allerede oprettet for den forrige rapport.
+	void synchronize_resetsTaskCreated_whenPublishedDateMovesForward() {
+		// Given — kendt audit som platform-syncen har set før (publishedDate er gemt), og DBS
+		// rykker publishedDate frem. Sammenlignet på samme felt fra samme API er hoppet reelt,
+		// så taskCreated skal nulstilles og give en ny opgave.
 		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		LocalDateTime previouslySeen = LocalDateTime.of(2026, 5, 1, 10, 0);
 		DBSOversight existingOversight = new DBSOversight();
 		existingOversight.setDbsId(1L);
 		existingOversight.setName("Tilsynsrapport Supplier");
 		existingOversight.setSupplier(supplier);
-		existingOversight.setCreated(LocalDateTime.of(2024, 5, 27, 19, 21, 32));
+		existingOversight.setCreated(previouslySeen);
+		existingOversight.setPublishedDate(previouslySeen);
 		existingOversight.setTaskCreated(true);
 
 		OffsetDateTime republished = OffsetDateTime.of(2026, 7, 24, 9, 43, 48, 0, ZoneOffset.ofHours(2));
@@ -302,7 +307,74 @@ class DBSPlatformSyncServiceTest {
 		syncService.synchronize(List.of(audit));
 
 		// Then
+		assertThat(existingOversight.getPublishedDate()).isEqualTo(republished.toLocalDateTime());
 		assertThat(existingOversight.getCreated()).isEqualTo(republished.toLocalDateTime());
+		assertThat(existingOversight.isTaskCreated()).isFalse();
+		verify(dbsOversightDao).save(existingOversight);
+	}
+
+	@Test
+	void synchronize_alignsDatesWithoutResettingTaskCreated_whenAdoptedRowFirstSeenByPlatformSync() {
+		// Given — række adopteret fra den gamle integration: created er det gamle systems
+		// dokumentdato, publishedDate er aldrig sat, og tilsynet er udført (taskCreated=true).
+		// Platformens publishedDate er nyere, men de to datoer er usammenlignelige på tværs af
+		// cutover'en, så det er IKKE en genudgivelse. En nulstilling her gav opgaver på allerede
+		// udførte tilsyn (Kalundborg 6/8-2026: 38 forkerte opgaver ved vandmærke-reset).
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		DBSOversight existingOversight = new DBSOversight();
+		existingOversight.setDbsId(1L);
+		existingOversight.setName("Tilsynsrapport Supplier");
+		existingOversight.setSupplier(supplier);
+		existingOversight.setCreated(LocalDateTime.of(2024, 5, 27, 19, 21, 32));
+		existingOversight.setPublishedDate(null);
+		existingOversight.setTaskCreated(true);
+
+		OffsetDateTime published = OffsetDateTime.of(2026, 7, 24, 9, 43, 48, 0, ZoneOffset.ofHours(2));
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport Supplier", 100, "Supplier", 200, "System", null);
+		audit.setPublishedDate(published);
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(existingOversight)));
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then — datoerne justeres, men taskCreated står urørt: ingen dubleret opgave
+		assertThat(existingOversight.getPublishedDate()).isEqualTo(published.toLocalDateTime());
+		assertThat(existingOversight.getCreated()).isEqualTo(published.toLocalDateTime());
+		assertThat(existingOversight.isTaskCreated()).isTrue();
+		verify(dbsOversightDao).save(existingOversight);
+	}
+
+	@Test
+	void synchronize_repairsMissedOversight_whenFirstSeenWithTaskCreatedFalse() {
+		// Given — adopteret række der aldrig blev til en opgave: taskCreated=false og en gammel
+		// created uden for opgavejobbets vindue. Første platform-sighting flytter created frem
+		// til publishedDate, så opgavejobbet samler rækken op - det reparerer oversete tilsyn
+		// uden reset-semantik, så samme kørsel ikke dublerer de udførte.
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		DBSOversight existingOversight = new DBSOversight();
+		existingOversight.setDbsId(1L);
+		existingOversight.setName("Tilsynsrapport Supplier");
+		existingOversight.setSupplier(supplier);
+		existingOversight.setCreated(LocalDateTime.of(2024, 5, 27, 19, 21, 32));
+		existingOversight.setPublishedDate(null);
+		existingOversight.setTaskCreated(false);
+
+		OffsetDateTime published = OffsetDateTime.of(2026, 7, 24, 9, 43, 48, 0, ZoneOffset.ofHours(2));
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport Supplier", 100, "Supplier", 200, "System", null);
+		audit.setPublishedDate(published);
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(new ArrayList<>(List.of(existingOversight)));
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then — created trukket ind i vinduet, taskCreated stadig false: opgaven oprettes
+		assertThat(existingOversight.getCreated()).isEqualTo(published.toLocalDateTime());
 		assertThat(existingOversight.isTaskCreated()).isFalse();
 		verify(dbsOversightDao).save(existingOversight);
 	}
@@ -318,6 +390,7 @@ class DBSPlatformSyncServiceTest {
 		existingOversight.setName("Tilsynsrapport Supplier");
 		existingOversight.setSupplier(supplier);
 		existingOversight.setCreated(alreadyKnown);
+		existingOversight.setPublishedDate(alreadyKnown);
 		existingOversight.setTaskCreated(true);
 
 		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport Supplier", 100, "Supplier", 200, "System", null);
@@ -339,15 +412,16 @@ class DBSPlatformSyncServiceTest {
 	@Test
 	void synchronize_backfillsCreatedWithoutResettingTaskCreated_whenExistingOversightHasNoCreated() {
 		// Given — gamle rækker fra den forrige integration kan mangle created helt, og opgaven kan
-		// være oprettet og afsluttet dengang. Uden nogen dato at sammenligne med kan vi ikke vide om
-		// auditen er genudgivet siden, så taskCreated skal stå urørt - ellers ville første kørsel
-		// efter deploy give en dubleret opgave for et tilsyn der allerede er afsluttet.
+		// være oprettet og afsluttet dengang. Første platform-sighting udfylder begge datoer, men
+		// taskCreated skal stå urørt - ellers ville første kørsel efter deploy give en dubleret
+		// opgave for et tilsyn der allerede er afsluttet.
 		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
 		DBSOversight existingOversight = new DBSOversight();
 		existingOversight.setDbsId(1L);
 		existingOversight.setName("Tilsynsrapport Supplier");
 		existingOversight.setSupplier(supplier);
 		existingOversight.setCreated(null);
+		existingOversight.setPublishedDate(null);
 		existingOversight.setTaskCreated(true);
 
 		OffsetDateTime published = OffsetDateTime.of(2026, 7, 24, 9, 43, 48, 0, ZoneOffset.ofHours(2));
@@ -363,20 +437,23 @@ class DBSPlatformSyncServiceTest {
 
 		// Then
 		assertThat(existingOversight.getCreated()).isEqualTo(published.toLocalDateTime());
+		assertThat(existingOversight.getPublishedDate()).isEqualTo(published.toLocalDateTime());
 		assertThat(existingOversight.isTaskCreated()).isTrue();
 		verify(dbsOversightDao).save(existingOversight);
 	}
 
 	@Test
 	void synchronize_republishesAfterBackfill_whenPublishedDateLaterMovesForward() {
-		// Given — rækken har fået sin dato udfyldt af backfillen ovenfor, og DBS lægger DEREFTER en ny
-		// tilsynsrapport på. Så skal den normale republish-vej slå til og give en ny opgave.
+		// Given — rækken har fået sine datoer justeret af first-sighting ovenfor, og DBS lægger
+		// DEREFTER en ny tilsynsrapport på. Så skal den normale republish-vej slå til og give en
+		// ny opgave.
 		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
 		DBSOversight existingOversight = new DBSOversight();
 		existingOversight.setDbsId(1L);
 		existingOversight.setName("Tilsynsrapport Supplier");
 		existingOversight.setSupplier(supplier);
 		existingOversight.setCreated(LocalDateTime.of(2026, 7, 24, 9, 43, 48));
+		existingOversight.setPublishedDate(LocalDateTime.of(2026, 7, 24, 9, 43, 48));
 		existingOversight.setTaskCreated(true);
 
 		OffsetDateTime republished = OffsetDateTime.of(2026, 10, 1, 8, 0, 0, 0, ZoneOffset.ofHours(2));

@@ -267,27 +267,32 @@ public class DBSPlatformSyncService {
 				LocalDateTime published = audit.getPublishedDate() != null
 						? audit.getPublishedDate().toLocalDateTime()
 						: null;
-				if (published != null && oversight.getCreated() == null) {
-					// Rækken har aldrig haft en dato - det kan forekomme på rækker fra den tidligere
-					// integration. Vi kan ikke vide om auditen er genudgivet siden, så udfyld kun
-					// datoen og lad taskCreated stå: nulstiller vi den, får et tilsyn der allerede er
-					// afsluttet en dubleret opgave ved første kørsel efter deploy.
-					log.info("Oversight {} (audit {}) had no created, backfilling {} and leaving taskCreated={}",
-							oversight.getId(), auditId, published, oversight.isTaskCreated());
+				if (published != null && oversight.getPublishedDate() == null) {
+					// Første gang platform-syncen ser denne række (adopteret fra den gamle
+					// integration, eller oprettet før published_date fandtes). created kan stamme
+					// fra det gamle systems dokumentdato og er ikke sammenlignelig med platformens
+					// publishedDate - at nulstille taskCreated på det grundlag gav opgaver på
+					// allerede udførte tilsyn. Derfor: justér datoerne, rør ikke taskCreated.
+					// Er tilsynet aldrig blevet til en opgave (taskCreated=false), trækker den nye
+					// created rækken ind i opgavejobbets vindue, og opgaven oprettes - det reparerer
+					// oversete genudgivelser uden at dublere de udførte.
+					log.info("Oversight {} (audit {}) first seen by platform sync: created {} -> {}, taskCreated={} untouched",
+							oversight.getId(), auditId, oversight.getCreated(), published, oversight.isTaskCreated());
+					oversight.setPublishedDate(published);
 					oversight.setCreated(published);
 					changed = true;
-				} else if (published != null && published.isAfter(oversight.getCreated())) {
-					// publishedDate er rykket frem på en audit vi kender i forvejen. API'et har ét
-					// auditLink og ingen filliste, så vi kan ikke se OM det er en ny tilsynsrapport,
-					// et ekstra bilag eller en rettet stavefejl - kun at datoen flyttede sig. Vi
-					// behandler det som noget der skal ses på. Det svarer til den tidligere
-					// integration, hvor hver enkelt fil blev sin egen oversight og dermed udløste sin
-					// egen opgave, så det er ikke mere støjende end det kunderne kom fra.
-					// Uden dette beholder rækken sin oprindelige dato: den falder uden for
-					// opgavejobbets vindue (DBSService bruger backfillFrom som nedre grænse), ligger
-					// med taskCreated=false og bliver filtreret væk hver time for evigt.
-					log.info("Oversight {} (audit {}) republished: created {} -> {}, resetting taskCreated",
-							oversight.getId(), auditId, oversight.getCreated(), published);
+				} else if (published != null && published.isAfter(oversight.getPublishedDate())) {
+					// publishedDate er rykket frem siden sidst vi så auditen - sammenlignet på samme
+					// felt fra samme API, så hoppet er reelt. API'et har ét auditLink og ingen
+					// filliste, så vi kan ikke se OM det er en ny tilsynsrapport, et ekstra bilag
+					// eller en rettet stavefejl - kun at datoen flyttede sig. Vi behandler det som
+					// noget der skal ses på. Uden dette beholder rækken sin oprindelige dato: den
+					// falder uden for opgavejobbets vindue (DBSService bruger backfillFrom som nedre
+					// grænse), ligger med taskCreated=false og bliver filtreret væk hver time for
+					// evigt.
+					log.info("Oversight {} (audit {}) republished: publishedDate {} -> {}, resetting taskCreated",
+							oversight.getId(), auditId, oversight.getPublishedDate(), published);
+					oversight.setPublishedDate(published);
 					oversight.setCreated(published);
 					oversight.setTaskCreated(false);
 					changed = true;
@@ -310,6 +315,7 @@ public class DBSPlatformSyncService {
 				DBSOversight oversight = new DBSOversight();
 				oversight.setDbsId(auditId);
 				oversight.setName(audit.getName());
+				oversight.setPublishedDate(audit.getPublishedDate() != null ? audit.getPublishedDate().toLocalDateTime() : null);
 				oversight.setCreated(audit.getPublishedDate() != null ? audit.getPublishedDate().toLocalDateTime() : LocalDateTime.now());
 				oversight.setLocked(false);
 				oversight.setSupplier(supplier.get());
