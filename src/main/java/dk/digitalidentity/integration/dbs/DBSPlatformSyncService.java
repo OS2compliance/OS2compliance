@@ -277,11 +277,15 @@ public class DBSPlatformSyncService {
 					oversight.setCreated(published);
 					changed = true;
 				} else if (published != null && published.isAfter(oversight.getCreated())) {
-					// DBS genudgiver den samme audit når der kommer en ny tilsynsrapport på den. Så er
-					// det et nyt tilsyn der skal give en ny opgave. Uden dette beholder rækken sin
-					// oprindelige dato: den falder uden for opgavejobbets vindue (DBSService bruger
-					// backfillFrom som nedre grænse), ligger med taskCreated=false og bliver filtreret
-					// væk hver time for evigt.
+					// publishedDate er rykket frem på en audit vi kender i forvejen. API'et har ét
+					// auditLink og ingen filliste, så vi kan ikke se OM det er en ny tilsynsrapport,
+					// et ekstra bilag eller en rettet stavefejl - kun at datoen flyttede sig. Vi
+					// behandler det som noget der skal ses på. Det svarer til den tidligere
+					// integration, hvor hver enkelt fil blev sin egen oversight og dermed udløste sin
+					// egen opgave, så det er ikke mere støjende end det kunderne kom fra.
+					// Uden dette beholder rækken sin oprindelige dato: den falder uden for
+					// opgavejobbets vindue (DBSService bruger backfillFrom som nedre grænse), ligger
+					// med taskCreated=false og bliver filtreret væk hver time for evigt.
 					log.info("Oversight {} (audit {}) republished: created {} -> {}, resetting taskCreated",
 							oversight.getId(), auditId, oversight.getCreated(), published);
 					oversight.setCreated(published);

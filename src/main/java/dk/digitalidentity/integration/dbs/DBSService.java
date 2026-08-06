@@ -118,7 +118,7 @@ public class DBSService {
 								.max(TaskService.NEWEST_FIRST)
 								.ifPresentOrElse((task) -> {
 											// Task already exists — add oversight to description
-											task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
+											appendOversightIfAbsent(task, dbsOversight);
 
 											// Unfinished tasks now include overdue ones. Reset the deadline when it has
 											// passed, so the new oversight is actionable instead of being appended to a
@@ -212,6 +212,31 @@ public class DBSService {
         return "Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
             + "Følgende filer kan findes på DBS-portalen:\n";
     }
+
+	/**
+	 * Adds the oversight to the task description, unless it is already listed.
+	 * <p>
+	 * Under the old integration every line was a distinct file name, so appending unconditionally was
+	 * safe. An oversight now covers a whole audit and is reused when DBS moves publishedDate forward,
+	 * and the audit keeps its name across a republication - without this guard the same line is
+	 * appended again every time.
+	 */
+	private void appendOversightIfAbsent(final Task task, final DBSOversight oversight) {
+		final String description = task.getDescription() != null ? task.getDescription() : "";
+		final String name = oversight.getName().trim();
+		// The first oversight on a freshly created task is written without the " - " prefix
+		// (baseDBSTaskDescription + name), later ones with it - strip the prefix so both forms
+		// count as listed. Compare whole lines: contains() would consider "Tilsyn 2026" already
+		// listed when the description holds "Tilsyn 2026 opdateret".
+		final boolean alreadyListed = description.lines()
+				.map(String::trim)
+				.map(l -> l.startsWith("- ") ? l.substring(2).trim() : l)
+				.anyMatch(name::equals);
+		if (alreadyListed) {
+			return;
+		}
+		task.setDescription(description + "\n - " + oversight.getName());
+	}
 
 	private void addAuditLinkIfAbsent(Task task, DBSOversight oversight) {
 		String auditLink = oversight.getAuditLink();
