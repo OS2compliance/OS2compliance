@@ -34,9 +34,9 @@ export default class ColumnOptions {
      * @param neverShowIds a list of column Id's for columns that should always be hidden for the user
      * @param buttonContainerSelector An optional selector for the container which houses the option toggle.
      * If the container is not found, the toggle is placed right before the table container
-     * @param maxVisibleColumns An optional cap on how many columns (including always-shown ones) may be
-     * visible at once. When the cap is reached, further columns must be hidden before new ones can be shown.
-     * Pass null (default) for no limit.
+     * @param maxVisibleColumns An optional cap on how many toggleable columns (i.e. excluding always-shown
+     * and never-shown ones) may be visible at once. When the cap is reached, further columns must be hidden
+     * before new ones can be shown. Pass null (default) for no limit.
      * @param sortOptionsAlphabetically When true, the option list is sorted alphabetically by column name
      * instead of following the column order in the grid config. Defaults to false.
      */
@@ -185,13 +185,17 @@ export default class ColumnOptions {
     }
 
     /**
-     * Counts how many columns are currently visible, taking any not-yet-confirmed
-     * toggles in tempState into account.
+     * Counts how many toggleable columns are currently visible, taking any not-yet-confirmed
+     * toggles in tempState into account. Always-shown and never-shown columns are excluded,
+     * since the user cannot change them and they should not count against the limit.
      * @returns {number}
      */
     countVisibleColumns() {
         let count = 0
         for (const [id, column] of Object.entries(this.state)) {
+            if (column.alwaysShow || column.neverShow) {
+                continue;
+            }
             const pendingHidden = this.tempState.hasOwnProperty(id) ? this.tempState[id] : column.hidden
             if (!pendingHidden) {
                 count++
@@ -243,7 +247,11 @@ export default class ColumnOptions {
         const atLimit = this.countVisibleColumns() >= this.maxVisibleColumns;
 
         for (const item of optionMenuContainer.querySelectorAll(`.${this.optionItemClass}`)) {
-            const isShown = !this.tempState[item.dataset.columnId];
+            const id = item.dataset.columnId;
+            const isShown = this.tempState.hasOwnProperty(id)
+                ? !this.tempState[id]
+                : !this.state[id]?.hidden;
+
             const disable = atLimit && !isShown;
             item.classList.toggle('disabled', disable);
             item.setAttribute('aria-disabled', String(disable));

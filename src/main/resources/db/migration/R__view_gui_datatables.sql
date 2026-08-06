@@ -371,12 +371,12 @@ SELECT a.id,
            END
            )                                                                as dpia_status_order,
        a.tia_opt_out,
-       tia.assessment                                                       as tia_assessment,
+       tia_latest.assessment                                                as tia_assessment,
        (CASE
             WHEN a.tia_opt_out = true THEN 0
-            WHEN tia.assessment = 'GREEN' THEN 1
-            WHEN tia.assessment = 'YELLOW' THEN 2
-            WHEN tia.assessment = 'RED' THEN 3
+            WHEN tia_latest.assessment = 'GREEN' THEN 1
+            WHEN tia_latest.assessment = 'YELLOW' THEN 2
+            WHEN tia_latest.assessment = 'RED' THEN 3
            END
            )                                                                as tia_status_order
 FROM assets a
@@ -496,7 +496,15 @@ FROM assets a
                    LIMIT 1
                )
          ) dpia_latest ON dpia_latest.asset_id = a.id
-         LEFT JOIN tia ON tia.asset_id = a.id
+         LEFT JOIN (
+             SELECT asset_id, assessment
+             FROM tia t1
+             WHERE t1.id = (
+                 SELECT t2.id FROM tia t2
+                 WHERE t2.asset_id = t1.asset_id
+                 ORDER BY t2.id DESC LIMIT 1
+             )
+         ) tia_latest ON tia_latest.asset_id = a.id
 WHERE a.deleted = false
 GROUP BY a.id;
 
