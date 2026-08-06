@@ -51,7 +51,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -443,19 +442,18 @@ public class ReportController {
                 );
         } else if (type.equals("DOCX")) {
 			try {
-				ByteArrayOutputStream data = assetService.getDPIADocx(dpia);
+			ByteArrayOutputStream data = assetService.getDPIADocx(dpia);
 
-				return ResponseEntity.ok()
-					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".docx\"")
-					.contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
-					.body(outputStream -> {
-						data.writeTo(outputStream);
-					});
-			} catch (Docx4JException e) {
-				log.error("Failed to convert DPIA to docx: ", e);
-				return ResponseEntity.internalServerError().build();
+			return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".docx\"")
+				.contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+				.body(outputStream -> {
+					data.writeTo(outputStream);
+				});
+			} catch(Exception e) {
+				// TODO
+				return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
-
 		}
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);

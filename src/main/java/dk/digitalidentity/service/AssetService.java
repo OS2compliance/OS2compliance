@@ -43,16 +43,13 @@ import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.exporter.HtmlToDocxExporterService;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.docx4j.convert.in.xhtml.XHTMLImporterImpl;
-import org.docx4j.convert.in.xhtml.renderer.DocxRenderer;
-import org.docx4j.openpackaging.exceptions.Docx4JException;
-import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -120,6 +117,7 @@ public class AssetService implements TagableService<Asset> {
 	private final ChoiceService choiceService;
 	private final ChoiceDPIADao choiceDPIADao;
 	private final S3Service s3Service;
+	private final HtmlToDocxExporterService htmlToDocxExporterService;
 
 	public boolean isResponsibleFor(Asset asset) {
 		return !asset.getResponsibleUsers().isEmpty() && asset.getResponsibleUsers().stream().map(User::getUuid).anyMatch(uuid -> uuid.equals(SecurityUtil.getPrincipalUuid()));
@@ -430,9 +428,9 @@ public class AssetService implements TagableService<Asset> {
 		return convertHtmlToPdf(html);
 	}
 
-	public ByteArrayOutputStream getDPIADocx(DPIA dpia) throws Docx4JException {
+	public ByteArrayOutputStream getDPIADocx(DPIA dpia) throws Exception {
 		String html = getDPIAHTML(dpia);
-		return convertHtmlToDocx(html);
+		return htmlToDocxExporterService.convert(html);
 	}
 
 	public byte[] getDPIAScreeningPdf(DPIA dpia) throws IOException {
@@ -614,21 +612,6 @@ public class AssetService implements TagableService<Asset> {
 		var result = outputStream.toByteArray();
 		outputStream.close();
 		return result;
-	}
-
-	private ByteArrayOutputStream convertHtmlToDocx(String html) throws Docx4JException {
-		WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.createPackage();
-        XHTMLImporterImpl importer = new XHTMLImporterImpl(wordMLPackage);
-		importer.setRenderer(new DocxRenderer(20f, 20));
-
-		wordMLPackage.getMainDocumentPart().getContent().addAll( 
-				importer.convert( html, null) );
-
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-		wordMLPackage.save(baos);
-
-		return baos;
 	}
 
 	private String handleResponseImg(String response) {
