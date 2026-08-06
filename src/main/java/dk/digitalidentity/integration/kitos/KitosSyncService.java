@@ -207,9 +207,7 @@ public class KitosSyncService {
 
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
 
-        if (lifeCycleStatus != null) {
-            asset.setActive(valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
-        }
+        asset.setActive(valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
 
         if (!valid) {
             return;
