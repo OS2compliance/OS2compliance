@@ -40,6 +40,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -242,6 +243,10 @@ class DBSServiceTest {
 		// Then - begge systemer besøges (any(DBSAsset.class)-stubs dækker også otherAsset)
 		verify(relationService).findRelatedToWithType(eq(otherAsset), eq(RelationType.ASSET));
 		assertThat(openTask.getDescription()).endsWith("\n - " + AUDIT_NAME);
+		// ...men oversighten gemmes kun ÉN gang. Et save per aktiv blev til merge() midt i
+		// iterationen af oversightens assets-collection og gav ConcurrentModificationException.
+		verify(dbsOversightDao, times(1)).save(oversight);
+		assertThat(oversight.isTaskCreated()).isTrue();
 	}
 
 	// ========== Ansvarskæden: tilsynsansvarlig -> global indstilling -> systemansvarlig ==========
@@ -317,8 +322,9 @@ class DBSServiceTest {
 		// When
 		dbsService.oversightResponsible();
 
-		// Then - ingen opgave, og oversighten står stadig som ubehandlet
+		// Then - ingen opgave, og oversighten står stadig som ubehandlet (og gemmes ikke)
 		verify(taskService, never()).saveTask(any());
+		verify(dbsOversightDao, never()).save(any());
 		assertThat(oversight.isTaskCreated()).isFalse();
 	}
 

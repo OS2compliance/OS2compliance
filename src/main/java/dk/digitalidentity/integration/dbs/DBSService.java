@@ -69,11 +69,15 @@ public class DBSService {
 			// Auditens egne systemer når platform-syncen har koblet dem; ellers alle leverandørens
 			// aktiver (rækker fra før koblingen fandtes). Den brede fallback lagde auditlinks og
 			// opgaver på systemer auditen ikke dækker, når en leverandør har flere systemer.
-			final Collection<DBSAsset> oversightAssets = !dbsOversight.getAssets().isEmpty()
+			// List.copyOf: vi laver session-arbejde (queries, saves) inde i løkken, og en flush
+			// kan røre Hibernate-collections bag iteratoren - iterér derfor et snapshot, aldrig
+			// den levende PersistentSet/Bag (gav ConcurrentModificationException).
+			final Collection<DBSAsset> oversightAssets = List.copyOf(!dbsOversight.getAssets().isEmpty()
 					? dbsOversight.getAssets()
-					: dbsOversight.getSupplier().getAssets();
+					: dbsOversight.getSupplier().getAssets());
 			log.debug("Oversight {} has {} assigned assets ({}).", dbsOversight.getId(), oversightAssets.size(),
 					dbsOversight.getAssets().isEmpty() ? "supplier-wide fallback" : "audit systems");
+			boolean anyTaskHandled = false;
 
 			for (DBSAsset dbsAsset : oversightAssets) {
 
@@ -205,10 +209,18 @@ public class DBSService {
 												notifyService.notifyOversightByEmail(task, taskEmail);
 											}
 										});
-						dbsOversight.setTaskCreated(true);
-						dbsOversightDao.save(dbsOversight);
+						anyTaskHandled = true;
 					}
 				}
+			}
+
+			// Per-oversight-tilstand: sæt og gem ÉN gang efter løkkerne. Det tidligere save per
+			// aktiv blev til merge() på en managed entity, som i Hibernate 6 re-wrapper entitetens
+			// collections - midt i iterationen af assets-settet ovenfor (CME). Semantikken er
+			// uændret: taskCreated sættes kun når mindst ét aktiv reelt fik behandlet en opgave.
+			if (anyTaskHandled) {
+				dbsOversight.setTaskCreated(true);
+				dbsOversightDao.save(dbsOversight);
 			}
 		}
 	}
