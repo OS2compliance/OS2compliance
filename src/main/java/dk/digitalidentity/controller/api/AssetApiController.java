@@ -189,10 +189,8 @@ public class AssetApiController {
 		if (assetUpdateEO.getProductLinks() != null) {
 			addProductLinks(assetUpdateEO.getProductLinks(), asset);
 		}
-        asset.getProperties().clear();
-        final Set<Property> properties = assetMapper.fromEO(assetUpdateEO.getProperties());
-        properties.forEach(property -> property.setEntity(asset));
-        asset.getProperties().addAll(properties);
+		asset.getProperties().clear();
+		asset.getProperties().addAll(assetMapper.fromEO(assetUpdateEO.getProperties()));
     }
 
     @Operation(summary = "Delete an asset", description = "Deletes an asset")
