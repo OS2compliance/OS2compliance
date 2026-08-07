@@ -13,8 +13,10 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.NotifyService;
 import dk.digitalidentity.service.RelationService;
@@ -68,6 +70,8 @@ class DBSServiceTest {
 	private SettingsService settingsService;
 	@Mock
 	private NotifyService notifyService;
+	@Mock
+	private AssetOversightService assetOversightService;
 	@Mock
 	private OS2complianceConfiguration configuration;
 
@@ -292,6 +296,35 @@ class DBSServiceTest {
 		// Then
 		verify(taskService).saveTask(any(Task.class));
 		assertThat(oversight.isTaskCreated()).isTrue();
+	}
+
+	// ========== Parkering af manuel kontrol når aktivet er på DBS-tilsyn ==========
+
+	@Test
+	void oversightResponsible_parksManualCheck_whenAssetIsOnDbsOversight() {
+		// Given - aktivet er på DBS-tilsyn; en evt. løbende manuel kontrol skal parkeres, så
+		// kunden ikke har både kontrol og DBS-opgave for samme tilsyn (TolkDanmark-dubletten:
+		// kontrol 01/09 ved siden af DBS-opgaven, fordi koblingen skete før parkeringen fandtes).
+		asset.setNextInspection(NextInspection.DBS);
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		verify(assetOversightService).createOrUpdateAssociatedOversightCheck(asset);
+	}
+
+	@Test
+	void oversightResponsible_doesNotTouchOversightCheck_whenAssetIsNotOnDbsOversight() {
+		// Given - aktiv uden DBS-tilsynsopsætning (nextInspection null i fixturen)
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		verify(assetOversightService, never()).createOrUpdateAssociatedOversightCheck(any());
 	}
 
 	// ========== Ansvarskæden: tilsynsansvarlig -> global indstilling -> systemansvarlig ==========

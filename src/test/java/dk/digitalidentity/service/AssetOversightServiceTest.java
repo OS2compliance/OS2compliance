@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import org.junit.jupiter.api.Test;
@@ -295,6 +296,25 @@ class AssetOversightServiceTest {
         verify(taskLogDao, never()).reassignTask(any(), any());
         assertThat(oldCheck.getLogs()).containsExactly(strayOnCheck);
         assertThat(dbsTask.getLogs()).containsExactly(existing);
+    }
+
+    @Test
+    void createOrUpdateAssociatedOversightCheck_parksTheCheckTask_neverTheDbsTask() {
+        // linked_asset-mængden indeholder både den gentagne kontrol (CHECK) og DBS-opgaver
+        // (TASK). En findFirst() på tværs kunne parkere en frisk DBS-opgave til 2099 i stedet
+        // for kontrollen - og overskrive dens ansvarlige.
+        final Asset asset = asset(dbsModel());
+        asset.setNextInspection(NextInspection.DBS);
+        asset.setNextInspectionDate(null);
+        final Task dbsTask = oversightTask(1L, TaskType.TASK, "X - DBS tilsyn", LocalDate.of(2026, 9, 4));
+        final Task check = oversightTask(2L, TaskType.CHECK, "Tilsyn af X", LocalDate.of(2026, 9, 1));
+        // DBS-opgaven først, så testen beviser typefilteret og ikke bare rækkefølgen
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(dbsTask, check));
+
+        assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
+
+        assertThat(check.getNextDeadline()).isEqualTo(LocalDate.of(2099, 1, 1));
+        assertThat(dbsTask.getNextDeadline()).isEqualTo(LocalDate.of(2026, 9, 4));
     }
 
     // ========== setAssetsToDbsOversight ==========

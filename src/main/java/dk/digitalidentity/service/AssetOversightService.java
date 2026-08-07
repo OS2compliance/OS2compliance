@@ -186,7 +186,13 @@ public class AssetOversightService {
     }
 
     private Task findAssociatedOversightCheck(final Asset asset) {
-        return findAssociatedOversightTasks(asset).stream().findFirst().orElse(null);
+        // Kun den gentagne kontrol-opgave (CHECK): listen indeholder også DBS-opgaver (TASK), og
+        // en findFirst() på tværs kunne parkere en frisk DBS-opgave til 2099 i stedet for
+        // kontrollen - og overskrive dens ansvarlige. Nyeste ved flere (samme regel som resten).
+        return findAssociatedOversightTasks(asset).stream()
+            .filter(t -> t.getTaskType() == TaskType.CHECK)
+            .max(TaskService.NEWEST_FIRST)
+            .orElse(null);
     }
 
     /**

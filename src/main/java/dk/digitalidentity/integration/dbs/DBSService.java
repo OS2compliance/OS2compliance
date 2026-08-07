@@ -12,9 +12,11 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.NotifyService;
 import dk.digitalidentity.service.RelationService;
@@ -44,6 +46,7 @@ public class DBSService {
     private final DBSOversightDao dbsOversightDao;
     private final RelationService relationService;
     private final AssetService assetService;
+	private final AssetOversightService assetOversightService;
     private final TaskService taskService;
 	private final SettingsService settingsService;
 	private final NotifyService notifyService;
@@ -223,6 +226,17 @@ public class DBSService {
 							} else if (taskEmail != null) {
 								notifyService.notifyOversightByEmail(task, taskEmail);
 							}
+						}
+
+						// Aktivet er på DBS-tilsyn: park den manuelle kontrol-opgave (deadline
+						// 2099), så kunden ikke står med både en løbende manuel kontrol og
+						// DBS-opgaven for det samme tilsyn. Parkeringen ved selve koblingen
+						// (setAssetsToDbsOversight) rammer ikke aktiver der blev koblet før den
+						// fandtes, eller kontroller oprettet efter koblingen - dette kald heler
+						// dem, når næste tilsyn flyder for aktivet. Idempotent og no-op for
+						// aktiver uden tilsynsopsætning.
+						if (asset.getNextInspection() == NextInspection.DBS) {
+							assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
 						}
 						anyTaskHandled = true;
 					}
