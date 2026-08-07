@@ -17,6 +17,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
@@ -40,8 +41,40 @@ import java.util.Set;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class Relatable {
 
+	/**
+	 * The name of the id generator shared by this hierarchy and {@link CustomThreat}. It is declared
+	 * here and referenced from there so both keep drawing from the same {@code default} segment.
+	 */
+	public static final String ID_GENERATOR = "shared_id_generator";
+
+	/**
+	 * Spelled out to silence HHH000398 on every startup. Every value matches what Hibernate already
+	 * defaulted to, so id allocation is unchanged - see TableGenerator.DEF_* and
+	 * OptimizableGenerator.DEFAULT_INCREMENT_SIZE. {@code pkColumnValue} in particular must stay: drop
+	 * it and Hibernate derives a segment per entity, restarting allocation at 1.
+	 * <p>
+	 * Because {@link InheritanceType#TABLE_PER_CLASS} makes Hibernate key entities on (id, Relatable),
+	 * an id handed out twice within this hierarchy surfaces as a ClassCastException between two
+	 * subclasses. Two rules follow, and V1_52__fix_dpia_ids.sql broke both:
+	 * <ul>
+	 * <li>Never give a subclass its own segment.
+	 * <li>Never assign ids from {@code next_val}. It is not the highest id in use, and a fresh block
+	 * starts <em>below</em> it: the generator writes next_val + allocationSize, returns next_val + 1,
+	 * and PooledOptimizer then hands out [returned - (allocationSize - 1) .. returned]. Renumbering
+	 * rows to next_val + 1 and up therefore lands them inside the very next block. If a data fix has
+	 * to move rows, leave at least allocationSize of room above them and push next_val past that.
+	 * </ul>
+	 */
 	@Id
-	@GeneratedValue(strategy = GenerationType.TABLE)
+	@GeneratedValue(strategy = GenerationType.TABLE, generator = ID_GENERATOR)
+	@TableGenerator(
+			name = ID_GENERATOR,
+			table = "hibernate_sequences",
+			pkColumnName = "sequence_name",
+			valueColumnName = "next_val",
+			pkColumnValue = "default",
+			allocationSize = 50
+	)
 	private Long id;
 
 	@Version
