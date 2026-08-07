@@ -70,12 +70,9 @@ public class DBSService {
 		log.debug("Found {} oversights that need a task.", oversights.size());
 
 		for (DBSOversight dbsOversight : oversights) {
-			// Auditens egne systemer når platform-syncen har koblet dem; ellers alle leverandørens
-			// aktiver (rækker fra før koblingen fandtes). Den brede fallback lagde auditlinks og
-			// opgaver på systemer auditen ikke dækker, når en leverandør har flere systemer.
-			// List.copyOf: vi laver session-arbejde (queries, saves) inde i løkken, og en flush
-			// kan røre Hibernate-collections bag iteratoren - iterér derfor et snapshot, aldrig
-			// den levende PersistentSet/Bag (gav ConcurrentModificationException).
+			// Auditens egne systemer når koblingen findes; ellers leverandør-bred fallback for
+			// ældre rækker. List.copyOf: iterér et snapshot, aldrig den levende Hibernate-
+			// collection - session-arbejde i løkken gav ConcurrentModificationException.
 			final Collection<DBSAsset> oversightAssets = List.copyOf(!dbsOversight.getAssets().isEmpty()
 					? dbsOversight.getAssets()
 					: dbsOversight.getSupplier().getAssets());
@@ -99,9 +96,7 @@ public class DBSService {
 							.toList();
 
 					for (Asset asset : assets) {
-						// Prioritet 1: manuelt sat tilsynsansvarlig på aktivet. Hjælpeteksten lover
-						// at den altid vinder over den globale indstilling - feltet auto-udfyldes
-						// derfor ikke længere (se AssetOversightService.setAssetsToDbsOversight).
+						// Prioritet 1: manuelt sat tilsynsansvarlig - vinder altid (jf. hjælpeteksten)
 						Set<User> responsibleUsers = asset.getOversightResponsibleUser() != null
 								? Set.of(asset.getOversightResponsibleUser())
 								: Set.of();
@@ -132,8 +127,7 @@ public class DBSService {
 						final Set<User> taskResponsibles = responsibleUsers;
 						final String taskEmail = notificationEmail;
 
-						// Alle DBS-tilsynsopgaver på dbs-aktivet - åbne til genbrug, udførte til
-						// dæknings-vurderingen nedenfor
+						// Alle DBS-tilsynsopgaver på dbs-aktivet: åbne genbruges, udførte indgår i dækning
 						List<Task> dbsTasks = relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
 								.map(r -> taskService.findById(r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId()))
 								.filter(Optional::isPresent)
@@ -184,11 +178,8 @@ public class DBSService {
 
 							addAuditLinkIfAbsent(task, dbsOversight);
 						} else if (isCoveredByCompletedTask(dbsTasks, dbsOversight)) {
-							// Et tilsyn udført EFTER auditens udgivelse dækker auditen - rapporten
-							// var tilgængelig da tilsynet blev udført. taskCreated=false på en
-							// adopteret/kapret række beviser ikke at tilsynet mangler: udførelsen
-							// kan ligge på en anden opgave på samme aktiv, og en ny opgave ville
-							// være en dublet af et afsluttet tilsyn.
+							// Tilsyn udført efter udgivelsen dækker auditen - en ny opgave ville
+							// dublere et afsluttet tilsyn (se isCoveredByCompletedTask)
 							log.info("Oversight {} (audit {}) already covered for asset {}: a DBS task was completed on/after the audit's publication - no new task",
 									dbsOversight.getId(), dbsOversight.getDbsId(), asset.getId());
 						} else {
@@ -227,22 +218,17 @@ public class DBSService {
 							}
 						}
 
-						// At vi behandler et DBS-tilsyn for aktivet beviser at det er DBS-dækket:
-						// park den systemskabte kontrol-opgave (deadline 2099), så kunden ikke
-						// står med både en løbende kontrol og DBS-opgaven for samme tilsyn.
-						// Ingen gate på aktivets next_inspection - feltet er ikke pålideligt sat
-						// på aktiver koblet før setAssetsToDbsOversight satte det. Idempotent og
-						// no-op når der ingen kontrol findes.
+						// Et DBS-tilsyn for aktivet beviser DBS-dækning: park den systemskabte
+						// kontrol, så kontrol og DBS-opgave ikke kører for samme tilsyn. Bevidst
+						// ingen gate på next_inspection - feltet er upålideligt på ældre koblinger.
 						assetOversightService.parkAssociatedOversightCheck(asset);
 						anyTaskHandled = true;
 					}
 				}
 			}
 
-			// Per-oversight-tilstand: sæt og gem ÉN gang efter løkkerne. Det tidligere save per
-			// aktiv blev til merge() på en managed entity, som i Hibernate 6 re-wrapper entitetens
-			// collections - midt i iterationen af assets-settet ovenfor (CME). Semantikken er
-			// uændret: taskCreated sættes kun når mindst ét aktiv reelt fik behandlet en opgave.
+			// Per-oversight-tilstand: gem ÉN gang efter løkkerne - save (merge) inde i løkken
+			// re-wrapper entitetens collections midt i iterationen (CME i Hibernate 6)
 			if (anyTaskHandled) {
 				dbsOversight.setTaskCreated(true);
 				dbsOversightDao.save(dbsOversight);
@@ -274,10 +260,9 @@ public class DBSService {
     }
 
 	/**
-	 * Afgør om auditen allerede er dækket af et udført tilsyn på aktivet: mindst én udført
-	 * DBS-tilsynsopgave med en log afsluttet på/efter auditens udgivelsesdato. Så var rapporten
-	 * tilgængelig da tilsynet blev udført. Er seneste udførelse ÆLDRE end udgivelsen, er auditen
-	 * nyt indhold og skal give en ny opgave - ægte genudgivelser rammes derfor ikke af værnet.
+	 * Auditen er dækket når en udført DBS-opgave på aktivet har en log afsluttet på/efter
+	 * auditens udgivelsesdato - rapporten var da tilgængelig ved tilsynet. Ægte genudgivelser
+	 * (nyere end seneste udførelse) rammes ikke.
 	 */
 	private boolean isCoveredByCompletedTask(final List<Task> dbsTasks, final DBSOversight oversight) {
 		final LocalDateTime publishedAt = oversight.getPublishedDate() != null

@@ -73,11 +73,9 @@ public class AssetOversightService {
             asset.setNextInspection(NextInspection.DBS);
             asset.setNextInspectionDate(null);
             asset.setSupervisoryModel(choiceValueDao.findByIdentifier("supervision-model-dbs-123456").orElse(null));
-			// Tilsynsansvarlig udfyldes bevidst IKKE her. Hjælpeteksten lover at feltet er "sat
-			// manuelt" og altid vinder over den globale dbsOversightRecipient-indstilling - en
-			// auto-udfyldning (tidligere: første ansvarlige bruger, ellers den der klikkede)
-			// udpegede derfor i stilhed en vilkårlig person og blokerede kundens indstilling.
-			// DBSService har ansvarskæden: tilsynsansvarlig -> global indstilling -> systemansvarlig.
+			// Tilsynsansvarlig udfyldes bevidst IKKE: feltet er et manuelt valg der vinder over
+			// den globale indstilling (hjælpeteksten) - auto-udfyldning udpegede en vilkårlig
+			// person og blokerede indstillingen. Ansvarskæden ligger i DBSService.
 			createOrUpdateAssociatedOversightCheck(asset);
         });
     }
@@ -189,12 +187,9 @@ public class AssetOversightService {
     }
 
     /**
-     * Parkerer den systemskabte kontrol-opgave på aktivet (deadline 2099, ingen gentagelse) -
-     * og intet andet. createOrUpdateAssociatedOversightCheck kan ikke bruges til formålet fra
-     * opgavejobbet: dens supervisoryModel==null-gren NULLER aktivets tilsynsopsætning som
-     * sideeffekt, og dens adfærd afhænger af aktivets mode-felter, som ikke er pålideligt sat
-     * på aktiver koblet før setAssetsToDbsOversight satte dem (set hos Kalundborg: TolkDanmark
-     * koblet manuelt, kontrol med linked_asset, men next_inspection ikke DBS).
+     * Parkerer den systemskabte kontrol-opgave (deadline 2099, ingen gentagelse) - og intet
+     * andet. createOrUpdateAssociatedOversightCheck duer ikke fra opgavejobbet: dens
+     * supervisoryModel==null-gren nuller aktivets tilsynsopsætning som sideeffekt.
      */
     public void parkAssociatedOversightCheck(final Asset asset) {
         final Task check = findAssociatedOversightCheck(asset);
@@ -206,9 +201,8 @@ public class AssetOversightService {
     }
 
     private Task findAssociatedOversightCheck(final Asset asset) {
-        // Kun den gentagne kontrol-opgave (CHECK): listen indeholder også DBS-opgaver (TASK), og
-        // en findFirst() på tværs kunne parkere en frisk DBS-opgave til 2099 i stedet for
-        // kontrollen - og overskrive dens ansvarlige. Nyeste ved flere (samme regel som resten).
+        // Kun CHECK: listen rummer også DBS-opgaver (TASK), og en match på tværs ville kunne
+        // parkere en frisk DBS-opgave til 2099. Nyeste ved flere.
         return findAssociatedOversightTasks(asset).stream()
             .filter(t -> t.getTaskType() == TaskType.CHECK)
             .max(TaskService.NEWEST_FIRST)

@@ -1,7 +1,6 @@
--- Kobler en oversight til de DBS-systemer auditens systems[] daekker. Uden koblingen fanner
--- opgavejobbet ud til ALLE leverandoerens aktiver, saa auditlinks og opgaver lander paa systemer
--- auditen ikke daekker. En tom maengde betyder en aeldre raekke uden systemdata; opgavejobbet
--- falder da tilbage til den leverandoer-brede adfaerd.
+-- Kobler en oversight til de DBS-systemer auditens systems[] daekker, saa opgaver og
+-- auditlinks kun rammer de rigtige systemer. Tom maengde = aeldre raekke uden systemdata;
+-- opgavejobbet falder da tilbage til leverandoer-bred adfaerd.
 CREATE TABLE dbs_oversight_assets (
     dbs_oversight_id BIGINT NOT NULL,
     dbs_asset_id BIGINT NOT NULL,

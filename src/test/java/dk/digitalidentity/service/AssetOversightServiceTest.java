@@ -301,10 +301,8 @@ class AssetOversightServiceTest {
 
     @Test
     void parkAssociatedOversightCheck_parksCheckWithoutTouchingAsset() {
-        // Sideeffektfri parkering til opgavejobbet: kontrollen skubbes til 2099 og stopper med
-        // at gentage - aktivets tilsynsopsætning røres IKKE (createOrUpdate-varianten nuller
-        // next_inspection når supervisory-modellen mangler, hvilket låste parkeringen ude for
-        // aktiver koblet før mode-felterne blev sat - TolkDanmark hos Kalundborg).
+        // Sideeffektfri parkering: kontrollen til 2099 uden gentagelse - aktivets
+        // tilsynsopsætning røres IKKE (createOrUpdate-varianten nuller den ved manglende model).
         final Asset asset = asset(null);
         final Task dbsTask = oversightTask(1L, TaskType.TASK, "X - DBS tilsyn", LocalDate.of(2026, 9, 4));
         final Task check = oversightTask(2L, TaskType.CHECK, "Tilsyn af X", LocalDate.of(2026, 9, 1));
@@ -358,11 +356,9 @@ class AssetOversightServiceTest {
 
     @Test
     void setAssetsToDbsOversight_doesNotAssignOversightResponsible() {
-        // Tilsynsansvarlig er iflg. hjælpeteksten et manuelt valg der altid vinder over den
-        // globale dbsOversightRecipient-indstilling. Den tidligere auto-udfyldning (første
-        // ansvarlige bruger, ellers den admin der klikkede) udpegede i stilhed en vilkårlig
-        // person og blokerede dermed indstillingen - kunde-observationen var opgaver tildelt
-        // "en tilfældig medarbejder der starter med A".
+        // Tilsynsansvarlig er et manuelt valg der vinder over den globale indstilling - den
+        // tidligere auto-udfyldning udpegede en vilkårlig person ("medarbejder der starter
+        // med A") og blokerede indstillingen.
         final Asset asset = asset(null);
         asset.getResponsibleUsers().add(new User());
         when(choiceValueDao.findByIdentifier("supervision-model-dbs-123456")).thenReturn(Optional.empty());

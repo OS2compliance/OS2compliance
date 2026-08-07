@@ -257,9 +257,8 @@ class DBSServiceTest {
 
 	@Test
 	void oversightResponsible_skipsTaskCreation_whenCompletedTaskCoversPublication() {
-		// Given - Tunstall-scenariet: auditen udgivet 22/1, kunden udførte tilsynet 22/2 på en
-		// (nu afsluttet) opgave. taskCreated=false på rækken lyver (arvet fra kapring), men
-		// udførelsen efter udgivelsen beviser at auditen er dækket - ingen dublet.
+		// Given - Tunstall-scenariet: audit udgivet 22/1, tilsyn udført 22/2 på en afsluttet
+		// opgave. Udførelse efter udgivelsen = dækket, ingen dublet trods taskCreated=false.
 		oversight.setCreated(LocalDateTime.of(2026, 1, 22, 15, 43));
 		oversight.setPublishedDate(LocalDateTime.of(2026, 1, 22, 15, 43));
 		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
@@ -301,10 +300,8 @@ class DBSServiceTest {
 
 	@Test
 	void oversightResponsible_parksOversightCheck_whenDbsOversightIsHandledForAsset() {
-		// Given - at aktivet får behandlet et DBS-tilsyn beviser at det er DBS-dækket; en evt.
-		// løbende kontrol skal parkeres (TolkDanmark-dubletten: kontrol 01/09 ved siden af
-		// DBS-opgaven). Ingen gate på next_inspection - feltet er ikke pålideligt sat på
-		// aktiver koblet før setAssetsToDbsOversight satte det.
+		// Given - et behandlet DBS-tilsyn beviser DBS-dækning: en løbende kontrol skal parkeres
+		// (TolkDanmark-dubletten). Bevidst ingen gate på next_inspection.
 		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
 
 		// When

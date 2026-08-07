@@ -248,8 +248,7 @@ public class DBSPlatformSyncService {
 				existing.ifPresent(o -> o.setDbsId(auditId));
 			}
 
-			// Systemerne er synkroniseret tidligere i samme kørsel (synchronizeSystems), så
-			// opslagene rammer også systemer der først kom ind med denne batch.
+			// Systemerne er synkroniseret tidligere i samme kørsel, så opslaget rammer også nye
 			Set<DBSAsset> auditAssets = resolveAuditAssets(audit);
 
 			if (existing.isPresent()) {
@@ -257,11 +256,8 @@ public class DBSPlatformSyncService {
 				claimedOversightIds.add(oversight.getId());
 				boolean changed = false;
 
-				// Selv-heling efter dbsId-kollisioner: gamle dokument-rækker delte talrum med
-				// platformens audit-id'er og kunne kapres af en audit hos en anden leverandør
-				// (navn og link overskrevet, leverandøren beholdt - V1_123 fjerner årsagen).
-				// Peger rækken på en anden leverandør end auditens, re-pointes den her, så
-				// allerede kaprede rækker rettes ved næste sync der ser auditen.
+				// Selv-heling efter dbsId-kollisioner (kaprede rækker beholdt den gamle
+				// leverandør, se V1_123): matcher leverandøren ikke auditens, re-pointes den.
 				long auditSupplierDbsId = audit.getSupplier().getId().longValue();
 				if (oversight.getSupplier() == null
 						|| !Objects.equals(oversight.getSupplier().getDbsId(), auditSupplierDbsId)) {
@@ -288,37 +284,25 @@ public class DBSPlatformSyncService {
 					changed = true;
 				}
 
-				// Normaliseret til dansk tid og IKKE toLocalDateTime(): dén tager wall-clock ved
-				// det offset Jackson tilfældigvis har parset til, som afhænger af JVM/Jackson-
-				// tidszonen. Et miljøskifte ville så flytte alle datoer 1-2 timer og - i plus-
-				// retningen - få samtlige audits til at ligne genudgivelser (masse-reset).
-				// Samme konvertering som ved oprettelse nedenfor og som findNewestPublishedDate.
+				// Normaliseret til dansk tid - toLocalDateTime() afhænger af Jackson/JVM-tidszonen,
+				// og et miljøskifte ville få alle audits til at ligne genudgivelser (masse-reset)
 				LocalDateTime published = audit.getPublishedDate() != null
 						? audit.getPublishedDate().atZoneSameInstant(LOCAL_TZ_ID).toLocalDateTime()
 						: null;
 				if (published != null && oversight.getPublishedDate() == null) {
-					// Første gang platform-syncen ser denne række (adopteret fra den gamle
-					// integration, eller oprettet før published_date fandtes). created kan stamme
-					// fra det gamle systems dokumentdato og er ikke sammenlignelig med platformens
-					// publishedDate - at nulstille taskCreated på det grundlag gav opgaver på
-					// allerede udførte tilsyn. Derfor: justér datoerne, rør ikke taskCreated.
-					// Er tilsynet aldrig blevet til en opgave (taskCreated=false), trækker den nye
-					// created rækken ind i opgavejobbets vindue, og opgaven oprettes - det reparerer
-					// oversete genudgivelser uden at dublere de udførte.
+					// Første platform-sighting (adopteret række eller ældre end kolonnen): created
+					// kan stamme fra den gamle integration og er usammenlignelig med publishedDate,
+					// så datoerne justeres UDEN reset - ellers dubleres allerede udførte tilsyn.
+					// Sideeffekt: rækker med taskCreated=false trækkes ind i opgavevinduet (reparation).
 					log.info("Oversight {} (audit {}) first seen by platform sync: created {} -> {}, taskCreated={} untouched",
 							oversight.getId(), auditId, oversight.getCreated(), published, oversight.isTaskCreated());
 					oversight.setPublishedDate(published);
 					oversight.setCreated(published);
 					changed = true;
 				} else if (published != null && published.isAfter(oversight.getPublishedDate())) {
-					// publishedDate er rykket frem siden sidst vi så auditen - sammenlignet på samme
-					// felt fra samme API, så hoppet er reelt. API'et har ét auditLink og ingen
-					// filliste, så vi kan ikke se OM det er en ny tilsynsrapport, et ekstra bilag
-					// eller en rettet stavefejl - kun at datoen flyttede sig. Vi behandler det som
-					// noget der skal ses på. Uden dette beholder rækken sin oprindelige dato: den
-					// falder uden for opgavejobbets vindue (DBSService bruger backfillFrom som nedre
-					// grænse), ligger med taskCreated=false og bliver filtreret væk hver time for
-					// evigt.
+					// Reelt hop i samme felt fra samme API = genudgivelse (API'et har ingen
+					// filliste, så vi kan ikke se hvad der ændrede sig). Uden reset falder rækken
+					// uden for opgavevinduet og filtreres væk for evigt.
 					log.info("Oversight {} (audit {}) republished: publishedDate {} -> {}, resetting taskCreated",
 							oversight.getId(), auditId, oversight.getPublishedDate(), published);
 					oversight.setPublishedDate(published);
@@ -364,9 +348,8 @@ public class DBSPlatformSyncService {
 	}
 
 	/**
-	 * Slår auditens systems[] op som DBSAssets via deres dbsId. Systemer der (endnu) ikke findes
-	 * lokalt udelades - de er enten sprunget over i synchronizeSystems (manglende leverandør,
-	 * logget dér) eller ukendte for os.
+	 * Slår auditens systems[] op som DBSAssets via dbsId. Ukendte systemer udelades
+	 * (sprunget over i synchronizeSystems og logget dér).
 	 */
 	private Set<DBSAsset> resolveAuditAssets(AuditDto audit) {
 		if (audit.getSystems() == null) {
@@ -379,10 +362,8 @@ public class DBSPlatformSyncService {
 	}
 
 	/**
-	 * Erstatter oversightens systemkobling med auditens, sammenlignet på id.
-	 * En tom auditAssets efterlader en eksisterende kobling urørt: auditen kan mangle systems[]
-	 * i et enkelt API-svar, og en tømning ville sende opgavejobbet tilbage til den
-	 * leverandør-brede fallback.
+	 * Erstatter oversightens systemkobling med auditens (sammenlignet på id). Et tomt
+	 * systems[]-svar tømmer ikke en eksisterende kobling.
 	 *
 	 * @return true hvis koblingen blev ændret
 	 */

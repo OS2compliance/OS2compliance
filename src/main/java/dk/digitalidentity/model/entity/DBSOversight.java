@@ -48,11 +48,9 @@ public class DBSOversight {
     private LocalDateTime created;
 
 	/**
-	 * Auditens publishedDate som platform-API'et senest har vist den. Adskilt fra created, fordi
-	 * created på rækker adopteret fra den gamle integration stammer fra det gamle systems
-	 * dokumentdato og ikke kan sammenlignes med platformens publishedDate. Genudgivelser opdages
-	 * som et fremadrettet hop i netop dette felt; null betyder at platform-syncen ikke har set
-	 * rækken endnu.
+	 * Auditens publishedDate som platformen senest har vist den. Genudgivelser opdages som et
+	 * fremadrettet hop i dette felt; null = endnu ikke set af platform-syncen. Adskilt fra
+	 * created, som på adopterede rækker stammer fra den gamle integration og er usammenlignelig.
 	 */
 	@Column(name = "published_date")
 	private LocalDateTime publishedDate;
@@ -61,9 +59,8 @@ public class DBSOversight {
 	private String auditLink;
 
 	/**
-	 * De DBS-systemer auditens systems[] dækker. Tom mængde betyder en ældre række uden
-	 * systemdata - opgavejobbet falder da tilbage til alle leverandørens aktiver, som var
-	 * adfærden før koblingen fandtes.
+	 * De DBS-systemer auditens systems[] dækker. Tom mængde = ældre række uden systemdata;
+	 * opgavejobbet falder da tilbage til alle leverandørens aktiver.
 	 */
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "dbs_oversight_assets",

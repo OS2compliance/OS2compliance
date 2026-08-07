@@ -317,11 +317,9 @@ class DBSPlatformSyncServiceTest {
 
 	@Test
 	void synchronize_alignsDatesWithoutResettingTaskCreated_whenAdoptedRowFirstSeenByPlatformSync() {
-		// Given — række adopteret fra den gamle integration: created er det gamle systems
-		// dokumentdato, publishedDate er aldrig sat, og tilsynet er udført (taskCreated=true).
-		// Platformens publishedDate er nyere, men de to datoer er usammenlignelige på tværs af
-		// cutover'en, så det er IKKE en genudgivelse. En nulstilling her gav opgaver på allerede
-		// udførte tilsyn (Kalundborg 6/8-2026: 38 forkerte opgaver ved vandmærke-reset).
+		// Given — adopteret række: created er den gamle integrations dato, publishedDate aldrig
+		// sat, tilsynet udført. IKKE en genudgivelse - en nulstilling her dublerede 38 allerede
+		// udførte tilsyn hos Kalundborg 6/8-2026.
 		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
 		DBSOversight existingOversight = new DBSOversight();
 		existingOversight.setDbsId(1L);
@@ -351,10 +349,8 @@ class DBSPlatformSyncServiceTest {
 
 	@Test
 	void synchronize_repairsMissedOversight_whenFirstSeenWithTaskCreatedFalse() {
-		// Given — adopteret række der aldrig blev til en opgave: taskCreated=false og en gammel
-		// created uden for opgavejobbets vindue. Første platform-sighting flytter created frem
-		// til publishedDate, så opgavejobbet samler rækken op - det reparerer oversete tilsyn
-		// uden reset-semantik, så samme kørsel ikke dublerer de udførte.
+		// Given — adopteret række der aldrig blev til en opgave: first-sighting flytter created
+		// ind i opgavevinduet, så oversete tilsyn repareres - uden reset-semantik.
 		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
 		DBSOversight existingOversight = new DBSOversight();
 		existingOversight.setDbsId(1L);
@@ -476,12 +472,9 @@ class DBSPlatformSyncServiceTest {
 
 	@Test
 	void synchronize_repointsSupplier_whenOversightWasHijackedByIdCollision() {
-		// Given — gammel dokument-række hvis dbs_id kolliderede med et audit-id: navn og link er
-		// allerede auditens (overskrevet ved kapringen), men rækken peger på den forkerte
-		// leverandør. Set hos Kalundborg 6/8-2026: EasyIQ-audit under Gyldendal, Plan2learn-audit
-		// under itm8 - auditens link fannede derfra ud til den forkerte leverandørs opgaver.
-		// V1_123 fjerner årsagen (nuller legacy dbs_id); denne vej reparerer allerede kaprede
-		// rækker næste gang syncen ser auditen.
+		// Given — række kapret ved dbsId-kollision: navn og link er auditens, leverandøren den
+		// forkerte (Kalundborg: EasyIQ-audit under Gyldendal). V1_123 fjerner årsagen; denne
+		// vej reparerer allerede kaprede rækker.
 		DBSSupplier wrongSupplier = createDbsSupplier(13734L, "Gyldendal A/S");
 		DBSSupplier correctSupplier = createDbsSupplier(13570L, "EasyIQ A/S");
 

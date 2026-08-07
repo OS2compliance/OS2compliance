@@ -1,6 +1,4 @@
--- Platformens publishedDate gemmes separat fra created: created på rækker adopteret fra den
--- gamle DBS-integration stammer fra det gamle systems dokumentdato og er ikke sammenlignelig
--- med den nye APIs publishedDate. Genudgivelses-detektionen keyes på denne kolonne, så vi kun
--- sammenligner platform-datoer med platform-datoer. NULL betyder at rækken endnu ikke er set
--- af platform-syncen efter denne ændring.
+-- Platformens publishedDate gemmes separat: created paa raekker adopteret fra den gamle
+-- integration er usammenlignelig med den nye APIs publishedDate. Genudgivelses-detektionen
+-- keyes paa denne kolonne; NULL betyder at platform-syncen ikke har set raekken endnu.
 ALTER TABLE dbs_oversight ADD COLUMN published_date datetime NULL;
