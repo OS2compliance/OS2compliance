@@ -503,6 +503,25 @@ class DBSPlatformSyncServiceTest {
 		verify(dbsOversightDao).save(hijacked);
 	}
 
+	@Test
+	void synchronize_skipsDuplicateAudit_withinSameBatch() {
+		// Given — samme audit to gange i én batch (fx side-drift under paginering). Uden værnet
+		// ville forekomst nr. 2 ramme UNIQUE(dbs_id) i create-stien og rulle hele syncen tilbage.
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Tilsynsrapport 2026", 100, "Supplier", 200, "System", null);
+		AuditDto duplicate = createAuditWithSupplierAndSystem(1, "Tilsynsrapport 2026", 100, "Supplier", 200, "System", null);
+
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(Collections.emptyList());
+
+		// When
+		syncService.synchronize(List.of(audit, duplicate));
+
+		// Then — kun én oversight oprettes
+		verify(dbsOversightDao, times(1)).save(any(DBSOversight.class));
+	}
+
 	// ========== Oversight/system-kobling ==========
 
 	@Test

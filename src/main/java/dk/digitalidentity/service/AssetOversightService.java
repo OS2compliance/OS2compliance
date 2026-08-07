@@ -194,7 +194,14 @@ public class AssetOversightService {
     public void parkAssociatedOversightCheck(final Asset asset) {
         final Task check = findAssociatedOversightCheck(asset);
         if (check != null && (check.getNextDeadline() == null || check.getNextDeadline().isBefore(PARKED_DEADLINE))) {
-            log.info("Parking oversight check task {} '{}' for asset {} - tilsynet drives af DBS", check.getId(), check.getName(), asset.getId());
+            if (asset.getNextInspection() != NextInspection.DBS) {
+                // Aktivets opsætning siger manuel kontrol, men DBS leverer tilsyn for det - gør
+                // uoverensstemmelsen synlig, så en bevidst ekstra kontrol kan undtages manuelt
+                log.warn("Parking oversight check task {} '{}' although asset {} has nextInspection={} - DBS drives the oversight",
+                        check.getId(), check.getName(), asset.getId(), asset.getNextInspection());
+            } else {
+                log.info("Parking oversight check task {} '{}' for asset {} - tilsynet drives af DBS", check.getId(), check.getName(), asset.getId());
+            }
             check.setNextDeadline(PARKED_DEADLINE);
             check.setRepetition(TaskRepetition.NONE);
         }

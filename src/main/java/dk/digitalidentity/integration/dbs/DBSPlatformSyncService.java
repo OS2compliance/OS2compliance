@@ -94,6 +94,15 @@ public class DBSPlatformSyncService {
 		log.info("DBS Platform sync result: {} new suppliers, {} new systems, {} new oversights, {} updated oversights (of which {} republished)",
 				suppliersCreated, systemsCreated, oversightResult.created(), oversightResult.updated(),
 				oversightResult.republished());
+
+		// Rækker uden published_date er kun i hentevinduet ved fuld backfill - genudgivelser på
+		// dem opdages ikke før vandmærket nulstilles (runbook-trin efter deploy). WARN indtil da,
+		// så et glemt trin er synligt i driftsovervågningen.
+		long awaitingBackfill = dbsOversightDao.countByPublishedDateIsNullAndAuditLinkIsNotNull();
+		if (awaitingBackfill > 0) {
+			log.warn("{} oversights still lack published_date - republications on them go undetected until {} is reset (full backfill)",
+					awaitingBackfill, PLATFORM_LAST_SYNC);
+		}
 	}
 
 	private int synchronizeSuppliers(List<AuditDto> audits) {
@@ -219,6 +228,7 @@ public class DBSPlatformSyncService {
 		// Rows already matched or adopted in this run must not be adopted again by a later
 		// same-named audit - that would overwrite the dbsId just assigned.
 		Set<Long> claimedOversightIds = new HashSet<>();
+		Set<Long> seenAuditIds = new HashSet<>();
 
 		for (AuditDto audit : audits) {
 			// Vandmaerket rykker frem uanset, saa en audit vi springer over hentes ikke igen af sig selv
@@ -232,6 +242,12 @@ public class DBSPlatformSyncService {
 			}
 
 			long auditId = audit.getId().longValue();
+			// Dublet i samme batch (fx side-drift under paginering) ville ellers ramme
+			// UNIQUE(dbs_id) i create-stien og rulle hele syncen tilbage - nat efter nat
+			if (!seenAuditIds.add(auditId)) {
+				log.warn("Audit {} '{}' appears more than once in the batch - skipping duplicate", audit.getId(), audit.getName());
+				continue;
+			}
 			Optional<DBSOversight> existing = existingOversights.stream()
 					.filter(o -> Objects.equals(o.getDbsId(), auditId))
 					.findFirst();
