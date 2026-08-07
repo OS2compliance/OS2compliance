@@ -308,19 +308,6 @@ function initGrid() {
                 hidden: true
             },
             {
-                id: 'allowedActions',
-                name: 'Handlinger',
-                sort: 0,
-                formatter: (cell, row) => {
-                    const attributeMap = new Map();
-                    const identifier = row.cells[0]['data'];
-                    attributeMap.set('identifier', identifier);
-                    const name = row.cells[2]['data'];
-                    attributeMap.set('name', name);
-                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
-                }
-            },
-            {
                 id: 'departments',
                 hidden: true,
                 name: "Ansvarlige forvaltninger",
@@ -478,6 +465,19 @@ function initGrid() {
                 searchable: {
                     searchKey: 'archive'
                 }
+            },
+            {
+                id: 'allowedActions',
+                name: 'Handlinger',
+                sort: 0,
+                formatter: (cell, row) => {
+                    const attributeMap = new Map();
+                    const identifier = row.cells[0]['data'];
+                    attributeMap.set('identifier', identifier);
+                    const name = row.cells[2]['data'];
+                    attributeMap.set('name', name);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
+                }
             }
         ],
         server:{
@@ -528,7 +528,6 @@ function initGrid() {
                     riskScore, // risk score for sorting/searching
                     null, // placeholder for risk assessment formatter
                     riskData, // hidden column with all risk data
-                    asset.allowedActions,
                     asset.departments,
                     asset.assetCategory,
                     asset.description,
@@ -546,6 +545,7 @@ function initGrid() {
                     asset.dpiaStatus,
                     asset.tiaStatus,
                     asset.archive,
+                    asset.allowedActions,
                     asset.oldKitos
                 ];
             }),
