@@ -451,7 +451,8 @@ public class ReportController {
 					data.writeTo(outputStream);
 				});
 			} catch(Exception e) {
-				// TODO
+				//TODO
+				log.error("Failed to parse html", e);
 				return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
