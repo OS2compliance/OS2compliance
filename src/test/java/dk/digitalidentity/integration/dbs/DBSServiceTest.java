@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.DBSSupplier;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -246,6 +247,50 @@ class DBSServiceTest {
 		// ...men oversighten gemmes kun ÉN gang. Et save per aktiv blev til merge() midt i
 		// iterationen af oversightens assets-collection og gav ConcurrentModificationException.
 		verify(dbsOversightDao, times(1)).save(oversight);
+		assertThat(oversight.isTaskCreated()).isTrue();
+	}
+
+	// ========== Dækning: udført tilsyn efter auditens udgivelse giver ikke ny opgave ==========
+
+	@Test
+	void oversightResponsible_skipsTaskCreation_whenCompletedTaskCoversPublication() {
+		// Given - Tunstall-scenariet: auditen udgivet 22/1, kunden udførte tilsynet 22/2 på en
+		// (nu afsluttet) opgave. taskCreated=false på rækken lyver (arvet fra kapring), men
+		// udførelsen efter udgivelsen beviser at auditen er dækket - ingen dublet.
+		oversight.setCreated(LocalDateTime.of(2026, 1, 22, 15, 43));
+		oversight.setPublishedDate(LocalDateTime.of(2026, 1, 22, 15, 43));
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+		TaskLog completedLog = new TaskLog();
+		completedLog.setCompleted(LocalDate.of(2026, 2, 22));
+		openTask.getLogs().add(completedLog);
+		when(taskService.isTaskDone(openTask)).thenReturn(true);
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then - ingen ny opgave, ingen ændring af den udførte, men oversighten er behandlet
+		verify(taskService, never()).saveTask(any());
+		assertThat(openTask.getDescription()).isEqualTo("Udfør tilsyn af EKSEMPEL ApS");
+		assertThat(oversight.isTaskCreated()).isTrue();
+		verify(dbsOversightDao).save(oversight);
+	}
+
+	@Test
+	void oversightResponsible_createsTask_whenPublicationIsNewerThanLastCompletedTask() {
+		// Given - ægte genudgivelse: seneste udførte tilsyn ligger FØR auditens udgivelsesdato,
+		// så auditen er nyt indhold og skal give en ny opgave.
+		oversight.setCreated(LocalDateTime.of(2026, 7, 24, 9, 43));
+		oversight.setPublishedDate(LocalDateTime.of(2026, 7, 24, 9, 43));
+		TaskLog completedLog = new TaskLog();
+		completedLog.setCompleted(LocalDate.of(2026, 2, 22));
+		openTask.getLogs().add(completedLog);
+		when(taskService.isTaskDone(openTask)).thenReturn(true);
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		verify(taskService).saveTask(any(Task.class));
 		assertThat(oversight.isTaskCreated()).isTrue();
 	}
 
