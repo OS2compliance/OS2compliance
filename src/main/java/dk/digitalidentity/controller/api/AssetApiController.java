@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
@@ -54,6 +55,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -205,8 +207,10 @@ public class AssetApiController {
 		if (assetUpdateEO.getProductLinks() != null) {
 			addProductLinks(assetUpdateEO.getProductLinks(), asset);
 		}
-        asset.getProperties().clear();
-        asset.getProperties().addAll(assetMapper.fromEO(assetUpdateEO.getProperties()));
+		asset.getProperties().clear();
+		final Set<Property> properties = assetMapper.fromEO(assetUpdateEO.getProperties());
+		properties.forEach(property -> property.setEntity(asset));
+		asset.getProperties().addAll(properties);
     }
 
     @Operation(summary = "Delete an asset", description = "Deletes an asset")
