@@ -347,11 +347,24 @@ public class TasksController {
     @Transactional
     @PostMapping("complete")
     public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
-        final Task task = completeTaskInternal(dto);
-        if ("dashboard".equals(referral)) {
-            return "redirect:/dashboard";
+        completeTaskInternal(dto);
+        return resolveReferralRedirect(referral);
+    }
+
+    private String resolveReferralRedirect(final String referral) {
+        if (StringUtils.isBlank(referral)) {
+            return "redirect:/tasks";
         }
-        return "redirect:/tasks";
+
+        final String type = StringUtils.substringBefore(referral, "-");
+        final String id = StringUtils.substringAfter(referral, "-");
+
+        return switch (type) {
+            case "dashboard" -> "redirect:/dashboard";
+            case "asset" -> "redirect:/assets/" + id;
+            case "register" -> "redirect:/registers/" + id;
+            default -> "redirect:/tasks";
+        };
     }
 
     private Task completeTaskInternal(final CompletionFormDTO dto) {
