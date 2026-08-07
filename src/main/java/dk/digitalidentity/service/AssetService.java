@@ -8,6 +8,8 @@ import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.dao.grid.DBSAssetGridDao;
+import dk.digitalidentity.model.api.AssetTypeUpdateEO;
+import dk.digitalidentity.model.api.OrganisationUnitEO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -22,6 +24,7 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
@@ -115,6 +118,7 @@ public class AssetService implements TagableService<Asset> {
 	private final ChoiceService choiceService;
 	private final ChoiceDPIADao choiceDPIADao;
 	private final S3Service s3Service;
+	private final OrganisationService organisationService;
 
 	public boolean isResponsibleFor(Asset asset) {
 		return !asset.getResponsibleUsers().isEmpty() && asset.getResponsibleUsers().stream().map(User::getUuid).anyMatch(uuid -> uuid.equals(SecurityUtil.getPrincipalUuid()));
@@ -943,5 +947,23 @@ public class AssetService implements TagableService<Asset> {
 		tia.setAcceptedByUuid(null);
 		tia.setAcceptedByName(null);
 		tia.setAcceptedComment(null);
+	}
+
+	public void setDepartments(final List<OrganisationUnitEO> departmentsEO, final Asset asset) {
+		final List<OrganisationUnit> departments = departmentsEO.stream()
+				.map(d -> organisationService.findByUuid(d.getUuid())
+						.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Department not found")))
+				.toList();
+		asset.setDepartments(departments);
+	}
+
+	public void setAssetType(final AssetTypeUpdateEO assetTypeEO, final Asset asset) {
+		final ChoiceList assetTypeChoiceList = choiceService.findChoiceList("asset-type")
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No asset types found"));
+		final ChoiceValue assetType = assetTypeChoiceList.getValues().stream()
+				.filter(value -> value.getIdentifier().equals(assetTypeEO.getIdentifier()))
+				.findAny()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "AssetType identifier is not valid"));
+		asset.setAssetType(assetType);
 	}
 }
