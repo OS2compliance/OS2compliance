@@ -100,51 +100,32 @@ public class AssetApiController {
         return assetMapper.toEO(assetService.getPagedNonDeleted(pageSize, page));
     }
 
-    @Operation(summary = "Create a new asset")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "The created asset"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEO.class)))
-    })
-    @PostMapping(produces = "application/json", consumes = "application/json")
-    @Transactional
-    @ResponseStatus(HttpStatus.CREATED)
-    public AssetEO create(@Valid @RequestBody final AssetCreateEO assetCreateEO) {
-        final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetCreateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
-        final Asset asset = assetMapper.fromEO(assetCreateEO);
-        asset.setActive(true);
-        asset.setResponsibleUsers(responsibleUsers);
-        asset.setOperationResponsibleUsers(responsibleUsers);
-        // The mapper leaves these null (rather than empty) whenever the corresponding
-        // field is omitted from the request, instead of the entity's normal empty-collection defaults.
-        asset.setManagers(new ArrayList<>());
-        if (asset.getProperties() == null) {
-            asset.setProperties(new HashSet<>());
-        }
-        asset.getProperties().forEach(property -> property.setEntity(asset));
-        if (asset.getProductLinks() == null) {
-            asset.setProductLinks(new ArrayList<>());
-        }
-        asset.getProductLinks().forEach(link -> link.setAsset(asset));
-        if (assetCreateEO.getAssetType() != null) {
-            setAssetType(assetCreateEO.getAssetType(), asset);
-        }
-        if (assetCreateEO.getResponsibleUsers() != null) {
-            addManagers(assetCreateEO.getResponsibleUsers(), asset);
-        }
-        if (assetCreateEO.getSupplier() != null) {
-            setSupplier(assetCreateEO.getSupplier(), asset);
-        }
-        if (assetCreateEO.getSubSuppliers() != null) {
-            addSubSuppliers(assetCreateEO.getSubSuppliers(), asset);
-        }
-        if (assetCreateEO.getDepartments() != null) {
-            setDepartments(assetCreateEO.getDepartments(), asset);
-        } else {
-            asset.setDepartments(new ArrayList<>());
-        }
-        return assetMapper.toEO(assetService.create(asset));
-    }
-
+	@Operation(summary = "Create a new asset")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "201", description = "The created asset"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEO.class)))
+	})
+	@PostMapping(produces = "application/json", consumes = "application/json")
+	@Transactional
+	@ResponseStatus(HttpStatus.CREATED)
+	public AssetEO create(@Valid @RequestBody final AssetCreateEO assetCreateEO) {
+		final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetCreateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
+		final Asset asset = assetMapper.fromEO(assetCreateEO);
+		asset.setResponsibleUsers(responsibleUsers);
+		if (assetCreateEO.getResponsibleUsers() != null) {
+			addManagers(assetCreateEO.getResponsibleUsers(), asset);
+		}
+		if (assetCreateEO.getSupplier() != null) {
+			setSupplier(assetCreateEO.getSupplier(), asset);
+		}
+		if (assetCreateEO.getSubSuppliers() != null) {
+			addSubSuppliers(assetCreateEO.getSubSuppliers(), asset);
+		}
+		if (assetCreateEO.getProductLinks() != null) {
+			addProductLinks(assetCreateEO.getProductLinks(), asset);
+		}
+		return assetMapper.toEO(assetService.create(asset));
+	}
 
     @Operation(summary = "Update an asset", description = "Updates an asset, the client should make a GET request first to ensure they have the newest version, update the fields they need and then call this method with the complete entity. <br><u>NOTICE! properties are used by multiple parties so make sure to never remove unknown properties, and prefix your properties so they are unique</u>")
     @ApiResponses(value = {
@@ -264,23 +245,4 @@ public class AssetApiController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Supplier not found"));
         asset.setSupplier(supplier);
     }
-
-    private void setDepartments(final List<OrganisationUnitEO> departmentsEO, final Asset asset) {
-        final List<OrganisationUnit> departments = departmentsEO.stream()
-            .map(d -> organisationService.findByUuid(d.getUuid())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Department not found")))
-            .toList();
-        asset.setDepartments(departments);
-    }
-
-    private void setAssetType(final AssetTypeUpdateEO assetTypeEO, final Asset asset) {
-        final ChoiceList assetTypeChoiceList = choiceService.findChoiceList("asset-type")
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No asset types found"));
-        final ChoiceValue assetType = assetTypeChoiceList.getValues().stream()
-            .filter(value -> value.getIdentifier().equals(assetTypeEO.getIdentifier()))
-            .findAny()
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "AssetType identifier is not valid"));
-        asset.setAssetType(assetType);
-    }
-
 }
