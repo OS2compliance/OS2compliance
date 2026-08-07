@@ -94,6 +94,15 @@ public class DBSPlatformSyncService {
 		log.info("DBS Platform sync result: {} new suppliers, {} new systems, {} new oversights, {} updated oversights (of which {} republished)",
 				suppliersCreated, systemsCreated, oversightResult.created(), oversightResult.updated(),
 				oversightResult.republished());
+
+		// Rækker uden published_date er kun i hentevinduet ved fuld backfill - genudgivelser på
+		// dem opdages ikke før vandmærket nulstilles (runbook-trin efter deploy). WARN indtil da,
+		// så et glemt trin er synligt i driftsovervågningen.
+		long awaitingBackfill = dbsOversightDao.countByPublishedDateIsNullAndAuditLinkIsNotNull();
+		if (awaitingBackfill > 0) {
+			log.warn("{} oversights still lack published_date - republications on them go undetected until {} is reset (full backfill)",
+					awaitingBackfill, PLATFORM_LAST_SYNC);
+		}
 	}
 
 	private int synchronizeSuppliers(List<AuditDto> audits) {
@@ -219,6 +228,7 @@ public class DBSPlatformSyncService {
 		// Rows already matched or adopted in this run must not be adopted again by a later
 		// same-named audit - that would overwrite the dbsId just assigned.
 		Set<Long> claimedOversightIds = new HashSet<>();
+		Set<Long> seenAuditIds = new HashSet<>();
 
 		for (AuditDto audit : audits) {
 			// Vandmaerket rykker frem uanset, saa en audit vi springer over hentes ikke igen af sig selv
@@ -232,6 +242,12 @@ public class DBSPlatformSyncService {
 			}
 
 			long auditId = audit.getId().longValue();
+			// Dublet i samme batch (fx side-drift under paginering) ville ellers ramme
+			// UNIQUE(dbs_id) i create-stien og rulle hele syncen tilbage - nat efter nat
+			if (!seenAuditIds.add(auditId)) {
+				log.warn("Audit {} '{}' appears more than once in the batch - skipping duplicate", audit.getId(), audit.getName());
+				continue;
+			}
 			Optional<DBSOversight> existing = existingOversights.stream()
 					.filter(o -> Objects.equals(o.getDbsId(), auditId))
 					.findFirst();
@@ -248,10 +264,30 @@ public class DBSPlatformSyncService {
 				existing.ifPresent(o -> o.setDbsId(auditId));
 			}
 
+			// Systemerne er synkroniseret tidligere i samme kørsel, så opslaget rammer også nye
+			Set<DBSAsset> auditAssets = resolveAuditAssets(audit);
+
 			if (existing.isPresent()) {
 				DBSOversight oversight = existing.get();
 				claimedOversightIds.add(oversight.getId());
 				boolean changed = false;
+
+				// Selv-heling efter dbsId-kollisioner (kaprede rækker beholdt den gamle
+				// leverandør, se V1_123): matcher leverandøren ikke auditens, re-pointes den.
+				long auditSupplierDbsId = audit.getSupplier().getId().longValue();
+				if (oversight.getSupplier() == null
+						|| !Objects.equals(oversight.getSupplier().getDbsId(), auditSupplierDbsId)) {
+					Optional<DBSSupplier> correctSupplier = dbsSupplierDao.findByDbsId(auditSupplierDbsId);
+					if (correctSupplier.isPresent()) {
+						log.warn("Oversight {} (audit {}) pointed at supplier '{}' but the audit belongs to '{}' - re-pointing",
+								oversight.getId(), auditId,
+								oversight.getSupplier() != null ? oversight.getSupplier().getName() : null,
+								correctSupplier.get().getName());
+						oversight.setSupplier(correctSupplier.get());
+						changed = true;
+					}
+				}
+
 				if (!Objects.equals(oversight.getName(), audit.getName())) {
 					oversight.setName(audit.getName());
 					changed = true;
@@ -260,34 +296,32 @@ public class DBSPlatformSyncService {
 					oversight.setAuditLink(audit.getAuditLink());
 					changed = true;
 				}
+				if (updateOversightAssets(oversight, auditAssets)) {
+					changed = true;
+				}
 
-				// Samme konvertering som ved oprettelse nedenfor - ellers ville hver kørsel se en
-				// offset-forskel på den samme dato og nulstille taskCreated igen, hvilket ville give
-				// dublerede opgaver hver nat.
+				// Normaliseret til dansk tid - toLocalDateTime() afhænger af Jackson/JVM-tidszonen,
+				// og et miljøskifte ville få alle audits til at ligne genudgivelser (masse-reset)
 				LocalDateTime published = audit.getPublishedDate() != null
-						? audit.getPublishedDate().toLocalDateTime()
+						? audit.getPublishedDate().atZoneSameInstant(LOCAL_TZ_ID).toLocalDateTime()
 						: null;
-				if (published != null && oversight.getCreated() == null) {
-					// Rækken har aldrig haft en dato - det kan forekomme på rækker fra den tidligere
-					// integration. Vi kan ikke vide om auditen er genudgivet siden, så udfyld kun
-					// datoen og lad taskCreated stå: nulstiller vi den, får et tilsyn der allerede er
-					// afsluttet en dubleret opgave ved første kørsel efter deploy.
-					log.info("Oversight {} (audit {}) had no created, backfilling {} and leaving taskCreated={}",
-							oversight.getId(), auditId, published, oversight.isTaskCreated());
+				if (published != null && oversight.getPublishedDate() == null) {
+					// Første platform-sighting (adopteret række eller ældre end kolonnen): created
+					// kan stamme fra den gamle integration og er usammenlignelig med publishedDate,
+					// så datoerne justeres UDEN reset - ellers dubleres allerede udførte tilsyn.
+					// Sideeffekt: rækker med taskCreated=false trækkes ind i opgavevinduet (reparation).
+					log.info("Oversight {} (audit {}) first seen by platform sync: created {} -> {}, taskCreated={} untouched",
+							oversight.getId(), auditId, oversight.getCreated(), published, oversight.isTaskCreated());
+					oversight.setPublishedDate(published);
 					oversight.setCreated(published);
 					changed = true;
-				} else if (published != null && published.isAfter(oversight.getCreated())) {
-					// publishedDate er rykket frem på en audit vi kender i forvejen. API'et har ét
-					// auditLink og ingen filliste, så vi kan ikke se OM det er en ny tilsynsrapport,
-					// et ekstra bilag eller en rettet stavefejl - kun at datoen flyttede sig. Vi
-					// behandler det som noget der skal ses på. Det svarer til den tidligere
-					// integration, hvor hver enkelt fil blev sin egen oversight og dermed udløste sin
-					// egen opgave, så det er ikke mere støjende end det kunderne kom fra.
-					// Uden dette beholder rækken sin oprindelige dato: den falder uden for
-					// opgavejobbets vindue (DBSService bruger backfillFrom som nedre grænse), ligger
-					// med taskCreated=false og bliver filtreret væk hver time for evigt.
-					log.info("Oversight {} (audit {}) republished: created {} -> {}, resetting taskCreated",
-							oversight.getId(), auditId, oversight.getCreated(), published);
+				} else if (published != null && published.isAfter(oversight.getPublishedDate())) {
+					// Reelt hop i samme felt fra samme API = genudgivelse (API'et har ingen
+					// filliste, så vi kan ikke se hvad der ændrede sig). Uden reset falder rækken
+					// uden for opgavevinduet og filtreres væk for evigt.
+					log.info("Oversight {} (audit {}) republished: publishedDate {} -> {}, resetting taskCreated",
+							oversight.getId(), auditId, oversight.getPublishedDate(), published);
+					oversight.setPublishedDate(published);
 					oversight.setCreated(published);
 					oversight.setTaskCreated(false);
 					changed = true;
@@ -310,17 +344,57 @@ public class DBSPlatformSyncService {
 				DBSOversight oversight = new DBSOversight();
 				oversight.setDbsId(auditId);
 				oversight.setName(audit.getName());
-				oversight.setCreated(audit.getPublishedDate() != null ? audit.getPublishedDate().toLocalDateTime() : LocalDateTime.now());
+				// Samme normalisering som i opdaterings-stien ovenfor
+				LocalDateTime publishedAtCreate = audit.getPublishedDate() != null
+						? audit.getPublishedDate().atZoneSameInstant(LOCAL_TZ_ID).toLocalDateTime()
+						: null;
+				oversight.setPublishedDate(publishedAtCreate);
+				oversight.setCreated(publishedAtCreate != null ? publishedAtCreate : LocalDateTime.now());
 				oversight.setLocked(false);
 				oversight.setSupplier(supplier.get());
 				oversight.setTaskCreated(false);
 				oversight.setAuditLink(audit.getAuditLink());
+				oversight.getAssets().addAll(auditAssets);
 				dbsOversightDao.save(oversight);
 				created++;
 			}
 		}
 		log.debug("Oversights: {} created, {} updated, {} republished", created, updated, republished);
 		return new OversightSyncResult(created, updated, republished);
+	}
+
+	/**
+	 * Slår auditens systems[] op som DBSAssets via dbsId. Ukendte systemer udelades
+	 * (sprunget over i synchronizeSystems og logget dér).
+	 */
+	private Set<DBSAsset> resolveAuditAssets(AuditDto audit) {
+		if (audit.getSystems() == null) {
+			return Set.of();
+		}
+		return audit.getSystems().stream()
+				.map(system -> dbsAssetDao.findByDbsId(String.valueOf(system.getId())))
+				.flatMap(Optional::stream)
+				.collect(Collectors.toSet());
+	}
+
+	/**
+	 * Erstatter oversightens systemkobling med auditens (sammenlignet på id). Et tomt
+	 * systems[]-svar tømmer ikke en eksisterende kobling.
+	 *
+	 * @return true hvis koblingen blev ændret
+	 */
+	private boolean updateOversightAssets(DBSOversight oversight, Set<DBSAsset> auditAssets) {
+		if (auditAssets.isEmpty()) {
+			return false;
+		}
+		Set<Long> currentIds = oversight.getAssets().stream().map(DBSAsset::getId).collect(Collectors.toSet());
+		Set<Long> incomingIds = auditAssets.stream().map(DBSAsset::getId).collect(Collectors.toSet());
+		if (currentIds.equals(incomingIds)) {
+			return false;
+		}
+		oversight.getAssets().clear();
+		oversight.getAssets().addAll(auditAssets);
+		return true;
 	}
 
 	private record SystemWithSupplier(AuditSystemDto system, AuditSupplierDto supplier, String kitosUuid) {}
