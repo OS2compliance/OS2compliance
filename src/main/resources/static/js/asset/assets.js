@@ -12,6 +12,20 @@ const defaultClassName = {
     header: "d-flex justify-content-end"
 };
 
+const badgeClassByAssessment = {
+    'Grøn': 'bg-green',
+    'Lysgrøn': 'bg-green-300',
+    'Gul': 'bg-yellow-500',
+    'Orange': 'bg-orange',
+    'Rød': 'bg-red'
+};
+
+const badgeClassByStatus = {
+    'Ikke startet': 'bg-warning',
+    'I gang': 'bg-info',
+    'Klar': 'bg-success'
+};
+
 const updateUrl = (prev, query) => {
     return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 };
@@ -222,14 +236,6 @@ function initGrid() {
                     fieldId:'assetRiskSearchSelector'
                 },
                 formatter: (cell, row) => {
-                    const badgeClassByAssessment = {
-                        'Grøn': 'bg-green',
-                        'Lysgrøn': 'bg-green-300',
-                        'Gul': 'bg-yellow-500',
-                        'Orange': 'bg-orange',
-                        'Rød': 'bg-red'
-                    };
-
                     if (!badgeClassByAssessment.hasOwnProperty(cell)) {
                         return gridjs.html('', 'div');
                     }
@@ -248,12 +254,6 @@ function initGrid() {
                     fieldId : 'assetStatusSearchSelector'
                 },
                 formatter: (cell, row) => {
-                    const badgeClassByStatus = {
-                        'Ikke startet': 'bg-warning',
-                        'I gang': 'bg-info',
-                        'Klar': 'bg-success'
-                    };
-
                     if (!badgeClassByStatus.hasOwnProperty(cell)) {
                         return gridjs.html(cell, 'div');
                     }

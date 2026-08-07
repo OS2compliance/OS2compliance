@@ -481,10 +481,10 @@ FROM assets a
              GROUP BY orum.asset_id
          ) operation_responsible ON operation_responsible.asset_id = a.id
          LEFT JOIN (
-             SELECT daa.asset_id, ds.conclusion AS dpia_screening_conclusion
+             SELECT daa.asset_id,
+                    (SELECT ds2.conclusion FROM dpia_screening ds2 WHERE ds2.dpia_id = d.id LIMIT 1) AS dpia_screening_conclusion
              FROM dpia_asset daa
                       JOIN dpia d ON d.id = daa.dpia_id
-                      LEFT JOIN dpia_screening ds ON ds.dpia_id = d.id
              WHERE d.deleted = false
                AND d.id = (
                    SELECT db.id
