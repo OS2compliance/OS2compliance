@@ -14,6 +14,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.NextInspection;
+import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import org.junit.jupiter.api.Test;
@@ -296,6 +297,42 @@ class AssetOversightServiceTest {
         verify(taskLogDao, never()).reassignTask(any(), any());
         assertThat(oldCheck.getLogs()).containsExactly(strayOnCheck);
         assertThat(dbsTask.getLogs()).containsExactly(existing);
+    }
+
+    @Test
+    void parkAssociatedOversightCheck_parksCheckWithoutTouchingAsset() {
+        // Sideeffektfri parkering til opgavejobbet: kontrollen skubbes til 2099 og stopper med
+        // at gentage - aktivets tilsynsopsætning røres IKKE (createOrUpdate-varianten nuller
+        // next_inspection når supervisory-modellen mangler, hvilket låste parkeringen ude for
+        // aktiver koblet før mode-felterne blev sat - TolkDanmark hos Kalundborg).
+        final Asset asset = asset(null);
+        final Task dbsTask = oversightTask(1L, TaskType.TASK, "X - DBS tilsyn", LocalDate.of(2026, 9, 4));
+        final Task check = oversightTask(2L, TaskType.CHECK, "Tilsyn af X", LocalDate.of(2026, 9, 1));
+        check.setRepetition(TaskRepetition.YEARLY);
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(dbsTask, check));
+
+        assetOversightService.parkAssociatedOversightCheck(asset);
+
+        assertThat(check.getNextDeadline()).isEqualTo(AssetOversightService.PARKED_DEADLINE);
+        assertThat(check.getRepetition()).isEqualTo(TaskRepetition.NONE);
+        assertThat(dbsTask.getNextDeadline()).isEqualTo(LocalDate.of(2026, 9, 4));
+        assertThat(asset.getNextInspection()).isNull();
+        assertThat(asset.getSupervisoryModel()).isNull();
+    }
+
+    @Test
+    void parkAssociatedOversightCheck_isIdempotent_andHandlesMissingCheck() {
+        final Asset asset = asset(null);
+        final Task parkedCheck = oversightTask(2L, TaskType.CHECK, "Tilsyn af X", AssetOversightService.PARKED_DEADLINE);
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(parkedCheck));
+
+        assetOversightService.parkAssociatedOversightCheck(asset);
+        assertThat(parkedCheck.getNextDeadline()).isEqualTo(AssetOversightService.PARKED_DEADLINE);
+
+        // og et aktiv helt uden kontrol-opgave er en no-op
+        final Asset bareAsset = asset(null);
+        when(relationService.findAllRelatedTo(bareAsset)).thenReturn(List.of());
+        assetOversightService.parkAssociatedOversightCheck(bareAsset);
     }
 
     @Test

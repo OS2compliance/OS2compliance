@@ -44,6 +44,9 @@ import static dk.digitalidentity.Constants.DBS_TASK_NAME_MARKER;
 @RequiredArgsConstructor
 @Transactional
 public class AssetOversightService {
+	/** "Parkeret" kontrol: deadlinen skubbes herud når tilsynet drives af DBS i stedet. */
+	public static final LocalDate PARKED_DEADLINE = LocalDate.of(2099, 1, 1);
+
     private final SamlModuleConfiguration samlConfiguration;
     private final AssetOversightDao assetOversightDao;
     private final TaskService taskService;
@@ -151,7 +154,7 @@ public class AssetOversightService {
         if (asset.getNextInspectionDate() != null) {
             task.setNextDeadline(asset.getNextInspectionDate());
         } else {
-            task.setNextDeadline(LocalDate.of(2099, 1,1));
+            task.setNextDeadline(PARKED_DEADLINE);
 
         }
         if (asset.getOversightResponsibleUser() != null) {
@@ -183,6 +186,23 @@ public class AssetOversightService {
         setTaskRevisionInterval(asset, task);
         final Task savedTask = taskService.saveTask(task);
         relationService.addRelation(savedTask, asset);
+    }
+
+    /**
+     * Parkerer den systemskabte kontrol-opgave på aktivet (deadline 2099, ingen gentagelse) -
+     * og intet andet. createOrUpdateAssociatedOversightCheck kan ikke bruges til formålet fra
+     * opgavejobbet: dens supervisoryModel==null-gren NULLER aktivets tilsynsopsætning som
+     * sideeffekt, og dens adfærd afhænger af aktivets mode-felter, som ikke er pålideligt sat
+     * på aktiver koblet før setAssetsToDbsOversight satte dem (set hos Kalundborg: TolkDanmark
+     * koblet manuelt, kontrol med linked_asset, men next_inspection ikke DBS).
+     */
+    public void parkAssociatedOversightCheck(final Asset asset) {
+        final Task check = findAssociatedOversightCheck(asset);
+        if (check != null && (check.getNextDeadline() == null || check.getNextDeadline().isBefore(PARKED_DEADLINE))) {
+            log.info("Parking oversight check task {} '{}' for asset {} - tilsynet drives af DBS", check.getId(), check.getName(), asset.getId());
+            check.setNextDeadline(PARKED_DEADLINE);
+            check.setRepetition(TaskRepetition.NONE);
+        }
     }
 
     private Task findAssociatedOversightCheck(final Asset asset) {

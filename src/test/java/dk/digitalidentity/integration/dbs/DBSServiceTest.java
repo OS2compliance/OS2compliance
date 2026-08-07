@@ -13,7 +13,6 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.service.AssetOversightService;
@@ -298,33 +297,34 @@ class DBSServiceTest {
 		assertThat(oversight.isTaskCreated()).isTrue();
 	}
 
-	// ========== Parkering af manuel kontrol når aktivet er på DBS-tilsyn ==========
+	// ========== Parkering af kontrol-opgaven når DBS-tilsyn behandles for aktivet ==========
 
 	@Test
-	void oversightResponsible_parksManualCheck_whenAssetIsOnDbsOversight() {
-		// Given - aktivet er på DBS-tilsyn; en evt. løbende manuel kontrol skal parkeres, så
-		// kunden ikke har både kontrol og DBS-opgave for samme tilsyn (TolkDanmark-dubletten:
-		// kontrol 01/09 ved siden af DBS-opgaven, fordi koblingen skete før parkeringen fandtes).
-		asset.setNextInspection(NextInspection.DBS);
+	void oversightResponsible_parksOversightCheck_whenDbsOversightIsHandledForAsset() {
+		// Given - at aktivet får behandlet et DBS-tilsyn beviser at det er DBS-dækket; en evt.
+		// løbende kontrol skal parkeres (TolkDanmark-dubletten: kontrol 01/09 ved siden af
+		// DBS-opgaven). Ingen gate på next_inspection - feltet er ikke pålideligt sat på
+		// aktiver koblet før setAssetsToDbsOversight satte det.
 		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
 
 		// When
 		dbsService.oversightResponsible();
 
 		// Then
-		verify(assetOversightService).createOrUpdateAssociatedOversightCheck(asset);
+		verify(assetOversightService).parkAssociatedOversightCheck(asset);
 	}
 
 	@Test
-	void oversightResponsible_doesNotTouchOversightCheck_whenAssetIsNotOnDbsOversight() {
-		// Given - aktiv uden DBS-tilsynsopsætning (nextInspection null i fixturen)
-		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+	void oversightResponsible_doesNotPark_whenAssetIsSkipped() {
+		// Given - intet ansvar kan udpeges: aktivet springes over, og så skal der heller ikke
+		// røres ved dets kontrol-opgave
+		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
 
 		// When
 		dbsService.oversightResponsible();
 
 		// Then
-		verify(assetOversightService, never()).createOrUpdateAssociatedOversightCheck(any());
+		verify(assetOversightService, never()).parkAssociatedOversightCheck(any());
 	}
 
 	// ========== Ansvarskæden: tilsynsansvarlig -> global indstilling -> systemansvarlig ==========

@@ -12,7 +12,6 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -228,16 +227,13 @@ public class DBSService {
 							}
 						}
 
-						// Aktivet er på DBS-tilsyn: park den manuelle kontrol-opgave (deadline
-						// 2099), så kunden ikke står med både en løbende manuel kontrol og
-						// DBS-opgaven for det samme tilsyn. Parkeringen ved selve koblingen
-						// (setAssetsToDbsOversight) rammer ikke aktiver der blev koblet før den
-						// fandtes, eller kontroller oprettet efter koblingen - dette kald heler
-						// dem, når næste tilsyn flyder for aktivet. Idempotent og no-op for
-						// aktiver uden tilsynsopsætning.
-						if (asset.getNextInspection() == NextInspection.DBS) {
-							assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
-						}
+						// At vi behandler et DBS-tilsyn for aktivet beviser at det er DBS-dækket:
+						// park den systemskabte kontrol-opgave (deadline 2099), så kunden ikke
+						// står med både en løbende kontrol og DBS-opgaven for samme tilsyn.
+						// Ingen gate på aktivets next_inspection - feltet er ikke pålideligt sat
+						// på aktiver koblet før setAssetsToDbsOversight satte det. Idempotent og
+						// no-op når der ingen kontrol findes.
+						assetOversightService.parkAssociatedOversightCheck(asset);
 						anyTaskHandled = true;
 					}
 				}
