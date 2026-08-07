@@ -13,7 +13,6 @@ import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
@@ -54,7 +53,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
