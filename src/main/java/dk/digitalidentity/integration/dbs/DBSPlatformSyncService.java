@@ -288,11 +288,13 @@ public class DBSPlatformSyncService {
 					changed = true;
 				}
 
-				// Samme konvertering som ved oprettelse nedenfor - ellers ville hver kørsel se en
-				// offset-forskel på den samme dato og nulstille taskCreated igen, hvilket ville give
-				// dublerede opgaver hver nat.
+				// Normaliseret til dansk tid og IKKE toLocalDateTime(): dén tager wall-clock ved
+				// det offset Jackson tilfældigvis har parset til, som afhænger af JVM/Jackson-
+				// tidszonen. Et miljøskifte ville så flytte alle datoer 1-2 timer og - i plus-
+				// retningen - få samtlige audits til at ligne genudgivelser (masse-reset).
+				// Samme konvertering som ved oprettelse nedenfor og som findNewestPublishedDate.
 				LocalDateTime published = audit.getPublishedDate() != null
-						? audit.getPublishedDate().toLocalDateTime()
+						? audit.getPublishedDate().atZoneSameInstant(LOCAL_TZ_ID).toLocalDateTime()
 						: null;
 				if (published != null && oversight.getPublishedDate() == null) {
 					// Første gang platform-syncen ser denne række (adopteret fra den gamle
@@ -342,8 +344,12 @@ public class DBSPlatformSyncService {
 				DBSOversight oversight = new DBSOversight();
 				oversight.setDbsId(auditId);
 				oversight.setName(audit.getName());
-				oversight.setPublishedDate(audit.getPublishedDate() != null ? audit.getPublishedDate().toLocalDateTime() : null);
-				oversight.setCreated(audit.getPublishedDate() != null ? audit.getPublishedDate().toLocalDateTime() : LocalDateTime.now());
+				// Samme normalisering som i opdaterings-stien ovenfor
+				LocalDateTime publishedAtCreate = audit.getPublishedDate() != null
+						? audit.getPublishedDate().atZoneSameInstant(LOCAL_TZ_ID).toLocalDateTime()
+						: null;
+				oversight.setPublishedDate(publishedAtCreate);
+				oversight.setCreated(publishedAtCreate != null ? publishedAtCreate : LocalDateTime.now());
 				oversight.setLocked(false);
 				oversight.setSupplier(supplier.get());
 				oversight.setTaskCreated(false);

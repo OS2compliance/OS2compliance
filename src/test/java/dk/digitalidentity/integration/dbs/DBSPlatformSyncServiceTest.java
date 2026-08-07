@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -224,8 +225,9 @@ class DBSPlatformSyncServiceTest {
 		DBSOversight saved = captor.getValue();
 		assertThat(saved.getDbsId()).isEqualTo(1L);
 		assertThat(saved.getName()).isEqualTo("Tilsynsrapport 2026");
-		assertThat(saved.getCreated()).isEqualTo(publishedDate.toLocalDateTime());
-		assertThat(saved.getPublishedDate()).isEqualTo(publishedDate.toLocalDateTime());
+		// Normaliseret til dansk tid - uafhængigt af hvilket offset API-klienten parser til
+		assertThat(saved.getCreated()).isEqualTo(publishedDate.atZoneSameInstant(LOCAL_TZ_ID).toLocalDateTime());
+		assertThat(saved.getPublishedDate()).isEqualTo(publishedDate.atZoneSameInstant(LOCAL_TZ_ID).toLocalDateTime());
 		assertThat(saved.isLocked()).isFalse();
 		assertThat(saved.isTaskCreated()).isFalse();
 		assertThat(saved.getSupplier()).isEqualTo(supplier);
@@ -262,8 +264,8 @@ class DBSPlatformSyncServiceTest {
 		existingOversight.setName("Same Name");
 		existingOversight.setSupplier(supplier);
 		// publishedDate skal matche auditens, ellers er auditen genudgivet (eller uset) og SKAL gemmes
-		existingOversight.setCreated(published.toLocalDateTime());
-		existingOversight.setPublishedDate(published.toLocalDateTime());
+		existingOversight.setCreated(published.atZoneSameInstant(LOCAL_TZ_ID).toLocalDateTime());
+		existingOversight.setPublishedDate(published.atZoneSameInstant(LOCAL_TZ_ID).toLocalDateTime());
 
 		AuditDto audit = createAuditWithSupplierAndSystem(1, "Same Name", 100, "Supplier", 200, "System", null);
 		audit.setPublishedDate(published);
