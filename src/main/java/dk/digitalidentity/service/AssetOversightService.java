@@ -48,7 +48,6 @@ public class AssetOversightService {
     private final AssetOversightDao assetOversightDao;
     private final TaskService taskService;
     private final RelationService relationService;
-    private final UserService userService;
 	private final ChoiceValueDao choiceValueDao;
 	private final DBSOversightGridDao dbsOversightGridDao;
 	private final TaskLogDao taskLogDao;
@@ -71,16 +70,12 @@ public class AssetOversightService {
             asset.setNextInspection(NextInspection.DBS);
             asset.setNextInspectionDate(null);
             asset.setSupervisoryModel(choiceValueDao.findByIdentifier("supervision-model-dbs-123456").orElse(null));
-			User user = userService.currentUser();
-			if (asset.getOversightResponsibleUser() == null) {
-				if (asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
-					asset.setOversightResponsibleUser(asset.getResponsibleUsers().get(0));
-					createOrUpdateAssociatedOversightCheck(asset);
-				} else if (user != null) {
-					asset.setOversightResponsibleUser(user);
-					createOrUpdateAssociatedOversightCheck(asset);
-				}
-			}
+			// Tilsynsansvarlig udfyldes bevidst IKKE her. Hjælpeteksten lover at feltet er "sat
+			// manuelt" og altid vinder over den globale dbsOversightRecipient-indstilling - en
+			// auto-udfyldning (tidligere: første ansvarlige bruger, ellers den der klikkede)
+			// udpegede derfor i stilhed en vilkårlig person og blokerede kundens indstilling.
+			// DBSService har ansvarskæden: tilsynsansvarlig -> global indstilling -> systemansvarlig.
+			createOrUpdateAssociatedOversightCheck(asset);
         });
     }
 
@@ -174,7 +169,10 @@ public class AssetOversightService {
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(asset.getNextInspectionDate());
         task.setNotifyResponsible(false);
-        task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
+        // Tilsynsansvarlig er et manuelt valg og kan mangle - Set.of(null) ville kaste NPE
+        if (asset.getOversightResponsibleUser() != null) {
+            task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
+        }
         task.setDescription("Gå ind på aktivet " + asset.getName() + " og udfør tilsyn.");
         task.getProperties().add(Property.builder()
             .entity(task)

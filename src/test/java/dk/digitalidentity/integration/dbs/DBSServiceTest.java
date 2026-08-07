@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.DBSSupplier;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.service.AssetService;
@@ -21,6 +22,7 @@ import dk.digitalidentity.service.TaskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,6 +38,7 @@ import static dk.digitalidentity.Constants.DBS_TASK_NAME_MARKER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -71,6 +74,7 @@ class DBSServiceTest {
 
 	private DBSOversight oversight;
 	private DBSAsset dbsAsset;
+	private Asset asset;
 	private Task openTask;
 
 	@BeforeEach
@@ -80,7 +84,8 @@ class DBSServiceTest {
 		Integration integrations = new Integration();
 		integrations.setDbs(dbsConfig);
 		when(configuration.getIntegrations()).thenReturn(integrations);
-		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("tilsyn@example.dk");
+		// lenient: enkelte tests overstyrer indstillingen eller rammer ikke genbrugs-stien
+		lenient().when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("tilsyn@example.dk");
 
 		DBSSupplier supplier = new DBSSupplier();
 		supplier.setId(1L);
@@ -101,7 +106,7 @@ class DBSServiceTest {
 		oversight.setSupplier(supplier);
 		oversight.setCreated(LocalDateTime.of(2026, 7, 24, 9, 0));
 
-		Asset asset = new Asset();
+		asset = new Asset();
 		asset.setId(ASSET_ID);
 		asset.setName("eReolen");
 
@@ -120,10 +125,10 @@ class DBSServiceTest {
 		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.ASSET)))
 				.thenReturn(List.of(relation(DBS_ASSET_ID, RelationType.DBSASSET, ASSET_ID, RelationType.ASSET)));
 		when(assetService.findById(ASSET_ID)).thenReturn(Optional.of(asset));
-		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK)))
+		lenient().when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK)))
 				.thenReturn(List.of(relation(DBS_ASSET_ID, RelationType.DBSASSET, TASK_ID, RelationType.TASK)));
-		when(taskService.findById(TASK_ID)).thenReturn(Optional.of(openTask));
-		when(taskService.isTaskDone(openTask)).thenReturn(false);
+		lenient().when(taskService.findById(TASK_ID)).thenReturn(Optional.of(openTask));
+		lenient().when(taskService.isTaskDone(openTask)).thenReturn(false);
 	}
 
 	@Test
@@ -237,6 +242,84 @@ class DBSServiceTest {
 		// Then - begge systemer besøges (any(DBSAsset.class)-stubs dækker også otherAsset)
 		verify(relationService).findRelatedToWithType(eq(otherAsset), eq(RelationType.ASSET));
 		assertThat(openTask.getDescription()).endsWith("\n - " + AUDIT_NAME);
+	}
+
+	// ========== Ansvarskæden: tilsynsansvarlig -> global indstilling -> systemansvarlig ==========
+
+	@Test
+	void oversightResponsible_usesManualOversightResponsible_beforeGlobalSetting() {
+		// Given - manuelt sat tilsynsansvarlig på aktivet vinder altid over den globale
+		// indstilling (lovet i hjælpeteksten). Ingen åben opgave -> opret-stien.
+		User tilsynsansvarlig = new User();
+		tilsynsansvarlig.setName("Tilde Tilsynsansvarlig");
+		asset.setOversightResponsibleUser(tilsynsansvarlig);
+		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK))).thenReturn(List.of());
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
+		verify(taskService).saveTask(captor.capture());
+		assertThat(captor.getValue().getResponsibleUsers()).containsExactly(tilsynsansvarlig);
+		verify(notifyService).notifyTaskResponsible(captor.getValue());
+		verify(notifyService, never()).notifyOversightByEmail(any(), any());
+	}
+
+	@Test
+	void oversightResponsible_usesGlobalSetting_beforeManagers() {
+		// Given - ingen tilsynsansvarlig, global indstilling er en direkte mail, og aktivet HAR
+		// systemansvarlige. Indstillingen har precedens (hjælpeteksten), så opgaven oprettes
+		// uden ansvarlige og notifikationen går til mailen.
+		asset.getManagers().add(new User());
+		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK))).thenReturn(List.of());
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
+		verify(taskService).saveTask(captor.capture());
+		assertThat(captor.getValue().getResponsibleUsers()).isEmpty();
+		verify(notifyService).notifyOversightByEmail(captor.getValue(), "tilsyn@example.dk");
+		verify(notifyService, never()).notifyTaskResponsible(any());
+	}
+
+	@Test
+	void oversightResponsible_fallsBackToAllManagers_whenNothingElseConfigured() {
+		// Given - ingen tilsynsansvarlig og ingen global indstilling: så er de systemansvarlige
+		// for aktivet ansvarlige. Alle sammen - en vilkårlig .get(0) var netop problemet med
+		// den gamle auto-udfyldning.
+		User manager1 = new User();
+		manager1.setName("Susanne Systemansvarlig");
+		User manager2 = new User();
+		manager2.setName("Søren Systemansvarlig");
+		asset.getManagers().add(manager1);
+		asset.getManagers().add(manager2);
+		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
+		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK))).thenReturn(List.of());
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
+		verify(taskService).saveTask(captor.capture());
+		assertThat(captor.getValue().getResponsibleUsers()).containsExactlyInAnyOrder(manager1, manager2);
+		verify(notifyService).notifyTaskResponsible(captor.getValue());
+	}
+
+	@Test
+	void oversightResponsible_skipsAsset_whenNoResponsibleAnywhere() {
+		// Given - ingen tilsynsansvarlig, ingen indstilling, ingen systemansvarlige
+		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then - ingen opgave, og oversighten står stadig som ubehandlet
+		verify(taskService, never()).saveTask(any());
+		assertThat(oversight.isTaskCreated()).isFalse();
 	}
 
 	private static Relation relation(long aId, RelationType aType, long bId, RelationType bType) {

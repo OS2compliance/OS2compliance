@@ -27,9 +27,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 
@@ -89,26 +91,37 @@ public class DBSService {
 							.toList();
 
 					for (Asset asset : assets) {
-						// Priority 1: manually assigned oversight responsible on the asset
-						User responsibleUser = asset.getOversightResponsibleUser();
+						// Prioritet 1: manuelt sat tilsynsansvarlig på aktivet. Hjælpeteksten lover
+						// at den altid vinder over den globale indstilling - feltet auto-udfyldes
+						// derfor ikke længere (se AssetOversightService.setAssetsToDbsOversight).
+						Set<User> responsibleUsers = asset.getOversightResponsibleUser() != null
+								? Set.of(asset.getOversightResponsibleUser())
+								: Set.of();
 						String notificationEmail = null;
 
-						// Priority 2: global setting — role lookup or direct email
-						if (responsibleUser == null && !recipientSetting.isEmpty()) {
+						// Prioritet 2: global indstilling - rolleopslag eller direkte mail
+						if (responsibleUsers.isEmpty() && !recipientSetting.isEmpty()) {
 							if (recipientSetting.startsWith("ROLE:")) {
-								responsibleUser = resolveUserFromRole(asset, recipientSetting);
+								User fromRole = resolveUserFromRole(asset, recipientSetting);
+								responsibleUsers = fromRole != null ? Set.of(fromRole) : Set.of();
 							} else {
 								notificationEmail = recipientSetting;
 							}
 						}
 
-						if (responsibleUser == null && notificationEmail == null) {
+						// Prioritet 3: systemansvarlige for aktivet - alle, ikke en vilkårlig første
+						if (responsibleUsers.isEmpty() && notificationEmail == null
+								&& asset.getManagers() != null && !asset.getManagers().isEmpty()) {
+							responsibleUsers = new LinkedHashSet<>(asset.getManagers());
+						}
+
+						if (responsibleUsers.isEmpty() && notificationEmail == null) {
 							log.warn("Skipping Asset: {} for DBSOversight: {} — no responsible user and no notification email configured.",
 									asset.getId(), dbsOversight.getId());
 							continue;
 						}
 
-						final User taskResponsible = responsibleUser;
+						final Set<User> taskResponsibles = responsibleUsers;
 						final String taskEmail = notificationEmail;
 
 						// Check if there is an open task already
@@ -162,8 +175,8 @@ public class DBSService {
 											Task task = new Task();
 											task.setName(getTaskName(asset));
 											task.setNextDeadline(nowPlus30Days);
-											if (taskResponsible != null) {
-												task.setResponsibleUsers(Set.of(taskResponsible));
+											if (!taskResponsibles.isEmpty()) {
+												task.setResponsibleUsers(taskResponsibles);
 												task.setNotifyResponsible(true);
 											}
 											task.setTaskType(TaskType.TASK);
@@ -176,7 +189,9 @@ public class DBSService {
 													.build();
 											task.getProperties().add(property);
 											log.debug("Created task: {} responsible: {}", task.getName(),
-													taskResponsible != null ? taskResponsible.getName() : "email:" + taskEmail);
+													!taskResponsibles.isEmpty()
+															? taskResponsibles.stream().map(User::getName).collect(Collectors.joining(", "))
+															: "email:" + taskEmail);
 											taskService.saveTask(task);
 
 											addAuditLinkIfAbsent(task, dbsOversight);
@@ -184,7 +199,7 @@ public class DBSService {
 											relationService.addRelation(task, dbsAsset);
 											relationService.addRelation(task, asset);
 
-											if (taskResponsible != null) {
+											if (!taskResponsibles.isEmpty()) {
 												notifyService.notifyTaskResponsible(task);
 											} else if (taskEmail != null) {
 												notifyService.notifyOversightByEmail(task, taskEmail);

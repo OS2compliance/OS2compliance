@@ -12,6 +12,7 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -293,5 +295,23 @@ class AssetOversightServiceTest {
         verify(taskLogDao, never()).reassignTask(any(), any());
         assertThat(oldCheck.getLogs()).containsExactly(strayOnCheck);
         assertThat(dbsTask.getLogs()).containsExactly(existing);
+    }
+
+    // ========== setAssetsToDbsOversight ==========
+
+    @Test
+    void setAssetsToDbsOversight_doesNotAssignOversightResponsible() {
+        // Tilsynsansvarlig er iflg. hjælpeteksten et manuelt valg der altid vinder over den
+        // globale dbsOversightRecipient-indstilling. Den tidligere auto-udfyldning (første
+        // ansvarlige bruger, ellers den admin der klikkede) udpegede i stilhed en vilkårlig
+        // person og blokerede dermed indstillingen - kunde-observationen var opgaver tildelt
+        // "en tilfældig medarbejder der starter med A".
+        final Asset asset = asset(null);
+        asset.getResponsibleUsers().add(new User());
+        when(choiceValueDao.findByIdentifier("supervision-model-dbs-123456")).thenReturn(Optional.empty());
+
+        assetOversightService.setAssetsToDbsOversight(List.of(asset));
+
+        assertThat(asset.getOversightResponsibleUser()).isNull();
     }
 }
