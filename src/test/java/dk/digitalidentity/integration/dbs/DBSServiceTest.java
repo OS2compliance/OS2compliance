@@ -11,8 +11,11 @@ import dk.digitalidentity.model.entity.DBSSupplier;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLog;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.NotifyService;
 import dk.digitalidentity.service.RelationService;
@@ -21,6 +24,7 @@ import dk.digitalidentity.service.TaskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,6 +40,10 @@ import static dk.digitalidentity.Constants.DBS_TASK_NAME_MARKER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -62,12 +70,16 @@ class DBSServiceTest {
 	@Mock
 	private NotifyService notifyService;
 	@Mock
+	private AssetOversightService assetOversightService;
+	@Mock
 	private OS2complianceConfiguration configuration;
 
 	@InjectMocks
 	private DBSService dbsService;
 
 	private DBSOversight oversight;
+	private DBSAsset dbsAsset;
+	private Asset asset;
 	private Task openTask;
 
 	@BeforeEach
@@ -77,14 +89,15 @@ class DBSServiceTest {
 		Integration integrations = new Integration();
 		integrations.setDbs(dbsConfig);
 		when(configuration.getIntegrations()).thenReturn(integrations);
-		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("tilsyn@example.dk");
+		// lenient: enkelte tests overstyrer indstillingen eller rammer ikke genbrugs-stien
+		lenient().when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("tilsyn@example.dk");
 
 		DBSSupplier supplier = new DBSSupplier();
 		supplier.setId(1L);
 		supplier.setDbsId(4711L);
 		supplier.setName("EKSEMPEL ApS");
 
-		DBSAsset dbsAsset = new DBSAsset();
+		dbsAsset = new DBSAsset();
 		dbsAsset.setId(DBS_ASSET_ID);
 		dbsAsset.setName("eReolen");
 		dbsAsset.setStatus("published");
@@ -98,7 +111,7 @@ class DBSServiceTest {
 		oversight.setSupplier(supplier);
 		oversight.setCreated(LocalDateTime.of(2026, 7, 24, 9, 0));
 
-		Asset asset = new Asset();
+		asset = new Asset();
 		asset.setId(ASSET_ID);
 		asset.setName("eReolen");
 
@@ -117,10 +130,10 @@ class DBSServiceTest {
 		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.ASSET)))
 				.thenReturn(List.of(relation(DBS_ASSET_ID, RelationType.DBSASSET, ASSET_ID, RelationType.ASSET)));
 		when(assetService.findById(ASSET_ID)).thenReturn(Optional.of(asset));
-		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK)))
+		lenient().when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK)))
 				.thenReturn(List.of(relation(DBS_ASSET_ID, RelationType.DBSASSET, TASK_ID, RelationType.TASK)));
-		when(taskService.findById(TASK_ID)).thenReturn(Optional.of(openTask));
-		when(taskService.isTaskDone(openTask)).thenReturn(false);
+		lenient().when(taskService.findById(TASK_ID)).thenReturn(Optional.of(openTask));
+		lenient().when(taskService.isTaskDone(openTask)).thenReturn(false);
 	}
 
 	@Test
@@ -188,6 +201,206 @@ class DBSServiceTest {
 		// Then - even when the description is left untouched, the oversight must not be picked up
 		// again on the next run.
 		assertThat(oversight.isTaskCreated()).isTrue();
+	}
+
+	@Test
+	void oversightResponsible_visitsOnlyAuditSystems_whenOversightIsCoupled() {
+		// Given - leverandøren har to systemer, men auditen dækker kun det ene. Uden koblingen
+		// (fallback) besøges begge, og auditens link/opgave lander også på det system auditen
+		// ikke dækker.
+		DBSAsset otherAsset = new DBSAsset();
+		otherAsset.setId(999L);
+		otherAsset.setName("Andet system");
+		otherAsset.setStatus("published");
+		otherAsset.setSupplier(oversight.getSupplier());
+		oversight.getSupplier().getAssets().add(otherAsset);
+		oversight.getAssets().add(dbsAsset);
+
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then - kun auditens eget system besøges
+		verify(relationService, never()).findRelatedToWithType(eq(otherAsset), eq(RelationType.ASSET));
+		assertThat(openTask.getDescription()).endsWith("\n - " + AUDIT_NAME);
+	}
+
+	@Test
+	void oversightResponsible_fallsBackToAllSupplierAssets_whenOversightHasNoCoupling() {
+		// Given - ældre række uden systemdata: begge leverandørens systemer besøges, som før
+		// koblingen fandtes. dbsAsset nr. 2 har ingen relaterede aktiver og giver derfor ingen
+		// opgave, men den SKAL besøges.
+		DBSAsset otherAsset = new DBSAsset();
+		otherAsset.setId(999L);
+		otherAsset.setName("Andet system");
+		otherAsset.setStatus("published");
+		otherAsset.setSupplier(oversight.getSupplier());
+		oversight.getSupplier().getAssets().add(otherAsset);
+		// oversight.getAssets() er tom
+
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then - begge systemer besøges (any(DBSAsset.class)-stubs dækker også otherAsset)
+		verify(relationService).findRelatedToWithType(eq(otherAsset), eq(RelationType.ASSET));
+		assertThat(openTask.getDescription()).endsWith("\n - " + AUDIT_NAME);
+		// ...men oversighten gemmes kun ÉN gang. Et save per aktiv blev til merge() midt i
+		// iterationen af oversightens assets-collection og gav ConcurrentModificationException.
+		verify(dbsOversightDao, times(1)).save(oversight);
+		assertThat(oversight.isTaskCreated()).isTrue();
+	}
+
+	// ========== Dækning: udført tilsyn efter auditens udgivelse giver ikke ny opgave ==========
+
+	@Test
+	void oversightResponsible_skipsTaskCreation_whenCompletedTaskCoversPublication() {
+		// Given - Tunstall-scenariet: audit udgivet 22/1, tilsyn udført 22/2 på en afsluttet
+		// opgave. Udførelse efter udgivelsen = dækket, ingen dublet trods taskCreated=false.
+		oversight.setCreated(LocalDateTime.of(2026, 1, 22, 15, 43));
+		oversight.setPublishedDate(LocalDateTime.of(2026, 1, 22, 15, 43));
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+		TaskLog completedLog = new TaskLog();
+		completedLog.setCompleted(LocalDate.of(2026, 2, 22));
+		openTask.getLogs().add(completedLog);
+		when(taskService.isTaskDone(openTask)).thenReturn(true);
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then - ingen ny opgave, ingen ændring af den udførte, men oversighten er behandlet
+		verify(taskService, never()).saveTask(any());
+		assertThat(openTask.getDescription()).isEqualTo("Udfør tilsyn af EKSEMPEL ApS");
+		assertThat(oversight.isTaskCreated()).isTrue();
+		verify(dbsOversightDao).save(oversight);
+	}
+
+	@Test
+	void oversightResponsible_createsTask_whenPublicationIsNewerThanLastCompletedTask() {
+		// Given - ægte genudgivelse: seneste udførte tilsyn ligger FØR auditens udgivelsesdato,
+		// så auditen er nyt indhold og skal give en ny opgave.
+		oversight.setCreated(LocalDateTime.of(2026, 7, 24, 9, 43));
+		oversight.setPublishedDate(LocalDateTime.of(2026, 7, 24, 9, 43));
+		TaskLog completedLog = new TaskLog();
+		completedLog.setCompleted(LocalDate.of(2026, 2, 22));
+		openTask.getLogs().add(completedLog);
+		when(taskService.isTaskDone(openTask)).thenReturn(true);
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		verify(taskService).saveTask(any(Task.class));
+		assertThat(oversight.isTaskCreated()).isTrue();
+	}
+
+	// ========== Parkering af kontrol-opgaven når DBS-tilsyn behandles for aktivet ==========
+
+	@Test
+	void oversightResponsible_parksOversightCheck_whenDbsOversightIsHandledForAsset() {
+		// Given - et behandlet DBS-tilsyn beviser DBS-dækning: en løbende kontrol skal parkeres
+		// (TolkDanmark-dubletten). Bevidst ingen gate på next_inspection.
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		verify(assetOversightService).parkAssociatedOversightCheck(asset);
+	}
+
+	@Test
+	void oversightResponsible_doesNotPark_whenAssetIsSkipped() {
+		// Given - intet ansvar kan udpeges: aktivet springes over, og så skal der heller ikke
+		// røres ved dets kontrol-opgave
+		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		verify(assetOversightService, never()).parkAssociatedOversightCheck(any());
+	}
+
+	// ========== Ansvarskæden: tilsynsansvarlig -> global indstilling -> systemansvarlig ==========
+
+	@Test
+	void oversightResponsible_usesManualOversightResponsible_beforeGlobalSetting() {
+		// Given - manuelt sat tilsynsansvarlig på aktivet vinder altid over den globale
+		// indstilling (lovet i hjælpeteksten). Ingen åben opgave -> opret-stien.
+		User tilsynsansvarlig = new User();
+		tilsynsansvarlig.setName("Tilde Tilsynsansvarlig");
+		asset.setOversightResponsibleUser(tilsynsansvarlig);
+		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK))).thenReturn(List.of());
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
+		verify(taskService).saveTask(captor.capture());
+		assertThat(captor.getValue().getResponsibleUsers()).containsExactly(tilsynsansvarlig);
+		verify(notifyService).notifyTaskResponsible(captor.getValue());
+		verify(notifyService, never()).notifyOversightByEmail(any(), any());
+	}
+
+	@Test
+	void oversightResponsible_usesGlobalSetting_beforeManagers() {
+		// Given - ingen tilsynsansvarlig, global indstilling er en direkte mail, og aktivet HAR
+		// systemansvarlige. Indstillingen har precedens (hjælpeteksten), så opgaven oprettes
+		// uden ansvarlige og notifikationen går til mailen.
+		asset.getManagers().add(new User());
+		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK))).thenReturn(List.of());
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
+		verify(taskService).saveTask(captor.capture());
+		assertThat(captor.getValue().getResponsibleUsers()).isEmpty();
+		verify(notifyService).notifyOversightByEmail(captor.getValue(), "tilsyn@example.dk");
+		verify(notifyService, never()).notifyTaskResponsible(any());
+	}
+
+	@Test
+	void oversightResponsible_fallsBackToAllManagers_whenNothingElseConfigured() {
+		// Given - ingen tilsynsansvarlig og ingen global indstilling: så er de systemansvarlige
+		// for aktivet ansvarlige. Alle sammen - en vilkårlig .get(0) var netop problemet med
+		// den gamle auto-udfyldning.
+		User manager1 = new User();
+		manager1.setName("Susanne Systemansvarlig");
+		User manager2 = new User();
+		manager2.setName("Søren Systemansvarlig");
+		asset.getManagers().add(manager1);
+		asset.getManagers().add(manager2);
+		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
+		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK))).thenReturn(List.of());
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then
+		ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
+		verify(taskService).saveTask(captor.capture());
+		assertThat(captor.getValue().getResponsibleUsers()).containsExactlyInAnyOrder(manager1, manager2);
+		verify(notifyService).notifyTaskResponsible(captor.getValue());
+	}
+
+	@Test
+	void oversightResponsible_skipsAsset_whenNoResponsibleAnywhere() {
+		// Given - ingen tilsynsansvarlig, ingen indstilling, ingen systemansvarlige
+		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
+
+		// When
+		dbsService.oversightResponsible();
+
+		// Then - ingen opgave, og oversighten står stadig som ubehandlet (og gemmes ikke)
+		verify(taskService, never()).saveTask(any());
+		verify(dbsOversightDao, never()).save(any());
+		assertThat(oversight.isTaskCreated()).isFalse();
 	}
 
 	private static Relation relation(long aId, RelationType aType, long bId, RelationType bType) {
