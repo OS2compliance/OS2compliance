@@ -3,9 +3,8 @@
   "name": "79. Behandling af personoplysninger i forbindelse med brugerinddragelse og frivilligt socialarbejde",
   "description": "Behandlingen af personoplysninger sker med henbilk på brugerinddragelse og frivilligt socialt arbejde",
   "gdprChoices": [
-    "register-gdpr-valp6",
     "register-gdpr-p6-a",
-    "register-gdpr-p6-e"
+    "register-gdpr-valp6"
   ],
   "kleMainGroups": [
     "27",
@@ -13,12 +12,14 @@
   ],
   "kleGroups": [
     "27.15",
+    "27.34",
     "34.05"
   ],
   "kleSubjects": [
     "27.15.00",
     "27.15.04",
     "27.15.12",
+    "27.34.20",
     "34.05.15",
     "34.05.20"
   ]

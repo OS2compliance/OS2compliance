@@ -156,6 +156,35 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(43, this::seedV43);
 		incrementAndPerformIfVersion(44, this::seedV44);
 		incrementAndPerformIfVersion(45, this::seedV45);
+		incrementAndPerformIfVersion(46, this::seedV46);
+	}
+
+	/**
+	 * Ruller opdateringen til version 1.8 af KL's ark ud på eksisterende installationer. En frisk
+	 * database har ikke brug for det - der importerer {@link #addRegistersV0()} pakkerne som de er.
+	 * <p>
+	 * De tre kald gør hver sin ting, og rækkefølgen er ikke tilfældig. {@code importRegister} slår op
+	 * på navn og opretter kun det der mangler, så de to nye aktiviteter kommer ind uden at røre de
+	 * øvrige. Til gengæld nulstiller den hovedgrupperne på en fortegnelse der i forvejen står uden
+	 * KLE, fordi den sender gruppenumre til et opslag på hovedgruppenummer - derfor skal
+	 * {@code enrichWithKLE} køre bagefter, som sætter alle tre niveauer korrekt.
+	 * <p>
+	 * {@code updateRegisterGdprChoices} og {@code enrichWithKLE} skriver oven i det der står. Har en
+	 * kommune selv rettet hjemmel eller KLE på en KL-fortegnelse, får de KL's udgave tilbage. Det er
+	 * det bevidste valg her: pakkerne ER KL's mapping, og hjemlen er rettet på 56 af dem (§10 ud, §8
+	 * ind). Beskrivelserne røres derimod ikke - der findes ingen tilsvarende metode i importeren, så
+	 * de 7 aktiviteter med ny tekst i arket beholder den gamle beskrivelse hos eksisterende kunder.
+	 */
+	@SneakyThrows
+	private void seedV46() {
+		final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
+		sortedResources.sort(Comparator.comparing(Resource::getFilename));
+		for (final Resource register : sortedResources) {
+			registerImporter.importRegister(register);
+			registerImporter.updateRegisterGdprChoices(register);
+			registerImporter.enrichWithKLE(register);
+		}
+		log.info("seedV46: genindlæste {} KL-pakker fra version 1.8 af arket", sortedResources.size());
 	}
 
 	private void seedV45() {
