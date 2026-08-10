@@ -70,6 +70,11 @@ public interface DocumentMapper {
 		return documentDTOS;
 	}
 
+	// embedded user references keep the shallow shape, positions/active are only exposed by the users API
+	@Mappings({
+			@Mapping(target = "active", ignore = true),
+			@Mapping(target = "positions", ignore = true)
+	})
 	UserEO toEO(User user);
 
 	@Mappings({

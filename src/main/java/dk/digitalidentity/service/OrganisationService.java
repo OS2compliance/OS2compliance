@@ -3,10 +3,12 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.model.entity.OrganisationUnit;
+import jakarta.persistence.EntityManager;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,9 +17,11 @@ import java.util.Set;
 @Component
 public class OrganisationService {
     private final OrganisationUnitDao organisationUnitDao;
+    private final EntityManager entityManager;
 
-    public OrganisationService(final OrganisationUnitDao organisationUnitDao) {
+    public OrganisationService(final OrganisationUnitDao organisationUnitDao, final EntityManager entityManager) {
         this.organisationUnitDao = organisationUnitDao;
+        this.entityManager = entityManager;
     }
 
     public Optional<OrganisationUnit> get(final String uuid) {
@@ -33,6 +37,22 @@ public class OrganisationService {
 
     public List<OrganisationUnit> findAllByUuids(final Set<String> uuids) {
         return organisationUnitDao.findAllByUuidInAndActiveTrue(uuids);
+    }
+
+    /**
+     * Persists a new organisation unit, failing if the primary key is already taken.
+     * Unlike {@link #save(OrganisationUnit)} this never degrades to an update of an existing row.
+     */
+    @Transactional
+    public OrganisationUnit create(final OrganisationUnit organisationUnit) {
+        entityManager.persist(organisationUnit);
+        entityManager.flush();
+        return organisationUnit;
+    }
+
+    @Transactional
+    public OrganisationUnit save(final OrganisationUnit organisationUnit) {
+        return organisationUnitDao.save(organisationUnit);
     }
 
 	public Optional<OrganisationUnit> findByUuid(final String uuid) {
