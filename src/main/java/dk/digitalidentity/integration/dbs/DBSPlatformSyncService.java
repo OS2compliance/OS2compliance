@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -73,10 +74,20 @@ public class DBSPlatformSyncService {
 	}
 
 	public Optional<ZonedDateTime> findNewestPublishedDate(List<AuditDto> audits) {
-		return audits.stream()
+		Optional<AuditDto> newest = audits.stream()
 				.filter(a -> a.getPublishedDate() != null)
-				.max(Comparator.comparing(AuditDto::getPublishedDate))
-				.map(a -> a.getPublishedDate().atZoneSameInstant(LOCAL_TZ_ID));
+				.max(Comparator.comparing(AuditDto::getPublishedDate));
+
+		// Denne audit bliver til vandmærket, og vandmærket sendes retur som publishedAfter, som
+		// DBS afviser hvis det ligger i fremtiden. Navngiv derfor auditen her: er den fremtidig
+		// allerede ved hentningen, ligger fejlen i DBS' data eller i urskævhed mellem os og DBS -
+		// ikke i vores gem/læs af vandmærket.
+		OffsetDateTime now = OffsetDateTime.now();
+		newest.filter(a -> a.getPublishedDate().isAfter(now))
+				.ifPresent(a -> log.warn("Audit {} ({}) has publishedDate {}, which is {} ahead of our clock - it blocks the next sync until our clock passes it",
+						a.getId(), a.getName(), a.getPublishedDate(), Duration.between(now, a.getPublishedDate())));
+
+		return newest.map(a -> a.getPublishedDate().atZoneSameInstant(LOCAL_TZ_ID));
 	}
 
 	@Transactional
