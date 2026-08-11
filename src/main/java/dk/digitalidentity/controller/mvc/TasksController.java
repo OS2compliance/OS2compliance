@@ -161,6 +161,9 @@ public class TasksController {
 		if (task.getStartDate() == null) {
 			task.setStartDate(LocalDate.now());
 		}
+		if (task.getNextDeadline() != null && task.getStartDate().isAfter(task.getNextDeadline())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Startdato kan ikke være efter deadline");
+		}
 		List<SubTask> subTasks = new ArrayList<>();
 		for (SubTask subTask : task.getSubTasks()) {
 			subTasks.add(new SubTask(null, subTask.getName(), subTask.isCompleted(), task));
@@ -206,6 +209,9 @@ public class TasksController {
         existingTask.setNote(inProgress ? task.getNote() : null);
 		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
         existingTask.setDescription(task.getDescription());
+        if (task.getStartDate() != null && task.getNextDeadline() != null && task.getStartDate().isAfter(task.getNextDeadline())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Startdato kan ikke være efter deadline");
+        }
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setStartDate(task.getStartDate());
         existingTask.setResponsibleOu(task.getResponsibleOu());
@@ -418,6 +424,9 @@ public class TasksController {
 			@Valid @ModelAttribute final Task taskForm,
 			@RequestParam(name = "relations", required = false) final List<Long> relations
 	) {
+		if (taskForm.getStartDate() != null && taskForm.getNextDeadline() != null && taskForm.getStartDate().isAfter(taskForm.getNextDeadline())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Startdato kan ikke være efter deadline");
+		}
 		final Task task = taskService.copyTask(taskForm);
 		setupRelations(task, relations);
 		if (task.getSubTasks() == null) {
