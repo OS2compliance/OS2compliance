@@ -157,12 +157,11 @@ class CustomGridFunctions {
     /**
      * Convenience method for updating column search state
      * @param {string} column
-     * @param {string} valuef
+     * @param {string} value
      */
     updateColumnValue(column, value) {
-        if (value === '__EMPTY__') {
-            this.state.searchValues[column] = "EMPTY";
-        }
+        // '__EMPTY__' (option-værdien for "Ingen") gemmes uoversat, så gendannelse af gemt søgning
+        // rammer selectorens option igen - serveren oversætter til EMPTY (FilterService).
         this.state.searchValues[column] = value;
     }
 
