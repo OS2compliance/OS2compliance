@@ -304,6 +304,7 @@ public class GlobalSearchService {
 		searchableProperties.put("createdAt", query);
 		searchableProperties.put("updatedAt", query);
 		searchableProperties.put("nextDeadline", query);
+		searchableProperties.put("startDate", query);
 
 		Page<Task> page;
 		if (filterResults) {
@@ -419,6 +420,7 @@ public class GlobalSearchService {
 				lastPart.equals("contractTermination") ||
 				lastPart.equals("userUpdatedDate") ||
 				lastPart.equals("nextDeadline") ||
+				lastPart.equals("startDate") ||
 				lastPart.equals("lastSync");
 	}
 
@@ -568,6 +570,7 @@ public class GlobalSearchService {
 			case "contractTermination" -> "Kontraktudløb";
 			case "userUpdatedDate" -> "Bruger opdateret dato";
 			case "nextDeadline" -> "Deadline";
+			case "startDate" -> "Startdato";
 			case "lastSync" -> "Sidste synkronisering";
 			default -> lastPart;
 		};

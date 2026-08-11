@@ -123,6 +123,7 @@ function CopyTaskService() {
 
     this.onLoaded = function() {
         this.modalContainer = document.getElementById('copyModal');
+        initDatepicker("#copyTaskStartDateBtn", "#copyTaskStartDate");
         initDatepicker("#copyTaskDeadlineBtn", "#copyTaskDeadline");
 
         let responsibleSelect = this.getScopedElementById('copyTaskUserSelect');

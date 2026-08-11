@@ -1014,7 +1014,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return result;
     }
 
-    record TaskPDFDTO(String name, String description, String taskType, String nextDeadline, String responsible, String department) {}
+    record TaskPDFDTO(String name, String description, String taskType, String startDate, String nextDeadline, String responsible, String department) {}
     private List<TaskPDFDTO> buildTasks(List<Task> riskAssessmentTasks) {
         List<TaskPDFDTO> result = new ArrayList<>();
         riskAssessmentTasks.forEach(
@@ -1023,6 +1023,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                     task.getName(),
                     task.getDescription(),
                     task.getTaskType().getMessage(),
+                    nullSafe(() -> DK_DATE_FORMATTER.format(task.getStartDate())),
                     DK_DATE_FORMATTER.format(task.getNextDeadline()),
                     nullSafe(() -> task.getResponsibleUsers().stream()
 							.map(User::getName)

@@ -90,10 +90,11 @@
                                     <label for="startDate" class="col-sm-2 col-form-label">Startdato</label>
                                     <div class="col-sm-10">
                                         <div class="input-group">
-                                            <input id="startDate" type="text" class="form-control editField" th:field="*{startDate}">
+                                            <input id="startDate" type="text" class="form-control editField" th:field="*{startDate}" required>
                                             <button id="startDateBtn" class="btn btn-primary editField" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;" disabled>
                                                 <i class="pli-calendar-4 fs-5"></i>
                                             </button>
+                                            <div class="invalid-feedback">Der skal vælges en startdato</div>
                                         </div>
                                     </div>
                                 </div>
