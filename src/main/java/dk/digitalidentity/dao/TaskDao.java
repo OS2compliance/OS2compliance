@@ -3,17 +3,12 @@ package dk.digitalidentity.dao;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.NotificationSetting;
-import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
-import jakarta.validation.constraints.NotNull;
 import dk.digitalidentity.service.tag.TagableRepository;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
