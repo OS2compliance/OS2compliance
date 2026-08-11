@@ -67,48 +67,52 @@
     <h2 th:text="${section.heading}"></h2>
     <p th:utext="${section.explainer}"></p>
     <table class="table">
+        <colgroup>
+            <col width="34%"/>
+            <col width="66%"/>
+        </colgroup>
         <thead>
         <tr>
-            <th class="col-4">Spørgsmål</th>
-            <th class="col-6">Besvarelse</th>
+            <th>Spørgsmål</th>
+            <th>Besvarelse</th>
         </tr>
         </thead>
         <tbody>
         <th:block th:if="${section.sectionIdentifier == 'scope'}">
             <tr>
-                <td class="col-4">Systemets navn</td>
-                <td class="col-6">
+                <td>Systemets navn</td>
+                <td>
                     <div class="answer-container" th:utext="${assetNames}" ></div>
                 </td>
             </tr>
             <tr>
-                <td class="col-4">Systemejer</td>
-                <td class="col-6">
+                <td>Systemejer</td>
+                <td>
                     <div class="answer-container" th:utext="${responsibleUserNames}" ></div>
                 </td>
             </tr>
             <tr>
-                <td class="col-4">Systemtype</td>
-                <td class="col-6">
+                <td>Systemtype</td>
+                <td>
                     <div class="answer-container" th:utext="${assetTypeNames}" ></div>
                 </td>
             </tr>
             <tr>
-                <td class="col-4">Leverandør</td>
-                <td class="col-6">
+                <td>Leverandør</td>
+                <td>
                     <div class="answer-container" th:utext="${supplierName}" ></div>
                 </td>
             </tr>
             <tr>
-                <td class="col-4">Systemansvarlig</td>
-                <td class="col-6">
+                <td>Systemansvarlig</td>
+                <td>
                     <div class="answer-container" th:utext="${managerNames}" ></div>
                 </td>
             </tr>
         </th:block>
         <tr th:each="question : ${section.questions}">
-            <td class="col-4" th:text="${question.question}"></td>
-            <td class="col-6">
+            <td th:text="${question.question}"></td>
+            <td>
                 <div class="answer-container" th:utext="${question.response}" ></div>
             </td>
         </tr>
