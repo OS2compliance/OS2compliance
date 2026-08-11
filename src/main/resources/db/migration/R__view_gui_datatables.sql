@@ -44,6 +44,7 @@ SELECT t.id,
        t.repetition,
        t.include_in_report,
        t.in_progress,
+       t.start_date,
        t.in_progress_note,
        t.created_at,
        (CASE

@@ -80,6 +80,11 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
     @NotNull
     private LocalDate nextDeadline;
 
+	@StatisticLabel("Startdato")
+	@Column
+	@DateTimeFormat(pattern = "dd/MM-yyyy")
+	private LocalDate startDate = LocalDate.now();
+
     @Column
     @Enumerated(EnumType.STRING)
     private TaskRepetition repetition;

@@ -25,13 +25,15 @@ public class TaskDTO {
     private String responsibleNames;
 	@ExcelColumn(headerName = "Afdeling", order = 4)
     private String responsibleOU;
-	@ExcelColumn(headerName = "Deadline", order = 6)
+	@ExcelColumn(headerName = "Startdato", order = 6)
+	private String startDate;
+	@ExcelColumn(headerName = "Slutdato", order = 7)
     private String nextDeadline;
-	@ExcelColumn(headerName = "Gentages", order = 7)
+	@ExcelColumn(headerName = "Gentages", order = 8)
     private String taskRepetition;
 	@ExcludeFromExport
     private Integer taskRepetitionOrder;
-	@ExcelColumn(headerName = "Status", order = 8)
+	@ExcelColumn(headerName = "Status", order = 9)
     private boolean completed;
 	@ExcludeFromExport
 	private boolean inProgress;

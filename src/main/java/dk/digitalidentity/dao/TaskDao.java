@@ -19,21 +19,25 @@ import java.util.Set;
 
 public interface TaskDao extends TagableRepository<Task> {
 
-	@Query("SELECT t FROM Task t WHERE t.notifyResponsible = true AND t.nextDeadline = :date AND (t.notificationReminders IS NULL OR t.notificationReminders = '')")
+	@Query("SELECT t FROM Task t WHERE t.notifyResponsible = true AND t.nextDeadline = :date AND (t.notificationReminders IS NULL OR t.notificationReminders = '') AND (t.startDate IS NULL OR t.startDate <= CURRENT_DATE)")
 	List<Task> findByNotifyResponsibleTrueAndNextDeadlineAndNotificationRemindersEmpty(@Param("date") LocalDate date);
 
-	@Query("SELECT t FROM Task t WHERE t.notifyResponsible = true AND t.nextDeadline IN :nextDeadlines AND (t.notificationReminders IS NULL OR t.notificationReminders = '')")
+	@Query("SELECT t FROM Task t WHERE t.notifyResponsible = true AND t.nextDeadline IN :nextDeadlines AND (t.notificationReminders IS NULL OR t.notificationReminders = '') AND (t.startDate IS NULL OR t.startDate <= CURRENT_DATE)")
 	List<Task> findByNotifyResponsibleTrueAndNextDeadlineInAndNotificationRemindersEmpty(@Param("nextDeadlines") Collection<LocalDate> nextDeadlines);
 
 	@SuppressWarnings("JpaQlInspection")
-	@Query("SELECT t FROM Task t WHERE t.nextDeadline = :nextDeadline AND t.notificationReminders IS NOT NULL AND t.notificationReminders <> ''")
+	@Query("SELECT t FROM Task t WHERE t.nextDeadline = :nextDeadline AND t.notificationReminders IS NOT NULL AND t.notificationReminders <> '' AND (t.startDate IS NULL OR t.startDate <= CURRENT_DATE)")
 	List<Task> findByNextDeadlineAndNotificationRemindersNotEmpty(@Param("nextDeadline") LocalDate nextDeadline);
 
 	@SuppressWarnings("JpaQlInspection")
-	@Query("SELECT t FROM Task t WHERE t.nextDeadline IN :deadlines AND t.notificationReminders IS NOT NULL AND t.notificationReminders <> ''")
+	@Query("SELECT t FROM Task t WHERE t.nextDeadline IN :deadlines AND t.notificationReminders IS NOT NULL AND t.notificationReminders <> '' AND (t.startDate IS NULL OR t.startDate <= CURRENT_DATE)")
 	List<Task> findByNextDeadlineInAndNotificationRemindersNotEmpty(@Param("deadlines") List<LocalDate> deadlines);
 
-    @Query("select t from Task  t left join TaskLog tl on tl.task=t where t.includeInReport=true and (t.nextDeadline > :deadline or tl.completed > :deadline) order by t.nextDeadline")
+	@Query("select t from Task t left join TaskLog tl on tl.task=t " +
+			"where t.includeInReport=true " +
+			"and (t.startDate is null or t.startDate <= CURRENT_DATE) " +
+			"and (t.nextDeadline > :deadline or tl.completed > :deadline) " +
+			"order by t.nextDeadline")
     List<Task> findTaskForYearWheel(@Param("deadline") final LocalDate date);
 
     @Query("select t from Task t join Property p on p.entity=t where p.key=:key and p.value=:value")

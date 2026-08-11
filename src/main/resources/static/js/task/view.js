@@ -83,6 +83,7 @@ function ViewTaskService() {
         }
 
         initDatepicker("#deadlineBtn", "#deadline");
+        initDatepicker("#startDateBtn", "#startDate");
         initDatepicker("#TaskDeadlineBtn", "#TaskDeadline");
         let taskDeadline = document.querySelector("#TaskDeadline");
         if (taskDeadline) {

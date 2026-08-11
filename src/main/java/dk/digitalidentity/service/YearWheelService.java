@@ -55,10 +55,10 @@ public class YearWheelService {
 
 		for (TaskGrid task : tasks) {
 			LocalDate deadline = task.getNextDeadline().toLocalDate();
-			LocalDate createdAt = task.getCreatedAt() != null
-					? task.getCreatedAt().toLocalDate()
-					: null;
-			List<Integer> occurrenceMonths = calculateOccurrenceMonths(year, deadline, task.getTaskRepetition(), createdAt);
+			LocalDate earliestDate = task.getStartDate() != null ?
+					task.getStartDate()
+					: (task.getCreatedAt() != null ? task.getCreatedAt().toLocalDate() : null);
+			List<Integer> occurrenceMonths = calculateOccurrenceMonths(year, deadline, task.getTaskRepetition(), earliestDate);
 
 			// Resolve year-wheel tags from tagIds
 			List<Tag> yearWheelTags = resolveYearWheelTags(task.getTagIds(), allTagsById);
@@ -152,7 +152,7 @@ public class YearWheelService {
 	 * Calculates which months in the target year a task occurs,
 	 * based on its nextDeadline and repetition pattern.
 	 */
-	List<Integer> calculateOccurrenceMonths(int targetYear, LocalDate nextDeadline, TaskRepetition repetition, LocalDate createdAt) {
+	List<Integer> calculateOccurrenceMonths(int targetYear, LocalDate nextDeadline, TaskRepetition repetition, LocalDate earliestKnownDate) {
 		List<Integer> months = new ArrayList<>();
 
 		if (nextDeadline == null) {
@@ -160,7 +160,7 @@ public class YearWheelService {
 		}
 
 		// Earliest date this task can appear
-		LocalDate earliestDate = createdAt != null ? createdAt : nextDeadline;
+		LocalDate earliestDate = earliestKnownDate != null ? earliestKnownDate : nextDeadline;
 
 		// No repetition: only include if deadline falls in target year and after creation
 		if (repetition == null || repetition == TaskRepetition.NONE) {

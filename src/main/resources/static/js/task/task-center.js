@@ -122,13 +122,20 @@ function initGrid() {
                 formatter: (cell, row) => formatTags(cell, row),
             },
             {
-                name: "Deadline",
+                name: "Startdato",
+                searchable: {
+                    searchKey: 'startDate',
+                },
+                width: '90px',
+            },
+            {
+                name: "Slutdato",
                 searchable: {
                     searchKey: 'nextDeadline',
                 },
                 width: '90px',
                 formatter: (cell, row) => {
-                    var completed = row.cells[10]['data'];
+                    var completed = row.cells[11]['data'];
                     var type = row.cells[2]['data'];
                     if (completed && type === "Opgave") {
                         return gridjs.html(`<span>${cell}</span>`);
@@ -195,10 +202,10 @@ function initGrid() {
                 formatter: (cell, row) => {
                     let status = '';
                     let type = row.cells[2]['data'];
-                    let deadline = row.cells[7]['data'] || null;
-                    let inProgress = row.cells[13]['data'];
-                    let note = row.cells[14]['data'];
-                    let completed = (cell && type === "Opgave") || row.cells[11]['data'] === true;
+                    let deadline = row.cells[8]['data'] || null;
+                    let inProgress = row.cells[14]['data'];
+                    let note = row.cells[15]['data'];
+                    let completed = (cell && type === "Opgave") || row.cells[12]['data'] === true;
 
                     // completed always wins over in progress
                     if (completed) {
@@ -220,12 +227,12 @@ function initGrid() {
                                 statusText = 'Overskredet';
                             }
 
-                            const taskRepetition = row.cells[9]['data'];
-                            if(taskRepetition === 'NO_ERROR') {
+                            const taskResult = row.cells[10]['data'];
+                            if(taskResult === 'NO_ERROR') {
                                 statusText = 'Ingen fejl';
-                            } else if (taskRepetition === 'NO_CRITICAL_ERROR') {
+                            } else if (taskResult === 'NO_CRITICAL_ERROR') {
                                 statusText = 'Ingen kritiske fejl';
-                            } else if (taskRepetition === 'CRITICAL_ERROR') {
+                            } else if (taskResult === 'CRITICAL_ERROR') {
                                 statusText = 'Kritiske fejl';
                             }
 
@@ -274,7 +281,7 @@ function initGrid() {
             },
             then: data => data.content.map(task =>
                 [ task.id, task.name, task.taskType, task.relatedEntities,
-                    task.responsibleNames, task.responsibleOU, task.tags, task.nextDeadline,
+                    task.responsibleNames, task.responsibleOU, task.tags, task.startDate, task.nextDeadline,
                     task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions, task.inProgress, task.inProgressNote]
             ),
             total: data => data.totalCount
@@ -305,7 +312,7 @@ function initGrid() {
         datatableId,
         grid,
         ['opgavenavn', 'allowedActions'],
-        ['opgavenavn', 'allowedActions', 'opgaveType', 'ansvarlig', 'deadline', 'status', 'resultat'],
+        ['opgavenavn', 'allowedActions', 'opgaveType', 'ansvarlig', 'startdato', 'slutdato', 'status', 'resultat'],
         ['id', 'inProgress', 'note'])
 
     initGridActions()

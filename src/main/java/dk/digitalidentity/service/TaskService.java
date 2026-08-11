@@ -161,6 +161,7 @@ public class TaskService implements TagableService<Task> {
         task.setName(oldTask.getName());
         task.setTaskType(oldTask.getTaskType());
         task.setNextDeadline(oldTask.getNextDeadline());
+        task.setStartDate(LocalDate.now());
         task.setResponsibleUsers(oldTask.getResponsibleUsers());
         task.setResponsibleOu(oldTask.getResponsibleOu());
         task.setRepetition(oldTask.getRepetition());

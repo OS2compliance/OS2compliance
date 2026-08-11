@@ -158,6 +158,9 @@ public class TasksController {
 		if (templateDescriptionId != null) {
 			choiceValueService.findById(templateDescriptionId).ifPresent(task::setTaskDescriptionTemplate);
 		}
+		if (task.getStartDate() == null) {
+			task.setStartDate(LocalDate.now());
+		}
 		List<SubTask> subTasks = new ArrayList<>();
 		for (SubTask subTask : task.getSubTasks()) {
 			subTasks.add(new SubTask(null, subTask.getName(), subTask.isCompleted(), task));
@@ -204,6 +207,7 @@ public class TasksController {
 		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());
+        existingTask.setStartDate(task.getStartDate());
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setDepartment(task.getDepartment());
         existingTask.setResponsibleUsers(task.getResponsibleUsers());

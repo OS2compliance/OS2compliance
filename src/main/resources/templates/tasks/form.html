@@ -31,6 +31,18 @@
                 </div>
 
                 <div class="row mt-3">
+                    <label th:for="${formId + 'TaskStartDate'}" class="col-sm-4 col-form-label">Startdato</label>
+                    <div class="col-sm-8">
+                        <div class="input-group">
+                            <input th:id="${formId + 'TaskStartDate'}" type="text" class="form-control" th:field="*{startDate}">
+                            <button th:id="${formId + 'TaskStartDateBtn'}" class="btn btn-primary" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;">
+                                <i class="pli-calendar-4 fs-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
                     <label th:for="${formId + 'TaskDeadline'}" class="col-sm-4 col-form-label">Deadline</label>
                     <div class="col-sm-8">
                         <div class="input-group">
