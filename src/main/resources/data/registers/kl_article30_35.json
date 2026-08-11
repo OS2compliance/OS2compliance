@@ -3,10 +3,10 @@
   "name": "36. Behandling af personoplysninger i forbindelse med spildevand og vandløb",
   "description": "Behandlingen af personoplysninger sker i forbindelse med tilladelser og påbud om tilslutning, nedsivning eller udledning af spildevand samt ekspropriation til spildevandsanlæg",
   "gdprChoices": [
-    "register-gdpr-valp6",
     "register-gdpr-p6-e",
-    "register-gdpr-valp10",
-    "register-gdpr-valp11"
+    "register-gdpr-valp11",
+    "register-gdpr-valp6",
+    "register-gdpr-valp8"
   ],
   "kleMainGroups": [
     "06"
@@ -55,6 +55,7 @@
     "06.02.40",
     "06.11.00",
     "06.11.01",
-    "06.11.05"
+    "06.11.05",
+    "06.11.10"
   ]
 }
