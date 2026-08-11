@@ -116,9 +116,9 @@ public class GlobalSearchService {
 
 		Page<Asset> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Asset.class, user, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Asset.class, user, true, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Asset.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Asset.class, null, false, true);
 		}
 
 		if (page.hasContent()) {
@@ -144,7 +144,7 @@ public class GlobalSearchService {
 			// not allowed for normal users - return
 			return;
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DBSAsset.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DBSAsset.class, null, false, false);
 		}
 		if (page.hasContent()) {
 			Page<SearchResultDTO> dtoPage = convertToSearchResultDTO(page, query, searchableProperties.keySet());
@@ -163,9 +163,9 @@ public class GlobalSearchService {
 
 		Page<Document> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Document.class, user, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Document.class, user, true, false);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Document.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Document.class, null, false, false);
 		}
 
 		if (page.hasContent()) {
@@ -187,9 +187,9 @@ public class GlobalSearchService {
 
 		Page<DPIA> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DPIA.class, user, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DPIA.class, user, true, false);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DPIA.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DPIA.class, null, false, false);
 		}
 
 		if (page.hasContent()) {
@@ -210,7 +210,7 @@ public class GlobalSearchService {
 			// not allowed for normal users - return
 			return;
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Incident.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Incident.class, null, false, false);
 		}
 
 		if (page.hasContent()) {
@@ -236,9 +236,9 @@ public class GlobalSearchService {
 
 		Page<Register> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Register.class, user, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Register.class, user, true, false);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Register.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Register.class, null, false, false);
 		}
 
 		if (page.hasContent()) {
@@ -261,9 +261,9 @@ public class GlobalSearchService {
 
 		Page<StandardSection> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, user, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, user, true, false);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, null, false, false);
 		}
 
 		if (page.hasContent()) {
@@ -285,9 +285,9 @@ public class GlobalSearchService {
 
 		Page<Supplier> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Supplier.class, user, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Supplier.class, user, true, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Supplier.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Supplier.class, null, false, true);
 		}
 
 		if (page.hasContent()) {
@@ -307,9 +307,9 @@ public class GlobalSearchService {
 
 		Page<Task> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Task.class, user, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Task.class, user, true, false);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Task.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Task.class, null, false, false);
 		}
 
 		if (page.hasContent()) {
@@ -329,9 +329,9 @@ public class GlobalSearchService {
 
 		Page<ThreatAssessment> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, ThreatAssessment.class, user, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, ThreatAssessment.class, user, true, false);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, ThreatAssessment.class, null, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, ThreatAssessment.class, null, false, false);
 		}
 
 		if (page.hasContent()) {

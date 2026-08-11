@@ -28,5 +28,6 @@ public interface SearchRepository {
 			final Pageable page,
 			final Class<T> entityClass,
 			final User user,
-			final boolean filterOnUser);
+			final boolean filterOnUser,
+			final boolean excludeDeleted);
 }
