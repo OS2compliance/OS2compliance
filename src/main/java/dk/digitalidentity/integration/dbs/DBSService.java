@@ -119,9 +119,13 @@ public class DBSService {
 						}
 
 						if (responsibleUsers.isEmpty() && notificationEmail == null) {
-							log.warn("Skipping Asset: {} for DBSOversight: {} — no responsible user and no notification email configured.",
+							// Ingen i ansvarskæden: opret opgaven alligevel - uden ansvarlig og uden
+							// notifikation. Før blev aktivet sprunget over, men fandt kæden ansvar for
+							// et ANDET aktiv på samme oversight, blev taskCreated=true og tilsynet her
+							// tabt for altid. En ansvarsløs opgave er synlig (Ubehandlet tilsyn) og kan
+							// tildeles manuelt.
+							log.warn("No responsible user and no notification email for Asset: {} on DBSOversight: {} - creating task without responsible.",
 									asset.getId(), dbsOversight.getId());
-							continue;
 						}
 
 						final Set<User> taskResponsibles = responsibleUsers;
@@ -203,7 +207,7 @@ public class DBSService {
 							log.debug("Created task: {} responsible: {}", task.getName(),
 									!taskResponsibles.isEmpty()
 											? taskResponsibles.stream().map(User::getName).collect(Collectors.joining(", "))
-											: "email:" + taskEmail);
+											: taskEmail != null ? "email:" + taskEmail : "none");
 							taskService.saveTask(task);
 
 							addAuditLinkIfAbsent(task, dbsOversight);
