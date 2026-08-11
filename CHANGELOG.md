@@ -6,6 +6,11 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- (Fortegnelser) KL's mappede behandlingsaktiviteter opdateret til version 1.8 af arket (95 pakker, ny aktivitet F, hjemmel rettet fra databeskyttelseslovens §10 til §8 på 56 aktiviteter) og den bundtede KLE-emneplan fornyet til 2026-05-01. **Kun nye tilslutninger får indholdet** — eksisterende installationer beholder deres nuværende fortegnelser, indtil `importRegister` kan matche på andet end titlen.
+
+### Fixed
+- (Fortegnelser) Udrulningen af version 1.8 på eksisterende installationer trukket tilbage. Den oprettede dubletter i stedet for at opdatere og overskrev kommunens egne rettelser af hjemmel og KLE. Én kommune nåede at få den og er genoprettet fra backup.
 
 
 ## [2.7.0] - 2026-06-14
