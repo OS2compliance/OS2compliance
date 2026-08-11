@@ -53,6 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -174,6 +175,10 @@ public class TaskRestController {
 		if (task == null) {
 			log.debug("Could not create task");
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		if (task.getStartDate() == null) {
+			task.setStartDate(LocalDate.now());
 		}
 
 		// Process links
