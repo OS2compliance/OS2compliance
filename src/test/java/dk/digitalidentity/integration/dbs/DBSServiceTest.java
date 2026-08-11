@@ -312,16 +312,20 @@ class DBSServiceTest {
 	}
 
 	@Test
-	void oversightResponsible_doesNotPark_whenAssetIsSkipped() {
-		// Given - intet ansvar kan udpeges: aktivet springes over, og så skal der heller ikke
-		// røres ved dets kontrol-opgave
+	void oversightResponsible_reusesOpenTaskAndParks_whenNoResponsibleAnywhere() {
+		// Given - intet ansvar kan udpeges, men en åben DBS-opgave findes. Auditen skal stadig
+		// føjes til opgaven og kontrollen parkeres: tilsynet ER DBS-drevet, ansvaret er bare
+		// uafklaret. Før blev aktivet sprunget helt over.
 		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
+		openTask.setDescription("Udfør tilsyn af EKSEMPEL ApS");
 
 		// When
 		dbsService.oversightResponsible();
 
 		// Then
-		verify(assetOversightService, never()).parkAssociatedOversightCheck(any());
+		assertThat(openTask.getDescription()).endsWith("\n - " + AUDIT_NAME);
+		verify(assetOversightService).parkAssociatedOversightCheck(asset);
+		assertThat(oversight.isTaskCreated()).isTrue();
 	}
 
 	// ========== Ansvarskæden: tilsynsansvarlig -> global indstilling -> systemansvarlig ==========
@@ -390,17 +394,26 @@ class DBSServiceTest {
 	}
 
 	@Test
-	void oversightResponsible_skipsAsset_whenNoResponsibleAnywhere() {
-		// Given - ingen tilsynsansvarlig, ingen indstilling, ingen systemansvarlige
+	void oversightResponsible_createsTaskWithoutResponsible_whenNoResponsibleAnywhere() {
+		// Given - ingen tilsynsansvarlig, ingen indstilling, ingen systemansvarlige og ingen
+		// åben opgave. Aktivet blev tidligere sprunget over - og fandt kæden ansvar for et
+		// ANDET aktiv på samme oversight, blev taskCreated=true og tilsynet her tabt for
+		// altid. Nu oprettes opgaven uden ansvarlig, så tilsynet er synligt (Ubehandlet
+		// tilsyn) og kan tildeles manuelt.
 		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
+		when(relationService.findRelatedToWithType(any(DBSAsset.class), eq(RelationType.TASK))).thenReturn(List.of());
 
 		// When
 		dbsService.oversightResponsible();
 
-		// Then - ingen opgave, og oversighten står stadig som ubehandlet (og gemmes ikke)
-		verify(taskService, never()).saveTask(any());
-		verify(dbsOversightDao, never()).save(any());
-		assertThat(oversight.isTaskCreated()).isFalse();
+		// Then - opgave uden ansvarlig, ingen notifikation, oversighten behandlet
+		ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
+		verify(taskService).saveTask(captor.capture());
+		assertThat(captor.getValue().getResponsibleUsers()).isEmpty();
+		verify(notifyService, never()).notifyTaskResponsible(any());
+		verify(notifyService, never()).notifyOversightByEmail(any(), any());
+		assertThat(oversight.isTaskCreated()).isTrue();
+		verify(dbsOversightDao).save(oversight);
 	}
 
 	private static Relation relation(long aId, RelationType aType, long bId, RelationType bType) {

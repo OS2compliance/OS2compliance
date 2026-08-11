@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -53,11 +54,22 @@ public class DBSPlatformSyncTask {
 			OffsetDateTime publishedAfter = lastSync != null
 					? lastSync.toOffsetDateTime()
 					: (backfillFrom != null ? backfillFrom.atStartOfDay().atOffset(ZoneOffset.UTC) : null);
-			List<AuditDto> audits = syncService.fetchAllAudits(publishedAfter);
 
+			// Logges FØR kaldet: DBS afviser en publishedAfter i fremtiden med HTTP 400, og
+			// vandmærket er den nyeste publishedDate vi har set - så både fremtidsdaterede data
+			// og urskævhed mellem os og DBS slår syncen ud. Uden værdien i loggen kan de to ikke
+			// skelnes efterfølgende.
 			if (lastSync == null) {
-				log.info("Backfill run with publishedAfter={}", publishedAfter);
+				log.info("Backfill run (no previous sync)");
 			}
+			OffsetDateTime now = OffsetDateTime.now();
+			log.info("Fetching audits from DBS Platform API with publishedAfter={} (our clock: {})", publishedAfter, now);
+			if (publishedAfter != null && publishedAfter.isAfter(now)) {
+				log.warn("publishedAfter {} is {} ahead of our clock - DBS rejects future timestamps with HTTP 400",
+						publishedAfter, Duration.between(now, publishedAfter));
+			}
+
+			List<AuditDto> audits = syncService.fetchAllAudits(publishedAfter);
 			log.info("Fetched {} audits from DBS Platform API", audits.size());
 
 			Optional<ZonedDateTime> newestPublished = syncService.findNewestPublishedDate(audits);
@@ -69,12 +81,18 @@ public class DBSPlatformSyncTask {
 			// for en audit uden leverandør er defekt i DBS, ikke hos os. En oversprunget audit logges
 			// som ERROR med sit id på dropstedet i DBSPlatformSyncService, og genopretningen er at
 			// nulstille denne indstilling, hvorefter vinduet spoles tilbage og auditen hentes igen.
-			newestPublished.ifPresent(ts -> settingsService.setZonedDateTime(PLATFORM_LAST_SYNC, ts));
+			newestPublished.ifPresent(ts -> {
+				log.info("Advancing {} to {}", PLATFORM_LAST_SYNC, ts);
+				settingsService.setZonedDateTime(PLATFORM_LAST_SYNC, ts);
+			});
 
 			long duration = System.currentTimeMillis() - startTime;
 			log.info("Finished: DBS Platform Sync in {} ms", duration);
 		} catch (RestClientResponseException e) {
-			log.error("DBS Platform API error: HTTP {} - {}", e.getStatusCode(), e.getStatusText(), e);
+			// Svarkroppen bærer valideringsdetaljen (fx hvilket felt der blev afvist og hvorfor);
+			// statusText er kun "Bad Request".
+			log.error("DBS Platform API error: HTTP {} - {} - response body: {}",
+					e.getStatusCode(), e.getStatusText(), e.getResponseBodyAsString(), e);
 		} catch (Exception e) {
 			log.error("Unexpected error during DBS Platform sync", e);
 		}
