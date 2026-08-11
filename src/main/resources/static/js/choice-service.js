@@ -70,7 +70,7 @@ function ChoiceService() {
     }
 
     this.updateSuppliers = (choices, search) => {
-        fetch( `/rest/suppliers/autocomplete?search=${search}`)
+        return fetch( `/rest/suppliers/autocomplete?search=${search}`)
             .then(response => response.json()
                 .then(data => {
                     choices.setChoices(data.content.map(e => {

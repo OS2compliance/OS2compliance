@@ -13,8 +13,11 @@
         <div class="row mt-3">
           <label for="supplierSelect" class="col-sm-4 col-form-label">Leverandør</label>
           <div class="col-sm-8">
-            <select class="form-control form-select choices__input" th:field="*{supplier}" data-trigger="" id="supplierSelect" hidden="" tabindex="-1" required>
-                <option th:each="supplier : ${allSuppliers}" th:value="${supplier.id}" th:text="${supplier.name}" selected></option>
+            <select class="form-control form-select choices__input" th:field="*{supplier}" data-trigger=""
+                th:data-selected-supplier-id="${subsupplier.supplier?.id}" id="supplierSelect" hidden="" tabindex="-1">
+                <option value="">-- Vælg leverandør --</option>
+                <option th:each="supplier : ${allSuppliers}" th:value="${supplier.id}" th:text="${supplier.name}"
+                    th:selected="${subsupplier.supplier != null and subsupplier.supplier.id == supplier.id}"></option>
             </select>
             <div class="invalid-feedback">Leverandør er påkrævet</div>
           </div>

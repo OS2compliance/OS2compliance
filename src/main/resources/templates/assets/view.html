@@ -131,10 +131,12 @@
                                                     <select class="form-control form-select choices__input"
                                                         data-trigger="" id="supplier" th:field="*{supplier}" hidden=""
                                                         tabindex="-1">
+                                                        <option value="">-- Vælg leverandør --</option>
                                                         <option th:value="${asset.supplier?.id}"
                                                             th:text="${asset.supplier?.name}"
                                                             th:if="${asset.supplier != null}"></option>
                                                     </select>
+                                                    <div class="invalid-feedback">Leverandør er påkrævet</div>
                                                 </div>
                                             </div>
 
