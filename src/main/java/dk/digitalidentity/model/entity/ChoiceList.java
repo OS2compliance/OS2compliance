@@ -15,6 +15,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.List;
 @Table(name = "choice_lists")
 @Getter
 @Setter
+@Audited
 public class ChoiceList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,5 +55,6 @@ public class ChoiceList {
             inverseJoinColumns = { @JoinColumn(name = "choice_value_id") }
     )
 	@Builder.Default
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private List<ChoiceValue> values = new ArrayList<>();
 }

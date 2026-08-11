@@ -26,6 +26,8 @@ public interface KitosMapper {
 
     @Mapping(target = "mainContractUuid", source = "mainContract")
     @Mapping(target = "dataClassificationUuid", source = "dataClassification")
+    @Mapping(target = "systemUsageCriticalityLevelUuid", source = "systemUsageCriticalityLevel")
+    @Mapping(target = "technicalSystemTypeUuids", source = "technicalSystemTypes")
     GeneralDataUpdateRequestDTO toUpdateReq(final GeneralDataResponseDTO responseDTO);
 
     @Mapping(target = "typeUuid", source = "type")

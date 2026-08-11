@@ -6,6 +6,8 @@ import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.dto.IncidentDTO;
+import dk.digitalidentity.model.dto.IncidentDateFilter;
+import dk.digitalidentity.model.dto.IncidentQuery;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.DPIA;
@@ -20,6 +22,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.report.ContactsView;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
@@ -53,7 +56,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -167,11 +171,10 @@ public class ReportController {
 	@RequireReadOwnerOnly
     @GetMapping("incidents")
     public String incidents(final Model model,
+                            @RequestParam(value = "dateField", required = false) final String dateField,
                             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
                             @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
-        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0, 0);
-        final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
+        final Page<Incident> allIncidents = incidentsForReport(dateField, from, to);
         model.addAttribute("incidents", incidentMapper.toDTOs(allIncidents.getContent()));
         model.addAttribute("from", from);
         model.addAttribute("to", to);
@@ -181,23 +184,47 @@ public class ReportController {
 	@RequireReadOwnerOnly
     @GetMapping("incidents/excel")
     public ModelAndView incidentsExcel(final HttpServletResponse response,
+                                       @RequestParam(value = "dateField", required = false) final String dateField,
                                        @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
                                        @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
-        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0, 0);
-        final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
+        final Page<Incident> allIncidents = incidentsForReport(dateField, from, to);
         final List<IncidentDTO> allIncidentDTOs = incidentMapper.toDTOs(allIncidents.getContent());
         response.setContentType("application/ms-excel");
         response.setHeader("Content-Disposition", "attachment; filename=\"Incidents.xls\"");
         final Map<String, Object> model = new HashMap<>();
         model.put("incidents", allIncidentDTOs);
         model.put("fields", incidentService.getAllFields());
-        model.put("from", fromDT);
-        model.put("to", toDT);
+        model.put("from", from);
+        model.put("to", to);
 
         return new ModelAndView(new IncidentsXlsView(), model);
     }
 
+    /**
+     * The old limit of 1000 was low enough to hit in normal use and said nothing when it did. This one
+     * is higher, and reaching it is logged, but it is deliberately not the .xls format's own ceiling of
+     * 65 535: every incident is mapped through {@link IncidentMapper}, which resolves each referenced
+     * user, unit, asset and supplier one lookup at a time, so the row count decides how many queries
+     * the report costs. Ten thousand rows is what that mapping can carry.
+     */
+    private static final int MAX_REPORT_INCIDENTS = 10_000;
+
+    /**
+     * Both incident reports honour the date field and range picked on the log, which is what the
+     * extract was wrong about. The grid's free text search and column filters are deliberately not
+     * carried over — the reports have always covered every incident within the range.
+     */
+    private Page<Incident> incidentsForReport(final String dateField, final LocalDate from, final LocalDate to) {
+        final IncidentQuery query = new IncidentQuery(IncidentDateFilter.parse(dateField),
+            from, to, null, Map.of(), Map.of());
+        final Page<Incident> incidents = incidentService.findIncidents(query,
+            PageRequest.of(0, MAX_REPORT_INCIDENTS, Sort.by(Sort.Direction.DESC, "createdAt")));
+        if (incidents.getTotalElements() > incidents.getNumberOfElements()) {
+            log.warn("Incident report covers {} of {} incidents, the rest is above the report row limit",
+                incidents.getNumberOfElements(), incidents.getTotalElements());
+        }
+        return incidents;
+    }
 
 	@RequireReadOwnerOnly
 	@GetMapping("/threat-assessment/{id}/excel")
@@ -523,7 +550,10 @@ public class ReportController {
 			@RequestParam List<String> includedTypes,
 			@RequestParam(required = false) List<String> latestOnly,
 			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate fromDate,
-			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy")LocalDate toDate) {
+			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy")LocalDate toDate,
+			@RequestParam(required = false) List<Criticality> criticalities,
+			@RequestParam(required = false, defaultValue = "false") boolean sociallyCriticalOnly,
+			@RequestParam(required = false) List<String> departments) {
 
 		// Validate
 		if (fromDate == null && toDate == null) {
@@ -534,7 +564,8 @@ public class ReportController {
 		response.setContentType("application/ms-excel");
 		response.setHeader("Content-Disposition", "attachment; filename=\"risikobillede.xlsx\"");
 
-		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly, fromDate, toDate);
+		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly, fromDate, toDate,
+				criticalities, sociallyCriticalOnly, departments);
 
 		List<ThreatRow> threats = riskImageService.mapToRows(relevantThreatAssessments);
 

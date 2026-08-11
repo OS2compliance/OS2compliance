@@ -61,8 +61,23 @@ export default function IncidentService() {
         });
     }
 
-    this.fetchColumnName = async () => {
+    /**
+     * The custom fields shown as columns in the grid, in form order.
+     */
+    this.fetchColumns = async () => {
         return jsonCall('GET', restUrl + 'columns', null)
+            .then((response) => {
+                defaultResponseErrorHandler(response);
+                return response.json();
+            })
+            .catch(defaultErrorHandler)
+    }
+
+    /**
+     * The obligatory date fields the from/to range can filter on, on top of created and updated.
+     */
+    this.fetchDateFields = async () => {
+        return jsonCall('GET', restUrl + 'datefields', null)
             .then((response) => {
                 defaultResponseErrorHandler(response);
                 return response.json();
@@ -152,6 +167,13 @@ export default function IncidentService() {
         let valid = true;
         let invalidFields = [];
 
+        // When saving as draft, obligatory fields are allowed to be empty
+        const isDraft = event.submitter != null && event.submitter.dataset.draft === 'true';
+        const draftInput = form.querySelector('input[name="draft"]');
+        if (draftInput) {
+            draftInput.value = isDraft;
+        }
+
         // validate name field
         const nameInput = form.querySelector('input[name="name"]');
         if (nameInput) {
@@ -198,7 +220,7 @@ export default function IncidentService() {
         // Validate obligatory fields
         const fvs = new FormValidationService(form)
         fvs.removeValidationMessages()
-        if (!fvs.validate_isNotEmpty()) {
+        if (!isDraft && !fvs.validate_isNotEmpty()) {
             valid = false;
         }
 

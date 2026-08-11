@@ -5,6 +5,13 @@ export function validateFormBeforeSubmit (event, form) {
     let valid = true;
     let invalidFields = [];
 
+    // When saving as draft, obligatory fields are allowed to be empty
+    const isDraft = event.submitter != null && event.submitter.dataset.draft === 'true';
+    const draftInput = form.querySelector('input[name="draft"]');
+    if (draftInput) {
+        draftInput.value = isDraft;
+    }
+
     // validate name field
     const nameInput = form.querySelector('input[name="name"]');
     if (nameInput) {
@@ -51,7 +58,7 @@ export function validateFormBeforeSubmit (event, form) {
     // Validate obligatory fields
     const fvs = new FormValidationService(form)
     fvs.removeValidationMessages()
-    if (!fvs.validate_isNotEmpty()) {
+    if (!isDraft && !fvs.validate_isNotEmpty()) {
         valid = false;
     }
 

@@ -6,6 +6,10 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- (Standarder) Nye krav fik numre med huller (fx 1.5, 1.10, 1.11), fordi kravets viste nummer blev udledt af en primærnøgle der deles på tværs af alle standarder
+- (Standarder) Kravets nummer blev ikke opdateret i relationer, opgaver, rapporter og global søgning når rækkefølgen blev ændret med træk og slip
+- (Standarder) Omsortering var ikke afgrænset til den standard kaldet angav
 
 
 ## [2.7.0] - 2026-06-14

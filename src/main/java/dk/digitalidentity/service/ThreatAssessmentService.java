@@ -24,6 +24,7 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -134,8 +135,24 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		return threatAssessmentDao.findByThreatAssessmentTypeInAndCreatedAtBetween(types, from.atStartOfDay(), to.atTime(LocalTime.MAX));
 	}
 
-	public Set<ThreatAssessment> findLatestForAllAssets(LocalDate from, LocalDate to){
-		return threatAssessmentDao.findLatestForAllAssetsBetweenDates(from.atStartOfDay(), to.atTime(LocalTime.MAX));
+	public Set<ThreatAssessment> findLatestForAllAssets(LocalDate from, LocalDate to, List<Criticality> criticalities, boolean sociallyCriticalOnly, List<String> departmentUuids) {
+		// inactive filters get a placeholder value since empty IN-lists cannot be bound
+		final boolean criticalitiesActive = criticalities != null && !criticalities.isEmpty();
+		final boolean departmentsActive = departmentUuids != null && !departmentUuids.isEmpty();
+		return threatAssessmentDao.findLatestForAllAssetsBetweenDates(from.atStartOfDay(), to.atTime(LocalTime.MAX),
+				criticalitiesActive, criticalitiesActive ? criticalities : List.of(Criticality.CRITICAL),
+				sociallyCriticalOnly,
+				departmentsActive, departmentsActive ? departmentUuids : List.of("-"));
+	}
+
+	public Set<ThreatAssessment> findAllForAssetsFiltered(LocalDate from, LocalDate to, List<Criticality> criticalities, boolean sociallyCriticalOnly, List<String> departmentUuids) {
+		// inactive filters get a placeholder value since empty IN-lists cannot be bound
+		final boolean criticalitiesActive = criticalities != null && !criticalities.isEmpty();
+		final boolean departmentsActive = departmentUuids != null && !departmentUuids.isEmpty();
+		return threatAssessmentDao.findAllForAssetsBetweenDatesFiltered(from.atStartOfDay(), to.atTime(LocalTime.MAX),
+				criticalitiesActive, criticalitiesActive ? criticalities : List.of(Criticality.CRITICAL),
+				sociallyCriticalOnly,
+				departmentsActive, departmentsActive ? departmentUuids : List.of("-"));
 	}
 
 	public Set<ThreatAssessment> findLatestForAllRegisters(LocalDate from, LocalDate to){
@@ -473,7 +490,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 					continue;
 				}
 
-				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
+				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, buildConsequenceBreakdown(threat), probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
             }
         }
         return riskProfiles;
@@ -549,6 +566,30 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 
     private int findHighestConsequence(final ThreatDTO threat) {
         return findHighestConsequence(threat.getRf(), threat.getRi(), threat.getRt(), threat.getOf(), threat.getOi(), threat.getOt(), threat.getSf(), threat.getSi(), threat.getSt(), threat.getSa());
+    }
+
+    // One line per subject (R=Registered, O=Organisation, S=Society) showing that subject's own highest
+    // consequence value and which dimension (F=Fortrolighed, I=Integritet, T=Tilgængelighed, A=Autenticitet
+    // — society only) it came from, e.g. "R: 3 · I". Subjects with no answered value are omitted.
+    private String buildConsequenceBreakdown(final ThreatDTO threat) {
+        final List<String> lines = new ArrayList<>();
+        addConsequenceBreakdownLine(lines, "R", threat.getRf(), threat.getRi(), threat.getRt(), -1);
+        addConsequenceBreakdownLine(lines, "O", threat.getOf(), threat.getOi(), threat.getOt(), -1);
+        addConsequenceBreakdownLine(lines, "S", threat.getSf(), threat.getSi(), threat.getSt(), threat.getSa());
+        return String.join("\n", lines);
+    }
+
+    private void addConsequenceBreakdownLine(final List<String> lines, final String subject, final int f, final int i, final int t, final int a) {
+        final Map<String, Integer> dimensions = new LinkedHashMap<>();
+        dimensions.put("F", f);
+        dimensions.put("I", i);
+        dimensions.put("T", t);
+        dimensions.put("A", a);
+
+        dimensions.entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .filter(highest -> highest.getValue() > 0)
+            .ifPresent(highest -> lines.add(subject + ": " + highest.getValue() + " · " + highest.getKey()));
     }
 
     public void setThreatAssessmentColor(final ThreatAssessment savedThreatAssessment) {
@@ -993,7 +1034,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return result;
     }
 
-    record RiskCalculationDTO(int probability, int consequence, int score, String color) {}
+    record RiskCalculationDTO(int probability, int consequence, String consequenceBreakdown, int score, String color) {}
     record ThreatPDFDTO(int index,
                         String threatType,
                         String threat,
@@ -1025,6 +1066,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                         new RiskCalculationDTO(
                             profile.getProbability(),
                             profile.getConsequence(),
+                            profile.getConsequenceBreakdown(),
                             score,
                             color),
                         t.getProblem(),
@@ -1038,6 +1080,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                         new RiskCalculationDTO(
                             profile.getResidualProbability(),
                             profile.getResidualConsequence(),
+                            null,
                             residualScore,
                             residualColor),
 							true

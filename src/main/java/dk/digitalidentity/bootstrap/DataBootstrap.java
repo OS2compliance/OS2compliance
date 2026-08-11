@@ -154,6 +154,73 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(41, this::seedV41);
 		incrementAndPerformIfVersion(42, this::seedV42);
 		incrementAndPerformIfVersion(43, this::seedV43);
+		incrementAndPerformIfVersion(44, this::seedV44);
+		incrementAndPerformIfVersion(45, this::seedV45);
+		incrementAndPerformIfVersion(46, this::seedV46);
+	}
+
+	/**
+	 * Ruller opdateringen til version 1.8 af KL's ark ud på eksisterende installationer. En frisk
+	 * database har ikke brug for det - der importerer {@link #addRegistersV0()} pakkerne som de er.
+	 * <p>
+	 * De tre kald gør hver sin ting, og rækkefølgen er ikke tilfældig. {@code importRegister} slår op
+	 * på navn og opretter kun det der mangler, så de to nye aktiviteter kommer ind uden at røre de
+	 * øvrige. Til gengæld nulstiller den hovedgrupperne på en fortegnelse der i forvejen står uden
+	 * KLE, fordi den sender gruppenumre til et opslag på hovedgruppenummer - derfor skal
+	 * {@code enrichWithKLE} køre bagefter, som sætter alle tre niveauer korrekt.
+	 * <p>
+	 * {@code updateRegisterGdprChoices} og {@code enrichWithKLE} skriver oven i det der står. Har en
+	 * kommune selv rettet hjemmel eller KLE på en KL-fortegnelse, får de KL's udgave tilbage. Det er
+	 * det bevidste valg her: pakkerne ER KL's mapping, og hjemlen er rettet på 56 af dem (§10 ud, §8
+	 * ind). Beskrivelserne røres derimod ikke - der findes ingen tilsvarende metode i importeren, så
+	 * de 7 aktiviteter med ny tekst i arket beholder den gamle beskrivelse hos eksisterende kunder.
+	 */
+	@SneakyThrows
+	private void seedV46() {
+		final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
+		sortedResources.sort(Comparator.comparing(Resource::getFilename));
+		for (final Resource register : sortedResources) {
+			registerImporter.importRegister(register);
+			registerImporter.updateRegisterGdprChoices(register);
+			registerImporter.enrichWithKLE(register);
+		}
+		log.info("seedV46: genindlæste {} KL-pakker fra version 1.8 af arket", sortedResources.size());
+	}
+
+	private void seedV45() {
+		// Same repair as seedV44, re-run because repairMisbookedDbsOversightLogs has since been widened
+		// to also move a log off an older DBS tilsyn task — not just off the generic CHECK task. That is
+		// the far more common case: the old selector consistently picked the oldest tilsyn task, so a
+		// tilsyn registered after a newer task had been imported was booked onto the older one and left
+		// the newer one standing overdue. Environments that already ran seedV44 would otherwise never
+		// get the widened pass. The repair is idempotent, so running it again is harmless.
+		repairMisbookedOversightLogs("seedV45");
+	}
+
+	private void seedV44() {
+		// seedV41 booked oversight completions via the then-buggy task selection, so a "Tilsyn udført"
+		// log could land on an older tilsyn task on the same asset while the real "DBS tilsyn" task
+		// stayed overdue. Move such misbooked logs onto the correct, still-open DBS tilsyn task.
+		repairMisbookedOversightLogs("seedV44");
+	}
+
+	private void repairMisbookedOversightLogs(final String seedName) {
+		final List<Asset> dbsAssets = taskService.findAllTasks().stream()
+				.map(taskService::findOversightAsset)
+				.flatMap(Optional::stream)
+				.filter(Asset.class::isInstance)
+				.map(Asset.class::cast)
+				.filter(a -> a.getSupervisoryModel() != null
+						&& a.getSupervisoryModel().getIdentifier() != null
+						&& a.getSupervisoryModel().getIdentifier().startsWith(Constants.DBS_SUPERVISION_MODEL_IDENTIFIER_PREFIX))
+				.distinct()
+				.toList();
+		int moved = 0;
+		for (final Asset asset : dbsAssets) {
+			moved += assetOversightService.repairMisbookedDbsOversightLogs(asset);
+		}
+		log.info("{}: moved {} misbooked oversight log(s) onto the correct DBS task across {} DBS asset(s)",
+				seedName, moved, dbsAssets.size());
 	}
 
 	private void seedV43() {

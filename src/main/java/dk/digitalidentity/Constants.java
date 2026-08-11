@@ -26,9 +26,15 @@ public interface Constants {
     String ASSOCIATED_THREAT_ASSESSMENT_PROPERTY = "linked_threat";
     String ASSOCIATED_ASSET_DPIA_PROPERTY = "linked_dpia";
     String ASSOCIATED_INSPECTION_PROPERTY = "linked_asset";
+    String DBS_SUPERVISION_MODEL_IDENTIFIER_PREFIX = "supervision-model-dbs-123456";
+    // the scope section is rendered with rows taken from the asset, not from the DPIA template
+    String DPIA_SCOPE_SECTION_IDENTIFIER = "scope";
+    String DBS_TASK_NAME_MARKER = "- DBS tilsyn";
     ZoneId LOCAL_TZ_ID = ZoneId.of("Europe/Copenhagen");
     String SYSTEM_USERID = "System";
     String DATA_MIGRATION_VERSION_SETTING = "seed_version";
+    /** UdgivelsesDato on the KLE emneplan we last backfilled register KLE codes for */
+    String KLE_BACKFILL_EMNEPLAN_DATE_SETTING = "kleBackfillEmneplanDate";
 
     String RISK_ASSESSMENT_TEMPLATE_DOC = "reports/risk/main.docx";
     String ISO27002_REPORT_TEMPLATE_DOC = "reports/ISO27002/ISO27002.docx";

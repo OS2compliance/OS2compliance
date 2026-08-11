@@ -23,8 +23,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.Where;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -36,6 +36,7 @@ import java.util.Set;
 @Getter
 @Setter
 @SQLDelete(sql = "UPDATE suppliers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
+@Audited
 public class Supplier extends Relatable implements HasSingleResponsibleUser, Tagable {
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -87,6 +88,7 @@ public class Supplier extends Relatable implements HasSingleResponsibleUser, Tag
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
 	@JoinTable(name = "supplier_tag", joinColumns = { @JoinColumn(name = "supplier_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<Tag> tags = new HashSet<>();
 
 	@Override

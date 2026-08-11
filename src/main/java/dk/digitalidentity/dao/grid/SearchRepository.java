@@ -4,6 +4,7 @@ import dk.digitalidentity.model.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Map;
 
 public interface SearchRepository {
@@ -13,6 +14,12 @@ public interface SearchRepository {
                                         final Pageable page, final Class<T> entityClass);
 
 	<T> Page<T> findAllForResponsibleUserOrCustomResponsibleUser(Map<String, String> searchableProperties, Pageable page, Class<T> entityClass, User user);
+
+	<T> Page<T> findAllWithColumnSearch(final Map<String, String> searchableProperties,
+										final Pageable page,
+										final Class<T> entityClass,
+										final List<PredicateBuilder<T>> extraPredicates,
+										final List<QueryPredicateBuilder<T>> queryPredicates);
 
 	<T> Page<T> findAllWithAssignedUser (Map<String, String> searchableProperties, User user, Pageable page, Class<T> entityClass);
 

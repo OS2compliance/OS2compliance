@@ -100,6 +100,7 @@ public class RiskController {
         model.addAttribute("risk", new ThreatAssessment());
         model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
+        model.addAttribute("possibleRiskAssessments", scaleService.getPossibleAssessments());
         return "risks/index";
     }
 
@@ -253,6 +254,7 @@ public class RiskController {
         savedThreatAssessment.setName(assessment.getName());
 		savedThreatAssessment.setResponsibleUser(assessment.getResponsibleUser());
 		savedThreatAssessment.setResponsibleOu(assessment.getResponsibleOu());
+		savedThreatAssessment.setComment(assessment.getComment());
 		if (presentUserUuids != null && !presentUserUuids.isEmpty()) {
 			savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
 		}

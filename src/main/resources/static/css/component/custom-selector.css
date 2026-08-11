@@ -1,0 +1,8 @@
+.custom-select-button {
+    cursor: pointer;
+    text-align: left;
+}
+
+[data-multiselect-id] .dropdown-item input[type="checkbox"] {
+    display: none;
+}

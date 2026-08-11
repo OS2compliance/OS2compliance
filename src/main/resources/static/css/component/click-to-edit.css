@@ -1,0 +1,43 @@
+/* Read-view of lazily initialized CKEditor fields: make it visible that the area is clickable */
+.click-to-edit {
+    position: relative;
+    border: 1px dashed #ced4da;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.click-to-edit:hover {
+    border-color: var(--bs-primary, #0d6efd);
+    background-color: rgba(13, 110, 253, 0.04);
+}
+
+.click-to-edit .click-to-edit-icon {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    color: #6c757d;
+    pointer-events: none;
+}
+
+.click-to-edit:hover .click-to-edit-icon {
+    color: var(--bs-primary, #0d6efd);
+}
+
+/* placeholder for empty fields */
+.click-to-edit .click-to-edit-content:empty::before {
+    content: 'Klik for at tilføje tekst';
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* while the editor is open, the read-view frame and icon disappear */
+.click-to-edit:has(> .editor-container:not([hidden])) {
+    border-color: transparent;
+    background-color: transparent;
+    cursor: auto;
+}
+
+.click-to-edit:has(> .editor-container:not([hidden])) .click-to-edit-icon {
+    display: none;
+}

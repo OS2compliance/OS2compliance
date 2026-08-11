@@ -1,7 +1,15 @@
 CREATE OR REPLACE VIEW view_gridjs_suppliers AS
 SELECT s.id,
        TRIM(s.name)                                                         AS name,
-       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false)           AS solution_count,
+       (SELECT COUNT(DISTINCT a.id)
+        FROM assets a
+        WHERE a.deleted = false
+          AND (a.supplier_id = s.id
+               OR EXISTS (SELECT 1
+                          FROM relations rel
+                          WHERE (rel.relation_a_id = a.id AND rel.relation_a_type = 'ASSET' AND rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER')
+                             OR (rel.relation_b_id = a.id AND rel.relation_b_type = 'ASSET' AND rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER'))))
+        AS solution_count,
        s.updated_at                                                         AS updated,
        s.status,
        s.localized_enums,
@@ -10,6 +18,10 @@ SELECT s.id,
                  LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
         WHERE a.supplier_id = s.id)                                         AS last_oversight_date,
        prop.prop_value                                                      AS kitos_uuid,
+       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false) AS primary_asset_count,
+       (SELECT COUNT(1) FROM relations rel
+        WHERE (rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET')
+           OR (rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER' AND rel.relation_a_type = 'ASSET')) AS secondary_asset_count,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
        s.responsible_uuid,
@@ -31,6 +43,8 @@ SELECT t.id,
        t.next_deadline,
        t.repetition,
        t.include_in_report,
+       t.in_progress,
+       t.in_progress_note,
        t.created_at,
        (CASE
             WHEN t.repetition = 'NONE' THEN 10
@@ -44,6 +58,12 @@ SELECT t.id,
        cv_result.caption                                                               as result,
        cv_result.id                                                                    as task_result_order,
        COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) as `completed`,
+       CASE
+           WHEN COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) = true THEN 'COMPLETED'
+           WHEN t.next_deadline IS NULL THEN NULL
+           WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
+           ELSE 'EXCEEDED'
+       END as task_deadline_status,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
        GROUP_CONCAT(DISTINCT COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
@@ -622,7 +642,7 @@ FROM assets a
                              INNER JOIN (SELECT asset_id, MAX(creation_date) as max_date
                                          FROM assets_oversight
                                          GROUP BY asset_id) ao_max ON ao.asset_id = ao_max.asset_id AND ao.creation_date = ao_max.max_date) latest_ao ON latest_ao.asset_id = a.id
-         LEFT JOIN choice_values cv_supervisory ON cv_supervisory.id = latest_ao.supervision_model
+         LEFT JOIN choice_values cv_supervisory ON cv_supervisory.id = a.supervisory_model
          LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
          LEFT JOIN dbs_asset da on r.relation_a_id = da.id OR r.relation_b_id = da.id
          LEFT JOIN relations r1 on ((r1.relation_a_id = da.id OR r1.relation_b_id = da.id) AND (r1.relation_a_type = 'TASK' OR r1.relation_b_type = 'TASK'))

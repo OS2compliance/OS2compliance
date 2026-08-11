@@ -5,6 +5,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.SamlLoginPostProcessor;
 import dk.digitalidentity.samlmodule.model.TokenUser;
+import dk.digitalidentity.service.AuditLogService;
 import dk.digitalidentity.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 	public static final String ATTRIBUTE_NAME = "ATTRIBUTE_NAME";
 	private final OS2complianceConfiguration configuration;
 	private final UserService userService;
+	private final AuditLogService auditLogService;
 
 	@Override
 	public void process(final TokenUser tokenUser) {
@@ -34,6 +36,7 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 		// C=DK,O=29189714,CN=Kaspar Bach Pedersen,Serial=8c3e3251-a9b1-45bd-af57-f5c202cca97b
 		log.info("Principal: " + principal);
 		final User user = extractUser(principal);
+		auditLogService.logLogin(user.getUuid(), user.getName());
 
 		tokenUser.getAttributes().put(ATTRIBUTE_USER_UUID, user.getUuid());
 		tokenUser.getAttributes().put(ATTRIBUTE_USERID, user.getUserId());
