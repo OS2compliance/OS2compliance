@@ -96,6 +96,33 @@ public interface AssetMapper {
 			.threatTypeList(assetGrid.getThreatTypeList())
 			.catalogList(assetGrid.getCatalogList())
 			.riskScore(assetGrid.getRiskScore())
+			.departments(nullSafe(assetGrid::getDepartmentNames))
+			.description(nullSafe(assetGrid::getDescription))
+			.operationResponsibleUsers(nullSafe(assetGrid::getOperationResponsibleUserNames))
+			.criticality(nullSafe(() -> assetGrid.getCriticality().getMessage()))
+			.criticalityOrder(assetGrid.getCriticalityOrder())
+			.sociallyCritical(assetGrid.isSociallyCritical())
+			.aiStatus(nullSafe(() -> assetGrid.getAiStatus().getDanishName()))
+			.contractDate(assetGrid.getContractDate())
+			.contractTermination(assetGrid.getContractTermination())
+			.terminationNotice(nullSafe(assetGrid::getTerminationNotice))
+			.dataProcessingAgreementStatus(nullSafe(() -> assetGrid.getDataProcessingAgreementStatus().getMessage()))
+			.dataProcessingAgreementDate(assetGrid.getDataProcessingAgreementDate())
+			.securityMeasuresStatus(nullSafe(() -> assetGrid.getAssetMeasureStatus().getMessage()))
+			.securityMeasuresStatusOrder(assetGrid.getAssetMeasureStatusOrder())
+			.riskAssessmentOptOutStatus(assetGrid.isThreatAssessmentOptOut()
+				? "Fravalgt"
+				: nullSafe(() -> assetGrid.getAssessment().getMessage()))
+			.riskAssessmentOptOutStatusOrder(assetGrid.getRiskAssessmentOptOutStatusOrder())
+			.dpiaStatus(assetGrid.isDpiaOptOut()
+				? "Fravalgt"
+				: nullSafe(() -> assetGrid.getDpiaScreeningConclusion().getMessage()))
+			.dpiaStatusOrder(assetGrid.getDpiaStatusOrder())
+			.tiaStatus(assetGrid.isTiaOptOut()
+				? "Fravalgt"
+				: nullSafe(() -> assetGrid.getTiaAssessment().getMessage()))
+			.tiaStatusOrder(assetGrid.getTiaStatusOrder())
+			.archive(nullSafe(() -> assetGrid.getArchive().getMessage()))
 			.build();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();

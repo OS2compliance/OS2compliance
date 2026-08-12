@@ -21,6 +21,9 @@ export default class ColumnOptions {
     optionsMenuContainerClass = 'columnOptionsMenuContainer'
     toggleOptionsButtonClass = 'toggleColumnOptionsButton';
     confirmButtonClass = 'columnOptionsConfirmButton';
+    limitInfoClass = 'columnOptionsLimitInfo';
+    maxVisibleColumns = null;
+    sortOptionsAlphabetically = false;
 
     /**
      * Creates a GridColumn instantiation for the given grid, with the configs provided
@@ -31,8 +34,13 @@ export default class ColumnOptions {
      * @param neverShowIds a list of column Id's for columns that should always be hidden for the user
      * @param buttonContainerSelector An optional selector for the container which houses the option toggle.
      * If the container is not found, the toggle is placed right before the table container
+     * @param maxVisibleColumns An optional cap on how many toggleable columns (i.e. excluding always-shown
+     * and never-shown ones) may be visible at once. When the cap is reached, further columns must be hidden
+     * before new ones can be shown. Pass null (default) for no limit.
+     * @param sortOptionsAlphabetically When true, the option list is sorted alphabetically by column name
+     * instead of following the column order in the grid config. Defaults to false.
      */
-    constructor(tableElementId, grid, alwaysShowIds = [], defaultShowingIds = [], neverShowIds = ['id'], buttonContainerSelector = '.tableOptionsContainer') {
+    constructor(tableElementId, grid, alwaysShowIds = [], defaultShowingIds = [], neverShowIds = ['id'], buttonContainerSelector = '.tableOptionsContainer', maxVisibleColumns = null, sortOptionsAlphabetically = false) {
         if (!tableElementId || !grid) {
             throw new Error('ColumnOptions was not provided with required arguments');
         }
@@ -43,6 +51,8 @@ export default class ColumnOptions {
         this.itemTemplate = document.getElementById(this.optionItemTemplateId);
         this.tableElementId = tableElementId
         this.buttonContainerSelector = buttonContainerSelector
+        this.maxVisibleColumns = maxVisibleColumns
+        this.sortOptionsAlphabetically = sortOptionsAlphabetically
 
         this.getInitialState(defaultShowingIds);
         this.createOptionsContainer()
@@ -153,8 +163,13 @@ export default class ColumnOptions {
         optionMenuContainer.innerHTML = '';
         this.tempState = {}
 
+        let entries = Object.entries(this.state)
+        if (this.sortOptionsAlphabetically) {
+            entries = entries.sort(([, a], [, b]) => a.name.localeCompare(b.name, 'da'))
+        }
+
         // create item for all that can possibly be shown
-        for (const [id, column] of Object.entries(this.state)) {
+        for (const [id, column] of entries) {
             // do not show columns that cannot be changed
             if (!column.neverShow && !column.alwaysShow) {
                 const item = this.createItem(id, column.name, !column.hidden);
@@ -165,6 +180,82 @@ export default class ColumnOptions {
             }
         }
 
+        this.updateLimitInfo()
+        this.updateOptionItemStates()
+    }
+
+    /**
+     * Counts how many toggleable columns are currently visible, taking any not-yet-confirmed
+     * toggles in tempState into account. Always-shown and never-shown columns are excluded,
+     * since the user cannot change them and they should not count against the limit.
+     * @returns {number}
+     */
+    countVisibleColumns() {
+        let count = 0
+        for (const [id, column] of Object.entries(this.state)) {
+            if (column.alwaysShow || column.neverShow) {
+                continue;
+            }
+            const pendingHidden = this.tempState.hasOwnProperty(id) ? this.tempState[id] : column.hidden
+            if (!pendingHidden) {
+                count++
+            }
+        }
+        return count
+    }
+
+    /**
+     * Renders (or removes) the "x of y columns shown" indicator, and lets the user know
+     * when the configured maximum has been reached.
+     */
+    updateLimitInfo() {
+        if (!this.maxVisibleColumns || !this.optionsContainer) {
+            return;
+        }
+
+        const optionMenuContainer = this.optionsContainer.querySelector(`.${this.optionsMenuContainerClass}`);
+        if (!optionMenuContainer) {
+            return;
+        }
+
+        let limitInfo = this.optionsContainer.querySelector(`.${this.limitInfoClass}`);
+        if (!limitInfo) {
+            limitInfo = document.createElement('div');
+            limitInfo.className = `${this.limitInfoClass} small text-muted px-2 pt-1`;
+            optionMenuContainer.before(limitInfo);
+        }
+
+        const visibleCount = this.countVisibleColumns();
+        limitInfo.textContent = `${visibleCount} af maks. ${this.maxVisibleColumns} kolonner valgt`;
+    }
+
+    /**
+     * Disables the option items for hidden columns once the maximum number of visible columns is
+     * reached, so the user cannot show more until one is hidden again. Items for already-shown
+     * columns stay enabled so they can still be hidden.
+     */
+    updateOptionItemStates() {
+        if (!this.maxVisibleColumns || !this.optionsContainer) {
+            return;
+        }
+
+        const optionMenuContainer = this.optionsContainer.querySelector(`.${this.optionsMenuContainerClass}`);
+        if (!optionMenuContainer) {
+            return;
+        }
+
+        const atLimit = this.countVisibleColumns() >= this.maxVisibleColumns;
+
+        for (const item of optionMenuContainer.querySelectorAll(`.${this.optionItemClass}`)) {
+            const id = item.dataset.columnId;
+            const isShown = this.tempState.hasOwnProperty(id)
+                ? !this.tempState[id]
+                : !this.state[id]?.hidden;
+
+            const disable = atLimit && !isShown;
+            item.classList.toggle('disabled', disable);
+            item.setAttribute('aria-disabled', String(disable));
+        }
     }
 
     /**
@@ -203,9 +294,16 @@ export default class ColumnOptions {
      */
     toggleOption(element) {
         if (element) {
+            if (element.classList.contains('disabled')) {
+                return;
+            }
+
             const iconElement = element.querySelector(`.${this.optionIconClass}`)
             const id = element.dataset.columnId
-            const isCurrentlyShown = !this.state[id].hidden
+            const isCurrentlyShown = this.tempState.hasOwnProperty(id)
+                ? !this.tempState[id]
+                : !this.state[id].hidden;
+
 
             if (isCurrentlyShown) {
                 iconElement.classList.remove('ti-check')
@@ -216,6 +314,9 @@ export default class ColumnOptions {
                 iconElement.classList.remove('ti-minus')
                 this.tempState[id] = false
             }
+
+            this.updateLimitInfo()
+            this.updateOptionItemStates()
         } else {
             console.info("Attempted to toggle option, but no element was passed")
         }
