@@ -108,6 +108,7 @@ public class AdminRestController {
 
             template.setMessage(emailTemplateDTO.getMessage());
             template.setTitle(emailTemplateDTO.getTitle());
+            template.setEnabled(emailTemplateDTO.isEnabled());
             emailTemplateService.save(template);
         }
 

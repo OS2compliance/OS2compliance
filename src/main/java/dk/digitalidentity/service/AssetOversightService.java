@@ -44,11 +44,13 @@ import static dk.digitalidentity.Constants.DBS_TASK_NAME_MARKER;
 @RequiredArgsConstructor
 @Transactional
 public class AssetOversightService {
+	/** "Parkeret" kontrol: deadlinen skubbes herud når tilsynet drives af DBS i stedet. */
+	public static final LocalDate PARKED_DEADLINE = LocalDate.of(2099, 1, 1);
+
     private final SamlModuleConfiguration samlConfiguration;
     private final AssetOversightDao assetOversightDao;
     private final TaskService taskService;
     private final RelationService relationService;
-    private final UserService userService;
 	private final ChoiceValueDao choiceValueDao;
 	private final DBSOversightGridDao dbsOversightGridDao;
 	private final TaskLogDao taskLogDao;
@@ -71,16 +73,10 @@ public class AssetOversightService {
             asset.setNextInspection(NextInspection.DBS);
             asset.setNextInspectionDate(null);
             asset.setSupervisoryModel(choiceValueDao.findByIdentifier("supervision-model-dbs-123456").orElse(null));
-			User user = userService.currentUser();
-			if (asset.getOversightResponsibleUser() == null) {
-				if (asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
-					asset.setOversightResponsibleUser(asset.getResponsibleUsers().get(0));
-					createOrUpdateAssociatedOversightCheck(asset);
-				} else if (user != null) {
-					asset.setOversightResponsibleUser(user);
-					createOrUpdateAssociatedOversightCheck(asset);
-				}
-			}
+			// Tilsynsansvarlig udfyldes bevidst IKKE: feltet er et manuelt valg der vinder over
+			// den globale indstilling (hjælpeteksten) - auto-udfyldning udpegede en vilkårlig
+			// person og blokerede indstillingen. Ansvarskæden ligger i DBSService.
+			createOrUpdateAssociatedOversightCheck(asset);
         });
     }
 
@@ -156,7 +152,7 @@ public class AssetOversightService {
         if (asset.getNextInspectionDate() != null) {
             task.setNextDeadline(asset.getNextInspectionDate());
         } else {
-            task.setNextDeadline(LocalDate.of(2099, 1,1));
+            task.setNextDeadline(PARKED_DEADLINE);
 
         }
         if (asset.getOversightResponsibleUser() != null) {
@@ -174,7 +170,10 @@ public class AssetOversightService {
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(asset.getNextInspectionDate());
         task.setNotifyResponsible(false);
-        task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
+        // Tilsynsansvarlig er et manuelt valg og kan mangle - Set.of(null) ville kaste NPE
+        if (asset.getOversightResponsibleUser() != null) {
+            task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
+        }
         task.setDescription("Gå ind på aktivet " + asset.getName() + " og udfør tilsyn.");
         task.getProperties().add(Property.builder()
             .entity(task)
@@ -187,8 +186,34 @@ public class AssetOversightService {
         relationService.addRelation(savedTask, asset);
     }
 
+    /**
+     * Parkerer den systemskabte kontrol-opgave (deadline 2099, ingen gentagelse) - og intet
+     * andet. createOrUpdateAssociatedOversightCheck duer ikke fra opgavejobbet: dens
+     * supervisoryModel==null-gren nuller aktivets tilsynsopsætning som sideeffekt.
+     */
+    public void parkAssociatedOversightCheck(final Asset asset) {
+        final Task check = findAssociatedOversightCheck(asset);
+        if (check != null && (check.getNextDeadline() == null || check.getNextDeadline().isBefore(PARKED_DEADLINE))) {
+            if (asset.getNextInspection() != NextInspection.DBS) {
+                // Aktivets opsætning siger manuel kontrol, men DBS leverer tilsyn for det - gør
+                // uoverensstemmelsen synlig, så en bevidst ekstra kontrol kan undtages manuelt
+                log.warn("Parking oversight check task {} '{}' although asset {} has nextInspection={} - DBS drives the oversight",
+                        check.getId(), check.getName(), asset.getId(), asset.getNextInspection());
+            } else {
+                log.info("Parking oversight check task {} '{}' for asset {} - tilsynet drives af DBS", check.getId(), check.getName(), asset.getId());
+            }
+            check.setNextDeadline(PARKED_DEADLINE);
+            check.setRepetition(TaskRepetition.NONE);
+        }
+    }
+
     private Task findAssociatedOversightCheck(final Asset asset) {
-        return findAssociatedOversightTasks(asset).stream().findFirst().orElse(null);
+        // Kun CHECK: listen rummer også DBS-opgaver (TASK), og en match på tværs ville kunne
+        // parkere en frisk DBS-opgave til 2099. Nyeste ved flere.
+        return findAssociatedOversightTasks(asset).stream()
+            .filter(t -> t.getTaskType() == TaskType.CHECK)
+            .max(TaskService.NEWEST_FIRST)
+            .orElse(null);
     }
 
     /**

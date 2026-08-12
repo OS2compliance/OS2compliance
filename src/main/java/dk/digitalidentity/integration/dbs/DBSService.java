@@ -10,10 +10,12 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
+import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.NotifyService;
 import dk.digitalidentity.service.RelationService;
@@ -26,9 +28,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 
@@ -39,6 +45,7 @@ public class DBSService {
     private final DBSOversightDao dbsOversightDao;
     private final RelationService relationService;
     private final AssetService assetService;
+	private final AssetOversightService assetOversightService;
     private final TaskService taskService;
 	private final SettingsService settingsService;
 	private final NotifyService notifyService;
@@ -63,9 +70,17 @@ public class DBSService {
 		log.debug("Found {} oversights that need a task.", oversights.size());
 
 		for (DBSOversight dbsOversight : oversights) {
-			log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
+			// Auditens egne systemer når koblingen findes; ellers leverandør-bred fallback for
+			// ældre rækker. List.copyOf: iterér et snapshot, aldrig den levende Hibernate-
+			// collection - session-arbejde i løkken gav ConcurrentModificationException.
+			final Collection<DBSAsset> oversightAssets = List.copyOf(!dbsOversight.getAssets().isEmpty()
+					? dbsOversight.getAssets()
+					: dbsOversight.getSupplier().getAssets());
+			log.debug("Oversight {} has {} assigned assets ({}).", dbsOversight.getId(), oversightAssets.size(),
+					dbsOversight.getAssets().isEmpty() ? "supplier-wide fallback" : "audit systems");
+			boolean anyTaskHandled = false;
 
-			for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
+			for (DBSAsset dbsAsset : oversightAssets) {
 
 				//Only update/create related task if itsystem status changes to published
 				if (dbsAsset.getStatus() != null && dbsAsset.getStatus().equals("published")) {
@@ -81,111 +96,146 @@ public class DBSService {
 							.toList();
 
 					for (Asset asset : assets) {
-						// Priority 1: manually assigned oversight responsible on the asset
-						User responsibleUser = asset.getOversightResponsibleUser();
+						// Prioritet 1: manuelt sat tilsynsansvarlig - vinder altid (jf. hjælpeteksten)
+						Set<User> responsibleUsers = asset.getOversightResponsibleUser() != null
+								? Set.of(asset.getOversightResponsibleUser())
+								: Set.of();
 						String notificationEmail = null;
 
-						// Priority 2: global setting — role lookup or direct email
-						if (responsibleUser == null && !recipientSetting.isEmpty()) {
+						// Prioritet 2: global indstilling - rolleopslag eller direkte mail
+						if (responsibleUsers.isEmpty() && !recipientSetting.isEmpty()) {
 							if (recipientSetting.startsWith("ROLE:")) {
-								responsibleUser = resolveUserFromRole(asset, recipientSetting);
+								User fromRole = resolveUserFromRole(asset, recipientSetting);
+								responsibleUsers = fromRole != null ? Set.of(fromRole) : Set.of();
 							} else {
 								notificationEmail = recipientSetting;
 							}
 						}
 
-						if (responsibleUser == null && notificationEmail == null) {
-							log.warn("Skipping Asset: {} for DBSOversight: {} — no responsible user and no notification email configured.",
-									asset.getId(), dbsOversight.getId());
-							continue;
+						// Prioritet 3: systemansvarlige for aktivet - alle, ikke en vilkårlig første
+						if (responsibleUsers.isEmpty() && notificationEmail == null
+								&& asset.getManagers() != null && !asset.getManagers().isEmpty()) {
+							responsibleUsers = new LinkedHashSet<>(asset.getManagers());
 						}
 
-						final User taskResponsible = responsibleUser;
+						if (responsibleUsers.isEmpty() && notificationEmail == null) {
+							// Ingen i ansvarskæden: opret opgaven alligevel - uden ansvarlig og uden
+							// notifikation. Før blev aktivet sprunget over, men fandt kæden ansvar for
+							// et ANDET aktiv på samme oversight, blev taskCreated=true og tilsynet her
+							// tabt for altid. En ansvarsløs opgave er synlig (Ubehandlet tilsyn) og kan
+							// tildeles manuelt.
+							log.warn("No responsible user and no notification email for Asset: {} on DBSOversight: {} - creating task without responsible.",
+									asset.getId(), dbsOversight.getId());
+						}
+
+						final Set<User> taskResponsibles = responsibleUsers;
 						final String taskEmail = notificationEmail;
 
-						// Check if there is an open task already
-						relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
+						// Alle DBS-tilsynsopgaver på dbs-aktivet: åbne genbruges, udførte indgår i dækning
+						List<Task> dbsTasks = relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
 								.map(r -> taskService.findById(r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId()))
 								.filter(Optional::isPresent)
 								.map(Optional::get)
 								.filter(t -> t.getTaskType() == TaskType.TASK
-										&& !taskService.isTaskDone(t)
 										&& t.getName().contains(Constants.DBS_TASK_NAME_MARKER))
-								// An asset can carry more than one unfinished DBS task (historic duplicates from back
-								// when overdue tasks were skipped), so do not let the relation order decide. Same rule
-								// as AssetOversightService uses when booking a completion, so the two never disagree
-								// about which task is the live one.
-								.max(TaskService.NEWEST_FIRST)
-								.ifPresentOrElse((task) -> {
-											// Task already exists — add oversight to description
-											appendOversightIfAbsent(task, dbsOversight);
+								.toList();
 
-											// Unfinished tasks now include overdue ones. Reset the deadline when it has
-											// passed, so the new oversight is actionable instead of being appended to a
-											// task that is already red and forgotten.
-											if (task.getNextDeadline() == null || !task.getNextDeadline().isAfter(now)) {
-												task.setNextDeadline(nowPlus30Days);
-											}
+						// An asset can carry more than one unfinished DBS task (historic duplicates from back
+						// when overdue tasks were skipped), so do not let the relation order decide. Same rule
+						// as AssetOversightService uses when booking a completion, so the two never disagree
+						// about which task is the live one.
+						Optional<Task> openTask = dbsTasks.stream()
+								.filter(t -> !taskService.isTaskDone(t))
+								.max(TaskService.NEWEST_FIRST);
 
-											// Tasks created before the asset link was introduced carry no
-											// ASSOCIATED_INSPECTION_PROPERTY, and AssetOversightService finds oversight
-											// tasks through exactly that property. Without it the task can never be
-											// completed from the oversight flow, so it would stay unfinished forever and
-											// — now that we reuse overdue tasks — be reused forever. Backfill it.
-											if (task.getProperties().stream().noneMatch(p -> ASSOCIATED_INSPECTION_PROPERTY.equals(p.getKey()))) {
-												task.getProperties().add(Property.builder()
-														.key(ASSOCIATED_INSPECTION_PROPERTY)
-														.value(asset.getId().toString())
-														.entity(task)
-														.build());
-												log.info("Backfilled missing asset link on DBS task id={} for asset id={}", task.getId(), asset.getId());
-											}
+						if (openTask.isPresent()) {
+							Task task = openTask.get();
+							// Task already exists — add oversight to description
+							appendOversightIfAbsent(task, dbsOversight);
 
-											//set link to the folder containing the documents
-											String url = "https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId();
-											if (task.getLinks().stream().noneMatch(l -> l.getUrl().equals(url))) {
-												task.getLinks().add(new TaskLink(null, url, task));
-											}
+							// Unfinished tasks now include overdue ones. Reset the deadline when it has
+							// passed, so the new oversight is actionable instead of being appended to a
+							// task that is already red and forgotten.
+							if (task.getNextDeadline() == null || !task.getNextDeadline().isAfter(now)) {
+								task.setNextDeadline(nowPlus30Days);
+							}
 
-											addAuditLinkIfAbsent(task, dbsOversight);
-										},
-										() -> {
-											// Create a new task
-											Task task = new Task();
-											task.setName(getTaskName(asset));
-											task.setNextDeadline(nowPlus30Days);
-											if (taskResponsible != null) {
-												task.setResponsibleUsers(Set.of(taskResponsible));
-												task.setNotifyResponsible(true);
-											}
-											task.setTaskType(TaskType.TASK);
-											task.setRepetition(TaskRepetition.NONE);
-											task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
-											Property property = Property.builder()
-													.key(ASSOCIATED_INSPECTION_PROPERTY)
-													.value(asset.getId().toString())
-													.entity(task)
-													.build();
-											task.getProperties().add(property);
-											log.debug("Created task: {} responsible: {}", task.getName(),
-													taskResponsible != null ? taskResponsible.getName() : "email:" + taskEmail);
-											taskService.saveTask(task);
+							// Tasks created before the asset link was introduced carry no
+							// ASSOCIATED_INSPECTION_PROPERTY, and AssetOversightService finds oversight
+							// tasks through exactly that property. Without it the task can never be
+							// completed from the oversight flow, so it would stay unfinished forever and
+							// — now that we reuse overdue tasks — be reused forever. Backfill it.
+							if (task.getProperties().stream().noneMatch(p -> ASSOCIATED_INSPECTION_PROPERTY.equals(p.getKey()))) {
+								task.getProperties().add(Property.builder()
+										.key(ASSOCIATED_INSPECTION_PROPERTY)
+										.value(asset.getId().toString())
+										.entity(task)
+										.build());
+								log.info("Backfilled missing asset link on DBS task id={} for asset id={}", task.getId(), asset.getId());
+							}
 
-											addAuditLinkIfAbsent(task, dbsOversight);
+							//set link to the folder containing the documents
+							String url = "https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId();
+							if (task.getLinks().stream().noneMatch(l -> l.getUrl().equals(url))) {
+								task.getLinks().add(new TaskLink(null, url, task));
+							}
 
-											relationService.addRelation(task, dbsAsset);
-											relationService.addRelation(task, asset);
+							addAuditLinkIfAbsent(task, dbsOversight);
+						} else if (isCoveredByCompletedTask(dbsTasks, dbsOversight)) {
+							// Tilsyn udført efter udgivelsen dækker auditen - en ny opgave ville
+							// dublere et afsluttet tilsyn (se isCoveredByCompletedTask)
+							log.info("Oversight {} (audit {}) already covered for asset {}: a DBS task was completed on/after the audit's publication - no new task",
+									dbsOversight.getId(), dbsOversight.getDbsId(), asset.getId());
+						} else {
+							// Create a new task
+							Task task = new Task();
+							task.setName(getTaskName(asset));
+							task.setNextDeadline(nowPlus30Days);
+							if (!taskResponsibles.isEmpty()) {
+								task.setResponsibleUsers(taskResponsibles);
+								task.setNotifyResponsible(true);
+							}
+							task.setTaskType(TaskType.TASK);
+							task.setRepetition(TaskRepetition.NONE);
+							task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
+							Property property = Property.builder()
+									.key(ASSOCIATED_INSPECTION_PROPERTY)
+									.value(asset.getId().toString())
+									.entity(task)
+									.build();
+							task.getProperties().add(property);
+							log.debug("Created task: {} responsible: {}", task.getName(),
+									!taskResponsibles.isEmpty()
+											? taskResponsibles.stream().map(User::getName).collect(Collectors.joining(", "))
+											: taskEmail != null ? "email:" + taskEmail : "none");
+							taskService.saveTask(task);
 
-											if (taskResponsible != null) {
-												notifyService.notifyTaskResponsible(task);
-											} else if (taskEmail != null) {
-												notifyService.notifyOversightByEmail(task, taskEmail);
-											}
-										});
-						dbsOversight.setTaskCreated(true);
-						dbsOversightDao.save(dbsOversight);
+							addAuditLinkIfAbsent(task, dbsOversight);
+
+							relationService.addRelation(task, dbsAsset);
+							relationService.addRelation(task, asset);
+
+							if (!taskResponsibles.isEmpty()) {
+								notifyService.notifyTaskResponsible(task);
+							} else if (taskEmail != null) {
+								notifyService.notifyOversightByEmail(task, taskEmail);
+							}
+						}
+
+						// Et DBS-tilsyn for aktivet beviser DBS-dækning: park den systemskabte
+						// kontrol, så kontrol og DBS-opgave ikke kører for samme tilsyn. Bevidst
+						// ingen gate på next_inspection - feltet er upålideligt på ældre koblinger.
+						assetOversightService.parkAssociatedOversightCheck(asset);
+						anyTaskHandled = true;
 					}
 				}
+			}
+
+			// Per-oversight-tilstand: gem ÉN gang efter løkkerne - save (merge) inde i løkken
+			// re-wrapper entitetens collections midt i iterationen (CME i Hibernate 6)
+			if (anyTaskHandled) {
+				dbsOversight.setTaskCreated(true);
+				dbsOversightDao.save(dbsOversight);
 			}
 		}
 	}
@@ -212,6 +262,27 @@ public class DBSService {
         return "Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
             + "Følgende filer kan findes på DBS-portalen:\n";
     }
+
+	/**
+	 * Auditen er dækket når en udført DBS-opgave på aktivet har en log afsluttet på/efter
+	 * auditens udgivelsesdato - rapporten var da tilgængelig ved tilsynet. Ægte genudgivelser
+	 * (nyere end seneste udførelse) rammes ikke.
+	 */
+	private boolean isCoveredByCompletedTask(final List<Task> dbsTasks, final DBSOversight oversight) {
+		final LocalDateTime publishedAt = oversight.getPublishedDate() != null
+				? oversight.getPublishedDate()
+				: oversight.getCreated();
+		if (publishedAt == null) {
+			return false;
+		}
+		final LocalDate publicationDate = publishedAt.toLocalDate();
+		return dbsTasks.stream()
+				.filter(taskService::isTaskDone)
+				.flatMap(t -> t.getLogs().stream())
+				.map(TaskLog::getCompleted)
+				.filter(Objects::nonNull)
+				.anyMatch(completed -> !completed.isBefore(publicationDate));
+	}
 
 	/**
 	 * Adds the oversight to the task description, unless it is already listed.
