@@ -580,7 +580,7 @@
                                                         <tbody>
                                                         <tr th:each="task : ${tasks}">
                                                             <td>
-                                                                <a th:text="${task.title}" th:href="@{/tasks/{id}(id=${task.id})}"></a>
+                                                                <a th:text="${task.title}" th:href="@{/tasks/{id}(id=${task.id},referral='asset-' + ${asset.id})}"></a>
                                                             </td>
                                                             <td th:text="${task.responsibleUserName}"></td>
                                                             <td th:text="${task.responsibleOuName}"></td>

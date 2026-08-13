@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -335,8 +336,38 @@ public class TasksController {
     @SuppressWarnings("ClassEscapesDefinedScope")
 	@RequireUpdateOwnerOnly
     @Transactional
+    @PostMapping("complete/stay")
+    public ResponseEntity<String> completeTaskStaying(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
+        completeTaskInternal(dto);
+        return ResponseEntity.ok(resolveReferralUrl(referral));
+    }
+
+    @SuppressWarnings("ClassEscapesDefinedScope")
+	@RequireUpdateOwnerOnly
+    @Transactional
     @PostMapping("complete")
-    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
+    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto) {
+        completeTaskInternal(dto);
+        return "redirect:/tasks";
+    }
+
+    private String resolveReferralUrl(final String referral) {
+        if (StringUtils.isBlank(referral)) {
+            return "/tasks";
+        }
+
+        final String type = StringUtils.substringBefore(referral, "-");
+        final String id = StringUtils.substringAfter(referral, "-");
+
+        return switch (type) {
+            case "dashboard" -> "/dashboard";
+            case "asset" -> "/assets/" + id;
+            case "register" -> "/registers/" + id;
+            default -> "/tasks";
+        };
+    }
+
+    private Task completeTaskInternal(final CompletionFormDTO dto) {
         final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !taskService.isResponsibleFor(task)) {
@@ -390,10 +421,7 @@ public class TasksController {
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
         taskService.completeTask(task, taskLog);
-        if ("dashboard".equals(referral)) {
-            return "redirect:/dashboard";
-        }
-        return "redirect:/tasks";
+        return task;
     }
 
 	@RequireCreateAll
