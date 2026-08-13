@@ -337,33 +337,33 @@ public class TasksController {
 	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("complete/stay")
-    public ResponseEntity<Void> completeTaskStaying(@Valid @ModelAttribute final CompletionFormDTO dto) {
+    public ResponseEntity<String> completeTaskStaying(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
         completeTaskInternal(dto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(resolveReferralUrl(referral));
     }
 
     @SuppressWarnings("ClassEscapesDefinedScope")
 	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("complete")
-    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
+    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto) {
         completeTaskInternal(dto);
-        return resolveReferralRedirect(referral);
+        return "redirect:/tasks";
     }
 
-    private String resolveReferralRedirect(final String referral) {
+    private String resolveReferralUrl(final String referral) {
         if (StringUtils.isBlank(referral)) {
-            return "redirect:/tasks";
+            return "/tasks";
         }
 
         final String type = StringUtils.substringBefore(referral, "-");
         final String id = StringUtils.substringAfter(referral, "-");
 
         return switch (type) {
-            case "dashboard" -> "redirect:/dashboard";
-            case "asset" -> "redirect:/assets/" + id;
-            case "register" -> "redirect:/registers/" + id;
-            default -> "redirect:/tasks";
+            case "dashboard" -> "/dashboard";
+            case "asset" -> "/assets/" + id;
+            case "register" -> "/registers/" + id;
+            default -> "/tasks";
         };
     }
 

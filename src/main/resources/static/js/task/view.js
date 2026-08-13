@@ -111,6 +111,7 @@ function ViewTaskService() {
     }
 
     this.initCompleteAndStay = function() {
+        const completeStayUrl = '/tasks/complete/stay';
         const form = document.getElementById('completeTaskForm');
         const completeAndStayBtn = document.getElementById('completeAndStayBtn');
 
@@ -133,23 +134,10 @@ function ViewTaskService() {
                         throw new Error(`${response.status} ${response.statusText}`);
                     }
 
-                    bootstrap.Modal.getInstance(document.getElementById('completeTaskModal'))?.hide();
-                    form.reset();
-                    form.classList.remove('was-validated');
-                    toastService.info('Opgaven blev udført');
-
-                    const historyTabBtn = document.querySelector('[data-bs-target="#_dm-tabsHistorik"]');
-                    if (historyTabBtn) {
-                        fetchHtml(timelineUrl, 'timelinePlaceholder').then(() => {
-                            bootstrap.Tab.getOrCreateInstance(historyTabBtn).show();
-                        });
-                        const badge = historyTabBtn.querySelector('.badge');
-                        if (badge) {
-                            badge.textContent = String(parseInt(badge.textContent, 10) + 1);
-                        }
-                    } else {
-                        window.location.reload();
-                    }
+                    return response.text();
+                })
+                .then(redirectUrl => {
+                    window.location.href = redirectUrl;
                 })
                 .catch(defaultErrorHandler);
         });
