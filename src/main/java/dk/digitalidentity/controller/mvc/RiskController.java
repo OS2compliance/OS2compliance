@@ -35,6 +35,7 @@ import dk.digitalidentity.security.annotations.sections.RequireRisk;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
@@ -62,6 +63,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -92,6 +94,7 @@ public class RiskController {
     private final AssetDao assetDao;
     private final UserService userService;
     private final EmailTemplateService emailTemplateService;
+    private final IncidentService incidentService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -359,6 +362,18 @@ public class RiskController {
 
         boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
         model.addAttribute("signed", signed);
+
+        if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
+            final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
+            model.addAttribute("incidentDateFrom", LocalDate.now().minusMonths(12).toString());
+            model.addAttribute("incidentDateTo", LocalDate.now().toString());
+            final List<Long> assetIds = assetRelations.stream()
+                .map(rel -> rel.getRelationAType() == RelationType.ASSET ? rel.getRelationAId() : rel.getRelationBId())
+                .toList();
+            final long incidentCount = incidentService.countIncidentsForAssetsLastYear(assetIds);
+            model.addAttribute("incidentCount", incidentCount);
+            model.addAttribute("incidentAssetIds", assetIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
+        }
 
         return "risks/view";
     }
