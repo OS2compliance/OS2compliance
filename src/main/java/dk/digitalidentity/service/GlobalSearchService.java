@@ -277,19 +277,15 @@ public class GlobalSearchService {
 				.map(template -> new SearchResultDTO(
 						template.getName(),
 						template.getIdentifier(),
-						"Navn",
+						getDisplayFieldName("name"),
 						template.getName(),
 						highlightSearchTerm(template.getName(), query)))
 				.collect(Collectors.toList());
 
 		final long totalElements = sectionPage.getTotalElements() + templatePage.getTotalElements();
 		if (totalElements > 0) {
-			final List<SearchResultDTO> combined = new ArrayList<>(templateDtos);
-			combined.addAll(sectionDtos);
-			final List<SearchResultDTO> capped = combined.size() > pageable.getPageSize()
-					? combined.subList(0, pageable.getPageSize())
-					: combined;
-			Page<SearchResultDTO> dtoPage = new PageImpl<>(capped, pageable, totalElements);
+			final List<SearchResultDTO> combined = interleave(templateDtos, sectionDtos, pageable.getPageSize());
+			Page<SearchResultDTO> dtoPage = new PageImpl<>(combined, pageable, totalElements);
 			results.put(RelationType.STANDARD_SECTION.toString(),
 					new SearchResultSection(RelationType.STANDARD_SECTION.toString(), RelationType.STANDARD_SECTION.getMessage(), dtoPage));
 		}
@@ -361,6 +357,26 @@ public class GlobalSearchService {
 			results.put(RelationType.THREAT_ASSESSMENT.toString(),
 					new SearchResultSection(RelationType.THREAT_ASSESSMENT.toString(), RelationType.THREAT_ASSESSMENT.getMessage(), dtoPage));
 		}
+	}
+
+	private List<SearchResultDTO> interleave(List<SearchResultDTO> first, List<SearchResultDTO> second, int limit) {
+		final List<SearchResultDTO> result = new ArrayList<>(Math.min(limit, first.size() + second.size()));
+		int i = 0;
+		int j = 0;
+
+		while (result.size() < limit && (i < first.size() || j < second.size())) {
+			if (i < first.size()) {
+				result.add(first.get(i++));
+				if (result.size() == limit) {
+					break;
+				}
+			}
+			if (j < second.size()) {
+				result.add(second.get(j++));
+			}
+		}
+
+		return result;
 	}
 
 	private <T extends Relatable> Page<SearchResultDTO> convertToSearchResultDTO(Page<T> page, String query, Set<String> searchFields) {
