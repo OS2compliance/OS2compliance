@@ -47,7 +47,7 @@ public class YearWheelFirstDeadlineIntegrationTest extends BaseIntegrationTest {
 		em.flush();
 
 		assertThat(taskService.getFirstDeadlines(List.of(task.getId())))
-				.containsExactly(Map.entry(task.getId(), LocalDate.of(2024, 8, 12)));
+				.containsOnly(Map.entry(task.getId(), LocalDate.of(2024, 8, 12)));
 	}
 
 	@Test
@@ -58,7 +58,7 @@ public class YearWheelFirstDeadlineIntegrationTest extends BaseIntegrationTest {
 		em.flush();
 
 		assertThat(taskService.getFirstDeadlines(List.of(completed.getId(), fresh.getId())))
-				.containsExactly(Map.entry(completed.getId(), LocalDate.of(2025, 8, 12)));
+				.containsOnly(Map.entry(completed.getId(), LocalDate.of(2025, 8, 12)));
 	}
 
 	@Test

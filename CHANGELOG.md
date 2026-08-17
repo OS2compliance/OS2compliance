@@ -15,6 +15,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Standarder) Omsortering var ikke afgrænset til den standard kaldet angav
 - (Fortegnelser) Udrulningen af version 1.8 på eksisterende installationer trukket tilbage. Den oprettede dubletter i stedet for at opdatere og overskrev kommunens egne rettelser af hjemmel og KLE. Én kommune nåede at få den og er genoprettet fra backup.
 - (Opgavecenter/Årshjul) Gentagne opgaver vises ikke længere i årene før deres første deadline. En årlig opgave med første deadline 12/08-2027 dukkede op som overskredet d. 12/08-2026, fordi årshjulet regnede baglæns fra næste deadline helt tilbage til opgavens oprettelsesdato. Baglæns fremskrivning stopper nu ved den ældste deadline, opgaven har haft.
+- (Opgavecenter/Årshjul) En enkelt opgave uden deadline fik hele årshjulet til at fejle. Den springes nu over.
 
 
 ## [2.7.0] - 2026-06-14

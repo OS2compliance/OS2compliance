@@ -59,8 +59,13 @@ public class YearWheelService {
 		Set<Tag> usedYearWheelTags = new TreeSet<>(Comparator.comparing(Tag::getId));
 
 		for (TaskGrid task : tasks) {
+			if (task.getNextDeadline() == null) {
+				// tasks.next_deadline is nullable and the grid view passes the null through - a single
+				// such task must not take the whole year wheel down
+				continue;
+			}
 			LocalDate deadline = task.getNextDeadline().toLocalDate();
-			LocalDate firstDeadline = firstDeadline(firstDeadlines.get(task.getId()), deadline);
+			LocalDate firstDeadline = resolveFirstDeadline(firstDeadlines.get(task.getId()), deadline);
 			List<Integer> occurrenceMonths = calculateOccurrenceMonths(year, deadline, task.getTaskRepetition(), firstDeadline);
 
 			// Resolve year-wheel tags from tagIds
@@ -152,30 +157,29 @@ public class YearWheelService {
 	}
 
 	/**
-	 * The first deadline the task ever had. A check's nextDeadline only moves forward when the check is
-	 * completed, and every completion logs the deadline it closed, so the oldest logged deadline is where
-	 * the series started. Without logs nothing has moved the deadline yet and nextDeadline is still the
-	 * first one - projecting occurrences before it would invent deadlines the task never had.
+	 * The earliest deadline the task is known to have had. Every completion logs the deadline it closed,
+	 * so the oldest logged deadline is where the series started. Without logs the task has never been
+	 * completed, and nextDeadline is the only deadline it has ever been given - whether that is the
+	 * original one or a rescheduled one, projecting occurrences before it would invent deadlines the task
+	 * never had. A deadline that was moved backwards after a completion falls back to nextDeadline too.
 	 */
-	private LocalDate firstDeadline(LocalDate firstLoggedDeadline, LocalDate nextDeadline) {
+	private LocalDate resolveFirstDeadline(LocalDate firstLoggedDeadline, LocalDate nextDeadline) {
 		return firstLoggedDeadline != null && firstLoggedDeadline.isBefore(nextDeadline)
 				? firstLoggedDeadline
 				: nextDeadline;
 	}
 
 	/**
-	 * Calculates which months in the target year a task occurs,
-	 * based on its nextDeadline and repetition pattern.
+	 * Calculates which months in the target year a task occurs, based on its nextDeadline and repetition
+	 * pattern. No occurrence is placed before firstDeadline, the first deadline the task ever had.
 	 */
 	List<Integer> calculateOccurrenceMonths(int targetYear, LocalDate nextDeadline, TaskRepetition repetition, LocalDate firstDeadline) {
 		List<Integer> months = new ArrayList<>();
 
-		if (nextDeadline == null) {
-			return months;
-		}
-
-		// Earliest date this task can appear - the series has no occurrences before its first deadline
-		LocalDate earliestDate = firstDeadline != null ? firstDeadline : nextDeadline;
+		// Earliest month this task can appear in. Snapped to the first of the month because the wheel
+		// places occurrences per month, and stepping by months clamps the day (31 Jan minus a month is
+		// 28 Feb) - comparing exact dates would drop the first occurrence for deadlines late in a month.
+		LocalDate earliestDate = firstDeadline.withDayOfMonth(1);
 
 		// No repetition: only include if deadline falls in target year and at or after the first deadline
 		if (repetition == null || repetition == TaskRepetition.NONE) {

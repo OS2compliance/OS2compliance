@@ -45,7 +45,6 @@ SELECT t.id,
        t.include_in_report,
        t.in_progress,
        t.in_progress_note,
-       t.created_at,
        (CASE
             WHEN t.repetition = 'NONE' THEN 10
             WHEN t.repetition = 'MONTHLY' THEN 2
