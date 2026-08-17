@@ -1,5 +1,6 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.grid.SearchRepositoryImpl;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
@@ -9,6 +10,7 @@ import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
+import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -27,6 +29,7 @@ import org.springframework.web.util.HtmlUtils;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -43,9 +46,10 @@ public class GlobalSearchService {
 
 	private final SearchRepositoryImpl searchRepository;
 	private final UserService userService;
+	private final StandardTemplateDao standardTemplateDao;
 
 	public record SearchResultSection(String key, String displayName, Page<SearchResultDTO> results) {}
-	public record SearchResultDTO(String name, long id, String searchResultFieldName, String searchResultFieldContent, String highlightedContent) {}
+	public record SearchResultDTO(String name, String id, String searchResultFieldName, String searchResultFieldContent, String highlightedContent) {}
 
 	public Map<String, SearchResultSection> search(String query) {
 		Pageable pageable = PageRequest.of(0, 5);
@@ -115,9 +119,9 @@ public class GlobalSearchService {
 
 		Page<Asset> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Asset.class, user, true, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Asset.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Asset.class, null, false, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Asset.class, null, false);
 		}
 
 		if (page.hasContent()) {
@@ -143,7 +147,7 @@ public class GlobalSearchService {
 			// not allowed for normal users - return
 			return;
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DBSAsset.class, null, false, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DBSAsset.class, null, false);
 		}
 		if (page.hasContent()) {
 			Page<SearchResultDTO> dtoPage = convertToSearchResultDTO(page, query, searchableProperties.keySet());
@@ -162,9 +166,9 @@ public class GlobalSearchService {
 
 		Page<Document> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Document.class, user, true, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Document.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Document.class, null, false, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Document.class, null, false);
 		}
 
 		if (page.hasContent()) {
@@ -186,9 +190,9 @@ public class GlobalSearchService {
 
 		Page<DPIA> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DPIA.class, user, true, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DPIA.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DPIA.class, null, false, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, DPIA.class, null, false);
 		}
 
 		if (page.hasContent()) {
@@ -209,7 +213,7 @@ public class GlobalSearchService {
 			// not allowed for normal users - return
 			return;
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Incident.class, null, false, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Incident.class, null, false);
 		}
 
 		if (page.hasContent()) {
@@ -235,9 +239,9 @@ public class GlobalSearchService {
 
 		Page<Register> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Register.class, user, true, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Register.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Register.class, null, false, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Register.class, null, false);
 		}
 
 		if (page.hasContent()) {
@@ -257,16 +261,35 @@ public class GlobalSearchService {
 		searchableProperties.put("createdAt", query);
 		searchableProperties.put("updatedAt", query);
 
-
-		Page<StandardSection> page;
+		Page<StandardSection> sectionPage;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, user, true, false);
+			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, null, false, false);
+			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, null, false);
 		}
 
-		if (page.hasContent()) {
-			Page<SearchResultDTO> dtoPage = convertToSearchResultDTO(page, query, searchableProperties.keySet());
+		Page<StandardTemplate> templatePage = standardTemplateDao.findByNameContainingIgnoreCase(query, pageable);
+
+		final List<SearchResultDTO> sectionDtos = sectionPage.hasContent()
+				? convertToSearchResultDTO(sectionPage, query, searchableProperties.keySet()).getContent()
+				: List.of();
+		final List<SearchResultDTO> templateDtos = templatePage.getContent().stream()
+				.map(template -> new SearchResultDTO(
+						template.getName(),
+						template.getIdentifier(),
+						"Navn",
+						template.getName(),
+						highlightSearchTerm(template.getName(), query)))
+				.collect(Collectors.toList());
+
+		final long totalElements = sectionPage.getTotalElements() + templatePage.getTotalElements();
+		if (totalElements > 0) {
+			final List<SearchResultDTO> combined = new ArrayList<>(templateDtos);
+			combined.addAll(sectionDtos);
+			final List<SearchResultDTO> capped = combined.size() > pageable.getPageSize()
+					? combined.subList(0, pageable.getPageSize())
+					: combined;
+			Page<SearchResultDTO> dtoPage = new PageImpl<>(capped, pageable, totalElements);
 			results.put(RelationType.STANDARD_SECTION.toString(),
 					new SearchResultSection(RelationType.STANDARD_SECTION.toString(), RelationType.STANDARD_SECTION.getMessage(), dtoPage));
 		}
@@ -284,9 +307,9 @@ public class GlobalSearchService {
 
 		Page<Supplier> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Supplier.class, user, true, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Supplier.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Supplier.class, null, false, true);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Supplier.class, null, false);
 		}
 
 		if (page.hasContent()) {
@@ -306,9 +329,9 @@ public class GlobalSearchService {
 
 		Page<Task> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Task.class, user, true, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Task.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Task.class, null, false, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, Task.class, null, false);
 		}
 
 		if (page.hasContent()) {
@@ -328,9 +351,9 @@ public class GlobalSearchService {
 
 		Page<ThreatAssessment> page;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, ThreatAssessment.class, user, true, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, ThreatAssessment.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, ThreatAssessment.class, null, false, false);
+			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, ThreatAssessment.class, null, false);
 		}
 
 		if (page.hasContent()) {
@@ -350,7 +373,7 @@ public class GlobalSearchService {
 
 					return new SearchResultDTO(
 							entity.getName(),
-							entity.getId(),
+							String.valueOf(entity.getId()),
 							matchingFieldDisplayName,
 							matchingFieldContent,
 							highlightedContent

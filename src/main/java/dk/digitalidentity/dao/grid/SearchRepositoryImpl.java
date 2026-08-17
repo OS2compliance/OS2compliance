@@ -348,8 +348,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 			final Pageable page,
 			final Class<T> entityClass,
 			final User user,
-			final boolean filterOnUser,
-			final boolean excludeDeleted) {
+			final boolean filterOnUser) {
 
 		final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		final CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
@@ -363,9 +362,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 			predicates.add(searchPredicate);
 		}
 
-		if (excludeDeleted) {
-			predicates.add(criteriaBuilder.isFalse(root.get("deleted")));
-		}
+		predicates.add(criteriaBuilder.isFalse(root.get("deleted")));
 
 		if (filterOnUser) {
 			addUserPredicates(entityClass, user, root, criteriaBuilder, criteriaQuery, predicates);
