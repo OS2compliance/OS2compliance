@@ -69,17 +69,19 @@ function ChoiceService() {
             .catch(error => toastService.error(error));
     }
 
-    this.updateSuppliers = (choices, search) => {
-        return fetch( `/rest/suppliers/autocomplete?search=${search}`)
-            .then(response => response.json()
-                .then(data => {
-                    choices.setChoices(data.content.map(e => {
-                        return {
-                            value: e.id,
-                            label: `${e.name}`}
-                    }), 'value', 'label', true);
-                }))
-            .catch(error => toastService.error(error));
+    this.updateSuppliers = async (choices, search) => {
+        try {
+            const response = await fetch(`/rest/suppliers/autocomplete?search=${search}`);
+            const data = await response.json();
+
+            choices.setChoices(data.content.map(e => {
+                return {
+                    value: e.id,
+                    label: `${e.name}`}
+            }), 'value', 'label', true);
+        } catch (error) {
+            toastService.error(error);
+        }
     }
 
     this.initUserSelect = (elementId, prefetch = true) => {
