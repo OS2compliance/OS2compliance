@@ -46,6 +46,11 @@ public class YearWheelService {
 		Map<Long, Tag> allTagsById = tagService.findAll().stream()
 				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
 
+		// Load the first deadline of every task once, so occurrences are not projected back past it
+		Map<Long, LocalDate> firstDeadlines = taskService.getFirstDeadlines(tasks.stream()
+				.map(TaskGrid::getId)
+				.toList());
+
 		Map<Integer, List<YearWheelTaskDTO>> months = new LinkedHashMap<>();
 		for (int m = 1; m <= 12; m++) {
 			months.put(m, new ArrayList<>());
@@ -55,10 +60,8 @@ public class YearWheelService {
 
 		for (TaskGrid task : tasks) {
 			LocalDate deadline = task.getNextDeadline().toLocalDate();
-			LocalDate createdAt = task.getCreatedAt() != null
-					? task.getCreatedAt().toLocalDate()
-					: null;
-			List<Integer> occurrenceMonths = calculateOccurrenceMonths(year, deadline, task.getTaskRepetition(), createdAt);
+			LocalDate firstDeadline = firstDeadline(firstDeadlines.get(task.getId()), deadline);
+			List<Integer> occurrenceMonths = calculateOccurrenceMonths(year, deadline, task.getTaskRepetition(), firstDeadline);
 
 			// Resolve year-wheel tags from tagIds
 			List<Tag> yearWheelTags = resolveYearWheelTags(task.getTagIds(), allTagsById);
@@ -149,20 +152,32 @@ public class YearWheelService {
 	}
 
 	/**
+	 * The first deadline the task ever had. A check's nextDeadline only moves forward when the check is
+	 * completed, and every completion logs the deadline it closed, so the oldest logged deadline is where
+	 * the series started. Without logs nothing has moved the deadline yet and nextDeadline is still the
+	 * first one - projecting occurrences before it would invent deadlines the task never had.
+	 */
+	private LocalDate firstDeadline(LocalDate firstLoggedDeadline, LocalDate nextDeadline) {
+		return firstLoggedDeadline != null && firstLoggedDeadline.isBefore(nextDeadline)
+				? firstLoggedDeadline
+				: nextDeadline;
+	}
+
+	/**
 	 * Calculates which months in the target year a task occurs,
 	 * based on its nextDeadline and repetition pattern.
 	 */
-	List<Integer> calculateOccurrenceMonths(int targetYear, LocalDate nextDeadline, TaskRepetition repetition, LocalDate createdAt) {
+	List<Integer> calculateOccurrenceMonths(int targetYear, LocalDate nextDeadline, TaskRepetition repetition, LocalDate firstDeadline) {
 		List<Integer> months = new ArrayList<>();
 
 		if (nextDeadline == null) {
 			return months;
 		}
 
-		// Earliest date this task can appear
-		LocalDate earliestDate = createdAt != null ? createdAt : nextDeadline;
+		// Earliest date this task can appear - the series has no occurrences before its first deadline
+		LocalDate earliestDate = firstDeadline != null ? firstDeadline : nextDeadline;
 
-		// No repetition: only include if deadline falls in target year and after creation
+		// No repetition: only include if deadline falls in target year and at or after the first deadline
 		if (repetition == null || repetition == TaskRepetition.NONE) {
 			if (nextDeadline.getYear() == targetYear && !nextDeadline.isBefore(earliestDate)) {
 				months.add(nextDeadline.getMonthValue());
