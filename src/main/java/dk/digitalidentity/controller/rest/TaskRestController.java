@@ -53,7 +53,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -177,11 +176,7 @@ public class TaskRestController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		if (task.getStartDate() == null) {
-			task.setStartDate(LocalDate.now());
-		}
-
-		if (task.getNextDeadline() != null && task.getStartDate().isAfter(task.getNextDeadline())) {
+		if (taskService.defaultStartDateAndCheckAfterDeadline(task)) {
 			log.debug("Start date is after deadline");
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}

@@ -250,14 +250,6 @@ function CreateTaskService() {
         this.selectCreateTaskOption('TASK');
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
         initDatepicker("#taskCreateFormTaskStartDateBtn", "#taskCreateFormTaskStartDate");
-        let taskStartDate = document.querySelector("#taskCreateFormTaskStartDate");
-        if (taskStartDate && !taskStartDate.value) {
-            taskStartDate.value = new Date().toLocaleDateString('da-DK', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            }).replace(/\./g, '/').replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$1/$2-$3');
-        }
         this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
         this.notificationSelectHandler = initNotificationSelect(

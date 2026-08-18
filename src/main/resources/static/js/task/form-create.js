@@ -89,6 +89,7 @@ function extractTaskFromFormData(fd, form) {
         id: fd.get('id') || null,
         name: fd.get('name') || '',
         taskType: fd.get('taskType') || null,
+        startDate: fd.get(form.id + 'TaskStartDate') || fd.get('startDate') || '',
         nextDeadline: fd.get(form.id + 'TaskDeadline') || fd.get('nextDeadline') || '',
         responsibleUserUuids: fd.getAll('responsibleUsers') || [],
         responsibleOuUuid: fd.get('responsibleOu') || null,

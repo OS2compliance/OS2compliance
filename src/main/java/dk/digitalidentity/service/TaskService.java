@@ -81,6 +81,18 @@ public class TaskService implements TagableService<Task> {
 				.anyMatch(SecurityUtil.getPrincipalUuid()::equals);
 	}
 
+	/**
+	 * Defaults a null startDate to today, then reports whether the (possibly defaulted) startDate is
+	 * after nextDeadline. Callers are responsible for translating a {@code true} result into their own
+	 * transport-specific error response.
+	 */
+	public boolean defaultStartDateAndCheckAfterDeadline(final Task task) {
+		if (task.getStartDate() == null) {
+			task.setStartDate(LocalDate.now());
+		}
+		return task.getNextDeadline() != null && task.getStartDate().isAfter(task.getNextDeadline());
+	}
+
     public List<Task> findAll() {
         return taskDao.findAll();
     }
@@ -124,7 +136,7 @@ public class TaskService implements TagableService<Task> {
      */
     @Transactional
     public List<Task> getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate deadline) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineAndNotificationRemindersEmpty(deadline);
+        return taskDao.findWithoutReminderConfigDueOn(deadline);
     }
 
     /**
@@ -134,7 +146,7 @@ public class TaskService implements TagableService<Task> {
      */
     @Transactional
     public List<Task> getTasksWithDeadLineInAndTaskNotificationOverrideFalse(List<LocalDate> deadlines) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineInAndNotificationRemindersEmpty(deadlines);
+        return taskDao.findWithoutReminderConfigDueOnAnyOf(deadlines);
     }
 
     public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
@@ -161,7 +173,8 @@ public class TaskService implements TagableService<Task> {
         task.setName(oldTask.getName());
         task.setTaskType(oldTask.getTaskType());
         task.setNextDeadline(oldTask.getNextDeadline());
-        task.setStartDate(oldTask.getStartDate() != null ? oldTask.getStartDate() : LocalDate.now());
+        task.setStartDate(oldTask.getStartDate());
+        defaultStartDateAndCheckAfterDeadline(task);
         task.setResponsibleUsers(oldTask.getResponsibleUsers());
         task.setResponsibleOu(oldTask.getResponsibleOu());
         task.setRepetition(oldTask.getRepetition());
@@ -448,14 +461,14 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public List<Task> getTasksWithDeadlineAtAndNotificationSettingContains(LocalDate deadline, NotificationSetting setting) {
-		return taskDao.findByNextDeadlineAndNotificationRemindersNotEmpty(deadline)
+		return taskDao.findWithReminderConfigDueOn(deadline)
 				.stream()
 				.filter(task -> task.getNotificationReminders().contains(setting))
 				.collect(Collectors.toList());
 	}
 
 	public List<Task> getTasksWithDeadlineInAndNotificationSettingContains(List<LocalDate> deadlines, NotificationSetting setting) {
-		return taskDao.findByNextDeadlineInAndNotificationRemindersNotEmpty(deadlines)
+		return taskDao.findWithReminderConfigDueOnAnyOf(deadlines)
 				.stream()
 				.filter(task -> task.getNotificationReminders().contains(setting))
 				.collect(Collectors.toList());

@@ -135,7 +135,7 @@ function initGrid() {
                 },
                 width: '90px',
                 formatter: (cell, row) => {
-                    var completed = row.cells[11]['data'];
+                    var completed = row.cells[12]['data'];
                     var type = row.cells[2]['data'];
                     if (completed && type === "Opgave") {
                         return gridjs.html(`<span>${cell}</span>`);
