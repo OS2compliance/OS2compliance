@@ -13,6 +13,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Standarder) Nye krav fik numre med huller (fx 1.5, 1.10, 1.11), fordi kravets viste nummer blev udledt af en primærnøgle der deles på tværs af alle standarder
 - (Standarder) Kravets nummer blev ikke opdateret i relationer, opgaver, rapporter og global søgning når rækkefølgen blev ændret med træk og slip
 - (Standarder) Omsortering var ikke afgrænset til den standard kaldet angav
+- (OS2kitos-integration) Al skrivning til OS2kitos med en dato blev afvist. Datoer blev sendt som epoch-tal i stedet for som tekst, og OS2kitos afviste hele opdateringen — ikke kun datofeltet. Det ramte synkronisering af risikovurdering og DPIA samt forretningskritisk/arkiveringspligt, og fejlede fra opdateringen af Kitos-klienten d. 2. juli 2026. Rettet i kitos-client release-1.3.3
+- (OS2kitos-integration) "Synkroniser til OS2kitos" på risikovurderingen fejlede lydløst ved manuel udfyldning, fordi et tomt dokumentationslink blev sendt med og afvist af OS2kitos
+- (OS2kitos-integration) DPIA-linket blev skrevet i risikovurderingens dokumentationsfelt i OS2kitos og overskrev dermed linket til risikovurderingen
 - (Fortegnelser) Udrulningen af version 1.8 på eksisterende installationer trukket tilbage. Den oprettede dubletter i stedet for at opdatere og overskrev kommunens egne rettelser af hjemmel og KLE. Én kommune nåede at få den og er genoprettet fra backup.
 
 
