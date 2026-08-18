@@ -174,7 +174,9 @@ public class TaskService implements TagableService<Task> {
         task.setTaskType(oldTask.getTaskType());
         task.setNextDeadline(oldTask.getNextDeadline());
         task.setStartDate(oldTask.getStartDate());
-        defaultStartDateAndCheckAfterDeadline(task);
+        if (defaultStartDateAndCheckAfterDeadline(task)) {
+            throw new IllegalArgumentException("Startdato kan ikke være efter deadline");
+        }
         task.setResponsibleUsers(oldTask.getResponsibleUsers());
         task.setResponsibleOu(oldTask.getResponsibleOu());
         task.setRepetition(oldTask.getRepetition());

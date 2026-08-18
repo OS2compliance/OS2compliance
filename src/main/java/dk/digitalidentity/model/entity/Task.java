@@ -22,6 +22,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -83,7 +84,7 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	@StatisticLabel("Startdato")
 	@Column
 	@DateTimeFormat(pattern = "dd/MM-yyyy")
-	private LocalDate startDate = LocalDate.now();
+	private LocalDate startDate;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -134,6 +135,13 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	@OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
 	@NotAudited
 	private List<SubTask> subTasks  = new ArrayList<>();
+
+    @PrePersist
+    protected void onTaskCreate() {
+        if (startDate == null) {
+            startDate = LocalDate.now();
+        }
+    }
 
     @Override
     public RelationType getRelationType() {

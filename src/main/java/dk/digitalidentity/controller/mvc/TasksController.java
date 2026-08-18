@@ -105,6 +105,7 @@ public class TasksController {
 
 			boolean responsibleChooseable = SecurityUtil.isOperationAllowed(Roles.CREATE_ALL);
 			Task task = new Task();
+			task.setStartDate(LocalDate.now());
 			if (!responsibleChooseable) {
 				task.setResponsibleUsers(Set.of(
 						userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
