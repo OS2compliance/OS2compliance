@@ -268,6 +268,7 @@ public class GlobalSearchService {
 			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, null, false);
 		}
 
+		// There is no per-user access control for standards, no need to apply filter results flag
 		Page<StandardTemplate> templatePage = standardTemplateDao.findByNameContainingIgnoreCase(query, pageable);
 
 		final List<SearchResultDTO> sectionDtos = sectionPage.hasContent()
@@ -280,12 +281,11 @@ public class GlobalSearchService {
 						getDisplayFieldName("name"),
 						template.getName(),
 						highlightSearchTerm(template.getName(), query)))
-				.collect(Collectors.toList());
+				.toList();
 
-		final long totalElements = sectionPage.getTotalElements() + templatePage.getTotalElements();
-		if (totalElements > 0) {
+		if (sectionPage.getTotalElements() + templatePage.getTotalElements() > 0) {
 			final List<SearchResultDTO> combined = interleave(templateDtos, sectionDtos, pageable.getPageSize());
-			Page<SearchResultDTO> dtoPage = new PageImpl<>(combined, pageable, totalElements);
+			Page<SearchResultDTO> dtoPage = new PageImpl<>(combined, pageable, combined.size());
 			results.put(RelationType.STANDARD_SECTION.toString(),
 					new SearchResultSection(RelationType.STANDARD_SECTION.toString(), RelationType.STANDARD_SECTION.getMessage(), dtoPage));
 		}
