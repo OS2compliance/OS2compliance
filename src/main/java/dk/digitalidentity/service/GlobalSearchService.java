@@ -261,31 +261,41 @@ public class GlobalSearchService {
 		searchableProperties.put("createdAt", query);
 		searchableProperties.put("updatedAt", query);
 
+		// interleave() always orders templates before sections, so the combined page window can be
+		// computed by fetching that same prefix (page 0, sized through the end of the requested page)
+		// from each source and slicing out the requested page's slot.
+		final Pageable prefixPageable = PageRequest.of(0, (pageable.getPageNumber() + 1) * pageable.getPageSize());
+
 		Page<StandardSection> sectionPage;
 		if (filterResults) {
-			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, user, true);
+			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, prefixPageable, StandardSection.class, user, true);
 		} else {
-			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, null, false);
+			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, prefixPageable, StandardSection.class, null, false);
 		}
 
 		// There is no per-user access control for standards, no need to apply filter results flag
-		Page<StandardTemplate> templatePage = standardTemplateDao.findByNameContainingIgnoreCase(query, pageable);
+		Page<StandardTemplate> templatePage = standardTemplateDao.findByNameContainingIgnoreCase(query, prefixPageable);
 
-		final List<SearchResultDTO> sectionDtos = sectionPage.hasContent()
-				? convertToSearchResultDTO(sectionPage, query, searchableProperties.keySet()).getContent()
-				: List.of();
-		final List<SearchResultDTO> templateDtos = templatePage.getContent().stream()
-				.map(template -> new SearchResultDTO(
-						template.getName(),
-						template.getIdentifier(),
-						getDisplayFieldName("name"),
-						template.getName(),
-						highlightSearchTerm(template.getName(), query)))
-				.toList();
+		final long totalElements = sectionPage.getTotalElements() + templatePage.getTotalElements();
+		if (totalElements > 0) {
+			final List<SearchResultDTO> sectionDtos = sectionPage.hasContent()
+					? convertToSearchResultDTO(sectionPage, query, searchableProperties.keySet()).getContent()
+					: List.of();
+			final List<SearchResultDTO> templateDtos = templatePage.getContent().stream()
+					.map(template -> new SearchResultDTO(
+							template.getName(),
+							template.getIdentifier(),
+							getDisplayFieldName("name"),
+							template.getName(),
+							highlightSearchTerm(template.getName(), query)))
+					.toList();
 
-		if (sectionPage.getTotalElements() + templatePage.getTotalElements() > 0) {
-			final List<SearchResultDTO> combined = interleave(templateDtos, sectionDtos, pageable.getPageSize());
-			Page<SearchResultDTO> dtoPage = new PageImpl<>(combined, pageable, combined.size());
+			final List<SearchResultDTO> combinedPrefix = interleave(templateDtos, sectionDtos, prefixPageable.getPageSize());
+			final int windowStart = Math.min(pageable.getPageNumber() * pageable.getPageSize(), combinedPrefix.size());
+			final int windowEnd = Math.min(windowStart + pageable.getPageSize(), combinedPrefix.size());
+			final List<SearchResultDTO> page = combinedPrefix.subList(windowStart, windowEnd);
+
+			Page<SearchResultDTO> dtoPage = new PageImpl<>(page, pageable, totalElements);
 			results.put(RelationType.STANDARD_SECTION.toString(),
 					new SearchResultSection(RelationType.STANDARD_SECTION.toString(), RelationType.STANDARD_SECTION.getMessage(), dtoPage));
 		}
