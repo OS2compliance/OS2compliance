@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -19,6 +21,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserService {
     private final UserDao userDao;
+    private final EntityManager entityManager;
 
     public User currentUser() {
         final String loggedInUserUuid = SecurityUtil.getLoggedInUserUuid();
@@ -72,6 +75,13 @@ public class UserService {
         return userDao.findByUserIdAndActiveIsTrue(userId);
     }
 
+    public List<User> findAllByUserIdIncludingInactive(final String userId) {
+        if (StringUtils.isEmpty(userId)) {
+            return Collections.emptyList();
+        }
+        return userDao.findByUserIdIgnoreCase(userId);
+    }
+
     public List<User> findAllByUuids(final Set<String> userUuids) {
         return userDao.findAllByUuidInAndActiveTrue(userUuids);
     }
@@ -90,6 +100,17 @@ public class UserService {
 
     public Page<User> getPaged(final int pageSize, final int page) {
         return userDao.findAll(Pageable.ofSize(pageSize).withPage(page));
+    }
+
+    /**
+     * Persists a new user, failing if the primary key is already taken.
+     * Unlike {@link #save(User)} this never degrades to an update of an existing row.
+     */
+    @Transactional
+    public User create(final User user) {
+        entityManager.persist(user);
+        entityManager.flush();
+        return user;
     }
 
     /**
