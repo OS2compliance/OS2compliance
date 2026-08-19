@@ -311,8 +311,8 @@ public class AssetsController {
 					: relatedDbAsset.getRelationBId();
 			dBSAssetDao.findById(dbsAssetId).ifPresent(dbsAsset -> model.addAttribute("dbsAssetLink", "https://www.dbstilsyn.dk/itsystem/" + dbsAsset.getDbsId() + "/view"));
 		}
-        model.addAttribute("isKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY) || p.getKey().equals((KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY))));
-        model.addAttribute("isOldKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY)));
+        model.addAttribute("isKitos", assetService.isKitosLinked(asset));
+        model.addAttribute("isOldKitos", assetService.isOldKitos(asset));
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
@@ -603,18 +603,18 @@ public class AssetsController {
 		existingAsset.setSupplier(asset.getSupplier());
 		existingAsset.setAssetType(asset.getAssetType());
 		existingAsset.setCriticality(asset.getCriticality());
-		existingAsset.setDescription(asset.getDescription());
 		existingAsset.setSociallyCritical(asset.isSociallyCritical());
 		existingAsset.setEmergencyPlanLink(asset.getEmergencyPlanLink());
 		existingAsset.setReEstablishmentPlanLink(asset.getReEstablishmentPlanLink());
 		existingAsset.setContractLink(asset.getContractLink());
 		existingAsset.setAssetStatus(asset.getAssetStatus());
 		existingAsset.setAssetCategory(asset.getAssetCategory());
-		existingAsset.setAiRisk(asset.getAiRisk());
 		existingAsset.setActive(asset.isActive());
 		existingAsset.setDepartments(asset.getDepartments());
 
-		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
+		// These fields cannot be changed when the asset comes from OS2kitos, and the form locks them, so they are
+		// not submitted at all. The check must match the "isKitos" flag the view is rendered with.
+		if (!assetService.isKitosLinked(existingAsset)) {
 			existingAsset.getProductLinks().clear();
 			for (AssetProductLink link : asset.getProductLinks()) {
 				if (link.getUrl() != null && !link.getUrl().isBlank()) {
@@ -622,12 +622,16 @@ public class AssetsController {
 					existingAsset.getProductLinks().add(link);
 				}
 			}
-			// These fields cannot be changed when the asset is linked to OS2kitos.
 			existingAsset.setOperationResponsibleUsers(asset.getOperationResponsibleUsers());
 			existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 			existingAsset.getManagers().clear();
 			existingAsset.getManagers().addAll(asset.getManagers());
-			existingAsset.setAiStatus(asset.getAiStatus());
+			existingAsset.setDescription(asset.getDescription());
+			existingAsset.setAiRisk(asset.getAiRisk());
+			// ai_status is not nullable, so an empty selection keeps the current value.
+			if (asset.getAiStatus() != null) {
+				existingAsset.setAiStatus(asset.getAiStatus());
+			}
 			existingAsset.setContractDate(asset.getContractDate());
 			existingAsset.setContractTermination(asset.getContractTermination());
 			existingAsset.setTerminationNotice(asset.getTerminationNotice());
