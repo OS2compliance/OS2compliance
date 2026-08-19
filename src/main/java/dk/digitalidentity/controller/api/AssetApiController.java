@@ -16,7 +16,6 @@ import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
-import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 
@@ -103,7 +102,6 @@ public class AssetApiController {
     public AssetEO create(@Valid @RequestBody final AssetCreateEO assetCreateEO) {
         final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetCreateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
         final Asset asset = assetMapper.fromEO(assetCreateEO);
-        asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
         asset.setResponsibleUsers(responsibleUsers);
         if (assetCreateEO.getResponsibleUsers() != null) {
             addManagers(assetCreateEO.getResponsibleUsers(), asset);
