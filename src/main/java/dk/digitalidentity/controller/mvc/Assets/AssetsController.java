@@ -596,11 +596,12 @@ public class AssetsController {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
+        // Ownership must be read from the stored asset. The form locks the responsible/manager fields for
+        // managers and for kitos assets, and unsubmitted fields would otherwise look like "no owners".
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(existingAsset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-		existingAsset.setSupplier(asset.getSupplier());
 		existingAsset.setAssetType(asset.getAssetType());
 		existingAsset.setCriticality(asset.getCriticality());
 		existingAsset.setSociallyCritical(asset.isSociallyCritical());
@@ -611,10 +612,13 @@ public class AssetsController {
 		existingAsset.setAssetCategory(asset.getAssetCategory());
 		existingAsset.setActive(asset.isActive());
 		existingAsset.setDepartments(asset.getDepartments());
+		// Editable for kitos assets as well, the value is pushed back to OS2kitos by AssetUpdatedEvent.
+		existingAsset.setArchive(asset.getArchive());
 
 		// These fields cannot be changed when the asset comes from OS2kitos, and the form locks them, so they are
 		// not submitted at all. The check must match the "isKitos" flag the view is rendered with.
 		if (!assetService.isKitosLinked(existingAsset)) {
+			existingAsset.setSupplier(asset.getSupplier());
 			existingAsset.getProductLinks().clear();
 			for (AssetProductLink link : asset.getProductLinks()) {
 				if (link.getUrl() != null && !link.getUrl().isBlank()) {
@@ -635,7 +639,6 @@ public class AssetsController {
 			existingAsset.setContractDate(asset.getContractDate());
 			existingAsset.setContractTermination(asset.getContractTermination());
 			existingAsset.setTerminationNotice(asset.getTerminationNotice());
-			existingAsset.setArchive(asset.getArchive());
 		}
         eventPublisher.publishEvent(AssetUpdatedEvent.builder()
                 .asset(assetMapper.toEO(existingAsset))

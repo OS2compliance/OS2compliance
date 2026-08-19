@@ -73,7 +73,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
-	private ContainsAITechnologyEnum aiStatus = ContainsAITechnologyEnum.UNDECIDED;
+	private ContainsAITechnologyEnum aiStatus;
 
 	@Column
 	@Enumerated(EnumType.STRING)

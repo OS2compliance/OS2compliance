@@ -5,10 +5,13 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.controller.mvc.Assets.AssetsController;
 import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.ChoiceValueDao;
+import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Property;
+import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.enums.AiRiskFactor;
+import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
@@ -16,11 +19,14 @@ import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,14 +40,15 @@ public class AssetsControllerEditTest extends BaseIntegrationTest {
 
     @Autowired private AssetsController assetsController;
     @Autowired private AssetDao assetDao;
+    @Autowired private SupplierDao supplierDao;
     @Autowired private ChoiceValueDao choiceValueDao;
     @PersistenceContext private EntityManager em;
 
-    @Test
-    public void keepsKitosOwnedFieldsWhenTheyAreNotSubmitted() {
-        // An asset whose OS2kitos link has been removed. The form still renders it as a kitos asset.
-        final Asset asset = persistAsset(true);
-        final Long assetId = asset.getId();
+    /** kitos_uuid is a live link, old_kitos_usage_uuid is a link that has been removed. Both lock the form. */
+    @ParameterizedTest
+    @ValueSource(strings = {KITOS_UUID_PROPERTY_KEY, X_KITOS_USAGE_UUID_PROPERTY_KEY})
+    public void keepsKitosOwnedFieldsWhenTheyAreNotSubmitted(final String kitosPropertyKey) {
+        final Long assetId = persistAsset(kitosPropertyKey).getId();
 
         assetsController.formEdit(submittedForm(assetId));
         em.flush();
@@ -51,12 +58,28 @@ public class AssetsControllerEditTest extends BaseIntegrationTest {
         assertThat(reloaded.getAiStatus()).isEqualTo(ContainsAITechnologyEnum.YES);
         assertThat(reloaded.getAiRisk()).isEqualTo(AiRiskFactor.HIGH);
         assertThat(reloaded.getDescription()).isEqualTo("Beskrivelse fra OS2kitos");
+        assertThat(reloaded.getSupplier()).isNotNull();
+        assertThat(reloaded.getTerminationNotice()).isEqualTo("3 måneder");
+    }
+
+    /** Archive is editable for kitos assets too, and is pushed back to OS2kitos when it changes. */
+    @Test
+    public void archiveIsSavedOnKitosAssets() {
+        final Long assetId = persistAsset(KITOS_UUID_PROPERTY_KEY).getId();
+
+        final Asset form = submittedForm(assetId);
+        form.setArchive(ArchiveDuty.B);
+
+        assetsController.formEdit(form);
+        em.flush();
+        em.clear();
+
+        assertThat(assetDao.findById(assetId).orElseThrow().getArchive()).isEqualTo(ArchiveDuty.B);
     }
 
     @Test
     public void editableAssetKeepsAiStatusButTakesTheOtherFields() {
-        final Asset asset = persistAsset(false);
-        final Long assetId = asset.getId();
+        final Long assetId = persistAsset(null).getId();
 
         final Asset form = submittedForm(assetId);
         form.setDescription("Ny beskrivelse");
@@ -81,13 +104,19 @@ public class AssetsControllerEditTest extends BaseIntegrationTest {
         form.setCriticality(Criticality.CRITICAL);
         form.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NOT_RELEVANT);
         form.setDepartments(new ArrayList<>());
+        form.setArchive(ArchiveDuty.UNDECIDED);
         form.setAiStatus(null);
         form.setAiRisk(null);
         form.setDescription(null);
+        form.setSupplier(null);
+        form.setTerminationNotice(null);
         return form;
     }
 
-    private Asset persistAsset(final boolean fromKitos) {
+    private Asset persistAsset(final String kitosPropertyKey) {
+        final Supplier supplier = new Supplier();
+        supplier.setName("Leverandør fra OS2kitos");
+
         final Asset asset = new Asset();
         asset.setName("AI aktiv");
         asset.setAssetType(itSystemType());
@@ -97,9 +126,12 @@ public class AssetsControllerEditTest extends BaseIntegrationTest {
         asset.setAiStatus(ContainsAITechnologyEnum.YES);
         asset.setAiRisk(AiRiskFactor.HIGH);
         asset.setDescription("Beskrivelse fra OS2kitos");
-        if (fromKitos) {
+        asset.setTerminationNotice("3 måneder");
+        asset.setArchive(ArchiveDuty.UNDECIDED);
+        asset.setSupplier(supplierDao.save(supplier));
+        if (kitosPropertyKey != null) {
             final Property property = new Property();
-            property.setKey(X_KITOS_USAGE_UUID_PROPERTY_KEY);
+            property.setKey(kitosPropertyKey);
             property.setValue("8ae0f0b6-6e1a-4f0e-9b6e-0f0b66e1a4f0");
             property.setEntity(asset);
             asset.getProperties().add(property);

@@ -132,8 +132,7 @@ public class AssetService implements TagableService<Asset> {
 	 * must be used when saving, otherwise the locked (and therefore unsubmitted) fields are wiped.
 	 */
 	public boolean isKitosLinked(final Asset asset) {
-		return hasProperty(asset, KitosConstants.KITOS_UUID_PROPERTY_KEY)
-				|| hasProperty(asset, KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY);
+		return hasProperty(asset, KitosConstants.KITOS_UUID_PROPERTY_KEY) || isOldKitos(asset);
 	}
 
 	/** True when the OS2kitos link has been removed, so the asset is no longer synchronized. */
