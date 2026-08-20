@@ -9,8 +9,10 @@ import java.util.Map;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.UnderlinePatterns;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFAbstractNum;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFNumbering;
 import org.apache.poi.xwpf.usermodel.XWPFStyle;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
@@ -22,10 +24,12 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.jspecify.annotations.NonNull;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTAbstractNum;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBorder;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTStyle;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPrBase;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STBorder;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STNumberFormat;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STStyleType;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblLayoutType;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth;
@@ -40,52 +44,65 @@ public class HtmlToDocxExporterService {
 	public ByteArrayOutputStream convert(@NonNull final String html) throws Exception {
 		final Document doc = Jsoup.parseBodyFragment(html);
 
-        try (final XWPFDocument xwpfDoc = new XWPFDocument()) {
+		try (final XWPFDocument xwpfDoc = new XWPFDocument()) {
 			final CssParser cssParser = new CssParser(doc);
 
 			cssParser.applyStyles(xwpfDoc);
 
-            final HtmlParser parser = new HtmlParser(xwpfDoc);
-            parser.parse(doc);
+			final HtmlParser parser = new HtmlParser(xwpfDoc);
+			parser.parse(doc);
 
-            final ByteArrayOutputStream out = new ByteArrayOutputStream();
-            xwpfDoc.write(out);
-            return out;
-        } catch (final IOException e) {
-            throw new Exception(e);
-        }
+			final ByteArrayOutputStream out = new ByteArrayOutputStream();
+			xwpfDoc.write(out);
+			return out;
+		} catch (final IOException e) {
+			throw new Exception(e);
+		}
 	}
 
-    private static class HtmlParser {
+	private static class HtmlParser {
 
-        private final XWPFDocument document;
+		private final XWPFDocument document;
 		private XWPFParagraph currentParagraph;
 		private XWPFTableCell currentCell;
 
-        HtmlParser(final XWPFDocument document) {
-            this.document = document;
-        }
+		HtmlParser(final XWPFDocument document) {
+			this.document = document;
+		}
 
-        void parse(Document html) {
+		private XWPFParagraph createParagraph() {
+			return currentCell != null
+				? currentCell.addParagraph()
+				: document.createParagraph();
+		}
+
+		void parse(Document html) {
 			parseBody(html.body());
-        }
+		}
 
-        void parseBody(final Element body) {
+		void parseBody(final Element body) {
 			processChildren(body, FormatState.none());
-        }
+		}
 
 		private void processNode(final Node node, final FormatState format) {
 			if (node instanceof final TextNode text) {
 				final String content = text.getWholeText();
-				if (!content.isBlank()) {
-					final XWPFRun run = currentParagraph.createRun();
-					run.setBold(format.bold());
-					run.setItalic(format.italic());
-					if (format.underline()) {
-						run.setUnderline(UnderlinePatterns.SINGLE);
-					}
-					run.setText(content);
+				if (content.isBlank() && !content.equals(" ")) {
+					return;
 				}
+				if (content.equals(" ") && (node.previousSibling() == null || isBlockOrBreak(node.previousSibling()))) {
+					return;
+				}
+				if (currentParagraph == null) {
+					currentParagraph = createParagraph();
+				}
+				final XWPFRun run = currentParagraph.createRun();
+				run.setBold(format.bold());
+				run.setItalic(format.italic());
+				if (format.underline()) {
+					run.setUnderline(UnderlinePatterns.SINGLE);
+				}
+				run.setText(content);
 			}
 			else if (node instanceof final Element element) {
 				applyParagraphStyle(element);
@@ -93,21 +110,41 @@ public class HtmlToDocxExporterService {
 			}
 		}
 
-        private void processElement(final Element element, final FormatState format) {
-            final HtmlTag tag = HtmlTag.from(element);
+		private boolean isBlockOrBreak(final Node node) {
+			if (node instanceof final Element el) {
+				return switch (HtmlTag.from(el)) {
+					case HEADING, P, DIV, TABLE, TR, TD, TH, OL, UL, LI, BR -> true;
+					default -> false;
+				};
+			}
+			return false;
+		}
 
-            switch (tag) {
-                case HEADING -> processHeading(element);
+		private void processElement(final Element element, final FormatState format) {
+			final HtmlTag tag = HtmlTag.from(element);
+
+			switch (tag) {
+				case HEADING -> processHeading(element);
 				case P, DIV -> processBlock(element, format);
 				case TABLE -> processTable(element, format);
 				case TR, TD, TH -> processChildren(element, format);
-                case B -> processChildren(element, format.withBold());
-                case I -> processChildren(element, format.withItalic());
-                case U -> processChildren(element, format.withUnderline());
+				case B -> processChildren(element, format.withBold());
+				case I -> processChildren(element, format.withItalic());
+				case U -> processChildren(element, format.withUnderline());
 				case IMG -> processImage(element);
-                default -> processChildren(element, format);
-            }
-        }
+				case OL, UL -> processList(element, format, 0, null);
+			case BR -> {
+				if (currentParagraph != null) {
+					if (!currentParagraph.getRuns().isEmpty()) {
+						currentParagraph.getRuns().getLast().addBreak();
+					} else {
+						currentParagraph.createRun().addBreak();
+					}
+				}
+			}
+				default -> processChildren(element, format);
+			}
+		}
 
 		private void processImage(final Element element) {
 			final String src = element.attr("src");
@@ -125,7 +162,7 @@ public class HtmlToDocxExporterService {
 				case "png" -> XWPFDocument.PICTURE_TYPE_PNG;
 				case "jpeg", "jpg" -> XWPFDocument.PICTURE_TYPE_JPEG;
 				case "gif" -> XWPFDocument.PICTURE_TYPE_GIF;
-				default -> XWPFDocument.PICTURE_TYPE_PNG;
+					default -> XWPFDocument.PICTURE_TYPE_PNG;
 			};
 
 			final String width = element.attr("width");
@@ -134,15 +171,18 @@ public class HtmlToDocxExporterService {
 			final int cy = height.isEmpty() ? 600000 : Integer.parseInt(height.replace("px", "")) * 9525;
 
 			try {
+				if (currentParagraph == null) {
+					currentParagraph = createParagraph();
+				}
 				document.addPictureData(data, type);
 				final XWPFRun run = currentParagraph.createRun();
 				run.addPicture(
-					new java.io.ByteArrayInputStream(data),
-					type,
-					"Test",
-					cx,
-					cy
-				);
+						new java.io.ByteArrayInputStream(data),
+						type,
+						"Test", // TODO
+						cx,
+						cy
+						);
 			} catch (final Exception e) {
 				log.warn("Failed to add image: {}", e.getMessage());
 			}
@@ -178,17 +218,14 @@ public class HtmlToDocxExporterService {
 					processChildren(htmlCells.get(x), cellFormat);
 					currentCell = null;
 				}
+				currentParagraph = null;
 			}
 		}
 
 		private void processHeading(final Element element) {
 			final int level = Integer.parseInt(element.tagName().substring(1));
-			if (currentCell != null) {
-				if (!currentParagraph.getRuns().isEmpty()) {
-					currentParagraph = currentCell.addParagraph();
-				}
-			} else {
-				currentParagraph = document.createParagraph();
+			if (currentCell == null || !currentParagraph.getRuns().isEmpty()) {
+				currentParagraph = createParagraph();
 			}
 			applyParagraphStyle(element);
 			final XWPFRun run = currentParagraph.createRun();
@@ -206,26 +243,100 @@ public class HtmlToDocxExporterService {
 			run.setText(element.text());
 		}
 
+		private boolean isWhitespaceOnly(final XWPFParagraph paragraph) {
+			return !paragraph.getRuns().isEmpty()
+				&& paragraph.getRuns().stream().allMatch(r -> {
+					final String text = r.text();
+					return text != null && text.isBlank();
+				});
+		}
+
 		private void processBlock(final Element element, final FormatState format) {
-			if (currentCell != null) {
-				if (currentParagraph.getRuns().isEmpty()) {
-					// reuse existing paragraph
+			if (currentCell == null || !currentParagraph.getRuns().isEmpty()) {
+				if (currentCell != null && isWhitespaceOnly(currentParagraph)) {
+					for (int i = currentParagraph.getRuns().size() - 1; i >= 0; i--) {
+						currentParagraph.removeRun(i);
+					}
 				} else {
-					currentParagraph = currentCell.addParagraph();
+					currentParagraph = createParagraph();
 				}
-			} else {
-				currentParagraph = document.createParagraph();
 			}
 			applyParagraphStyle(element);
 			currentParagraph.setSpacingAfter(100);
 			processChildren(element, format);
 		}
 
-        private void processChildren(final Element element, final FormatState format) {
-            for (final Node child : element.childNodes()) {
-                processNode(child, format);
-            }
-        }
+		private void processList(final Element element, final FormatState format,
+				final int depth, final BigInteger parentNumId) {
+			final var numbering = document.getNumbering() != null
+				? document.getNumbering() : document.createNumbering();
+
+			final BigInteger numId = parentNumId != null
+				? parentNumId
+				: createNumbering(element, depth, numbering);
+
+			for (final Node child : element.childNodes()) {
+				if (child instanceof Element e && HtmlTag.from(e) == HtmlTag.LI) {
+					processListItem(e, format, numId, depth);
+				}
+			}
+		}
+
+		private BigInteger createNumbering(final Element element, final int depth,
+				final XWPFNumbering numbering) {
+			final boolean ordered = HtmlTag.from(element) == HtmlTag.OL;
+			final var cTAbstractNum = CTAbstractNum.Factory.newInstance();
+			cTAbstractNum.setAbstractNumId(
+					BigInteger.valueOf(numbering.getAbstractNums().size()));
+
+			for (int i = 0; i <= depth; i++) {
+				addNumberingLevel(cTAbstractNum, i, ordered);
+			}
+
+			final var abstractNum = new XWPFAbstractNum(cTAbstractNum, numbering);
+			return numbering.addNum(numbering.addAbstractNum(abstractNum));
+		}
+
+		private void addNumberingLevel(final CTAbstractNum cTAbstractNum,
+				final int index, final boolean ordered) {
+			final var lvl = cTAbstractNum.addNewLvl();
+			lvl.setIlvl(BigInteger.valueOf(index));
+			lvl.addNewNumFmt().setVal(
+					ordered ? STNumberFormat.DECIMAL : STNumberFormat.BULLET);
+			lvl.addNewLvlText().setVal(
+					ordered ? "%" + (index + 1) + "." : "\u2022");
+			lvl.addNewStart().setVal(BigInteger.ONE);
+
+			if (!ordered) {
+				final var fonts = lvl.addNewRPr().addNewRFonts();
+				fonts.setAscii("Symbol");
+				fonts.setHAnsi("Symbol");
+			}
+
+			final var ind = lvl.addNewPPr().addNewInd();
+			ind.setLeft(BigInteger.valueOf(720L * (index + 1)));
+			ind.setHanging(BigInteger.valueOf(180));
+		}
+
+		private void processListItem(final Element element, final FormatState format,
+				final BigInteger numId, final int depth) {
+			currentParagraph = createParagraph();
+			currentParagraph.setSpacingAfter(100);
+
+			final var numPr = currentParagraph.getCTP().addNewPPr().addNewNumPr();
+			numPr.addNewNumId().setVal(numId);
+			numPr.addNewIlvl().setVal(BigInteger.valueOf(depth));
+
+			for (final Node child : element.childNodes()) {
+				processNode(child, format);
+			}
+		}
+
+		private void processChildren(final Element element, final FormatState format) {
+			for (final Node child : element.childNodes()) {
+				processNode(child, format);
+			}
+		}
 
 		private void applyColumnWidths(final Element table, final XWPFTable xwpfTable) {
 			final Elements cols = table.select("colgroup col");
@@ -263,7 +374,7 @@ public class HtmlToDocxExporterService {
 			final var tblLayout = tblPr.addNewTblLayout();
 			tblLayout.setType(STTblLayoutType.Enum.forString("fixed"));
 		}
-		
+
 		private void applyParagraphStyle(final Element element) {
 			final String style = element.attr("style");
 			if (style.isEmpty() || currentParagraph == null) {
@@ -279,7 +390,7 @@ public class HtmlToDocxExporterService {
 					case "center" -> ParagraphAlignment.CENTER;
 					case "right" -> ParagraphAlignment.RIGHT;
 					case "justify" -> ParagraphAlignment.BOTH;
-					default -> null;
+						default -> null;
 				});
 			}
 		}
@@ -297,7 +408,7 @@ public class HtmlToDocxExporterService {
 
 
 		private enum HtmlTag {
-			HEADING, P, DIV, TABLE, TR, TD, TH, B, I, U, IMG, UNKNOWN;
+			HEADING, P, DIV, TABLE, TR, TD, TH, B, I, U, IMG, OL, UL, LI, BR, UNKNOWN;
 
 			static HtmlTag from(final Element element) {
 				final String tag = element.tagName().toLowerCase();
@@ -313,6 +424,10 @@ public class HtmlToDocxExporterService {
 					case "i", "em" -> I;
 					case "u" -> U;
 					case "img" -> IMG;
+					case "ol" -> OL;
+					case "ul" -> UL;
+					case "li" -> LI;
+					case "br" -> BR;
 					default -> UNKNOWN;
 				};
 			}
@@ -336,7 +451,7 @@ public class HtmlToDocxExporterService {
 				return new FormatState(bold, italic, true);
 			}
 		}
-    }
+	}
 
 	private static class CssParser {
 
@@ -417,9 +532,9 @@ public class HtmlToDocxExporterService {
 		}
 
 		private void setBorderSide(final CTBorder border,
-								   final STBorder.Enum type,
-								   final int size,
-								   final String color) {
+				final STBorder.Enum type,
+				final int size,
+				final String color) {
 			border.setVal(type);
 			border.setSz(BigInteger.valueOf(size));
 			border.setColor(color);
@@ -467,8 +582,8 @@ public class HtmlToDocxExporterService {
 			}
 			if (value.startsWith("rgb")) {
 				final var matcher = java.util.regex.Pattern
-						.compile("(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)")
-						.matcher(value);
+					.compile("(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)")
+					.matcher(value);
 				if (matcher.find()) {
 					return String.format("%02X%02X%02X",
 							Integer.parseInt(matcher.group(1)),
