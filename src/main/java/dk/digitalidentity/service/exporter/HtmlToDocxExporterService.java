@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.UnderlinePatterns;
@@ -49,7 +50,7 @@ public class HtmlToDocxExporterService {
 
 			cssParser.applyStyles(xwpfDoc);
 
-			final HtmlParser parser = new HtmlParser(xwpfDoc);
+			final HtmlParser parser = new HtmlParser(xwpfDoc, cssParser.getClassBackgroundColors());
 			parser.parse(doc);
 
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -63,11 +64,13 @@ public class HtmlToDocxExporterService {
 	private static class HtmlParser {
 
 		private final XWPFDocument document;
+		private final Map<String, String> classBackgroundColors;
 		private XWPFParagraph currentParagraph;
 		private XWPFTableCell currentCell;
 
-		HtmlParser(final XWPFDocument document) {
+		HtmlParser(final XWPFDocument document, final Map<String, String> classBackgroundColors) {
 			this.document = document;
+			this.classBackgroundColors = classBackgroundColors;
 		}
 
 		private XWPFParagraph createParagraph() {
@@ -215,11 +218,56 @@ public class HtmlToDocxExporterService {
 					final FormatState cellFormat = htmlCells.get(x).tagName().equalsIgnoreCase("th")
 						? format.withBold()
 						: format;
+					applyCellShading(htmlCells.get(x), currentCell);
 					processChildren(htmlCells.get(x), cellFormat);
 					currentCell = null;
 				}
 				currentParagraph = null;
 			}
+		}
+
+		private void applyCellShading(final Element htmlCell, final XWPFTableCell cell) {
+			if (classBackgroundColors == null || classBackgroundColors.isEmpty()) {
+				return;
+			}
+
+			final String ownColor = findBackgroundColor(htmlCell);
+			if (ownColor != null) {
+				cell.getCTTc().addNewTcPr().addNewShd().setFill(ownColor);
+				return;
+			}
+
+			final java.util.Set<String> colors = new java.util.LinkedHashSet<>();
+			for (final Element descendant : htmlCell.select("[class]")) {
+				final String color = findBackgroundColor(descendant);
+				if (color != null) {
+					colors.add(normalizeColor(color));
+				}
+			}
+
+			if (colors.size() == 1) {
+				cell.getCTTc().addNewTcPr().addNewShd().setFill(colors.iterator().next());
+			}
+		}
+
+		private String normalizeColor(final String hex) {
+			if (hex != null && hex.length() == 3) {
+				return "" + hex.charAt(0) + hex.charAt(0) + hex.charAt(1) + hex.charAt(1) + hex.charAt(2) + hex.charAt(2);
+			}
+			return hex;
+		}
+
+		private String findBackgroundColor(final Element element) {
+			for (final String token : element.attr("class").trim().split("\\s+")) {
+				if (token.isEmpty()) {
+					continue;
+				}
+				final String color = classBackgroundColors.get(token);
+				if (color != null) {
+					return color;
+				}
+			}
+			return null;
 		}
 
 		private void processHeading(final Element element) {
@@ -455,10 +503,28 @@ public class HtmlToDocxExporterService {
 
 	private static class CssParser {
 
+		private static final Pattern RGB_COLOR = Pattern.compile("(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)");
 		private final String css;
+		private final List<CssRule> rules;
 
 		CssParser(final Document html) {
 			this.css = html.select("style").html();
+			this.rules = parseCssRules();
+		}
+
+		private List<CssRule> parseCssRules() {
+			final List<CssRule> rules = new java.util.ArrayList<>();
+			for (final String part : css.split("}")) {
+				final String[] ruleParts = part.split("\\{", 2);
+				if (ruleParts.length < 2) {
+					continue;
+				}
+				rules.add(new CssRule(ruleParts[0].trim().toLowerCase(), ruleParts[1].trim().toLowerCase()));
+			}
+			return rules;
+		}
+
+		private record CssRule(String selectors, String declarations) {
 		}
 
 		void applyStyles(final XWPFDocument doc) {
@@ -552,23 +618,45 @@ public class HtmlToDocxExporterService {
 		Map<String, String> getAllProperties(final String selector) {
 			final Map<String, String> result = new java.util.LinkedHashMap<>();
 
-			for (final String rule : css.split("}")) {
-				final String[] parts = rule.split("\\{", 2);
-				if (parts.length < 2) {
+			for (final CssRule rule : rules) {
+				if (!java.util.Arrays.asList(rule.selectors().split("\\s*,\\s*")).contains(selector)) {
 					continue;
 				}
 
-				final String selectors = parts[0].trim().toLowerCase();
-				final String declarations = parts[1].trim().toLowerCase();
-
-				if (!java.util.Arrays.asList(selectors.split("\\s*,\\s*")).contains(selector)) {
-					continue;
-				}
-
-				for (final String decl : declarations.split(";")) {
+				for (final String decl : rule.declarations().split(";")) {
 					final String[] kv = decl.split(":", 2);
 					if (kv.length == 2) {
 						result.put(kv[0].trim(), kv[1].trim());
+					}
+				}
+			}
+
+			return result;
+		}
+
+		Map<String, String> getClassBackgroundColors() {
+			final Map<String, String> result = new java.util.LinkedHashMap<>();
+
+			for (final CssRule rule : rules) {
+				final String[] selectors = rule.selectors().split("\\s*,\\s*");
+				final String[] declarations = rule.declarations().split(";");
+
+				for (final String selector : selectors) {
+					if (!selector.matches("^\\.([a-z0-9_-]+)$")) {
+						continue;
+					}
+
+					for (final String declaration : declarations) {
+						final String[] kv = declaration.split(":", 2);
+						if (kv.length != 2 || !kv[0].trim().equals("background-color")) {
+							continue;
+						}
+
+						final String hex = toHexColor(kv[1].trim().replaceAll("!\\s*important\\s*", ""));
+						if (hex != null) {
+							result.put(selector.substring(1), hex);
+							break;
+						}
 					}
 				}
 			}
@@ -581,9 +669,7 @@ public class HtmlToDocxExporterService {
 				return value.substring(1).toUpperCase();
 			}
 			if (value.startsWith("rgb")) {
-				final var matcher = java.util.regex.Pattern
-					.compile("(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)")
-					.matcher(value);
+				final var matcher = RGB_COLOR.matcher(value);
 				if (matcher.find()) {
 					return String.format("%02X%02X%02X",
 							Integer.parseInt(matcher.group(1)),
