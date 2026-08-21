@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -83,6 +84,18 @@ public class HtmlToDocxExporterService {
 			this.document = document;
 			this.classBackgroundColors = classBackgroundColors;
 		}
+
+		private Optional<Integer> parsePx(final String value) {
+			if (value.isEmpty()) {
+				return Optional.empty();
+			}
+			final String digits = value.replace("px", "").trim();
+			if (!digits.chars().allMatch(Character::isDigit)) {
+				return Optional.empty();
+			}
+			return Optional.of(Integer.parseInt(digits) * 9525);
+		}
+
 
 		private XWPFParagraph createParagraph() {
 			return currentCell != null
@@ -167,6 +180,9 @@ public class HtmlToDocxExporterService {
 			}
 
 			final int headerEnd = src.indexOf(";");
+			if (headerEnd < 0) {
+				return;
+			}
 			final String mime = src.substring(5, headerEnd);
 			final String base64 = src.substring(headerEnd + 8);
 			final byte[] data = java.util.Base64.getDecoder().decode(base64);
@@ -179,10 +195,8 @@ public class HtmlToDocxExporterService {
 					default -> XWPFDocument.PICTURE_TYPE_PNG;
 			};
 
-			final String width = element.attr("width");
-			final String height = element.attr("height");
-			final int cx = width.isEmpty() ? 600000 : Integer.parseInt(width.replace("px", "")) * 9525;
-			final int cy = height.isEmpty() ? 600000 : Integer.parseInt(height.replace("px", "")) * 9525;
+			final int cx = parsePx(element.attr("width")).orElse(600000);
+			final int cy = parsePx(element.attr("height")).orElse(600000);
 
 			try {
 				if (currentParagraph == null) {
@@ -425,7 +439,13 @@ public class HtmlToDocxExporterService {
 			for (int i = 0; i < cols.size() && i < gridCols; i++) {
 				final String width = cols.get(i).attr("width");
 				if (!width.isEmpty() && width.endsWith("%")) {
-					final int pct = Integer.parseInt(width.replace("%", "").trim());
+					final String digits = width.replace("%", "").trim();
+
+					if (!digits.chars().allMatch(Character::isDigit)) {
+						continue;
+					}
+
+					final int pct = Integer.parseInt(digits);
 					final int widthTwips = pageWidth * pct / 100;
 					tblGrid.getGridColArray(i).setW(BigInteger.valueOf(widthTwips));
 				}
@@ -597,7 +617,10 @@ public class HtmlToDocxExporterService {
 
 			for (final String part : parts) {
 				if (part.endsWith("px")) {
-					borderWidth = Integer.parseInt(part.replace("px", "").trim());
+					final String borderDigits = part.replace("px", "").trim();
+					if (borderDigits.chars().allMatch(Character::isDigit)) {
+						borderWidth = Integer.parseInt(borderDigits);
+					}
 				}
 				else {
 					final String hex = toHexColor(part);
@@ -629,7 +652,12 @@ public class HtmlToDocxExporterService {
 
 		private void applyWidth(final CTTblPrBase tblPr, final String width) {
 			if (width.endsWith("%")) {
-				final int pct = Integer.parseInt(width.replace("%", "").trim());
+				final String digits = width.replace("%", "").trim();
+				if (!digits.chars().allMatch(Character::isDigit)) {
+					return; 
+				}
+
+				final int pct = Integer.parseInt(digits);
 				final CTTblWidth tblW = tblPr.addNewTblW();
 				tblW.setW(BigInteger.valueOf(pct * 50));
 				tblW.setType(STTblWidth.Enum.forString("pct"));
