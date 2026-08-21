@@ -477,9 +477,8 @@ public class ReportController {
 				.body(outputStream -> {
 					data.writeTo(outputStream);
 				});
-			} catch(Exception e) {
-				//TODO
-				log.error("Failed to parse html", e);
+			} catch(IOException e) {
+				log.error("Failed to convert DPIA to docx", e);
 				return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}

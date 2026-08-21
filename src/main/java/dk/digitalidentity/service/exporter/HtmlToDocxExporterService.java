@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
@@ -15,6 +17,7 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFNumbering;
 import org.apache.poi.xwpf.usermodel.XWPFStyle;
+import org.apache.poi.xwpf.usermodel.XWPFStyles;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
@@ -27,9 +30,19 @@ import org.jsoup.select.Elements;
 import org.jspecify.annotations.NonNull;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTAbstractNum;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBorder;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTFonts;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTInd;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTLvl;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTNumPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTStyle;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblBorders;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblGrid;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblLayoutType;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPrBase;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblWidth;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STBorder;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STBorder.Enum;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STNumberFormat;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STStyleType;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblLayoutType;
@@ -42,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HtmlToDocxExporterService {
 
-	public ByteArrayOutputStream convert(@NonNull final String html) throws Exception {
+	public ByteArrayOutputStream convert(@NonNull final String html) throws IOException {
 		final Document doc = Jsoup.parseBodyFragment(html);
 
 		try (final XWPFDocument xwpfDoc = new XWPFDocument()) {
@@ -56,8 +69,6 @@ public class HtmlToDocxExporterService {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			xwpfDoc.write(out);
 			return out;
-		} catch (final IOException e) {
-			throw new Exception(e);
 		}
 	}
 
@@ -197,10 +208,18 @@ public class HtmlToDocxExporterService {
 				return;
 			}
 
-			final int cols = htmlRows.getFirst().select("td, th").size();
+			final int cols = htmlRows.stream()
+				.mapToInt(r -> r.select("td, th").size())
+				.max()
+				.orElse(0);
+
+			if (cols == 0) {
+				return;
+			}
+
 			final XWPFTable table = document.createTable(htmlRows.size(), cols);
 
-			final var tblGrid = table.getCTTbl().addNewTblGrid();
+			final CTTblGrid tblGrid = table.getCTTbl().addNewTblGrid();
 			for (int i = 0; i < cols; i++) {
 				tblGrid.addNewGridCol().setW(BigInteger.valueOf(12240 / cols));
 			}
@@ -211,7 +230,8 @@ public class HtmlToDocxExporterService {
 				final Elements htmlCells = htmlRows.get(y).select("td, th");
 				final XWPFTableRow row = table.getRow(y);
 
-				for (int x = 0; x < htmlCells.size(); x++) {
+				final int cellCount = Math.min(htmlCells.size(), cols);
+				for (int x = 0; x < cellCount; x++) {
 					currentCell = row.getCell(x);
 					currentParagraph = currentCell.getParagraphs().getFirst();
 
@@ -316,7 +336,7 @@ public class HtmlToDocxExporterService {
 
 		private void processList(final Element element, final FormatState format,
 				final int depth, final BigInteger parentNumId) {
-			final var numbering = document.getNumbering() != null
+			final XWPFNumbering numbering = document.getNumbering() != null
 				? document.getNumbering() : document.createNumbering();
 
 			final BigInteger numId = parentNumId != null
@@ -333,7 +353,7 @@ public class HtmlToDocxExporterService {
 		private BigInteger createNumbering(final Element element, final int depth,
 				final XWPFNumbering numbering) {
 			final boolean ordered = HtmlTag.from(element) == HtmlTag.OL;
-			final var cTAbstractNum = CTAbstractNum.Factory.newInstance();
+			final CTAbstractNum cTAbstractNum = CTAbstractNum.Factory.newInstance();
 			cTAbstractNum.setAbstractNumId(
 					BigInteger.valueOf(numbering.getAbstractNums().size()));
 
@@ -341,13 +361,13 @@ public class HtmlToDocxExporterService {
 				addNumberingLevel(cTAbstractNum, i, ordered);
 			}
 
-			final var abstractNum = new XWPFAbstractNum(cTAbstractNum, numbering);
+			final XWPFAbstractNum abstractNum = new XWPFAbstractNum(cTAbstractNum, numbering);
 			return numbering.addNum(numbering.addAbstractNum(abstractNum));
 		}
 
 		private void addNumberingLevel(final CTAbstractNum cTAbstractNum,
 				final int index, final boolean ordered) {
-			final var lvl = cTAbstractNum.addNewLvl();
+			final CTLvl lvl = cTAbstractNum.addNewLvl();
 			lvl.setIlvl(BigInteger.valueOf(index));
 			lvl.addNewNumFmt().setVal(
 					ordered ? STNumberFormat.DECIMAL : STNumberFormat.BULLET);
@@ -356,12 +376,12 @@ public class HtmlToDocxExporterService {
 			lvl.addNewStart().setVal(BigInteger.ONE);
 
 			if (!ordered) {
-				final var fonts = lvl.addNewRPr().addNewRFonts();
+				final CTFonts fonts = lvl.addNewRPr().addNewRFonts();
 				fonts.setAscii("Symbol");
 				fonts.setHAnsi("Symbol");
 			}
 
-			final var ind = lvl.addNewPPr().addNewInd();
+			final CTInd ind = lvl.addNewPPr().addNewInd();
 			ind.setLeft(BigInteger.valueOf(720L * (index + 1)));
 			ind.setHanging(BigInteger.valueOf(180));
 		}
@@ -371,7 +391,7 @@ public class HtmlToDocxExporterService {
 			currentParagraph = createParagraph();
 			currentParagraph.setSpacingAfter(100);
 
-			final var numPr = currentParagraph.getCTP().addNewPPr().addNewNumPr();
+			final CTNumPr numPr = currentParagraph.getCTP().addNewPPr().addNewNumPr();
 			numPr.addNewNumId().setVal(numId);
 			numPr.addNewIlvl().setVal(BigInteger.valueOf(depth));
 
@@ -392,7 +412,7 @@ public class HtmlToDocxExporterService {
 				return;
 			}
 
-			final var tblGrid = xwpfTable.getCTTbl().getTblGrid();
+			final CTTblGrid tblGrid = xwpfTable.getCTTbl().getTblGrid();
 			if (tblGrid == null) {
 				return;
 			}
@@ -412,14 +432,14 @@ public class HtmlToDocxExporterService {
 		}
 
 		private void applyTableStyle(final Element element, final XWPFTable table) {
-			final var tblPr = table.getCTTbl().addNewTblPr();
+			final CTTblPr tblPr = table.getCTTbl().addNewTblPr();
 			tblPr.addNewTblStyle().setVal("TableGrid");
 
-			final var tblW = tblPr.addNewTblW();
+			final CTTblWidth tblW = tblPr.addNewTblW();
 			tblW.setW(BigInteger.valueOf(5000));
 			tblW.setType(STTblWidth.Enum.forString("pct"));
 
-			final var tblLayout = tblPr.addNewTblLayout();
+			final CTTblLayoutType tblLayout = tblPr.addNewTblLayout();
 			tblLayout.setType(STTblLayoutType.Enum.forString("fixed"));
 		}
 
@@ -541,16 +561,16 @@ public class HtmlToDocxExporterService {
 				return;
 			}
 
-			final var styles = doc.createStyles();
-			final var ctStyle = CTStyle.Factory.newInstance();
+			final XWPFStyles styles = doc.createStyles();
+			final CTStyle ctStyle = CTStyle.Factory.newInstance();
 			ctStyle.setType(STStyleType.TABLE);
 			ctStyle.setStyleId("TableGrid");
 			ctStyle.addNewName().setVal("Table Grid");
 			ctStyle.addNewQFormat();
 
-			final var tblPr = ctStyle.addNewTblPr();
+			final CTTblPrBase tblPr = ctStyle.addNewTblPr();
 
-			for (final var entry : allProps.entrySet()) {
+			for (final Entry<String, String> entry : allProps.entrySet()) {
 				final String prop = entry.getKey();
 				final String value = entry.getValue();
 
@@ -586,8 +606,8 @@ public class HtmlToDocxExporterService {
 				}
 			}
 
-			final var borders = tblPr.addNewTblBorders();
-			final var borderType = STBorder.Enum.forString("single");
+			final CTTblBorders borders = tblPr.addNewTblBorders();
+			final Enum borderType = STBorder.Enum.forString("single");
 
 			setBorderSide(borders.addNewTop(), borderType, borderWidth, borderColor);
 			setBorderSide(borders.addNewBottom(), borderType, borderWidth, borderColor);
@@ -609,7 +629,7 @@ public class HtmlToDocxExporterService {
 		private void applyWidth(final CTTblPrBase tblPr, final String width) {
 			if (width.endsWith("%")) {
 				final int pct = Integer.parseInt(width.replace("%", "").trim());
-				final var tblW = tblPr.addNewTblW();
+				final CTTblWidth tblW = tblPr.addNewTblW();
 				tblW.setW(BigInteger.valueOf(pct * 50));
 				tblW.setType(STTblWidth.Enum.forString("pct"));
 			}
@@ -669,7 +689,7 @@ public class HtmlToDocxExporterService {
 				return value.substring(1).toUpperCase();
 			}
 			if (value.startsWith("rgb")) {
-				final var matcher = RGB_COLOR.matcher(value);
+				final Matcher matcher = RGB_COLOR.matcher(value);
 				if (matcher.find()) {
 					return String.format("%02X%02X%02X",
 							Integer.parseInt(matcher.group(1)),

@@ -428,7 +428,7 @@ public class AssetService implements TagableService<Asset> {
 		return convertHtmlToPdf(html);
 	}
 
-	public ByteArrayOutputStream getDPIADocx(DPIA dpia) throws Exception {
+	public ByteArrayOutputStream getDPIADocx(DPIA dpia) throws IOException {
 		String html = getDPIAHTML(dpia);
 		return htmlToDocxExporterService.convert(html);
 	}
