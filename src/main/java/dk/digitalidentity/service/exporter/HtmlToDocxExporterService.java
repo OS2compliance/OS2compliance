@@ -187,7 +187,11 @@ public class HtmlToDocxExporterService {
 			final String base64 = src.substring(headerEnd + 8);
 			final byte[] data = java.util.Base64.getDecoder().decode(base64);
 
-			final String ext = mime.split("/")[1];
+			final String[] mimeParts = mime.split("/");
+			if (mimeParts.length < 2) {
+				return;
+			}
+			final String ext = mimeParts[1];
 			final int type = switch (ext) {
 				case "png" -> XWPFDocument.PICTURE_TYPE_PNG;
 				case "jpeg", "jpg" -> XWPFDocument.PICTURE_TYPE_JPEG;
