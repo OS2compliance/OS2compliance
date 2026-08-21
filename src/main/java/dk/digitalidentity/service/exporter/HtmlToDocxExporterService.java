@@ -109,7 +109,7 @@ public class HtmlToDocxExporterService {
 				}
 				if (currentParagraph == null) {
 					currentParagraph = createParagraph();
-				}
+			}
 				final XWPFRun run = currentParagraph.createRun();
 				run.setBold(format.bold());
 				run.setItalic(format.italic());
@@ -188,12 +188,13 @@ public class HtmlToDocxExporterService {
 				if (currentParagraph == null) {
 					currentParagraph = createParagraph();
 				}
-				document.addPictureData(data, type);
+
 				final XWPFRun run = currentParagraph.createRun();
+
 				run.addPicture(
 						new java.io.ByteArrayInputStream(data),
 						type,
-						"Test", // TODO
+						java.util.UUID.randomUUID().toString(),
 						cx,
 						cy
 						);
