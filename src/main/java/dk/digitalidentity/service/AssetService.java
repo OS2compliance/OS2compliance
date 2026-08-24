@@ -8,6 +8,7 @@ import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.dao.grid.DBSAssetGridDao;
+import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -123,6 +124,24 @@ public class AssetService implements TagableService<Asset> {
 		boolean isResponsible = isResponsibleFor(asset);
 		boolean isManager = asset.getManagers().stream().map(User::getUuid).anyMatch(uuid -> uuid.equals(SecurityUtil.getPrincipalUuid()));
 		return isResponsible || isManager;
+	}
+
+	/**
+	 * True when the asset originates from OS2kitos, either through a live link or through a link that has since
+	 * been removed. Fields that are owned by OS2kitos are locked in the UI for these assets, so the same check
+	 * must be used when saving, otherwise the locked (and therefore unsubmitted) fields are wiped.
+	 */
+	public boolean isKitosLinked(final Asset asset) {
+		return hasProperty(asset, KitosConstants.KITOS_UUID_PROPERTY_KEY) || isOldKitos(asset);
+	}
+
+	/** True when the OS2kitos link has been removed, so the asset is no longer synchronized. */
+	public boolean isOldKitos(final Asset asset) {
+		return hasProperty(asset, KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY);
+	}
+
+	private static boolean hasProperty(final Asset asset, final String key) {
+		return asset.getProperties().stream().anyMatch(p -> p.getKey().equals(key));
 	}
 
 	public Optional<AssetOversight> getOversight(final Long oversightId) {
