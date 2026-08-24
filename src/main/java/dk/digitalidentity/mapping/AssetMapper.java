@@ -260,6 +260,8 @@ public interface AssetMapper {
         @Mapping(target = "dpiaOptOutReason", ignore = true),
         @Mapping(target = "oversightResponsibleUser", ignore = true),
         @Mapping(target = "assetType", ignore = true),
+		// Not taken from the payload; the asset starts out "uafklaret" like the other create paths.
+		@Mapping(target = "aiStatus", constant = "UNDECIDED"),
 		@Mapping(target = "aiRisk", ignore = true),
 		@Mapping(target = "active", ignore = true),
 		@Mapping(target = "dpiaCompletionStatus", ignore = true),
