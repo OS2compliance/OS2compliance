@@ -114,8 +114,12 @@ UPDATE properties p JOIN dpia_id_flyt f ON p.prop_value = CAST(f.gammelt_id AS C
 SET p.prop_value = CAST(f.nyt_id AS CHAR)
 WHERE p.prop_key = 'linked_dpia';
 
--- GREATEST sikrer at next_val kun kan stige
+-- INSERT IGNORE foerst: mangler generatorraekken, rammer UPDATE'en ingenting, og Hibernate seeder
+-- fra initialValue ved naeste opstart og deler id'er ud der er i brug. GREATEST sikrer at next_val
+-- kun kan stige.
 SELECT COALESCE(MAX(nyt_id), 0) INTO @flyttet_max FROM dpia_id_flyt;
+INSERT IGNORE INTO hibernate_sequences (sequence_name, next_val)
+VALUES ('default', GREATEST(@max_id + 50, @flyttet_max + 50));
 UPDATE hibernate_sequences
 SET next_val = GREATEST(next_val, @max_id + 50, @flyttet_max + 50)
 WHERE sequence_name = 'default';

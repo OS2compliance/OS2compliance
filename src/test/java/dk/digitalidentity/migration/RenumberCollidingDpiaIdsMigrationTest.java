@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
@@ -151,6 +152,16 @@ public class RenumberCollidingDpiaIdsMigrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    void seedsTheGeneratorWhenItsRowIsMissing() throws IOException {
+        jdbcTemplate.update("DELETE FROM hibernate_sequences WHERE sequence_name = 'default'");
+
+        runMigration();
+
+        assertThat(readNextVal()).isNotNull();
+        assertThat(readNextVal() - 48).isGreaterThan(highestRelatableId());
+    }
+
+    @Test
     void isIdempotent() throws IOException {
         runMigration();
         final List<Long> afterFirstRun = idsIn("dpia");
@@ -163,15 +174,23 @@ public class RenumberCollidingDpiaIdsMigrationTest extends BaseIntegrationTest {
     }
 
     private void runMigration() throws IOException {
-        // Comments before the split: they hold semicolons, and splitting first tears one in half
+        // Comments first: one containing a semicolon would be torn in half by the split
         final String sql = new String(new ClassPathResource(MIGRATION).getContentAsByteArray(),
                 StandardCharsets.UTF_8).replaceAll("--[^\n]*", "");
         jdbcTemplate.execute((ConnectionCallback<Void>) connection -> {
             try (Statement statement = connection.createStatement()) {
-                for (final String chunk : sql.split(";")) {
-                    if (!chunk.isBlank()) {
-                        statement.execute(chunk);
+                try {
+                    for (final String chunk : sql.split(";")) {
+                        if (!chunk.isBlank()) {
+                            statement.execute(chunk);
+                        }
                     }
+                } catch (final SQLException e) {
+                    // The connection goes back to the pool shared with every other integration test,
+                    // and a half-run migration would leave it holding the row lock with checks off
+                    statement.execute("ROLLBACK");
+                    statement.execute("SET FOREIGN_KEY_CHECKS = 1");
+                    throw e;
                 }
             }
             return null;
