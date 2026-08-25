@@ -125,7 +125,7 @@ public class DPIARestController {
 			String responsibleOUName,
 			LocalDate userUpdatedDate,
 			int taskCount,
-			ThreatAssessmentReportApprovalStatus status,
+			String reportApprovalStatus,
 			DPIAScreeningConclusion screeningConclusion,
 			Boolean isExternal,
 			List<TagDTO> tags,
@@ -547,7 +547,7 @@ public class DPIARestController {
 									dpia.getResponsibleOuName(),
 									dpia.getUserUpdatedDate(),
 									dpia.getTaskCount(),
-									dpia.getReportApprovalStatus(),
+									dpia.getReportApprovalStatus() != null ? dpia.getReportApprovalStatus().getMessage() : "",
 									dpia.getScreeningConclusion(),
 									dpia.isExternal(),
 									TagService.toTagDTO(dpia.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(),
@@ -659,7 +659,7 @@ public class DPIARestController {
 				.max(Comparator.comparingLong(DPIAReport::getId))
 				.map(report -> report.getDpiaReportApprovalStatus() != null
 						? report.getDpiaReportApprovalStatus().getMessage()
-						: "")
-				.orElse("");
+						: ThreatAssessmentReportApprovalStatus.NOT_SENT.getMessage())
+				.orElse(ThreatAssessmentReportApprovalStatus.NOT_SENT.getMessage());
 	}
 }
