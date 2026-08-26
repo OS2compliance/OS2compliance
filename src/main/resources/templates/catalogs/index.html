@@ -20,6 +20,10 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex gap-2">
+                        <div class="form-check form-switch align-self-center mb-0 me-2">
+                            <input class="form-check-input" type="checkbox" id="showHiddenCatalogsToggle">
+                            <label class="form-check-label" for="showHiddenCatalogsToggle">Vis skjulte kataloger</label>
+                        </div>
                         <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='saveAsExcelButton', text='Gem som Excel', iconClass='ti-bookmark')}"></div>
                         <div th:replace="~{fragments/component/pageTopButton :: openModalInfoButton(id='createCatalogButton', text='Ny trusselskatalog', iconClass='ti-plus', target='#createCatalogDialog')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>

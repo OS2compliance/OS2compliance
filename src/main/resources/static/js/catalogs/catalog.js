@@ -6,8 +6,16 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 let editDialog;
 let copyDialog;
 
+let catalogGrid;
+
 document.addEventListener("DOMContentLoaded", function (event) {
-    initGrid()
+    initGrid();
+
+    const showHiddenCatalogsToggle = document.getElementById('showHiddenCatalogsToggle');
+    showHiddenCatalogsToggle.addEventListener('change', function () {
+        const filteredData = showHiddenCatalogsToggle.checked ? data : data.filter(item => !item.hidden);
+        catalogGrid.updateConfig({data: filteredData}).forceRender();
+    });
 });
 
 function initGrid() {
@@ -22,7 +30,7 @@ function initGrid() {
         header: "d-flex justify-content-end"
     };
 
-    new gridjs.Grid({
+    catalogGrid = new gridjs.Grid({
         className: defaultClassName,
         sort: {
             enabled: true,
@@ -74,7 +82,7 @@ function initGrid() {
                 }
             }
         ],
-        data: data,
+        data: data.filter(item => !item.hidden),
         language: {
             'noRecordsFound': "Ingen data fundet",
             'search': {
