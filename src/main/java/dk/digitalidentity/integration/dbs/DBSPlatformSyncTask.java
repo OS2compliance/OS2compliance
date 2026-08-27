@@ -86,6 +86,10 @@ public class DBSPlatformSyncTask {
 				settingsService.setZonedDateTime(PLATFORM_LAST_SYNC, ts);
 			});
 
+			// Efter vandmærket: en fejl her må ikke koste den fremrykning, batchet allerede har
+			// fortjent. Uden for synchronize(), så genforsøget også kører ved tomt batch.
+			syncService.retryKitosMapping();
+
 			long duration = System.currentTimeMillis() - startTime;
 			log.info("Finished: DBS Platform Sync in {} ms", duration);
 		} catch (RestClientResponseException e) {
