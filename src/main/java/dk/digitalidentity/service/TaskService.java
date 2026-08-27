@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
+import static dk.digitalidentity.Constants.DBS_TASK_NAME_MARKER;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
@@ -96,6 +97,11 @@ public class TaskService implements TagableService<Task> {
 
     public Optional<Task> findById(final Long id) {
         return taskDao.findById(id);
+    }
+
+    /** Aabne DBS-tilsynsopgaver uden ansvarlig - kandidater til backfill, se DBSService. */
+    public List<Task> findOpenDbsTasksWithoutResponsible() {
+        return taskDao.findOpenTasksWithoutResponsibleByNameContaining(DBS_TASK_NAME_MARKER);
     }
 
     public List<Task> findRelatedTasks(final Relatable relatable, final Predicate<Task> taskPredicate) {

@@ -3,17 +3,12 @@ package dk.digitalidentity.dao;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.NotificationSetting;
-import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
-import jakarta.validation.constraints.NotNull;
 import dk.digitalidentity.service.tag.TagableRepository;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -50,6 +45,10 @@ public interface TaskDao extends TagableRepository<Task> {
 
 	@Query("select t from Task t where t.deleted=false and t.taskType='TASK'")
 	List<Task> finAllTasks();
+
+	@Query("select t from Task t where t.deleted=false and t.taskType='TASK' and t.logs is empty "
+			+ "and t.responsibleUsers is empty and t.name like concat('%', :marker, '%')")
+	List<Task> findOpenTasksWithoutResponsibleByNameContaining(@Param("marker") final String marker);
 
     List<Task> findByTaskDescriptionTemplate(ChoiceValue taskDescriptionTemplate);
 
