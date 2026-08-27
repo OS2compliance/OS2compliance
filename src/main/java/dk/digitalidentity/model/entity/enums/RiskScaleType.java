@@ -2,7 +2,6 @@ package dk.digitalidentity.model.entity.enums;
 
 import lombok.Getter;
 
-import java.util.Map;
 
 @Getter
 public enum	RiskScaleType {
