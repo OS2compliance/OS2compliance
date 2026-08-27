@@ -249,6 +249,7 @@ function CreateTaskService() {
         let self = this;
         this.selectCreateTaskOption('TASK');
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
+        initDatepicker("#taskCreateFormTaskStartDateBtn", "#taskCreateFormTaskStartDate");
         this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
         this.notificationSelectHandler = initNotificationSelect(

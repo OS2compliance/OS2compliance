@@ -106,6 +106,7 @@ public class TasksController {
 
 			boolean responsibleChooseable = SecurityUtil.isOperationAllowed(Roles.CREATE_ALL);
 			Task task = new Task();
+			task.setStartDate(LocalDate.now());
 			if (!responsibleChooseable) {
 				task.setResponsibleUsers(Set.of(
 						userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
@@ -159,6 +160,7 @@ public class TasksController {
 		if (templateDescriptionId != null) {
 			choiceValueService.findById(templateDescriptionId).ifPresent(task::setTaskDescriptionTemplate);
 		}
+		defaultAndValidateStartDate(task);
 		List<SubTask> subTasks = new ArrayList<>();
 		for (SubTask subTask : task.getSubTasks()) {
 			subTasks.add(new SubTask(null, subTask.getName(), subTask.isCompleted(), task));
@@ -204,7 +206,9 @@ public class TasksController {
         existingTask.setNote(inProgress ? task.getNote() : null);
 		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
         existingTask.setDescription(task.getDescription());
+        defaultAndValidateStartDate(task);
         existingTask.setNextDeadline(task.getNextDeadline());
+        existingTask.setStartDate(task.getStartDate());
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setDepartment(task.getDepartment());
         existingTask.setResponsibleUsers(task.getResponsibleUsers());
@@ -442,6 +446,7 @@ public class TasksController {
 			@Valid @ModelAttribute final Task taskForm,
 			@RequestParam(name = "relations", required = false) final List<Long> relations
 	) {
+		defaultAndValidateStartDate(taskForm);
 		final Task task = taskService.copyTask(taskForm);
 		setupRelations(task, relations);
 		if (task.getSubTasks() == null) {
@@ -464,6 +469,12 @@ public class TasksController {
 		notifyService.notifyTaskResponsible(task);
 		return "redirect:/tasks/" + task.getId();
 	}
+
+    private void defaultAndValidateStartDate(final Task task) {
+        if (taskService.defaultStartDateAndCheckAfterDeadline(task)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Startdato kan ikke være efter deadline");
+        }
+    }
 
     private void setupRelations(final Task task, final List<Long> relations) {
         final List<Relatable> relatables = relatableService.findAllById(relations);
