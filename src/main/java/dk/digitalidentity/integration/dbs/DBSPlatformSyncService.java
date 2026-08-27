@@ -81,10 +81,11 @@ public class DBSPlatformSyncService {
 		// Denne audit bliver til vandmærket, og vandmærket sendes retur som publishedAfter, som
 		// DBS afviser hvis det ligger i fremtiden. Navngiv derfor auditen her: er den fremtidig
 		// allerede ved hentningen, ligger fejlen i DBS' data eller i urskævhed mellem os og DBS -
-		// ikke i vores gem/læs af vandmærket.
+		// ikke i vores gem/læs af vandmærket. DBSPlatformSyncTask klemmer selve kaldet ned, så
+		// syncen kører videre; det fremtidige vandmærke betyder blot et bredere hentevindue.
 		OffsetDateTime now = OffsetDateTime.now();
 		newest.filter(a -> a.getPublishedDate().isAfter(now))
-				.ifPresent(a -> log.warn("Audit {} ({}) has publishedDate {}, which is {} ahead of our clock - it blocks the next sync until our clock passes it",
+				.ifPresent(a -> log.warn("Audit {} ({}) has publishedDate {}, which is {} ahead of our clock - next sync clamps publishedAfter to now",
 						a.getId(), a.getName(), a.getPublishedDate(), Duration.between(now, a.getPublishedDate())));
 
 		return newest.map(a -> a.getPublishedDate().atZoneSameInstant(LOCAL_TZ_ID));
