@@ -17,7 +17,6 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.tag.TagableService;
 import dk.digitalidentity.util.LinkHelper;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -34,7 +33,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
-import static dk.digitalidentity.Constants.SYNCED_DOCUMENT_LINK_PROPERTY;
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
@@ -46,15 +44,13 @@ public class DocumentService implements TagableService<Document> {
     private final TaskService taskService;
     private final RelationService relationService;
     private final UserService userService;
-    private final EntityManager entityManager;
 
-	public DocumentService(final DocumentDao documentDao, final TaskService taskService, final RelationService relationService, final UserService userService, DocumentGridDao documentGridDao, EntityManager entityManager) {
+	public DocumentService(final DocumentDao documentDao, final TaskService taskService, final RelationService relationService, final UserService userService, DocumentGridDao documentGridDao) {
 		this.documentDao = documentDao;
         this.taskService = taskService;
         this.relationService = relationService;
         this.userService = userService;
 		this.documentGridDao = documentGridDao;
-        this.entityManager = entityManager;
     }
 
 	public boolean isResponsibleFor(Document document) {
@@ -115,39 +111,15 @@ public class DocumentService implements TagableService<Document> {
     }
 
 	private void syncDocumentLinkOnTask(final Document document, final Task task) {
-		final Property syncedLinkProperty = task.getProperties().stream()
-			.filter(p -> SYNCED_DOCUMENT_LINK_PROPERTY.equals(p.getKey()))
-			.findFirst()
-			.orElse(null);
-		final TaskLink syncedLink = syncedLinkProperty == null ? null : task.getLinks().stream()
-			.filter(l -> String.valueOf(l.getId()).equals(syncedLinkProperty.getValue()))
-			.findFirst()
-			.orElse(null);
-
-		final String newUrl = LinkHelper.linkify(document.getLink());
-		if (StringUtils.isEmpty(newUrl)) {
-			if (syncedLink != null) {
-				task.getLinks().remove(syncedLink);
-				task.getProperties().remove(syncedLinkProperty);
-			}
+		final String url = LinkHelper.linkify(document.getLink());
+		if (StringUtils.isEmpty(url)) {
 			return;
 		}
 
-		if (syncedLink != null) {
-			syncedLink.setUrl(newUrl);
-			return;
+		final boolean alreadyPresent = task.getLinks().stream().anyMatch(l -> url.equals(l.getUrl()));
+		if (!alreadyPresent) {
+			task.getLinks().add(new TaskLink(null, url, task));
 		}
-
-		final TaskLink newLink = new TaskLink(null, newUrl, task);
-		task.getLinks().add(newLink);
-		entityManager.persist(newLink);
-		entityManager.flush();
-		task.getProperties().add(Property.builder()
-			.entity(task)
-			.key(SYNCED_DOCUMENT_LINK_PROPERTY)
-			.value("" + newLink.getId())
-			.build()
-		);
 	}
 
 	public Task findRelatedCheckTask(Document document, RelationService relationService) {

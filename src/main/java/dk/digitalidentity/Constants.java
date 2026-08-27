@@ -23,7 +23,6 @@ public interface Constants {
     String NEEDS_CVR_UPDATE_PROPERTY = "cvr_update";
     String CVR_UPDATED_PROPERTY = "cvr_updated_at";
     String ASSOCIATED_DOCUMENT_PROPERTY = "linked_doc";
-    String SYNCED_DOCUMENT_LINK_PROPERTY = "synced_doc_link_id";
     String ASSOCIATED_THREAT_ASSESSMENT_PROPERTY = "linked_threat";
     String ASSOCIATED_ASSET_DPIA_PROPERTY = "linked_dpia";
     String ASSOCIATED_INSPECTION_PROPERTY = "linked_asset";
