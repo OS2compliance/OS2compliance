@@ -3,11 +3,13 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.mapping.OrganisationUnitMapper;
 import dk.digitalidentity.model.dto.OrganisationUnitDTO;
+import dk.digitalidentity.model.dto.OrganisationUnitSuggestionDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Position;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.annotations.RequireAuthenticated;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,7 @@ public class OrganisationRestController {
     private final OrganisationUnitDao organisationUnitDao;
     private final OrganisationUnitMapper mapper;
     private final UserService userService;
+    private final OrganisationService organisationService;
 
 	@RequireReadOwnerOnly
     @GetMapping("autocomplete")
@@ -62,4 +65,18 @@ public class OrganisationRestController {
 		// If a user has a position we return the OrgUnit that it's mapped to
         return ResponseEntity.ok(mapper.toDTO(organisationUnitDao.findByUuid(position.getOuUuid())));
     }
+
+	@RequireReadOwnerOnly
+	@GetMapping("/user/{id}/suggestion")
+	public ResponseEntity<OrganisationUnitSuggestionDTO> getOrgSuggestionByUser(@PathVariable final String id) {
+		final User user = userService.findByUuid(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		final OrganisationUnitDTO afdeling = organisationService.findAfdelingForUser(user).map(mapper::toDTO).orElse(null);
+		final OrganisationUnitDTO forvaltning = organisationService.findForvaltningForUser(user).map(mapper::toDTO).orElse(null);
+
+		return ResponseEntity.ok(OrganisationUnitSuggestionDTO.builder()
+			.afdeling(afdeling)
+			.forvaltning(forvaltning)
+			.build());
+	}
 }

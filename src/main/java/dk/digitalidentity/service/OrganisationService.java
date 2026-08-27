@@ -3,6 +3,8 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.Position;
+import dk.digitalidentity.model.entity.User;
 import jakarta.persistence.EntityManager;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -60,5 +62,25 @@ public class OrganisationService {
 			return Optional.empty();
 		}
 		return Optional.ofNullable(organisationUnitDao.findByUuid(uuid));
+	}
+
+	/**
+	 * Afdeling is derived from the user's position, forvaltning from that OU's parent.
+	 */
+	public Optional<OrganisationUnit> findAfdelingForUser(final User user) {
+		if (user == null) {
+			return Optional.empty();
+		}
+		return user.getPositions().stream()
+			.map(Position::getOuUuid)
+			.filter(StringUtils::isNotEmpty)
+			.findFirst()
+			.flatMap(this::findByUuid);
+	}
+
+	public Optional<OrganisationUnit> findForvaltningForUser(final User user) {
+		return findAfdelingForUser(user)
+			.map(OrganisationUnit::getParentUuid)
+			.flatMap(this::findByUuid);
 	}
 }

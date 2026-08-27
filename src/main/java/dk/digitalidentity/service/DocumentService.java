@@ -7,6 +7,7 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -15,7 +16,10 @@ import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.tag.TagableService;
+import dk.digitalidentity.util.LinkHelper;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,6 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
+import static dk.digitalidentity.Constants.SYNCED_DOCUMENT_LINK_PROPERTY;
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
@@ -41,13 +46,15 @@ public class DocumentService implements TagableService<Document> {
     private final TaskService taskService;
     private final RelationService relationService;
     private final UserService userService;
+    private final EntityManager entityManager;
 
-	public DocumentService(final DocumentDao documentDao, final TaskService taskService, final RelationService relationService, final UserService userService, DocumentGridDao documentGridDao) {
+	public DocumentService(final DocumentDao documentDao, final TaskService taskService, final RelationService relationService, final UserService userService, DocumentGridDao documentGridDao, EntityManager entityManager) {
 		this.documentDao = documentDao;
         this.taskService = taskService;
         this.relationService = relationService;
         this.userService = userService;
 		this.documentGridDao = documentGridDao;
+        this.entityManager = entityManager;
     }
 
 	public boolean isResponsibleFor(Document document) {
@@ -101,8 +108,47 @@ public class DocumentService implements TagableService<Document> {
                 task.setNextDeadline(LocalDate.of(2099, 1,1));
             }
             setTaskRevisionInterval(document, task);
+			task.setResponsibleOu(document.getResponsibleOu());
+			task.setDepartment(document.getDepartment());
+			syncDocumentLinkOnTask(document, task);
         }
     }
+
+	private void syncDocumentLinkOnTask(final Document document, final Task task) {
+		final Property syncedLinkProperty = task.getProperties().stream()
+			.filter(p -> SYNCED_DOCUMENT_LINK_PROPERTY.equals(p.getKey()))
+			.findFirst()
+			.orElse(null);
+		final TaskLink syncedLink = syncedLinkProperty == null ? null : task.getLinks().stream()
+			.filter(l -> String.valueOf(l.getId()).equals(syncedLinkProperty.getValue()))
+			.findFirst()
+			.orElse(null);
+
+		final String newUrl = LinkHelper.linkify(document.getLink());
+		if (StringUtils.isEmpty(newUrl)) {
+			if (syncedLink != null) {
+				task.getLinks().remove(syncedLink);
+				task.getProperties().remove(syncedLinkProperty);
+			}
+			return;
+		}
+
+		if (syncedLink != null) {
+			syncedLink.setUrl(newUrl);
+			return;
+		}
+
+		final TaskLink newLink = new TaskLink(null, newUrl, task);
+		task.getLinks().add(newLink);
+		entityManager.persist(newLink);
+		entityManager.flush();
+		task.getProperties().add(Property.builder()
+			.entity(task)
+			.key(SYNCED_DOCUMENT_LINK_PROPERTY)
+			.value("" + newLink.getId())
+			.build()
+		);
+	}
 
 	public Task findRelatedCheckTask(Document document, RelationService relationService) {
 		final List<Relatable> relatedTasks = relationService.findAllRelatedTo(document);
@@ -126,6 +172,8 @@ public class DocumentService implements TagableService<Document> {
 		task.setIncludeInReport(includeInYearWheel);
 		task.setResponsibleUsers(document.getResponsibleUser() != null ? Set.of(document.getResponsibleUser()) : Set.of(userService.currentUser()));
         task.setDescription("Revider dokumentet " + document.getName());
+		task.setResponsibleOu(document.getResponsibleOu());
+		task.setDepartment(document.getDepartment());
         task.getProperties().add(Property.builder()
             .entity(task)
             .key(ASSOCIATED_DOCUMENT_PROPERTY)
@@ -135,6 +183,7 @@ public class DocumentService implements TagableService<Document> {
         setTaskRevisionInterval(document, task);
         final Task savedTask = taskService.saveTask(task);
         relationService.addRelation(savedTask, document);
+		syncDocumentLinkOnTask(document, savedTask);
     }
 
 	@Override

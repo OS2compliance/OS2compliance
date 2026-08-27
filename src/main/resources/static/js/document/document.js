@@ -3,6 +3,8 @@ import initRelatedTagList from "../tags/related-tag-list.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let userChoicesEditSelect = null;
+let ouChoicesEditSelect = null;
+let departmentOuChoicesEditSelect = null;
 
 document.addEventListener("DOMContentLoaded", function(event) {
     loadViewAndEditForm();
@@ -35,9 +37,27 @@ function formReset() {
 function loadViewAndEditForm() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
     userChoicesEditSelect = choiceService.initUserSelect("userSelect");
+    ouChoicesEditSelect = choiceService.initOUSelect("ouSelect");
+    departmentOuChoicesEditSelect = choiceService.initOUSelect("departmentOuSelect");
 
     userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
         checkInputField(userChoicesEditSelect);
+    });
+
+    userChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
+        const userUuid = userChoicesEditSelect.passedElement.element.value;
+        fetch(`/rest/ous/user/${userUuid}/suggestion`).then(response => {
+            if (response.ok) {
+                response.json().then(suggestion => {
+                    if (suggestion.afdeling) {
+                        ouChoicesEditSelect.setChoiceByValue(suggestion.afdeling.uuid);
+                    }
+                    if (suggestion.forvaltning) {
+                        departmentOuChoicesEditSelect.setChoiceByValue(suggestion.forvaltning.uuid);
+                    }
+                });
+            }
+        }).catch(error => toastService.error(error));
     });
 
     document.querySelectorAll('.editField').forEach(elem => {
@@ -45,6 +65,8 @@ function loadViewAndEditForm() {
     });
 
     userChoicesEditSelect.disable();
+    ouChoicesEditSelect.disable();
+    departmentOuChoicesEditSelect.disable();
 
     initFormValidationForForm("editForm", () => validateChoices(userChoicesEditSelect));
 }
@@ -57,6 +79,8 @@ function editMode(enabled, responsibleFieldsChangeable = false) {
 
         if (responsibleFieldsChangeable) {
             userChoicesEditSelect.enable();
+            ouChoicesEditSelect.enable();
+            departmentOuChoicesEditSelect.enable();
         }
 
         document.getElementById('saveEditBtn').hidden = false;
@@ -69,6 +93,8 @@ function editMode(enabled, responsibleFieldsChangeable = false) {
         });
 
         userChoicesEditSelect.disable();
+        ouChoicesEditSelect.disable();
+        departmentOuChoicesEditSelect.disable();
         document.getElementById('saveEditBtn').hidden = true;
         document.getElementById('editBtn').hidden = false;
         document.querySelector('.clickableDocLink').style.display = '';

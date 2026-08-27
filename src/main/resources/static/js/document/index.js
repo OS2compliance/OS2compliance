@@ -18,12 +18,31 @@ const updateUrl = (prev, query) => {
 function createDocumentFormLoaded() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
     const userChoicesEditSelect = choiceService.initUserSelect('userSelect');
+    const ouChoicesEditSelect = choiceService.initOUSelect('ouSelect');
+    const departmentOuChoicesEditSelect = choiceService.initOUSelect('departmentOuSelect');
     choiceService.initDocumentRelationSelect();
     initTagSelect('createDocumentTagsSelect');
 
     userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
         checkInputField(userChoicesEditSelect);
     });
+
+    userChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
+        const userUuid = userChoicesEditSelect.passedElement.element.value;
+        fetch(`/rest/ous/user/${userUuid}/suggestion`).then(response => {
+            if (response.ok) {
+                response.json().then(suggestion => {
+                    if (suggestion.afdeling) {
+                        ouChoicesEditSelect.setChoiceByValue(suggestion.afdeling.uuid);
+                    }
+                    if (suggestion.forvaltning) {
+                        departmentOuChoicesEditSelect.setChoiceByValue(suggestion.forvaltning.uuid);
+                    }
+                });
+            }
+        }).catch(error => toastService.error(error));
+    });
+
     initFormValidationForForm("createDocumentModal", () => validateChoices(userChoicesEditSelect));
 
     const cancelButton = document.getElementById('createCancelButton');
@@ -99,6 +118,18 @@ function initGrid() {
                 },
             },
             {
+                name: "Afdeling",
+                searchable: {
+                    searchKey: 'responsibleOuName',
+                },
+            },
+            {
+                name: "Forvaltning",
+                searchable: {
+                    searchKey: 'departmentName',
+                },
+            },
+            {
                 name: "Næste revidering",
                 searchable: {
                     searchKey: 'nextRevision',
@@ -154,7 +185,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(document =>
-                [ document.id, document.name, document.documentType, document.responsibleUser, document.nextRevision, document.status, document.tags, document.allowedActions ]
+                [ document.id, document.name, document.documentType, document.responsibleUser, document.responsibleOu, document.department, document.nextRevision, document.status, document.tags, document.allowedActions ]
             ),
             total: data => data.totalCount
         },
