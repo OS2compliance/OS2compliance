@@ -37,6 +37,15 @@
                             <div class="invalid-feedback" id="assetError">Der skal vælges mindst et asset</div>
                         </div>
                     </div>
+                    <div class="row mt-3" id="supplierSelectRow">
+                        <label for="supplierSelect" class="col-sm-4 col-form-label">Leverandører</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedSupplier" data-trigger="" id="supplierSelect" hidden="" tabindex="-1">
+                                <option th:if="${supplier != null}" th:value="${supplier?.id}" th:text="${supplier?.name}" selected="selected"></option>
+                            </select>
+                            <div class="invalid-feedback" id="supplierError">Der skal vælges mindst et asset</div>
+                        </div>
+                    </div>
                     <div class="row mt-3">
                         <label for="name" class="col-sm-4 col-form-label">Titel</label>
                         <div class="col-sm-8">

@@ -18,6 +18,7 @@ import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.S3Document;
@@ -54,6 +55,7 @@ import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.SettingsService;
+import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -106,6 +108,7 @@ public class RiskRestController {
     private final ApplicationEventPublisher eventPublisher;
     private final RegisterService registerService;
     private final AssetService assetService;
+    private final SupplierService supplierService;
     private final ThreatAssessmentService threatAssessmentService;
     private final DocsReportGeneratorComponent docsReportGeneratorComponent;
     private final RelationService relationService;
@@ -168,6 +171,21 @@ public class RiskRestController {
 
         final List<ResponsibleUserDTO> users = register.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
         return new ResponsibleUsersWithElementNameDTO(register.getName(), users);
+    }
+
+	@RequireReadOwnerOnly
+    @GetMapping("supplier")
+    public ResponsibleUsersWithElementNameDTO getSupplierResponsibleUserAndName(@RequestParam final long supplierId) {
+        final Supplier supplier = supplierService.findById(supplierId);
+        if (supplier == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        if (supplier.getResponsibleUser() == null) {
+            return new ResponsibleUsersWithElementNameDTO(supplier.getName(), new ArrayList<>());
+        }
+
+        final ResponsibleUserDTO responsibleUser = new ResponsibleUserDTO(supplier.getResponsibleUser().getUuid(), supplier.getResponsibleUser().getName(), supplier.getResponsibleUser().getUserId());
+        return new ResponsibleUsersWithElementNameDTO(supplier.getName(), List.of(responsibleUser));
     }
 
     record RiskUIDTO(String elementName, int rf, int of, int sf, int ri, int oi, int si, int rt, int ot, int st, int sa, ResponsibleUsersWithElementNameDTO users) {}
