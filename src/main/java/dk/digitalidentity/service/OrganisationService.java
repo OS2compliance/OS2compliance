@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class OrganisationService {
@@ -71,11 +72,14 @@ public class OrganisationService {
 		if (user == null) {
 			return Optional.empty();
 		}
-		return user.getPositions().stream()
+		final Set<String> ouUuids = user.getPositions().stream()
 			.map(Position::getOuUuid)
 			.filter(StringUtils::isNotEmpty)
-			.findFirst()
-			.flatMap(this::findByUuid);
+			.collect(Collectors.toSet());
+		if (ouUuids.size() != 1) {
+			return Optional.empty();
+		}
+		return findByUuid(ouUuids.iterator().next());
 	}
 
 	public Optional<OrganisationUnit> findForvaltningForUser(final User user) {
