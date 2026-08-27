@@ -41,6 +41,7 @@ import dk.digitalidentity.service.model.ThreatDTO;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.data.domain.Page;
@@ -78,6 +79,7 @@ import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ThreatAssessmentService implements TagableService<ThreatAssessment> {
@@ -733,6 +735,9 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 
 		// remove catalogs and responses
 		if (!catalogIdsToRemove.isEmpty()) {
+			log.warn("Fravalgte trusselskataloger {} på risikovurdering {} - sletter {} besvarelser",
+					catalogIdsToRemove, assessment.getId(),
+					threatAssessmentResponseDao.countResponsesByAssessmentAndCatalogIdentifiers(assessment.getId(), catalogIdsToRemove));
 			threatAssessmentResponseDao.deleteResponsesByAssessmentAndCatalogIdentifiers(
 					assessment.getId(), catalogIdsToRemove);
 			currentCatalogs.removeIf(catalog -> catalogIdsToRemove.contains(catalog.getIdentifier()));
