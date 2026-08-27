@@ -2,8 +2,15 @@ package dk.digitalidentity.model.entity.grid;
 
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
+import dk.digitalidentity.model.entity.enums.ColorStatus;
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
+import dk.digitalidentity.model.entity.enums.Criticality;
+import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
+import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
+import dk.digitalidentity.model.entity.enums.TiaAssessment;
 
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import jakarta.persistence.Column;
@@ -144,5 +151,81 @@ public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
 
 	@Column
 	private Double riskScore;
+
+	@Column
+	private String departmentNames;
+
+	@Column
+	private String description;
+
+	@Column
+	private String operationResponsibleUserNames;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private Criticality criticality;
+
+	@Column
+	private Integer criticalityOrder;
+
+	@Column
+	private boolean sociallyCritical;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private ContainsAITechnologyEnum aiStatus;
+
+	@Column
+	private LocalDate contractDate;
+
+	@Column
+	private LocalDate contractTermination;
+
+	@Column
+	private String terminationNotice;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private DataProcessingAgreementStatus dataProcessingAgreementStatus;
+
+	@Column
+	private LocalDate dataProcessingAgreementDate;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private ArchiveDuty archive;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private ColorStatus assetMeasureStatus;
+
+	@Column
+	private Integer assetMeasureStatusOrder;
+
+	@Column
+	private boolean threatAssessmentOptOut;
+
+	@Column
+	private Integer riskAssessmentOptOutStatusOrder;
+
+	@Column
+	private boolean dpiaOptOut;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private DPIAScreeningConclusion dpiaScreeningConclusion;
+
+	@Column
+	private Integer dpiaStatusOrder;
+
+	@Column
+	private boolean tiaOptOut;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private TiaAssessment tiaAssessment;
+
+	@Column
+	private Integer tiaStatusOrder;
 
 }

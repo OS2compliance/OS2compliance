@@ -108,6 +108,40 @@ function ViewTaskService() {
         );
 
         this.initInProgressNoteToggle();
+        this.initCompleteAndStay();
+    }
+
+    this.initCompleteAndStay = function() {
+        const completeStayUrl = '/tasks/complete/stay';
+        const form = document.getElementById('completeTaskForm');
+        const completeAndStayBtn = document.getElementById('completeAndStayBtn');
+
+        if (!form || !completeAndStayBtn) {
+            return;
+        }
+
+        const token = document.getElementsByName('_csrf')[0].getAttribute('content');
+
+        form.addEventListener('submit', event => {
+            if (event.submitter !== completeAndStayBtn || event.defaultPrevented) {
+                return;
+            }
+
+            event.preventDefault();
+
+            fetch(completeStayUrl, { method: 'POST', body: new FormData(form), headers: { 'X-CSRF-TOKEN': token } })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`${response.status} ${response.statusText}`);
+                    }
+
+                    return response.text();
+                })
+                .then(redirectUrl => {
+                    window.location.href = redirectUrl;
+                })
+                .catch(defaultErrorHandler);
+        });
     }
 
     this.initInProgressNoteToggle = function() {

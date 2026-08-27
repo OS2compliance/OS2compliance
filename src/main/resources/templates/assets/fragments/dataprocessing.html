@@ -125,8 +125,13 @@
 
                     //Init choices.js
                     const supplierSelect = document.getElementById('supplierSelect');
+                    const selectedSupplierId = supplierSelect.dataset.selectedSupplierId;
                     supplierChoices = initSelect(supplierSelect);
-                    choiceService.updateSuppliers(supplierChoices, "");
+                    choiceService.updateSuppliers(supplierChoices, "").then(() => {
+                        if (selectedSupplierId) {
+                            supplierChoices.setChoiceByValue(selectedSupplierId);
+                        }
+                    });
                     supplierSelect.addEventListener("search",
                         function(event) {
                             choiceService.updateSuppliers(supplierChoices, event.detail.value);
@@ -137,6 +142,8 @@
                         checkInputField(supplierChoices);
                     });
                     dpChoiceElements.push(supplierChoices);
+
+                    initFormValidationForFormChoicesOnly('subSupplierForm', () => validateChoices(supplierChoices));
                 }))
             .catch(error => toastService.error(error))
         }

@@ -102,9 +102,6 @@ public class TaskGrid implements HasMultipleResponsibleUsers {
 	@Column(name = "in_progress_note")
 	private String inProgressNote;
 
-	@Column(name = "created_at")
-	private LocalDateTime createdAt;
-
 	public Set<String> getResponsibleUserUuidsAsSet() {
 		return Arrays.stream(responsibleUserUuids.split(",")).collect(Collectors.toSet());
 	}

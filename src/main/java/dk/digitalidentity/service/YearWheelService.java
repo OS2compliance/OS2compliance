@@ -46,6 +46,11 @@ public class YearWheelService {
 		Map<Long, Tag> allTagsById = tagService.findAll().stream()
 				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
 
+		// Load the first deadline of every task once, so occurrences are not projected back past it
+		Map<Long, LocalDate> firstDeadlines = taskService.getFirstDeadlines(tasks.stream()
+				.map(TaskGrid::getId)
+				.toList());
+
 		Map<Integer, List<YearWheelTaskDTO>> months = new LinkedHashMap<>();
 		for (int m = 1; m <= 12; m++) {
 			months.put(m, new ArrayList<>());
@@ -54,11 +59,14 @@ public class YearWheelService {
 		Set<Tag> usedYearWheelTags = new TreeSet<>(Comparator.comparing(Tag::getId));
 
 		for (TaskGrid task : tasks) {
+			if (task.getNextDeadline() == null) {
+				// tasks.next_deadline is nullable and the grid view passes the null through - a single
+				// such task must not take the whole year wheel down
+				continue;
+			}
 			LocalDate deadline = task.getNextDeadline().toLocalDate();
-			LocalDate earliestDate = task.getStartDate() != null ?
-					task.getStartDate()
-					: (task.getCreatedAt() != null ? task.getCreatedAt().toLocalDate() : null);
-			List<Integer> occurrenceMonths = calculateOccurrenceMonths(year, deadline, task.getTaskRepetition(), earliestDate);
+			LocalDate firstDeadline = resolveFirstDeadline(task.getStartDate(), firstDeadlines.get(task.getId()), deadline);
+			List<Integer> occurrenceMonths = calculateOccurrenceMonths(year, deadline, task.getTaskRepetition(), firstDeadline);
 
 			// Resolve year-wheel tags from tagIds
 			List<Tag> yearWheelTags = resolveYearWheelTags(task.getTagIds(), allTagsById);
@@ -149,20 +157,35 @@ public class YearWheelService {
 	}
 
 	/**
-	 * Calculates which months in the target year a task occurs,
-	 * based on its nextDeadline and repetition pattern.
+	 * The earliest deadline the task is known to have had. An explicit task startDate is the user's
+	 * stated intent and takes precedence. Otherwise, every completion logs the deadline it closed, so the
+	 * oldest logged deadline is where the series started. Without logs the task has never been completed,
+	 * and nextDeadline is the only deadline it has ever been given - whether that is the original one or a
+	 * rescheduled one, projecting occurrences before it would invent deadlines the task never had. A
+	 * deadline that was moved backwards after a completion falls back to nextDeadline too.
 	 */
-	List<Integer> calculateOccurrenceMonths(int targetYear, LocalDate nextDeadline, TaskRepetition repetition, LocalDate earliestKnownDate) {
+	private LocalDate resolveFirstDeadline(LocalDate startDate, LocalDate firstLoggedDeadline, LocalDate nextDeadline) {
+		if (startDate != null) {
+			return startDate;
+		}
+		return firstLoggedDeadline != null && firstLoggedDeadline.isBefore(nextDeadline)
+				? firstLoggedDeadline
+				: nextDeadline;
+	}
+
+	/**
+	 * Calculates which months in the target year a task occurs, based on its nextDeadline and repetition
+	 * pattern. No occurrence is placed before firstDeadline, the first deadline the task ever had.
+	 */
+	List<Integer> calculateOccurrenceMonths(int targetYear, LocalDate nextDeadline, TaskRepetition repetition, LocalDate firstDeadline) {
 		List<Integer> months = new ArrayList<>();
 
-		if (nextDeadline == null) {
-			return months;
-		}
+		// Earliest month this task can appear in. Snapped to the first of the month because the wheel
+		// places occurrences per month, and stepping by months clamps the day (31 Jan minus a month is
+		// 28 Feb) - comparing exact dates would drop the first occurrence for deadlines late in a month.
+		LocalDate earliestDate = firstDeadline.withDayOfMonth(1);
 
-		// Earliest date this task can appear
-		LocalDate earliestDate = earliestKnownDate != null ? earliestKnownDate : nextDeadline;
-
-		// No repetition: only include if deadline falls in target year and after creation
+		// No repetition: only include if deadline falls in target year and at or after the first deadline
 		if (repetition == null || repetition == TaskRepetition.NONE) {
 			if (nextDeadline.getYear() == targetYear && !nextDeadline.isBefore(earliestDate)) {
 				months.add(nextDeadline.getMonthValue());

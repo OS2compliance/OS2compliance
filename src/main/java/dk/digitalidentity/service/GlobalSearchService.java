@@ -1,5 +1,6 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.grid.SearchRepositoryImpl;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
@@ -9,6 +10,7 @@ import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
+import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -27,6 +29,7 @@ import org.springframework.web.util.HtmlUtils;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -43,9 +46,10 @@ public class GlobalSearchService {
 
 	private final SearchRepositoryImpl searchRepository;
 	private final UserService userService;
+	private final StandardTemplateDao standardTemplateDao;
 
 	public record SearchResultSection(String key, String displayName, Page<SearchResultDTO> results) {}
-	public record SearchResultDTO(String name, long id, String searchResultFieldName, String searchResultFieldContent, String highlightedContent) {}
+	public record SearchResultDTO(String name, String id, String searchResultFieldName, String searchResultFieldContent, String highlightedContent) {}
 
 	public Map<String, SearchResultSection> search(String query) {
 		Pageable pageable = PageRequest.of(0, 5);
@@ -257,16 +261,41 @@ public class GlobalSearchService {
 		searchableProperties.put("createdAt", query);
 		searchableProperties.put("updatedAt", query);
 
+		// interleave() always orders templates before sections, so the combined page window can be
+		// computed by fetching that same prefix (page 0, sized through the end of the requested page)
+		// from each source and slicing out the requested page's slot.
+		final Pageable prefixPageable = PageRequest.of(0, (pageable.getPageNumber() + 1) * pageable.getPageSize());
 
-		Page<StandardSection> page;
+		Page<StandardSection> sectionPage;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, user, true);
+			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, prefixPageable, StandardSection.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, null, false);
+			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, prefixPageable, StandardSection.class, null, false);
 		}
 
-		if (page.hasContent()) {
-			Page<SearchResultDTO> dtoPage = convertToSearchResultDTO(page, query, searchableProperties.keySet());
+		// There is no per-user access control for standards, no need to apply filter results flag
+		Page<StandardTemplate> templatePage = standardTemplateDao.findByNameContainingIgnoreCase(query, prefixPageable);
+
+		final long totalElements = sectionPage.getTotalElements() + templatePage.getTotalElements();
+		if (totalElements > 0) {
+			final List<SearchResultDTO> sectionDtos = sectionPage.hasContent()
+					? convertToSearchResultDTO(sectionPage, query, searchableProperties.keySet()).getContent()
+					: List.of();
+			final List<SearchResultDTO> templateDtos = templatePage.getContent().stream()
+					.map(template -> new SearchResultDTO(
+							template.getName(),
+							template.getIdentifier(),
+							getDisplayFieldName("name"),
+							template.getName(),
+							highlightSearchTerm(template.getName(), query)))
+					.toList();
+
+			final List<SearchResultDTO> combinedPrefix = interleave(templateDtos, sectionDtos, prefixPageable.getPageSize());
+			final int windowStart = Math.min(pageable.getPageNumber() * pageable.getPageSize(), combinedPrefix.size());
+			final int windowEnd = Math.min(windowStart + pageable.getPageSize(), combinedPrefix.size());
+			final List<SearchResultDTO> page = combinedPrefix.subList(windowStart, windowEnd);
+
+			Page<SearchResultDTO> dtoPage = new PageImpl<>(page, pageable, totalElements);
 			results.put(RelationType.STANDARD_SECTION.toString(),
 					new SearchResultSection(RelationType.STANDARD_SECTION.toString(), RelationType.STANDARD_SECTION.getMessage(), dtoPage));
 		}
@@ -341,6 +370,26 @@ public class GlobalSearchService {
 		}
 	}
 
+	private List<SearchResultDTO> interleave(List<SearchResultDTO> first, List<SearchResultDTO> second, int limit) {
+		final List<SearchResultDTO> result = new ArrayList<>(Math.min(limit, first.size() + second.size()));
+		int i = 0;
+		int j = 0;
+
+		while (result.size() < limit && (i < first.size() || j < second.size())) {
+			if (i < first.size()) {
+				result.add(first.get(i++));
+				if (result.size() == limit) {
+					break;
+				}
+			}
+			if (j < second.size()) {
+				result.add(second.get(j++));
+			}
+		}
+
+		return result;
+	}
+
 	private <T extends Relatable> Page<SearchResultDTO> convertToSearchResultDTO(Page<T> page, String query, Set<String> searchFields) {
 		List<SearchResultDTO> dtos = page.getContent().stream()
 				.map(entity -> {
@@ -351,7 +400,7 @@ public class GlobalSearchService {
 
 					return new SearchResultDTO(
 							entity.getName(),
-							entity.getId(),
+							String.valueOf(entity.getId()),
 							matchingFieldDisplayName,
 							matchingFieldContent,
 							highlightedContent

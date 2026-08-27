@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
+import dk.digitalidentity.model.dto.TaskFirstDeadlineDTO;
 import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.dto.enums.StatusColor;
 import dk.digitalidentity.model.entity.Document;
@@ -379,6 +380,19 @@ public class TaskService implements TagableService<Task> {
     public List<TaskLog> getLogsForTasks (final List<Task> taskList) {
         return taskLogDao.findByTaskIdIn(taskList.stream().map(Relatable::getId).toList());
     }
+
+	/**
+	 * The first deadline each of the given tasks ever had, keyed by task id. Tasks that have never been
+	 * completed are absent from the map - nothing has moved their deadline yet, so their next deadline is
+	 * still their first one.
+	 */
+	public Map<Long, LocalDate> getFirstDeadlines(final Collection<Long> taskIds) {
+		if (taskIds.isEmpty()) {
+			return Map.of();
+		}
+		return taskLogDao.findFirstDeadlineByTaskIdIn(taskIds).stream()
+				.collect(Collectors.toMap(TaskFirstDeadlineDTO::taskId, TaskFirstDeadlineDTO::deadline));
+	}
 
 	public Set<Task> findAllUnrelatedTasksForResponsibleUser (User user) {
 		return taskDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(user);
