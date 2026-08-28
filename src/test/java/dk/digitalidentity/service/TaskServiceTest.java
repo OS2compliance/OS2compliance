@@ -25,11 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
-/**
- * Regression tests for the "next deadline" calculation on task completion. Guards against the bug
- * where completing a periodic CHECK task more than once within the same period advanced the deadline
- * by one interval per completion, instead of anchoring the new deadline to the actual completion date.
- */
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
 

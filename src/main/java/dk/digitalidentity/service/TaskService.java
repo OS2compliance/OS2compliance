@@ -370,9 +370,6 @@ public class TaskService implements TagableService<Task> {
             return deadline;
         }
         final LocalDate effectiveCompleted = completed != null ? completed : LocalDate.now();
-        // An execution only belongs to the period the current deadline closes if it falls after
-        // "deadline minus one interval". Otherwise it's an extra completion in an already-closed
-        // period, and the deadline must not move (this is the case that used to double-advance).
         if (!effectiveCompleted.isAfter(addInterval(deadline, repetition, -1))) {
             return deadline;
         }

@@ -125,10 +125,6 @@ function ViewTaskService() {
             nextDeadlineDirty = true;
         });
 
-        // MCDatepicker only reads its opening date from `selectedDate` at creation time, so once the
-        // preview fetch changes the input's value the picker has to be recreated to open on that date
-        // instead of today. The button is cloned to drop the previous picker's click listener along
-        // with it, rather than leaving it to call open() on a destroyed instance.
         const setNextDeadlineValue = (day, month, year) => {
             nextDeadline.value = `${day}/${month}-${year}`;
             nextDeadlinePicker.destroy();
