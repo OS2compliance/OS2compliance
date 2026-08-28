@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatCatalog;
@@ -39,6 +40,7 @@ import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
@@ -95,6 +97,7 @@ public class RiskController {
     private final UserService userService;
     private final EmailTemplateService emailTemplateService;
     private final IncidentService incidentService;
+	private final SupplierService supplierService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -114,7 +117,8 @@ public class RiskController {
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
             @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
             @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
-            @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
+            @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset,
+			@RequestParam(name = "selectedSupplier", required = false) final Long selectedSupplier) {
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation() && !threatAssessment.isSociety()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de tre vurderinger.");
         }
@@ -124,6 +128,9 @@ public class RiskController {
         if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
         }
+		if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER) && selectedSupplier == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt.");
+		}
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
@@ -135,7 +142,9 @@ public class RiskController {
             relateAssets(selectedAsset, savedThreatAssessment);
         } else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
             relateRegister(selectedRegister, savedThreatAssessment);
-        }
+        } else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER)) {
+			relateSupplier(selectedSupplier, savedThreatAssessment);
+		}
         if (sendEmail) {
             createTaskAndSendMail(savedThreatAssessment);
         }
@@ -171,7 +180,9 @@ public class RiskController {
                               @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
 								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets,
-								@RequestParam(name = "selectedRegister", required = false) final Long selectedRegister
+								@RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+								@RequestParam(name = "selectedSupplier", required = false) final Long selectedSupplier
+
 	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
@@ -183,6 +194,12 @@ public class RiskController {
 		}
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER) && selectedSupplier == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt.");
 		}
 
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
@@ -581,6 +598,12 @@ public class RiskController {
             () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
         relationService.addRelation(savedThreatAssessment, register);
     }
+
+	private void relateSupplier(final Long selectedSupplier, final ThreatAssessment savedThreatAssessment) {
+		final Supplier supplier = supplierService.findById(selectedSupplier).orElseThrow(
+				() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt."));
+		relationService.addRelation(savedThreatAssessment, supplier);
+	}
 
     private User getFirstRelatedResponsible(final ThreatAssessment threatAssessment) {
         if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {

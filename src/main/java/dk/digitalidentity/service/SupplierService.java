@@ -163,8 +163,8 @@ public class SupplierService implements TagableService<Supplier> {
 		return supplierDao.searchForSupplierNotDeleted(search, pageable);
 	}
 
-	public Supplier findById(Long id) {
-		return supplierDao.findById(id).orElse(null);
+	public Optional<Supplier> findById(Long id) {
+		return supplierDao.findById(id);
 	}
 
 	public List<SupplierGrid> findGridByIds(List<Long> ids, User user) {

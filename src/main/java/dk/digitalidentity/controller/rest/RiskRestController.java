@@ -176,10 +176,10 @@ public class RiskRestController {
 	@RequireReadOwnerOnly
     @GetMapping("supplier")
     public ResponsibleUsersWithElementNameDTO getSupplierResponsibleUserAndName(@RequestParam final long supplierId) {
-        final Supplier supplier = supplierService.findById(supplierId);
-        if (supplier == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
+        final Supplier supplier = supplierService.findById(supplierId).orElseThrow(
+				() -> new ResponseStatusException(HttpStatus.NOT_FOUND)
+		);
+
         if (supplier.getResponsibleUser() == null) {
             return new ResponsibleUsersWithElementNameDTO(supplier.getName(), new ArrayList<>());
         }

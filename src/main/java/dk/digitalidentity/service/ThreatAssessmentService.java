@@ -45,9 +45,11 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -1303,5 +1305,17 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 	private static boolean uuidListContains(final String commaSeparatedUuids, final String userUuid) {
 		return commaSeparatedUuids != null
 				&& Arrays.stream(commaSeparatedUuids.split(",")).anyMatch(uuid -> uuid.trim().equals(userUuid));
+	}
+
+	public void validateRiskType(ThreatAssessment editedAssessment, Set<Long> selectedAssets, Long selectedRegister, Long selectedSupplier) {
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER) && selectedSupplier == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt.");
+		}
 	}
 }
