@@ -93,6 +93,7 @@ function ViewTaskService() {
                 year: 'numeric'
             }).replace(/\./g, '/').replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$1/$2-$3');
         }
+        this.initNextDeadlinePreview();
         var textarea = document.getElementById('description');
         if (textarea) {
             this.fitDescription(textarea);
@@ -109,6 +110,51 @@ function ViewTaskService() {
 
         this.initInProgressNoteToggle();
         this.initCompleteAndStay();
+    }
+
+    this.initNextDeadlinePreview = function() {
+        const taskDeadline = document.querySelector("#TaskDeadline");
+        const nextDeadline = document.querySelector("#NextDeadline");
+        if (!taskDeadline || !nextDeadline) {
+            return;
+        }
+
+        let nextDeadlinePicker = initDatepicker("#NextDeadlineBtn", "#NextDeadline");
+        let nextDeadlineDirty = false;
+        nextDeadline.addEventListener("input", () => {
+            nextDeadlineDirty = true;
+        });
+
+        // MCDatepicker only reads its opening date from `selectedDate` at creation time, so once the
+        // preview fetch changes the input's value the picker has to be recreated to open on that date
+        // instead of today. The button is cloned to drop the previous picker's click listener along
+        // with it, rather than leaving it to call open() on a destroyed instance.
+        const setNextDeadlineValue = (day, month, year) => {
+            nextDeadline.value = `${day}/${month}-${year}`;
+            nextDeadlinePicker.destroy();
+            const oldBtn = document.querySelector("#NextDeadlineBtn");
+            oldBtn.replaceWith(oldBtn.cloneNode(true));
+            nextDeadlinePicker = initDatepicker("#NextDeadlineBtn", "#NextDeadline", {
+                selectedDate: new Date(year, month - 1, day)
+            });
+        };
+
+        const refreshPreview = () => {
+            if (nextDeadlineDirty || !taskDeadline.value) {
+                return;
+            }
+            fetch(`/tasks/${taskId}/next-deadline-preview?dateOfCompletion=${encodeURIComponent(taskDeadline.value)}`)
+                .then(response => response.ok ? response.json() : null)
+                .then(date => {
+                    if (date && !nextDeadlineDirty) {
+                        const [year, month, day] = date.split('-');
+                        setNextDeadlineValue(day, month, year);
+                    }
+                });
+        };
+
+        taskDeadline.addEventListener("change", refreshPreview);
+        refreshPreview();
     }
 
     this.initCompleteAndStay = function() {

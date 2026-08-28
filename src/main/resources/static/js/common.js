@@ -124,7 +124,7 @@ const initSelectWithConfirmation = (element, containerInner = 'form-control') =>
     return choices;
 }
 
-function initDatepicker(elementQuerySelector, inputField) {
+function initDatepicker(elementQuerySelector, inputField, extraOptions) {
     const datePicker = MCDatepicker.create({
         el: inputField,
         autoClose: true,
@@ -135,7 +135,8 @@ function initDatepicker(elementQuerySelector, inputField) {
         customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
         customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
         customClearBTN: "Ryd",
-        customCancelBTN: "Annuller"
+        customCancelBTN: "Annuller",
+        ...extraOptions
     });
     document.querySelector(elementQuerySelector).addEventListener("click", () => {
         datePicker.open();

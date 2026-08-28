@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -240,7 +241,7 @@ public class TasksController {
     }
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, ChoiceValue taskResult) {}
-    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, String documentLink, Long documentRelation, Long resultId, List<Long> subTasksCompleted) {}
+    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate nextDeadline, String documentLink, Long documentRelation, Long resultId, List<Long> subTasksCompleted) {}
     @RequireReadOwnerOnly
 	@GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
@@ -259,7 +260,7 @@ public class TasksController {
 
 		model.addAttribute("taskDescriptionTemplates", values);
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
-        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, "", null, null, null));
+        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, null, "", null, null, null));
 		model.addAttribute("possibleResults", choiceService.findChoiceValuesForListIdentifier("control-result"));
 
         if (task.getTaskType().equals(TaskType.TASK)) {
@@ -424,8 +425,17 @@ public class TasksController {
             taskLog.setDocument(documentService.get(dto.documentRelation()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
-        taskService.completeTask(task, taskLog);
+        taskService.completeTask(task, taskLog, dto.nextDeadline());
         return task;
+    }
+
+    @RequireReadOwnerOnly
+    @GetMapping("{id}/next-deadline-preview")
+    @ResponseBody
+    public LocalDate nextDeadlinePreview(@PathVariable("id") final long id,
+            @RequestParam("dateOfCompletion") @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate dateOfCompletion) {
+        final Task task = taskService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return taskService.previewNextDeadline(task, dateOfCompletion);
     }
 
 	@RequireCreateAll
