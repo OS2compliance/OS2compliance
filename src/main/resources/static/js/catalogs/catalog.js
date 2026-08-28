@@ -1,4 +1,4 @@
-import { initSaveAsExcelButtonClientside } from "/js/excel-export/excel-export-init.js";
+import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 
 window.catalog = new CatalogService();
 
@@ -6,16 +6,16 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 let editDialog;
 let copyDialog;
 
-let catalogGrid;
+const columnProperties = [
+    'identifier',
+    'name',
+    'threatCount',
+    'hidden',
+    'inUse'
+];
 
 document.addEventListener("DOMContentLoaded", function (event) {
     initGrid();
-
-    const showHiddenCatalogsToggle = document.getElementById('showHiddenCatalogsToggle');
-    showHiddenCatalogsToggle.addEventListener('change', function () {
-        const filteredData = showHiddenCatalogsToggle.checked ? data : data.filter(item => !item.hidden);
-        catalogGrid.updateConfig({data: filteredData}).forceRender();
-    });
 });
 
 function initGrid() {
@@ -30,7 +30,7 @@ function initGrid() {
         header: "d-flex justify-content-end"
     };
 
-    catalogGrid = new gridjs.Grid({
+    const gridConfig = {
         className: defaultClassName,
         sort: {
             enabled: true,
@@ -38,32 +38,41 @@ function initGrid() {
         },
         columns: [
             {
-                id: "identifier",
                 name: "identifier",
                 hidden: true
             },
             {
-                id: "name",
                 name: "Katalog",
+                searchable: {
+                    searchKey: 'name'
+                },
                 formatter: (cell, row) => {
-                    const url = viewUrl + row.cells[0]['data'];
+                    const identifier = row.cells[columnProperties.indexOf('identifier')]['data'];
+                    const url = viewUrl + identifier;
                     return gridjs.html(`<a href="${url}">${cell}</a>`);
                 }
             },
             {
-                id: "threats",
                 name: "Trusler",
-                formatter: (cell, row) => {
-                    return cell.length;
+                searchable: {
+                    sortKey: 'threatCount'
                 }
             },
             {
-                id: "hidden",
                 name: "Synlighed",
-                width: '90px',
+                width: '160px',
+                searchable: {
+                    searchKey: 'hidden',
+                    fieldId: 'catalogHiddenSearchSelector'
+                },
                 formatter: (cell, row) => {
-                    return cell ? "Skjult" : "Synlig";
+                    const isHidden = cell === true || cell === 'true';
+                    return isHidden ? "Skjult" : "Synlig";
                 }
+            },
+            {
+                name: "inUse",
+                hidden: true
             },
             {
                 id: "actions",
@@ -71,18 +80,33 @@ function initGrid() {
                 sort: 0,
                 width: '90px',
                 formatter: (cell, row) => {
-                    const identifier = row.cells[0]['data'];
-                    const catalog = row.cells[1]['data'];
-                    const inUse = inUseMap[identifier];
+                    const identifier = row.cells[columnProperties.indexOf('identifier')]['data'];
+                    const catalogName = row.cells[columnProperties.indexOf('name')]['data'].replaceAll("'", "\\'");
+                    const inUse = row.cells[columnProperties.indexOf('inUse')]['data'] === true || row.cells[columnProperties.indexOf('inUse')]['data'] === 'true';
                     const deleteStyle = inUse ? 'visibility: hidden' : '';
                     const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="catalog.editCatalog('${identifier}')"><i class="pli-pencil fs-5"></i></button>`;
-                    const deleteButton = `<button style="${deleteStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="catalog.deleteCatalog('${identifier}', '${catalog}')"><i class="pli-trash fs-5"></i></button>`;
+                    const deleteButton = `<button style="${deleteStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="catalog.deleteCatalog('${identifier}', '${catalogName}')"><i class="pli-trash fs-5"></i></button>`;
                     const copyButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="catalog.copyCatalog('${identifier}')"><i class="pli-data-copy fs-5"></i></button>`;
                     return gridjs.html(editButton + copyButton + deleteButton);
                 }
             }
         ],
-        data: data.filter(item => !item.hidden),
+        server: {
+            url: gridCatalogsUrl,
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': token
+            },
+            then: data => data.content.map(obj => {
+                    const result = []
+                    for (const property of columnProperties) {
+                        result.push(obj[property])
+                    }
+                    return result;
+                }
+            ),
+            total: data => data.totalCount
+        },
         language: {
             'noRecordsFound': "Ingen data fundet",
             'search': {
@@ -99,14 +123,17 @@ function initGrid() {
                 'page': (page) => `Side ${page}`
             }
         }
-    }).render(document.getElementById("catalogsDatatable"));
+    };
 
-    initSaveAsExcelButtonClientside('catalogsDatatable', 'threatCatalog', 'catalogs', 'Trusselskataloger', () => {
-        return data.map(item => ({
-            id: item.identifier,  // String UUID
-            name: item.name
-        }));
+    const grid = new gridjs.Grid(gridConfig).render(document.getElementById("catalogsDatatable"));
+
+    // Initialized search, pagination and so forth. Mutates specific parts of table config
+    const customGridFunctions = new CustomGridFunctions(grid, gridCatalogsUrl, 'catalogsDatatable', {
+        sortDirection: 'ASC',
+        sortColumn: 'name',
     });
+
+    initSaveAsExcelButton(customGridFunctions, 'threatCatalog', 'catalogs', 'Trusselskataloger');
 }
 
 function CatalogService() {
