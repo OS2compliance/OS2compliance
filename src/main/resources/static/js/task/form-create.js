@@ -99,7 +99,7 @@ function extractTaskFromFormData(fd, form) {
         includeInReport: fd.get('includeInReport') === 'on' || fd.get('includeInReport') === 'true',
         tagIds: (fd.getAll('tags') || []).map(v => parseInt(v)),
         notificationReminders: fd.getAll('notificationReminders') || [],
-        taskDescriptionTemplateId: fd.get('templateDescription') ? parseInt(fd.get('templateDescription')) : null,
+        taskDescriptionTemplateId: fd.get('taskDescriptionTemplate') ? parseInt(fd.get('taskDescriptionTemplate')) : null,
         links: [],
         subTasks: []
     };

@@ -154,9 +154,14 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 		return responsibleUsers.stream().map(User::getName).collect(Collectors.joining(","));
 	}
 
-	// No one calls this one for now, its just for convenience
+	// En valgt skabelon vinder over opgavens egen tekst overalt hvor beskrivelsen vises
 	public String getDescription() {
 		return taskDescriptionTemplate != null ? taskDescriptionTemplate.getDescription() : description;
+	}
+
+	// Opgavens egen tekst, som getDescription() maskerer så snart der er valgt en skabelon
+	public String getOwnDescription() {
+		return description;
 	}
 
 }

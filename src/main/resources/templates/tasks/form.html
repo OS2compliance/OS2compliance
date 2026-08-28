@@ -105,8 +105,9 @@
                 <div class="row mt-3" th:id="${formId + 'TemplateDescriptionDiv'}" th:unless="${descriptionTemplates == null || descriptionTemplates.isEmpty()}">
                     <label th:for="${formId + 'TemplateDescriptionSelect'}" class="col-sm-4 col-form-label">Beskrivelseskabeloner</label>
                     <div class="col-sm-8">
-                        <select class="form-control form-select choices__input" name="templateDescription" th:id="${formId + 'TemplateDescriptionSelect'}" tabindex="-1">
-                            <option th:each="template : ${descriptionTemplates}" th:value="${template.id}" th:text="${template.caption}"></option>
+                        <select class="form-control form-select choices__input" name="taskDescriptionTemplate" th:id="${formId + 'TemplateDescriptionSelect'}" tabindex="-1">
+                            <option value="" th:selected="${task.taskDescriptionTemplate == null}">Ingen valgt</option>
+                            <option th:each="template : ${descriptionTemplates}" th:value="${template.id}" th:text="${template.caption}" th:selected="${template.id} == ${task.taskDescriptionTemplate?.id}"></option>
                         </select>
                     </div>
                 </div>
@@ -115,7 +116,7 @@
                     <label for="description" class="col-sm-4 col-form-label">Beskrivelse</label>
                     <div class="col-sm-8">
                         <div class="input-group">
-                            <textarea id="description" class="form-control" th:id="${formId + 'description'}"  placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
+                            <textarea id="description" class="form-control" th:id="${formId + 'description'}"  placeholder="Indtast beskrivelse" th:field="*{description}" th:attr="data-own-description=${task.ownDescription}" rows="3"></textarea>
                         </div>
                     </div>
                 </div>

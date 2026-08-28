@@ -269,19 +269,19 @@ function CreateTaskService() {
                 placeholderValue: 'Vælg en skabelon',
                 searchPlaceholderValue: 'Søg...'
             });
-            let previousDescription;
+            let ownDescription = document.getElementById('taskCreateFormdescription').dataset.ownDescription || '';
 
             templateDescriptionSelect.addEventListener('change', function(event) {
                 let descriptionBox = document.getElementById('taskCreateFormdescription');
                 if (templateDescriptionSelect.value !== '' && templateDescriptionSelect.value !== null) {
-                    if (descriptionBox.value) {
-                        previousDescription = descriptionBox.value;
+                    if (!descriptionBox.disabled) {
+                        ownDescription = descriptionBox.value;
                     }
                     descriptionBox.value = "";
                     descriptionBox.disabled = true;
                 }
                 else {
-                    descriptionBox.value = previousDescription;
+                    descriptionBox.value = ownDescription;
                     descriptionBox.disabled = false;
                 }
             });
