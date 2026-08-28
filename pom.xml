@@ -252,6 +252,12 @@
 			<artifactId>dbs-platfom-client</artifactId>
 			<version>1.0.4</version>
 		</dependency>
+		<dependency>
+			<groupId>dk.digitalidentity</groupId>
+			<artifactId>reporter</artifactId>
+			<version>1.0.5</version>
+			<optional>true</optional>
+		</dependency>
     </dependencies>
 
 	<build>
