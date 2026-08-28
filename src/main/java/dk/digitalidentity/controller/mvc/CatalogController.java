@@ -5,7 +5,6 @@ import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
-import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.CatalogService;
 import lombok.RequiredArgsConstructor;

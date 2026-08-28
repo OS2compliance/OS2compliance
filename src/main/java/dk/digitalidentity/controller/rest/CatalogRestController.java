@@ -225,5 +225,3 @@ public class CatalogRestController {
 	}
 
 }
-
-
