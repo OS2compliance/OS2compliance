@@ -157,6 +157,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(44, this::seedV44);
 		incrementAndPerformIfVersion(45, this::seedV45);
 		incrementAndPerformIfVersion(46, this::seedV46);
+		incrementAndPerformIfVersion(47, this::seedV47);
 	}
 
 	/**
@@ -192,6 +193,10 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	 * {@code seed_version} sat til 47, og fjernes kaldet i {@link #onApplicationEvent}, ville den
 	 * springe det næste seed over, fordi versionerne kun matcher eksakt.
 	 */
+	private void seedV47() {
+		settingsService.createSetting(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, "false", "risk", true);
+	}
+
 	private void seedV46() {
 		// Med vilje tom - se javadoc.
 	}

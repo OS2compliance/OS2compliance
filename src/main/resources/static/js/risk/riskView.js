@@ -568,20 +568,19 @@ function setRevisionInterval(assessmentId) {
         .catch(error => toastService.error(error));
 }
 
-function updateRelatedPrecautions(choices, search, threatType, threatId, threatIdentifier) {
+function updateRelatedPrecautions(choices, search, threatType, threatId, threatIdentifier, showFullDescription) {
     fetch( `/rest/relatable/autocomplete/relatedprecautions?search=${search}&threatType=${threatType}&threatIdentifier=${threatIdentifier}&threatId=${threatId}&riskId=${riskId}`)
         .then(response => response.json()
             .then(data => {
                 choices.setChoices(data.content.map(reg => {
-                    return {
+                    return showFullDescription ? {
                         id: reg.id,
-                        // name: truncateString(reg.name + ": " + reg.description, 60),
                         name: reg.name + ": " + reg.description,
-                        title: reg.description,
-                        customProperties : {
-
-                        }
-                    }
+                    } : {
+                        id: reg.id,
+                        name: reg.name,
+                        labelDescription: ": " + reg.description,
+                    };
                 }), 'id', 'name', true);
 
 
@@ -683,6 +682,7 @@ function pageLoaded() {
         let dbType = relationsSelect.dataset.dbtype;
         let id = relationsSelect.dataset.id;
         let identifier = relationsSelect.dataset.identifier;
+        let showFullDescription = relationsSelect.dataset.showFullDescription === 'true';
 
         const initPrecautionSelect = (element, containerInner = 'form-control') => {
             let choices = new Choices(element, {
@@ -709,7 +709,7 @@ function pageLoaded() {
             );
             element.addEventListener("showDropdown",
                 function(event) {
-                    updateRelatedPrecautions(relationsChoice, event.detail.value ? event.detail.value : "" , dbType, id, identifier);
+                    updateRelatedPrecautions(relationsChoice, event.detail.value ? event.detail.value : "" , dbType, id, identifier, showFullDescription);
                 },
                 false,
             );
@@ -719,13 +719,13 @@ function pageLoaded() {
 
         relationsSelect.addEventListener("search",
             function(event) {
-                updateRelatedPrecautions(relationsChoice, event.detail.value, dbType, id, identifier);
+                updateRelatedPrecautions(relationsChoice, event.detail.value, dbType, id, identifier, showFullDescription);
             },
             false,
         );
         relationsSelect.addEventListener("change",
             function(event) {
-                updateRelatedPrecautions(relationsChoice, "", dbType, id, identifier);
+                updateRelatedPrecautions(relationsChoice, "", dbType, id, identifier, showFullDescription);
             },
             false,
         );
