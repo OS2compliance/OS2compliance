@@ -38,6 +38,7 @@ import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.SupplierService;
@@ -74,6 +75,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -98,6 +100,7 @@ public class RiskController {
     private final EmailTemplateService emailTemplateService;
     private final IncidentService incidentService;
 	private final SupplierService supplierService;
+	private final RelatableService relatableService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -122,15 +125,7 @@ public class RiskController {
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation() && !threatAssessment.isSociety()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de tre vurderinger.");
         }
-        if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAsset == null || selectedAsset.isEmpty())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
-        }
-        if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
-        }
-		if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER) && selectedSupplier == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt.");
-		}
+        threatAssessmentService.validateRiskType(threatAssessment, selectedAsset, selectedRegister, selectedSupplier);
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
@@ -192,21 +187,16 @@ public class RiskController {
 		if (editedAssessment.getThreatAssessmentType() != assessment.getThreatAssessmentType()) {
 			editedAssessment.setThreatAssessmentType(assessment.getThreatAssessmentType());
 		}
-		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
-		}
-		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
-		}
-		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER) && selectedSupplier == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt.");
-		}
+		threatAssessmentService.validateRiskType(assessment, selectedAssets, selectedRegister, selectedSupplier);
 
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
 			relationService.setRelationsAbsolute(editedAssessment, selectedAssets);
 		}
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
 			relateRegister(selectedRegister, editedAssessment);
+		}
+	 	if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER)) {
+			relateSupplier(selectedSupplier, editedAssessment);
 		}
         editedAssessment.setName(assessment.getName());
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
@@ -525,25 +515,23 @@ public class RiskController {
 	private String findElementName(final ThreatAssessment threatAssessment) {
         final ThreatAssessmentType threatAssessmentType = threatAssessment.getThreatAssessmentType();
         if (ThreatAssessmentType.ASSET.equals(threatAssessmentType)) {
-            final List<Relation> relations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
-            return relations.stream()
-                .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
-                .map(assetService::findById)
-                .filter(Optional::isPresent)
-                .map(a -> a.get().getName())
-                .collect(Collectors.joining(", "));
+			return joinNames(threatAssessment, RelationType.ASSET, id -> assetService.findById(id).map(Asset::getName));
         } else if (ThreatAssessmentType.REGISTER.equals(threatAssessmentType)) {
-            final List<Relation> relations = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER);
-            return relations.stream()
-                .map(r -> r.getRelationAType().equals(RelationType.REGISTER) ? r.getRelationAId() : r.getRelationBId())
-                .map(registerService::findById)
-                .filter(Optional::isPresent)
-                .map(a -> a.get().getName())
-                .collect(Collectors.joining(", "));
-        } else {
+			return joinNames(threatAssessment, RelationType.REGISTER, id -> registerService.findById(id).map(Register::getName));
+        } else if (ThreatAssessmentType.SUPPLIER.equals(threatAssessmentType)) {
+			return joinNames(threatAssessment, RelationType.SUPPLIER, id -> supplierService.findById(id).map(Supplier::getName));
+		} else {
             return "";
         }
     }
+
+	private String joinNames(final ThreatAssessment threatAssessment, final RelationType relationType, final Function<Long, Optional<String>> findName) {
+		return relationService.findRelatedToWithType(threatAssessment, relationType).stream()
+				.map(r -> r.getRelationAType().equals(relationType) ? r.getRelationAId() : r.getRelationBId())
+				.map(findName)
+				.flatMap(Optional::stream)
+				.collect(Collectors.joining(", "));
+	}
 
 	private void createTaskAndSendMail(final ThreatAssessment savedThreatAssessment) {
 		if (savedThreatAssessment.getResponsibleUser() != null) {
