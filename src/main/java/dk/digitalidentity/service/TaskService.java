@@ -3,8 +3,11 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
+import dk.digitalidentity.dao.TaskPredicates;
+import dk.digitalidentity.dao.grid.QueryPredicateBuilder;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
+import dk.digitalidentity.model.dto.TaskDateFilter;
 import dk.digitalidentity.model.dto.TaskFirstDeadlineDTO;
 import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.dto.enums.StatusColor;
@@ -403,7 +406,13 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user, boolean onlyMine) {
+		return getTasks(sortColumn, sortDirection, filters, page, pageLimit, user, onlyMine, TaskDateFilter.DEADLINE, null, null);
+	}
+
+	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user,
+			boolean onlyMine, TaskDateFilter dateFilter, LocalDate from, LocalDate to) {
 		Page<TaskGrid> tasks;
+		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(TaskPredicates.dateWithin(dateFilter, from, to));
 
 		// if onlyMine is true - only show the tasks assigned to the user, even if read_all
 		if (!onlyMine && SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
@@ -411,7 +420,9 @@ public class TaskService implements TagableService<Task> {
 			tasks = taskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, TaskGrid.class),
 					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					TaskGrid.class
+					TaskGrid.class,
+					List.of(),
+					queryPredicates
 			);
 		}
 		else {
@@ -420,7 +431,8 @@ public class TaskService implements TagableService<Task> {
 					validateSearchFilters(filters, TaskGrid.class),
 					user,
 					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					TaskGrid.class
+					TaskGrid.class,
+					queryPredicates
 			);
 		}
 		return tasks;

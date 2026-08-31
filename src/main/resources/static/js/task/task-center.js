@@ -4,6 +4,7 @@ import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 import {BadgeData, createBadges} from "../component/badge.js";
 import { initYearWheel } from "./year-wheel.js";
+import { DateRangeFilter } from "../component/date-range-filter.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -135,6 +136,10 @@ function initGrid() {
                 },
                 width: '90px',
                 formatter: (cell, row) => {
+                    if (!cell) {
+                        return gridjs.html(`<span>-</span>`);
+                    }
+
                     var completed = row.cells[12]['data'];
                     var type = row.cells[2]['data'];
                     if (completed && type === "Opgave") {
@@ -308,6 +313,8 @@ function initGrid() {
     //Enables custom column search, serverside sorting and pagination
     const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, datatableId);
 
+    initDateRangeFilter(customGridFunctions);
+
     new ColumnOptions(
         datatableId,
         grid,
@@ -318,6 +325,33 @@ function initGrid() {
     initGridActions()
 
     initSaveAsExcelButton(customGridFunctions, 'task', 'tasks', 'Opgavecenter')
+}
+
+function initDateRangeFilter(customGridFunctions) {
+    const filterValue = (key) => customGridFunctions.state.searchValues[key] || '';
+    const setFilter = (key, value) => {
+        customGridFunctions.updateColumnValue(key, value || '');
+        customGridFunctions.state.page = 0;
+        customGridFunctions.saveState();
+        customGridFunctions.onSearch();
+    };
+
+    new DateRangeFilter({
+        containerEl: document.getElementById('taskDateRangeFilter'),
+        getValue: () => ({ from: filterValue('fromDate'), to: filterValue('toDate') }),
+        onApply: (from, to) => {
+            setFilter('fromDate', from);
+            setFilter('toDate', to);
+        },
+        onClear: () => {
+            setFilter('fromDate', '');
+            setFilter('toDate', '');
+        }
+    });
+
+    const dateFieldSelect = document.getElementById('taskDateFieldSelect');
+    dateFieldSelect.value = filterValue('dateField') || 'DEADLINE';
+    dateFieldSelect.addEventListener('change', (event) => setFilter('dateField', event.target.value));
 }
 
 function initGridActions() {

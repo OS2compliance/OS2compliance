@@ -1,6 +1,7 @@
 import {initStatisticView} from "./statistic/statisticView.js";
 import ColumnOptions from "./grid-js-extension/column-options.js";
 import formatTags from "./tags/tag-grid-formatter.js";
+import { DateRangeFilter } from "./component/date-range-filter.js";
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -19,6 +20,38 @@ function escapeAttribute(value) {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
+}
+
+function initTaskDateRangeFilter(customGridFunctions) {
+    const container = document.getElementById('taskDateRangeFilterDashboard');
+    if (!container) {
+        return;
+    }
+
+    const filterValue = (key) => customGridFunctions.state.searchValues[key] || '';
+    const setFilter = (key, value) => {
+        customGridFunctions.updateColumnValue(key, value || '');
+        customGridFunctions.state.page = 0;
+        customGridFunctions.saveState();
+        customGridFunctions.onSearch();
+    };
+
+    new DateRangeFilter({
+        containerEl: container,
+        getValue: () => ({ from: filterValue('fromDate'), to: filterValue('toDate') }),
+        onApply: (from, to) => {
+            setFilter('fromDate', from);
+            setFilter('toDate', to);
+        },
+        onClear: () => {
+            setFilter('fromDate', '');
+            setFilter('toDate', '');
+        }
+    });
+
+    const dateFieldSelect = document.getElementById('taskDateFieldSelectDashboard');
+    dateFieldSelect.value = filterValue('dateField') || 'DEADLINE';
+    dateFieldSelect.addEventListener('change', (event) => setFilter('dateField', event.target.value));
 }
 
 document.addEventListener("DOMContentLoaded", function (event) {
@@ -69,7 +102,10 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     name: "Slutdato",
                     searchable: {searchKey: 'nextDeadline'},
                     formatter: (cell, row) => {
-                        var completed = row.cells[8]['data'];
+                        if (!cell) {
+                            return gridjs.html(`<span>-</span>`);
+                        }
+                        var completed = row.cells[9]['data'];
                         var type = row.cells[2]['data'];
                         if (completed && type == "Opgave") {
                             return gridjs.html(`<span>${cell}</span>`);
@@ -83,6 +119,21 @@ document.addEventListener("DOMContentLoaded", function (event) {
                         } else {
                             return gridjs.html(`<span>${cell}</span>`);
                         }
+                    }
+                },
+                {
+                    name: "Sidst udført",
+                    searchable: {searchKey: 'lastCompletionDate'},
+                    formatter: (cell) => {
+                        if (!cell || cell.trim() === '') {
+                            return gridjs.html(`<span>-</span>`);
+                        }
+                        var dateParts = cell.split('-');
+                        if (dateParts.length === 3) {
+                            var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+                            return gridjs.html(`<span>${formattedDate}</span>`);
+                        }
+                        return gridjs.html(`<span>${cell}</span>`);
                     }
                 },
                 {
@@ -102,8 +153,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
                         // Null-safe access to row cells and data
                         let type = row?.cells?.[2]?.data || null;
                         let deadline = row?.cells?.[6]?.data || null;
-                        let inProgress = row?.cells?.[10]?.data === true;
-                        let note = row?.cells?.[11]?.data || null;
+                        let inProgress = row?.cells?.[11]?.data === true;
+                        let note = row?.cells?.[12]?.data || null;
 
                         // if completed and task type opgave
                         if (cell && type === "Opgave") {
@@ -164,7 +215,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(task =>
-                    [task.id, task.name, task.taskType, task.responsibleNames, task.responsibleOU, task.startDate, task.nextDeadline, task.taskRepetition, task.completed, task.tags, task.inProgress, task.inProgressNote]
+                    [task.id, task.name, task.taskType, task.responsibleNames, task.responsibleOU, task.startDate, task.nextDeadline, task.lastCompletionDate, task.taskRepetition, task.completed, task.tags, task.inProgress, task.inProgressNote]
                 ),
                 total: data => data.totalCount ? data.totalCount : 0
             },
@@ -190,7 +241,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
             .render(document.getElementById(taskDatatableId));
 
         //Enables custom column search, serverside sorting and pagination
-        new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId, 'tasksDatatable');
+        const customGridFunctionsTasks = new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId, 'tasksDatatable');
+
+        initTaskDateRangeFilter(customGridFunctionsTasks);
 
         new ColumnOptions(
             taskDatatableId,

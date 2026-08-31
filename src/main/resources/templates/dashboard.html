@@ -57,8 +57,17 @@
                     </ul>
                     <div class="tab-content">
                         <div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel" aria-labelledby="task-tab">
-                            <div class="taskTableOptionsContainer d-flex gap-2">
-                                <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                <div class="taskTableOptionsContainer d-flex align-items-center gap-2">
+                                    <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 ms-auto">
+                                    <select id="taskDateFieldSelectDashboard" class="form-control form-select form-select-sm w-auto">
+                                        <option value="DEADLINE">Deadline</option>
+                                        <option value="LAST_COMPLETION">Sidst udført</option>
+                                    </select>
+                                    <div id="taskDateRangeFilterDashboard"></div>
+                                </div>
                             </div>
                             <div id="tasksDatatable"></div>
 
