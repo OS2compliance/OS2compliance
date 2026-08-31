@@ -39,6 +39,15 @@
                             <div class="invalid-feedback" id="registerError">Der skal vælges mindst en behandlingsaktivitet</div>
                         </div>
                     </div>
+                    <div class="row mt-3" id="editSupplierSelectRow" style="display: none;">
+                        <label for="editSupplierSelect" class="col-sm-4 col-form-label">Leverandør</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedSupplier" data-trigger="" id="editSupplierSelect" hidden="" tabindex="-1">
+                                <option th:each="supplier : ${relatedSuppliers}" th:value="${supplier.id}" th:text="${supplier.name}" selected></option>
+                            </select>
+                            <div class="invalid-feedback" id="supplierError">Der skal vælges mindst en leverandør</div>
+                        </div>
+                    </div>
                     <div class="row mt-3" id="editTitleRow">
                         <label for="editName" class="col-sm-4 col-form-label">Titel</label>
                         <div class="col-sm-8">

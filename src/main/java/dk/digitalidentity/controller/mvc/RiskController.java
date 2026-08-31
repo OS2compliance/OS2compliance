@@ -161,6 +161,10 @@ public class RiskController {
 			final List<Relation> registerRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER);
 			model.addAttribute("relatedRegisters", registerService.findAllByRelations(registerRelations));
 		}
+		if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.SUPPLIER) {
+			final List<Relation> supplierRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.SUPPLIER);
+			model.addAttribute("relatedSuppliers", supplierService.findAllByRelations(supplierRelations));
+		}
 
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("risk", threatAssessment);
