@@ -37,6 +37,44 @@
         </li>
     </template>
 
+    <!-- Template for the date range ("Periode") filter -->
+    <template id="dateRangeFilterTemplate" th:if="${gridjs == true}">
+        <div class="date-range-filter">
+            <button type="button" class="btn btn-outline-secondary date-range-filter__toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                <i class="pli-calendar-4 fs-6"></i>
+                <span class="date-range-filter__label">Periode</span>
+            </button>
+            <span class="date-range-filter__clear" title="Ryd periode" style="display:none;">&times;</span>
+            <div class="dropdown-menu p-3 date-range-filter__menu">
+                <div class="d-flex gap-2 mb-3">
+                    <div>
+                        <label class="form-label mb-1 date-range-filter__from-label">Fra</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control date-range-filter__from" autocomplete="off">
+                            <button type="button" class="btn btn-primary date-range-filter__from-btn">
+                                <i class="pli-calendar-4 fs-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label mb-1 date-range-filter__to-label">Til</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control date-range-filter__to" autocomplete="off">
+                            <button type="button" class="btn btn-primary date-range-filter__to-btn">
+                                <i class="pli-calendar-4 fs-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="date-range-filter__presets d-grid gap-1 mb-3"></div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary btn-sm date-range-filter__reset">Ryd</button>
+                    <button type="button" class="btn btn-primary btn-sm date-range-filter__submit">Anvend</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
     <div th:if="${statistic == true}" id="statisticModalContainer" class="modal fade" tabindex="-1"></div>
 
     <!-- Dialogs used by dialog-service.js (showConfirm / showAlert / openDialog) -->

@@ -77,42 +77,15 @@ export class DateRangeFilter {
         const fromId = `date-range-filter__from-${this.instanceId}`;
         const toId = `date-range-filter__to-${this.instanceId}`;
 
-        this.containerEl.innerHTML = `
-            <div class="date-range-filter">
-                <button type="button" class="btn btn-outline-secondary date-range-filter__toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                    <i class="pli-calendar-4 fs-6"></i>
-                    <span class="date-range-filter__label">Periode</span>
-                </button>
-                <span class="date-range-filter__clear" title="Ryd periode" style="display:none;">&times;</span>
-                <div class="dropdown-menu p-3 date-range-filter__menu">
-                    <div class="d-flex gap-2 mb-3">
-                        <div>
-                            <label class="form-label mb-1" for="${fromId}">Fra</label>
-                            <div class="input-group">
-                                <input type="text" id="${fromId}" class="form-control date-range-filter__from" autocomplete="off">
-                                <button type="button" class="btn btn-primary date-range-filter__from-btn">
-                                    <i class="pli-calendar-4 fs-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="form-label mb-1" for="${toId}">Til</label>
-                            <div class="input-group">
-                                <input type="text" id="${toId}" class="form-control date-range-filter__to" autocomplete="off">
-                                <button type="button" class="btn btn-primary date-range-filter__to-btn">
-                                    <i class="pli-calendar-4 fs-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="date-range-filter__presets d-grid gap-1 mb-3"></div>
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-secondary btn-sm date-range-filter__reset">Ryd</button>
-                        <button type="button" class="btn btn-primary btn-sm date-range-filter__submit">Anvend</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        const template = document.getElementById('dateRangeFilterTemplate');
+        const clone = template.content.cloneNode(true);
+
+        clone.querySelector('.date-range-filter__from').id = fromId;
+        clone.querySelector('.date-range-filter__from-label').setAttribute('for', fromId);
+        clone.querySelector('.date-range-filter__to').id = toId;
+        clone.querySelector('.date-range-filter__to-label').setAttribute('for', toId);
+
+        this.containerEl.replaceChildren(clone);
 
         this.toggleButton = this.containerEl.querySelector('.date-range-filter__toggle');
         this.labelEl = this.containerEl.querySelector('.date-range-filter__label');
