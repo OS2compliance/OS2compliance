@@ -758,6 +758,12 @@ public class RiskRestController {
 			case SCENARIO:
 				key += assessment.getId(); // Scenarios are unique per assessment
 				break;
+			case SUPPLIER:
+				final Optional<Supplier> supplier = relations.stream().filter(r -> r.getRelationType() == RelationType.SUPPLIER)
+						.map(Supplier.class::cast)
+						.findFirst();
+				key += supplier.isPresent() ? supplier.get().getId() : "unknown";
+				break;
 			default:
 				key += assessment.getId();
 		}

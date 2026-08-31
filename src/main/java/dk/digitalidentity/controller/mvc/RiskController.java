@@ -38,7 +38,6 @@ import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
-import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.SupplierService;
@@ -100,7 +99,6 @@ public class RiskController {
     private final EmailTemplateService emailTemplateService;
     private final IncidentService incidentService;
 	private final SupplierService supplierService;
-	private final RelatableService relatableService;
 
 	@RequireReadOwnerOnly
     @GetMapping
