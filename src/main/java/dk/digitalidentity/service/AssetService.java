@@ -302,28 +302,32 @@ public class AssetService implements TagableService<Asset> {
 		final LocalDate deadline = dpia.getNextRevision();
 		if (deadline != null && dpia.getRevisionInterval() != null) {
 			final Task task = findAssociatedCheck(dpia).orElseGet(() -> createAssociatedCheck(dpia));
-			String name = "DPIA for " + dpia.getAssets().getFirst().getName();
-			name += (dpia.getAssets().size() > 1) ? " med flere" : "";
-			task.setName(name);
+			task.setName(dpiaCheckName(dpia));
 			task.setNextDeadline(dpia.getNextRevision());
 			task.setResponsibleUsers(updatedUser != null ? Set.of(updatedUser) : Collections.emptySet());
-			task.setDescription("Revider DPIA for " + String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList()));
+			task.setDescription("Revider DPIA for " + (dpia.getAssets().isEmpty() ? dpia.getName()
+					: String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList())));
 			setTaskRevisionInterval(dpia, task);
 			return task;
 		}
 		return null;
 	}
 
-	private Task createAssociatedCheck(final DPIA dpia) {
+	/**
+	 * En konsekvensanalyse behøver ikke være knyttet til et aktiv, og falder da tilbage på sit eget navn.
+	 */
+	private static String dpiaCheckName(final DPIA dpia) {
 		final List<Asset> assets = dpia.getAssets();
+		if (assets.isEmpty()) {
+			return "DPIA for " + dpia.getName();
+		}
+		return "DPIA for " + assets.getFirst().getName() + (assets.size() > 1 ? " med flere" : "");
+	}
+
+	private Task createAssociatedCheck(final DPIA dpia) {
 		final Task task = new Task();
 
-		if (assets.size() > 1) {
-			task.setName("DPIA for " + assets.getFirst().getName() + " med flere");
-		}
-		else {
-			task.setName("DPIA for " + assets.getFirst().getName());
-		}
+		task.setName(dpiaCheckName(dpia));
 
 		task.setCreatedAt(LocalDateTime.now());
 		task.getProperties().add(Property.builder()
