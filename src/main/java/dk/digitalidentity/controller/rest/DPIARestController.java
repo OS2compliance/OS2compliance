@@ -288,13 +288,12 @@ public class DPIARestController {
                 ? new ArrayList<>(assetService.findAllById(createExternalDPIADTO.assetIds))
                 : (dpia != null ? dpia.getAssets() : new ArrayList<>());
 
-		// uden aktiver er der intet aktiv-ejerskab at tjekke, og adgangen styres alene af @RequireCreateAll
-		if (!assets.isEmpty() && !assetService.isEditable(assets)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
-
         if (dpia != null) {
 			//Update
+			// ved opdatering ligger ejerskabet på konsekvensanalysen, ikke på de aktiver der sendes med
+			if (!dpiaService.isEditable(dpia)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
             dpia.setAssets(assets);
             dpia.setExternalLink(createExternalDPIADTO.link);
 			dpia.setUserUpdatedDate(createExternalDPIADTO.userUpdatedDate);
@@ -312,6 +311,10 @@ public class DPIARestController {
             dpiaService.save(dpia);
         } else {
 			//Create
+			// uden aktiver er der intet aktiv-ejerskab at tjekke, og adgangen styres alene af @RequireCreateAll
+			if (!assets.isEmpty() && !assetService.isEditable(assets)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
             dpiaService.createExternal(assets,createExternalDPIADTO.link, createExternalDPIADTO.title, createExternalDPIADTO.userUpdatedDate, createExternalDPIADTO.responsibleUserUuid, createExternalDPIADTO.responsibleOuUuid);
         }
 

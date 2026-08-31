@@ -53,6 +53,18 @@ public class DPIAWithoutAssetTest extends BaseIntegrationTest {
         assertThat(countDpiasNamed("Tilknyttet konsekvensanalyse uden aktiv")).isEqualTo(1);
     }
 
+    @Test
+    public void externalDpiaWithoutTitleGetsADefaultName() throws Exception {
+        mockMvc.perform(post("/rest/dpia/external/create").with(csrf().asHeader())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"dpiaId": null, "title": "", "assetIds": [], "link": "https://example.org/dpia"}
+                                """))
+                .andExpect(status().isOk());
+
+        assertThat(countDpiasNamed("Konsekvensanalyse")).isEqualTo(1);
+    }
+
     private long countDpiasNamed(final String name) {
         return entityManager.createQuery("SELECT COUNT(d) FROM DPIA d WHERE d.name = :name", Long.class)
                 .setParameter("name", name)

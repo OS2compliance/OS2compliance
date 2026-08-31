@@ -195,7 +195,7 @@ public class DPIAService implements TagableService<DPIA> {
 	@Transactional
     public DPIA createExternal(List<Asset> assets, String externalLink, String name, LocalDate userUpdatedDate,String responsibleUserUuid, String responsibleOuUuid) {
         DPIA dpia = new DPIA();
-        dpia.setName(name);
+        dpia.setName(name == null || name.isBlank() ? "Konsekvensanalyse" : name);
         dpia.setAssets(assets);
         dpia.setFromExternalSource(true);
         dpia.setUserUpdatedDate(userUpdatedDate);
