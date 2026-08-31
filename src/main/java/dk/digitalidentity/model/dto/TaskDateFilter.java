@@ -1,7 +1,18 @@
 package dk.digitalidentity.model.dto;
 
-public enum TaskDateFilter {
-    DEADLINE, LAST_COMPLETION;
+import dk.digitalidentity.model.entity.interfaces.HasMessage;
+import lombok.Getter;
+
+@Getter
+public enum TaskDateFilter implements HasMessage {
+    DEADLINE("Deadline"),
+    LAST_COMPLETION("Sidst udført");
+
+    private final String message;
+
+    TaskDateFilter(final String message) {
+        this.message = message;
+    }
 
     public static TaskDateFilter parse(final String raw) {
         if (LAST_COMPLETION.name().equalsIgnoreCase(raw)) {

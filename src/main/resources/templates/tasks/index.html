@@ -43,8 +43,8 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <select id="taskDateFieldSelect" class="form-control form-select form-select-sm w-auto">
-                                            <option value="DEADLINE">Deadline</option>
-                                            <option value="LAST_COMPLETION">Sidst udført</option>
+                                            <option th:each="dateFilter : ${T(dk.digitalidentity.model.dto.TaskDateFilter).values()}"
+                                                    th:value="${dateFilter}" th:text="${dateFilter.message}"></option>
                                         </select>
                                         <div id="taskDateRangeFilter"></div>
                                     </div>
