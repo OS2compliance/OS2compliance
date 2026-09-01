@@ -305,8 +305,8 @@
                         <td th:text="${threat.problem}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.method}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.elaboration}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
-                        <td><b>Eksisterende:</b></td>
-                        <td th:text="${threat.existingMeasures}"></td>
+                        <td><b>Supplerende bemærkninger:</b></td>
+                        <td th:text="${threat.additionalMeasures}"></td>
                         <td th:text="${threat.residualRisk.probability > 0 ? threat.residualRisk.probability : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.residualRisk.consequence > 0 ? threat.residualRisk.consequence : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.residualRisk.score > 0 && threat.residualRisk.color != null ? threat.residualRisk.score : ''}" th:style="'background-color:' + ${threat.residualRisk.color}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>

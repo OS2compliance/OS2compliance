@@ -332,7 +332,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
 					//set first precaution row to Existing
                     setCellTextSmall(row, 9, "Eksisterende");
-                    setCellTextSmall(row, 10, t.getExistingMeasures());
+                    setCellTextSmall(row, 10, t.getAdditionalMeasures());
 
 					//Save index of first row, for future merging
 					int mergeStartIndex = idx[0];
