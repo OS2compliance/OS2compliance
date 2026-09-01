@@ -229,15 +229,16 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         final XWPFParagraph tableParagraph = document.insertNewParagraph(cursor);
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
-        createTableCells(table, tasks.size()+1, 7);
+        createTableCells(table, tasks.size()+1, 8);
         final XWPFTableRow headerRow = table.getRow(0);
         setCellHeaderTextSmall(headerRow, 0, "Opgave navn");
         setCellHeaderTextSmall(headerRow, 1, "Beskrivelse");
         setCellHeaderTextSmall(headerRow, 2, "Frekvens");
-        setCellHeaderTextSmall(headerRow, 3, "Deadline");
-        setCellHeaderTextSmall(headerRow, 4, "Ansvarlig");
-        setCellHeaderTextSmall(headerRow, 5, "Afdeling");
-        setCellHeaderTextSmall(headerRow, 6, "Status");
+        setCellHeaderTextSmall(headerRow, 3, "Startdato");
+        setCellHeaderTextSmall(headerRow, 4, "Deadline");
+        setCellHeaderTextSmall(headerRow, 5, "Ansvarlig");
+        setCellHeaderTextSmall(headerRow, 6, "Afdeling");
+        setCellHeaderTextSmall(headerRow, 7, "Status");
 
         final int[] idx = { 1 };
         tasks.forEach(
@@ -246,10 +247,11 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 setCellTextSmall(row, 0, task.getName());
                 setCellTextSmall(row, 1, task.getDescription());
                 setCellTextSmall(row, 2, task.getTaskType().getMessage());
-                setCellTextSmall(row, 3, DK_DATE_FORMATTER.format(task.getNextDeadline()));
-                setCellTextSmall(row, 4, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))));
-                setCellTextSmall(row, 5, nullSafe(() -> task.getResponsibleOu().getName()));
-                setCellTextSmall(row, 6, taskService.calculateStatus(task).text());
+                setCellTextSmall(row, 3, nullSafe(() -> DK_DATE_FORMATTER.format(task.getStartDate())));
+                setCellTextSmall(row, 4, DK_DATE_FORMATTER.format(task.getNextDeadline()));
+                setCellTextSmall(row, 5, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))));
+                setCellTextSmall(row, 6, nullSafe(() -> task.getResponsibleOu().getName()));
+                setCellTextSmall(row, 7, taskService.calculateStatus(task).text());
                 idx[0]++;
             }
         );

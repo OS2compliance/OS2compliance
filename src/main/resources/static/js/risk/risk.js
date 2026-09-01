@@ -463,7 +463,8 @@ function EditRiskService() {
             .catch(error => toastService.error(error));
     }
 
-    this.typeChanged = function(selectedType) {
+    this.typeChanged = function(selectedType, clearTitle = true) {
+        // skopet til #editModal: den eksterne redigeringsmodal bruger samme id'er og ligger før denne i DOM'en
         const registerRow = document.getElementById("editRegisterSelectRow");
         const assetRow = document.getElementById("editAssetSelectRow");
         const supplierRow = document.getElementById("editSupplierSelectRow");
@@ -476,7 +477,7 @@ function EditRiskService() {
             }
             if (titleRow) {
                 titleRow.style.display = '';
-                if (titleValue) {
+                if (titleValue && clearTitle) {
                     titleValue.value = '';
                 }
             }
@@ -513,7 +514,7 @@ function EditRiskService() {
             }
             if (titleRow) {
                 titleRow.style.display = '';
-                if (titleValue) {
+                if (titleValue && clearTitle) {
                     titleValue.value = '';
                 }
             }
@@ -595,7 +596,8 @@ function EditRiskService() {
     this.initTypeSelect = function() {
         let threatAssessmentTypeElement = this.getScopedElementById("editThreatAssessmentType");
         if (threatAssessmentTypeElement) {
-            this.typeChanged(threatAssessmentTypeElement.value);
+            // ryd ikke titlen ved åbning - kun når brugeren reelt skifter type
+            this.typeChanged(threatAssessmentTypeElement.value, false);
             threatAssessmentTypeElement.addEventListener('change', () => {
                 this.typeChanged(threatAssessmentTypeElement.value);
             });

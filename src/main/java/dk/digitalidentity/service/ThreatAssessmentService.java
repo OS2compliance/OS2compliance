@@ -42,6 +42,7 @@ import dk.digitalidentity.service.model.ThreatDTO;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.data.domain.Page;
@@ -81,6 +82,7 @@ import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ThreatAssessmentService implements TagableService<ThreatAssessment> {
@@ -776,6 +778,9 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 
 		// remove catalogs and responses
 		if (!catalogIdsToRemove.isEmpty()) {
+			log.warn("Fravalgte trusselskataloger {} på risikovurdering {} - sletter {} besvarelser",
+					catalogIdsToRemove, assessment.getId(),
+					threatAssessmentResponseDao.countResponsesByAssessmentAndCatalogIdentifiers(assessment.getId(), catalogIdsToRemove));
 			threatAssessmentResponseDao.deleteResponsesByAssessmentAndCatalogIdentifiers(
 					assessment.getId(), catalogIdsToRemove);
 			currentCatalogs.removeIf(catalog -> catalogIdsToRemove.contains(catalog.getIdentifier()));
@@ -1016,7 +1021,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return result;
     }
 
-    record TaskPDFDTO(String name, String description, String taskType, String nextDeadline, String responsible, String department) {}
+    record TaskPDFDTO(String name, String description, String taskType, String startDate, String nextDeadline, String responsible, String department) {}
     private List<TaskPDFDTO> buildTasks(List<Task> riskAssessmentTasks) {
         List<TaskPDFDTO> result = new ArrayList<>();
         riskAssessmentTasks.forEach(
@@ -1025,6 +1030,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                     task.getName(),
                     task.getDescription(),
                     task.getTaskType().getMessage(),
+                    nullSafe(() -> DK_DATE_FORMATTER.format(task.getStartDate())),
                     DK_DATE_FORMATTER.format(task.getNextDeadline()),
                     nullSafe(() -> task.getResponsibleUsers().stream()
 							.map(User::getName)
