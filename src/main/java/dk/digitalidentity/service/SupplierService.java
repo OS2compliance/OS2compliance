@@ -3,9 +3,11 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.dao.grid.SupplierGridDao;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -163,8 +165,8 @@ public class SupplierService implements TagableService<Supplier> {
 		return supplierDao.searchForSupplierNotDeleted(search, pageable);
 	}
 
-	public Supplier findById(Long id) {
-		return supplierDao.findById(id).orElse(null);
+	public Optional<Supplier> findById(Long id) {
+		return supplierDao.findById(id);
 	}
 
 	public List<SupplierGrid> findGridByIds(List<Long> ids, User user) {
@@ -202,5 +204,14 @@ public class SupplierService implements TagableService<Supplier> {
 				})
 				.map(Asset::getId)
 				.collect(Collectors.toList());
+	}
+
+	public List<Supplier> findAllByRelations(final List<Relation> relations) {
+		final List<Long> lookupIds = relations.stream()
+				.map(s -> s.getRelationAType() == RelationType.SUPPLIER
+						? s.getRelationAId()
+						: s.getRelationBId())
+				.toList();
+		return supplierDao.findAllById(lookupIds);
 	}
 }
