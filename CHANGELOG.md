@@ -6,6 +6,9 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-446) (Risikostyring) Konsekvensanalyser uden aktiv
+
 ### Changed
 - (Fortegnelser) KL's mappede behandlingsaktiviteter opdateret til version 1.8 af arket (95 pakker, ny aktivitet F, hjemmel rettet fra databeskyttelseslovens §10 til §8 på 56 aktiviteter) og den bundtede KLE-emneplan fornyet til 2026-05-01. **Kun nye tilslutninger får indholdet** — eksisterende installationer beholder deres nuværende fortegnelser, indtil `importRegister` kan matche på andet end titlen.
 
