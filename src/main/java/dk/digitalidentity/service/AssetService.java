@@ -302,28 +302,32 @@ public class AssetService implements TagableService<Asset> {
 		final LocalDate deadline = dpia.getNextRevision();
 		if (deadline != null && dpia.getRevisionInterval() != null) {
 			final Task task = findAssociatedCheck(dpia).orElseGet(() -> createAssociatedCheck(dpia));
-			String name = "DPIA for " + dpia.getAssets().getFirst().getName();
-			name += (dpia.getAssets().size() > 1) ? " med flere" : "";
-			task.setName(name);
+			task.setName(dpiaCheckName(dpia));
 			task.setNextDeadline(dpia.getNextRevision());
 			task.setResponsibleUsers(updatedUser != null ? Set.of(updatedUser) : Collections.emptySet());
-			task.setDescription("Revider DPIA for " + String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList()));
+			task.setDescription("Revider DPIA for " + (dpia.getAssets().isEmpty() ? dpia.getName()
+					: String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList())));
 			setTaskRevisionInterval(dpia, task);
 			return task;
 		}
 		return null;
 	}
 
-	private Task createAssociatedCheck(final DPIA dpia) {
+	/**
+	 * En konsekvensanalyse behøver ikke være knyttet til et aktiv, og falder da tilbage på sit eget navn.
+	 */
+	private static String dpiaCheckName(final DPIA dpia) {
 		final List<Asset> assets = dpia.getAssets();
+		if (assets.isEmpty()) {
+			return "DPIA for " + dpia.getName();
+		}
+		return "DPIA for " + assets.getFirst().getName() + (assets.size() > 1 ? " med flere" : "");
+	}
+
+	private Task createAssociatedCheck(final DPIA dpia) {
 		final Task task = new Task();
 
-		if (assets.size() > 1) {
-			task.setName("DPIA for " + assets.getFirst().getName() + " med flere");
-		}
-		else {
-			task.setName("DPIA for " + assets.getFirst().getName());
-		}
+		task.setName(dpiaCheckName(dpia));
 
 		task.setCreatedAt(LocalDateTime.now());
 		task.getProperties().add(Property.builder()
@@ -464,7 +468,10 @@ public class AssetService implements TagableService<Asset> {
 		context.setVariable("dpiaSections", sections);
 		context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
 		context.setVariable("conclusion", dpia.getConclusion());
-		context.setVariable("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
+		final String assetNames = String.join(", ", assets.stream().map(Asset::getName).toList());
+		context.setVariable("assetNames", assetNames);
+		// uden aktiv er der intet system at henvise til, og rapporten bruger konsekvensanalysens eget navn
+		context.setVariable("reportTitle", assets.isEmpty() ? dpia.getName() : "Konsekvensanalyse vedr. " + assetNames);
 		context.setVariable("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a -> a.getAssetType().getCaption()).toList()));
 		context.setVariable("responsibleUserNames", String.join(", ", assets.stream().flatMap(a -> a.getResponsibleUsers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));
 		context.setVariable("managerNames", String.join(", ", assets.stream().flatMap(a -> a.getManagers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));

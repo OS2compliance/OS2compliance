@@ -178,7 +178,8 @@ public class AssetsRestController {
         canSetFieldDPIAScreeningGuard(fieldName);
 		DPIA dpia = dPIAService.find(id);
 
-        if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets())) {
+        // samme tjek som resten af konsekvensanalysen, så en risikoejer uden aktiver også kan gemme
+        if (!dPIAService.isEditable(dpia)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -491,14 +492,6 @@ public class AssetsRestController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
-
-	private boolean isResponsibleForAsset(List<Asset> assets) {
-		return assets.stream().flatMap(a ->
-						a.getResponsibleUsers().stream()
-								.map(User::getUuid))
-				.toList()
-				.contains(SecurityUtil.getPrincipalUuid());
-	}
 
 	@GetMapping("export-metadata")
 	@RequireReadOwnerOnly
