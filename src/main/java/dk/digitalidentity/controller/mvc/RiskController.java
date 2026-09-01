@@ -158,7 +158,7 @@ public class RiskController {
 			model.addAttribute("relatedRegisters", registerService.findAllByRelations(registerRelations));
 		}
 
-		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
+		model.addAttribute("threatCatalogs", catalogService.findSelectableFor(threatAssessment));
         model.addAttribute("risk", threatAssessment);
 		model.addAttribute("isResponsible", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || threatAssessmentService.isResponsibleFor(threatAssessment));
         return "risks/editForm";
@@ -171,7 +171,8 @@ public class RiskController {
                               @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
 								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets,
-								@RequestParam(name = "selectedRegister", required = false) final Long selectedRegister
+								@RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+								@RequestParam(name = "_threatCatalogs", required = false) final String catalogFieldPresent
 	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
@@ -199,8 +200,11 @@ public class RiskController {
 			editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
 		}
 
-		// Handle threatCatalog changes
-		threatAssessmentService.handleThreatCatalogChanges(editedAssessment, assessment.getThreatCatalogs());
+		// En tom katalogliste betyder kun fravalg hvis formularen faktisk viste feltet - ellers ville et
+		// forældet eller afvist felt slette besvarelserne
+		if (catalogFieldPresent != null) {
+			threatAssessmentService.handleThreatCatalogChanges(editedAssessment, assessment.getThreatCatalogs());
+		}
 
         return "redirect:/risks";
     }
@@ -208,11 +212,17 @@ public class RiskController {
 	@RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("{id}/update-catalogs")
-	public String updateThreatCatalogs(@PathVariable("id") final long id, @RequestParam(name = "threatCatalogs", required = false) final Set<String> catalogIdentifiers) {
+	public String updateThreatCatalogs(@PathVariable("id") final long id,
+									   @RequestParam(name = "threatCatalogs", required = false) final Set<String> catalogIdentifiers,
+									   @RequestParam(name = "_threatCatalogs", required = false) final String catalogFieldPresent) {
 		final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(editedAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		if (catalogFieldPresent == null) {
+			return "redirect:/risks/" + id;
 		}
 
 		// Find selected catalogs
@@ -358,7 +368,7 @@ public class RiskController {
         model.addAttribute("relatedRegisters", findRelatedRegisters(threatAssessment));
         model.addAttribute("presentAtMeetingName", threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", ")));
         model.addAttribute("defaultSendReportTo", getFirstRelatedResponsible(threatAssessment));
-        model.addAttribute("threatCatalogs", catalogService.findAllVisible());
+        model.addAttribute("threatCatalogs", catalogService.findSelectableFor(threatAssessment));
 
         boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
         model.addAttribute("signed", signed);

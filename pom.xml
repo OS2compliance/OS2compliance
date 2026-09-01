@@ -267,6 +267,12 @@
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-envers</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>dk.digitalidentity</groupId>
+			<artifactId>reporter</artifactId>
+			<version>1.0.5</version>
+			<optional>true</optional>
+		</dependency>
     </dependencies>
 
 	<build>

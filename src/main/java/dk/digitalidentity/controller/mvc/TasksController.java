@@ -151,14 +151,10 @@ public class TasksController {
                            @RequestParam(name = "relations", required = false) final Set<Long> relations,
                            @RequestParam(name = "taskRiskId", required = false) final Long riskId,
                            @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
-							@RequestParam(name = "templateDescription", required = false) final Long templateDescriptionId,
                            @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
 		List<TaskLink> links = new ArrayList<>();
 		for (TaskLink link : task.getLinks()) {
 			links.add(new TaskLink(null, linkify(link.getUrl()), task));
-		}
-		if (templateDescriptionId != null) {
-			choiceValueService.findById(templateDescriptionId).ifPresent(task::setTaskDescriptionTemplate);
 		}
 		defaultAndValidateStartDate(task);
 		List<SubTask> subTasks = new ArrayList<>();
@@ -205,7 +201,10 @@ public class TasksController {
         existingTask.setInProgress(inProgress);
         existingTask.setNote(inProgress ? task.getNote() : null);
 		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
-        existingTask.setDescription(task.getDescription());
+        // en valgt skabelon låser beskrivelsesfeltet, og låste felter sendes slet ikke med
+        if (task.getOwnDescription() != null) {
+            existingTask.setDescription(task.getOwnDescription());
+        }
         defaultAndValidateStartDate(task);
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setStartDate(task.getStartDate());

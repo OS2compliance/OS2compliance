@@ -214,24 +214,35 @@ function ViewTaskService() {
         textarea.style.height = textarea.scrollHeight + 'px';
     }
 
+    // Feltet viser skabelonens tekst når en skabelon er valgt, så det låses - ellers ville den tekst blive
+    // gemt oven i opgavens egen beskrivelse
+    this.syncDescriptionLock = function() {
+        const select = document.getElementById('taskDescriptionTemplateSelect');
+        const descriptionField = document.getElementById('description');
+        if (select === null || descriptionField === null) {
+            return;
+        }
+        descriptionField.disabled = select.value !== '';
+    }
+
     this.loadDescriptionTemplateSelect = function() {
         const select = document.getElementById('taskDescriptionTemplateSelect');
         const descriptionField = document.getElementById('description');
-        let previousDescription = ''; // Store previous value
+        let ownDescription = descriptionField.dataset.ownDescription || '';
 
         select.addEventListener("change", async function () {
             const selectedValue = this.value;
 
             // If "Ingen valgt" (no selection) or empty value
             if (!selectedValue || selectedValue === '') {
-                descriptionField.value = previousDescription;
+                descriptionField.value = ownDescription;
                 descriptionField.disabled = false;
                 return;
             }
 
             // Save current description before replacing it
-            if (descriptionField.value) {
-                previousDescription = descriptionField.value;
+            if (!descriptionField.disabled) {
+                ownDescription = descriptionField.value;
             }
 
             const response = await fetch(`/rest/choicelists/custom/choiceValue/${selectedValue}`);
@@ -262,6 +273,7 @@ function ViewTaskService() {
             document.getElementById('editTaskBtn').hidden = true;
             performButton.hidden = true;
             this.nameField.disabled = false
+            this.syncDescriptionLock();
             document.getElementById("linksViewContainer").hidden = true;
             document.getElementById("subTaskViewContainer").hidden = true;
             document.getElementById("linksEditContainer").hidden = false;

@@ -458,17 +458,18 @@ function EditRiskService() {
             .catch(error => toastService.error(error));
     }
 
-    this.typeChanged = function(selectedType) {
-        const registerRow = document.getElementById("editRegisterSelectRow");
-        const assetRow = document.getElementById("editAssetSelectRow");
-        const titleRow = document.getElementById("editTitleRow");
-        const titleValue = document.getElementById("editName");
+    this.typeChanged = function(selectedType, clearTitle = true) {
+        // skopet til #editModal: den eksterne redigeringsmodal bruger samme id'er og ligger før denne i DOM'en
+        const registerRow = this.getScopedElementById("editRegisterSelectRow");
+        const assetRow = this.getScopedElementById("editAssetSelectRow");
+        const titleRow = this.getScopedElementById("editTitleRow");
+        const titleValue = this.getScopedElementById("editName");
 
         if (selectedType === 'ASSET') {
             if (registerRow) registerRow.style.display = 'none';
             if (titleRow) {
                 titleRow.style.display = '';
-                if (titleValue) {
+                if (titleValue && clearTitle) {
                     titleValue.value = '';
                 }
             }
@@ -488,7 +489,7 @@ function EditRiskService() {
             if (assetRow) assetRow.style.display = 'none';
             if (titleRow) {
                 titleRow.style.display = '';
-                if (titleValue) {
+                if (titleValue && clearTitle) {
                     titleValue.value = '';
                 }
             }
@@ -521,7 +522,8 @@ function EditRiskService() {
     this.initTypeSelect = function() {
         let threatAssessmentTypeElement = this.getScopedElementById("editThreatAssessmentType");
         if (threatAssessmentTypeElement) {
-            this.typeChanged(threatAssessmentTypeElement.value);
+            // ryd ikke titlen ved åbning - kun når brugeren reelt skifter type
+            this.typeChanged(threatAssessmentTypeElement.value, false);
             threatAssessmentTypeElement.addEventListener('change', () => {
                 this.typeChanged(threatAssessmentTypeElement.value);
             });
