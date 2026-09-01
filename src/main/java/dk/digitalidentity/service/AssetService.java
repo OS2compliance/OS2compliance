@@ -468,7 +468,10 @@ public class AssetService implements TagableService<Asset> {
 		context.setVariable("dpiaSections", sections);
 		context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
 		context.setVariable("conclusion", dpia.getConclusion());
-		context.setVariable("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
+		final String assetNames = String.join(", ", assets.stream().map(Asset::getName).toList());
+		context.setVariable("assetNames", assetNames);
+		// uden aktiv er der intet system at henvise til, og rapporten bruger konsekvensanalysens eget navn
+		context.setVariable("reportTitle", assets.isEmpty() ? dpia.getName() : "Konsekvensanalyse vedr. " + assetNames);
 		context.setVariable("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a -> a.getAssetType().getCaption()).toList()));
 		context.setVariable("responsibleUserNames", String.join(", ", assets.stream().flatMap(a -> a.getResponsibleUsers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));
 		context.setVariable("managerNames", String.join(", ", assets.stream().flatMap(a -> a.getManagers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));

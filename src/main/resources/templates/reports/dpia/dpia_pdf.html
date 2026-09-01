@@ -117,7 +117,7 @@
 </head>
 <body>
 
-<h1 th:text="'Konsekvensanalyse vedr. ' + ${assetNames}" style="text-align: center;"></h1>
+<h1 th:text="${reportTitle}" style="text-align: center;"></h1>
 <div th:each="section : ${dpiaSections}">
     <h2 th:text="${section.heading}"></h2>
     <p th:utext="${section.explainer}"></p>
@@ -129,7 +129,7 @@
         </tr>
         </thead>
         <tbody>
-        <th:block th:if="${section.sectionIdentifier == 'scope'}">
+        <th:block th:if="${section.sectionIdentifier == 'scope' and !#strings.isEmpty(assetNames)}">
             <tr>
                 <td>Systemets navn</td>
                 <td th:text="${assetNames}"></td>

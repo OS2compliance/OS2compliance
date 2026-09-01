@@ -1,6 +1,12 @@
 package dk.digitalidentity.controller.rest;
 
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
 import dk.digitalidentity.BaseIntegrationTest;
+import dk.digitalidentity.model.entity.DPIA;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.DPIAService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +14,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.ByteArrayInputStream;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -27,6 +36,10 @@ public class DPIAWithoutAssetTest extends BaseIntegrationTest {
     private MockMvc mockMvc;
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    private DPIAService dpiaService;
+    @Autowired
+    private AssetService assetService;
 
     @Test
     public void canCreateDpiaWithoutAsset() throws Exception {
@@ -63,6 +76,26 @@ public class DPIAWithoutAssetTest extends BaseIntegrationTest {
                 .andExpect(status().isOk());
 
         assertThat(countDpiasNamed("Konsekvensanalyse")).isEqualTo(1);
+    }
+
+    @Test
+    public void reportRendersForDpiaWithoutAsset() throws Exception {
+        final DPIA dpia = dpiaService.create(List.of(), "Konsekvensanalyse af manuelle sagsgange", null, null, null);
+
+        final String text = extractText(assetService.getDPIAPdf(dpia));
+
+        // uden aktiv står konsekvensanalysens eget navn i overskriften i stedet for "Konsekvensanalyse vedr. "
+        assertThat(text).contains("Konsekvensanalyse af manuelle sagsgange");
+    }
+
+    private String extractText(final byte[] pdf) throws Exception {
+        try (PdfDocument document = new PdfDocument(new PdfReader(new ByteArrayInputStream(pdf)))) {
+            final StringBuilder text = new StringBuilder();
+            for (int page = 1; page <= document.getNumberOfPages(); page++) {
+                text.append(PdfTextExtractor.getTextFromPage(document.getPage(page)));
+            }
+            return text.toString();
+        }
     }
 
     private long countDpiasNamed(final String name) {
