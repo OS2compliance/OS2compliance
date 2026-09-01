@@ -1,21 +1,6 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.dao.AssetDao;
-import dk.digitalidentity.dao.ContactDao;
-import dk.digitalidentity.dao.DBSAssetDao;
-import dk.digitalidentity.dao.DBSOversightDao;
-import dk.digitalidentity.dao.DPIADao;
-import dk.digitalidentity.dao.DocumentDao;
-import dk.digitalidentity.dao.IncidentDao;
-import dk.digitalidentity.dao.PrecautionDao;
-import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.RelationDao;
-import dk.digitalidentity.dao.StandardSectionDao;
-import dk.digitalidentity.dao.SupplierDao;
-import dk.digitalidentity.dao.TaskDao;
-import dk.digitalidentity.dao.TaskLogDao;
-import dk.digitalidentity.dao.ThreatAssessmentDao;
-import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.DBSAsset;
@@ -25,7 +10,6 @@ import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
-import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.Supplier;
@@ -39,39 +23,46 @@ import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class RelationCleanupService {
 	private final RelationDao relationDao;
-	private final SupplierDao supplierDao;
-	private final ContactDao contactDao;
-	private final TaskDao taskDao;
-	private final DocumentDao documentDao;
-	private final TaskLogDao taskLogDao;
-	private final RegisterDao registerDao;
-	private final AssetDao assetDao;
-	private final StandardSectionDao standardSectionDao;
-	private final ThreatAssessmentDao threatAssessmentDao;
-	private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
-	private final PrecautionDao precautionDao;
-	private final DBSAssetDao dBSAssetDao;
-	private final DBSOversightDao dBSOversightDao;
-	private final IncidentDao incidentDao;
-	private final DPIADao dPIADao;
+	private final JdbcTemplate jdbcTemplate;
+
+	/**
+	 * The tables backing every {@link dk.digitalidentity.model.entity.Relatable} subclass - the ones
+	 * that draw ids from {@code shared_id_generator} (see its Javadoc) and must therefore never
+	 * contain the same id twice.
+	 */
+	private static final List<String> RELATABLE_TABLES = List.of(
+			"assets", "contacts", "dbs_asset", "documents", "dpia", "incidents",
+			"precautions", "registers", "standard_sections", "suppliers", "tasks",
+			"task_logs", "threat_assessments", "threat_assessment_responses"
+	);
+
+	/**
+	 * {@code custom_threats} draws from the same generator (see
+	 * {@link dk.digitalidentity.model.entity.CustomThreat}) without being a Relatable subclass, so it
+	 * counts towards how much headroom the generator has left but is not itself scanned for duplicates.
+	 */
+	private static final List<String> ID_GENERATOR_TABLES =
+			Stream.concat(RELATABLE_TABLES.stream(), Stream.of("custom_threats")).toList();
 
 	@Transactional(readOnly = true)
 	public Map<Class<?>, Set<Relation>> findBrokenRelations() {
@@ -100,63 +91,55 @@ public class RelationCleanupService {
 		return brokenRelations;
 	}
 
+	/**
+	 * Every id shared by two or more Relatable tables, found directly against the tables themselves.
+	 * The previous approach only ever saw ids referenced from the {@code relations} join table, so a
+	 * collision between two rows that happen not to be related to anything went undetected.
+	 */
 	@Transactional(readOnly = true)
-	public Map<RelationType, Collection<? extends Relatable>> findAllDuplicateIds() {
-		Map<RelationType, Collection<? extends Relatable>> duplicateIds = new EnumMap<>(RelationType.class);
+	public Map<Long, List<String>> findAllDuplicateIds() {
+		final String unionSelect = RELATABLE_TABLES.stream()
+				.map(table -> "SELECT id, '%s' AS table_name FROM %s".formatted(table, table))
+				.collect(Collectors.joining(" UNION ALL "));
 
-		// map dao functions for relationtypes
-		@FunctionalInterface
-		interface EntityDaoFunction {
-			Collection<? extends Relatable> apply(List<Long> ids);
+		final List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+				SELECT id, GROUP_CONCAT(table_name ORDER BY table_name) AS tables
+				FROM (%s) all_relatables
+				GROUP BY id
+				HAVING COUNT(*) > 1
+				""".formatted(unionSelect));
+
+		final Map<Long, List<String>> duplicates = new LinkedHashMap<>();
+		for (final Map<String, Object> row : rows) {
+			duplicates.put(((Number) row.get("id")).longValue(), List.of(((String) row.get("tables")).split(",")));
 		}
+		return duplicates;
+	}
 
-		Map<RelationType, EntityDaoFunction> queryFunctionPerType = new EnumMap<>(RelationType.class);
-		queryFunctionPerType.put(RelationType.SUPPLIER, supplierDao::findAllById);
-		queryFunctionPerType.put(RelationType.CONTACT, contactDao::findAllById);
-		queryFunctionPerType.put(RelationType.TASK, taskDao::findAllById);
-		queryFunctionPerType.put(RelationType.DOCUMENT, documentDao::findAllById);
-		queryFunctionPerType.put(RelationType.TASK_LOG, taskLogDao::findAllById);
-		queryFunctionPerType.put(RelationType.REGISTER, registerDao::findAllById);
-		queryFunctionPerType.put(RelationType.ASSET, assetDao::findAllById);
-		queryFunctionPerType.put(RelationType.STANDARD_SECTION, standardSectionDao::findAllById);
-		queryFunctionPerType.put(RelationType.THREAT_ASSESSMENT, threatAssessmentDao::findAllById);
-		queryFunctionPerType.put(RelationType.THREAT_ASSESSMENT_RESPONSE, threatAssessmentResponseDao::findAllById);
-		queryFunctionPerType.put(RelationType.PRECAUTION, precautionDao::findAllById);
-		queryFunctionPerType.put(RelationType.DBSASSET, dBSAssetDao::findAllById);
-		queryFunctionPerType.put(RelationType.INCIDENT, incidentDao::findAllById);
-		queryFunctionPerType.put(RelationType.DPIA, dPIADao::findAllById);
+	/**
+	 * Whether the next block the generator hands out could collide with an id already in use.
+	 * {@code allocationSize = 50}'s PooledOptimizer serves {@code [next_val - 48 .. next_val + 1]}
+	 * before it touches {@code next_val} again (see {@code Relatable.ID_GENERATOR}'s Javadoc), so
+	 * {@code next_val} must clear the highest id in use by more than that.
+	 */
+	@Transactional(readOnly = true)
+	public GeneratorHeadroom checkGeneratorHeadroom() {
+		final Long nextVal = jdbcTemplate.queryForObject(
+				"SELECT next_val FROM hibernate_sequences WHERE sequence_name = 'default'", Long.class);
 
-		// find all Relation ids and map them
-		List<Relation> relations = relationDao.findAll();
-		Map<RelationType, Set<Long>> idsByType = new EnumMap<>(RelationType.class);
-		for (Relation relation : relations) {
-			RelationType relationTypeA = relation.getRelationAType();
-			Long relationAId = relation.getRelationAId();
-			idsByType.computeIfAbsent(relationTypeA, k -> new HashSet<>())
-					.add(relationAId);
+		final String unionSelect = ID_GENERATOR_TABLES.stream()
+				.map(table -> "SELECT id FROM " + table)
+				.collect(Collectors.joining(" UNION ALL "));
+		final Long highestId = jdbcTemplate.queryForObject(
+				"SELECT MAX(id) FROM (%s) all_ids".formatted(unionSelect), Long.class);
 
-			RelationType relationTypeB = relation.getRelationBType();
-			Long relationBId = relation.getRelationBId();
-			idsByType.computeIfAbsent(relationTypeB, k -> new HashSet<>())
-					.add(relationBId);
+		return new GeneratorHeadroom(nextVal == null ? 0L : nextVal, highestId == null ? 0L : highestId);
+	}
 
+	public record GeneratorHeadroom(long nextVal, long highestIdInUse) {
+		public boolean isAtRisk() {
+			return nextVal - 48 <= highestIdInUse;
 		}
-		// for each type, find the united set of every OTHER relationtypes ids
-		for (RelationType relationType : idsByType.keySet()) {
-			Set<Long> allOtherIds = idsByType.entrySet().stream()
-					.filter(entry -> !entry.getKey().equals(relationType))
-					.flatMap(entry -> entry.getValue().stream())
-					.collect(Collectors.toSet());
-
-			// search this relatables table for any of the other Ids
-			Collection<? extends Relatable> relatablesWithDuplicateId = queryFunctionPerType
-					.get(relationType)
-					.apply(allOtherIds.stream().toList());
-
-			duplicateIds.put(relationType, relatablesWithDuplicateId);
-		}
-
-		return duplicateIds;
 	}
 
 	private static Specification<Relation> hasBrokenRelation(
