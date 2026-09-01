@@ -568,18 +568,15 @@ function setRevisionInterval(assessmentId) {
         .catch(error => toastService.error(error));
 }
 
-function updateRelatedPrecautions(choices, search, threatType, threatId, threatIdentifier, showFullDescription) {
+function updateRelatedPrecautions(choices, search, threatType, threatId, threatIdentifier) {
     fetch( `/rest/relatable/autocomplete/relatedprecautions?search=${search}&threatType=${threatType}&threatIdentifier=${threatIdentifier}&threatId=${threatId}&riskId=${riskId}`)
         .then(response => response.json()
             .then(data => {
                 choices.setChoices(data.content.map(reg => {
-                    return showFullDescription ? {
+                    return {
                         id: reg.id,
                         name: reg.name + ": " + reg.description,
-                    } : {
-                        id: reg.id,
-                        name: reg.name,
-                        labelDescription: ": " + reg.description,
+                        labelDescription: reg.description,
                     };
                 }), 'id', 'name', true);
 
@@ -675,6 +672,26 @@ function pageLoaded() {
 
     // precaution choice.js
     const precautionChoiceSelects = document.querySelectorAll('.select-precaution');
+    if (precautionChoiceSelects.length) {
+        // prevent opening of the dropdown when info-icon is pressed
+        document.addEventListener('mousedown', event => {
+            if (event.target.closest && event.target.closest('.choices__info-icon')) {
+                event.stopPropagation();
+            }
+        }, true);
+
+        // close an open description tooltip when clicking anywhere outside its icon
+        document.addEventListener('click', event => {
+            document.querySelectorAll('.choices__info-icon').forEach(icon => {
+                if (!icon.contains(event.target)) {
+                    const tooltip = bootstrap.Tooltip.getInstance(icon);
+                    if (tooltip) {
+                        tooltip.hide();
+                    }
+                }
+            });
+        });
+    }
     for (let i = 0; i < precautionChoiceSelects.length; i++) {
         const relationsSelect = precautionChoiceSelects[i];
 
@@ -700,6 +717,43 @@ function pageLoaded() {
                 },
                 duplicateItemsAllowed: false,
                 shouldSort: false,
+                callbackOnCreateTemplates: function(strToEl, escapeForTemplate, getClassNames) {
+                    const defaultTemplates = Choices.defaults.templates;
+                    return {
+                        // remove labelDescription from the template so we can display "name: description" as one text
+                        choice(classNames, choice, selectText, groupName) {
+                            return defaultTemplates.choice.call(this, classNames, Object.assign({}, choice, {labelDescription: undefined}), selectText, groupName);
+                        },
+                        // add info button when the "showFullDescription" is disabled
+                        item(classNames, choice, removeItemButton) {
+                            const itemEl = defaultTemplates.item.call(this, classNames, choice, removeItemButton);
+                            if (!showFullDescription && choice.labelDescription) {
+                                const infoIcon = document.createElement('span');
+                                infoIcon.className = 'choices__info-icon';
+                                infoIcon.textContent = 'ⓘ';
+                                infoIcon.setAttribute('data-bs-toggle', 'tooltip');
+                                infoIcon.setAttribute('title', choice.labelDescription);
+                                infoIcon.setAttribute('aria-label', choice.labelDescription);
+                                const removeButton = itemEl.querySelector('[data-button]');
+                                itemEl.insertBefore(infoIcon, removeButton);
+                                infoIcon.addEventListener('click', event => event.stopPropagation());
+                                // prevent opening multiple tooltips at the same time
+                                infoIcon.addEventListener('shown.bs.tooltip', () => {
+                                    document.querySelectorAll('.choices__info-icon').forEach(otherIcon => {
+                                        if (otherIcon !== infoIcon) {
+                                            const otherTooltip = bootstrap.Tooltip.getInstance(otherIcon);
+                                            if (otherTooltip) {
+                                                otherTooltip.hide();
+                                            }
+                                        }
+                                    });
+                                });
+                                new bootstrap.Tooltip(infoIcon, {trigger: 'click', customClass: 'choices__info-tooltip'});
+                            }
+                            return itemEl;
+                        },
+                    };
+                },
             });
             element.addEventListener("change",
                 function(event) {
@@ -709,7 +763,7 @@ function pageLoaded() {
             );
             element.addEventListener("showDropdown",
                 function(event) {
-                    updateRelatedPrecautions(relationsChoice, event.detail.value ? event.detail.value : "" , dbType, id, identifier, showFullDescription);
+                    updateRelatedPrecautions(relationsChoice, event.detail.value ? event.detail.value : "" , dbType, id, identifier);
                 },
                 false,
             );
@@ -719,13 +773,13 @@ function pageLoaded() {
 
         relationsSelect.addEventListener("search",
             function(event) {
-                updateRelatedPrecautions(relationsChoice, event.detail.value, dbType, id, identifier, showFullDescription);
+                updateRelatedPrecautions(relationsChoice, event.detail.value, dbType, id, identifier);
             },
             false,
         );
         relationsSelect.addEventListener("change",
             function(event) {
-                updateRelatedPrecautions(relationsChoice, "", dbType, id, identifier, showFullDescription);
+                updateRelatedPrecautions(relationsChoice, "", dbType, id, identifier);
             },
             false,
         );

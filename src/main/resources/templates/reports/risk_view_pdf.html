@@ -305,8 +305,10 @@
                         <td th:text="${threat.problem}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.method}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.elaboration}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
-                        <td><b>Supplerende bemærkninger:</b></td>
-                        <td th:text="${threat.additionalMeasures}"></td>
+                        <td th:if="${threat.linkedPrecautions.isEmpty()}"><b>Supplerende bemærkninger:</b></td>
+                        <td th:if="${threat.linkedPrecautions.isEmpty()}" th:text="${threat.additionalMeasures}"></td>
+                        <td th:unless="${threat.linkedPrecautions.isEmpty()}"><b th:text="${threat.linkedPrecautions[0].name}"></b></td>
+                        <td th:unless="${threat.linkedPrecautions.isEmpty()}" th:text="${threat.linkedPrecautions[0].description}"></td>
                         <td th:text="${threat.residualRisk.probability > 0 ? threat.residualRisk.probability : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.residualRisk.consequence > 0 ? threat.residualRisk.consequence : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.residualRisk.score > 0 && threat.residualRisk.color != null ? threat.residualRisk.score : ''}" th:style="'background-color:' + ${threat.residualRisk.color}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
@@ -316,9 +318,13 @@
                         <td th:text="${threat.threatType}"></td>
                         <td colspan="12" style="text-align: center;">Ikke relevant</td>
                     </tr>
-                    <tr th:each="precaution, iterationStatus : ${threat.linkedPrecautions}">
+                    <tr th:each="precaution, iterationStatus : ${threat.linkedPrecautions}" th:if="${iterationStatus.index > 0}">
                         <td rowspan="1" style="border-top: 1px dashed gray;"><b th:text="${precaution.name}" ></b></td>
                         <td rowspan="1" style="border-top: 1px dashed gray;" th:text="${precaution.description}"></td>
+                    </tr>
+                    <tr th:unless="${threat.linkedPrecautions.isEmpty()}">
+                        <td rowspan="1" style="border-top: 1px dashed gray;"><b>Supplerende bemærkninger:</b></td>
+                        <td rowspan="1" style="border-top: 1px dashed gray;" th:text="${threat.additionalMeasures}"></td>
                     </tr>
 
                 </th:block>

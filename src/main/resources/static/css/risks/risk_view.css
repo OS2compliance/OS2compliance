@@ -172,3 +172,27 @@ select::-ms-expand {
     width: 98%;
 }
 
+/* keep the choices.js remove-item button on the same line as its label, never wrapped below */
+.riskViewTd .choices__list--multiple .choices__item {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* info icon shown on a precaution chip when its description isn't already displayed inline */
+.riskViewTd .choices__list--multiple .choices__info-icon {
+    display: inline-block;
+    margin-left: 6px;
+    cursor: pointer;
+    opacity: 0.75;
+    font-weight: bold;
+}
+
+.riskViewTd .choices__list--multiple .choices__info-icon:hover {
+    opacity: 1;
+}
+
+/* widen the precaution description tooltip - the Bootstrap default (200px) wraps long text into a tall, narrow column */
+.choices__info-tooltip .tooltip-inner {
+    max-width: 400px;
+}
+
