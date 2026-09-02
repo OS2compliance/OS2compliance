@@ -67,7 +67,7 @@ class RelatableIdGeneratorIntegrationTest extends BaseIntegrationTest {
 	@ParameterizedTest
 	@MethodSource("relatableSubclasses")
 	void tableHasNoLeftoverAutoIncrementOnId(final Class<?> subclass) {
-		final String table = subclass.getAnnotation(Table.class).name();
+		final String table = tableNameOf(subclass);
 
 		assertThat(idColumnExtra(table))
 				.as("%s.id still has AUTO_INCREMENT - ids must come only from hibernate_sequences (V1_125 dropped this for contacts/suppliers)", table)
@@ -83,6 +83,12 @@ class RelatableIdGeneratorIntegrationTest extends BaseIntegrationTest {
 				}
 			}
 		}
+	}
+
+	private static String tableNameOf(final Class<?> subclass) {
+		final Table tableAnnotation = subclass.getAnnotation(Table.class);
+		final String name = tableAnnotation == null ? "" : tableAnnotation.name();
+		return name.isBlank() ? subclass.getSimpleName() : name;
 	}
 
 	@SuppressWarnings("unchecked")
