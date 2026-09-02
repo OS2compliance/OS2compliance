@@ -119,6 +119,7 @@ public class AssetService implements TagableService<Asset> {
 	private final ChoiceService choiceService;
 	private final ChoiceDPIADao choiceDPIADao;
 	private final S3Service s3Service;
+	private final NotifyService notifyService;
 	private final OrganisationService organisationService;
 
 	public boolean isResponsibleFor(Asset asset) {
@@ -189,7 +190,22 @@ public class AssetService implements TagableService<Asset> {
 			saved.getTia().setAsset(asset);
 		}
 		addDefaultSubSupplier(saved);
+
+		if (SecurityUtil.isSystemOrigin()) {
+			notifyService.notifyAssetSystemCreated(saved);
+		}
+
 		return saved;
+	}
+
+	// The single place Asset.active should be toggled from - centralizes the
+	// "system-triggered deactivation" notification so callers don't need to know about it.
+	public void setActive(final Asset asset, final boolean active) {
+		final boolean wasActive = asset.isActive();
+		asset.setActive(active);
+		if (wasActive && !active && SecurityUtil.isSystemOrigin()) {
+			notifyService.notifyAssetSystemDeactivated(asset);
+		}
 	}
 
 	public void update(final Asset asset) {
