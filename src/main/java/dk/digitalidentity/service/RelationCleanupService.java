@@ -47,8 +47,7 @@ public class RelationCleanupService {
 
 	/**
 	 * The tables backing every {@link dk.digitalidentity.model.entity.Relatable} subclass - the ones
-	 * that draw ids from {@code shared_id_generator} (see its Javadoc) and must therefore never
-	 * contain the same id twice.
+	 * that draw ids from {@code shared_id_generator} and must therefore never contain the same id twice.
 	 */
 	private static final List<String> RELATABLE_TABLES = List.of(
 			"assets", "contacts", "dbs_asset", "documents", "dpia", "incidents",

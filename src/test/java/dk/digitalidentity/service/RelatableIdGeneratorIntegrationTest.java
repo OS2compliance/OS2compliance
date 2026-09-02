@@ -25,13 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Guards the two rules {@link Relatable#ID_GENERATOR}'s Javadoc depends on: a subclass must never
- * declare its own id mapping, and its table must never carry a leftover {@code AUTO_INCREMENT} on
- * {@code id} - either hands that subclass a segment of its own, colliding with the one shared
- * generator every {@link Relatable} draws from. MR !542 fixed the two known offenders (dpia /
- * dbs_asset, then contacts / suppliers); both assertions below are green today, and exist to catch
- * the next one - including a brand new subclass, since the class list is discovered, not hardcoded.
+ * declare its own id mapping, and its table must never carry a leftover {@code AUTO_INCREMENT} on {@code id}
  */
-public class RelatableIdGeneratorIntegrationTest extends BaseIntegrationTest {
+class RelatableIdGeneratorIntegrationTest extends BaseIntegrationTest {
 
 	private static final List<Class<? extends Annotation>> OWN_ID_ANNOTATIONS =
 			List.of(Id.class, GeneratedValue.class, TableGenerator.class, SequenceGenerator.class);
@@ -43,6 +39,7 @@ public class RelatableIdGeneratorIntegrationTest extends BaseIntegrationTest {
 		final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
 		scanner.addIncludeFilter(new AssignableTypeFilter(Relatable.class));
 
+		// Look for classes assignable to Relatable in the scope
 		return scanner.findCandidateComponents("dk.digitalidentity.model.entity").stream()
 				.<Class<?>>map(bean -> {
 					try {
@@ -78,6 +75,7 @@ public class RelatableIdGeneratorIntegrationTest extends BaseIntegrationTest {
 	}
 
 	private static void collectViolations(final AccessibleObject[] members, final List<String> violations) {
+		// Collect relatable classes who have one of the violating annotations present
 		for (final AccessibleObject member : members) {
 			for (final Class<? extends Annotation> annotationType : OWN_ID_ANNOTATIONS) {
 				if (member.isAnnotationPresent(annotationType)) {
@@ -89,6 +87,7 @@ public class RelatableIdGeneratorIntegrationTest extends BaseIntegrationTest {
 
 	@SuppressWarnings("unchecked")
 	private String idColumnExtra(final String table) {
+		// Search for id columns with auto_increment in the EXTRA field
 		final List<String> extra = entityManager.createNativeQuery(
 						"SELECT LOWER(extra) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :table AND column_name = 'id'")
 				.setParameter("table", table)
