@@ -572,11 +572,13 @@ function updateRelatedPrecautions(choices, search, threatType, threatId, threatI
     fetch( `/rest/relatable/autocomplete/relatedprecautions?search=${search}&threatType=${threatType}&threatIdentifier=${threatIdentifier}&threatId=${threatId}&riskId=${riskId}`)
         .then(response => response.json()
             .then(data => {
+                // customProperties.name lets the item template show just the name when needed
                 choices.setChoices(data.content.map(reg => {
                     return {
                         id: reg.id,
                         name: reg.name + ": " + reg.description,
                         labelDescription: reg.description,
+                        customProperties: { name: reg.name },
                     };
                 }), 'id', 'name', true);
 
@@ -726,7 +728,10 @@ function pageLoaded() {
                         },
                         // add info button when the "showFullDescription" is disabled
                         item(classNames, choice, removeItemButton) {
-                            const itemEl = defaultTemplates.item.call(this, classNames, choice, removeItemButton);
+                            // use the plain name for the chip when the setting is off
+                            const shortName = !showFullDescription && choice.customProperties && choice.customProperties.name;
+                            const itemChoice = shortName ? Object.assign({}, choice, {label: shortName}) : choice;
+                            const itemEl = defaultTemplates.item.call(this, classNames, itemChoice, removeItemButton);
                             if (!showFullDescription && choice.labelDescription) {
                                 const infoIcon = document.createElement('span');
                                 infoIcon.className = 'choices__info-icon';
