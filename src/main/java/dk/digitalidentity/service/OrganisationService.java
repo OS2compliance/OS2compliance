@@ -65,10 +65,7 @@ public class OrganisationService {
 		return Optional.ofNullable(organisationUnitDao.findByUuid(uuid));
 	}
 
-	/**
-	 * Afdeling is derived from the user's position, forvaltning from that OU's parent.
-	 */
-	public Optional<OrganisationUnit> findAfdelingForUser(final User user) {
+	public Optional<OrganisationUnit> findOuForUser(final User user) {
 		if (user == null) {
 			return Optional.empty();
 		}
@@ -80,11 +77,5 @@ public class OrganisationService {
 			return Optional.empty();
 		}
 		return findByUuid(ouUuids.iterator().next());
-	}
-
-	public Optional<OrganisationUnit> findForvaltningForUser(final User user) {
-		return findAfdelingForUser(user)
-			.map(OrganisationUnit::getParentUuid)
-			.flatMap(this::findByUuid);
 	}
 }

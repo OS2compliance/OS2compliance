@@ -34,6 +34,14 @@ function formReset() {
     form.reset();
 }
 
+function selectOu(ouChoicesSelect, ou) {
+    ouChoicesSelect.setChoiceByValue(ou.uuid);
+    if (ouChoicesSelect.getValue(true) === ou.uuid) {
+        return;
+    }
+    ouChoicesSelect.setChoices([{ value: ou.uuid, label: ou.name, selected: true }], 'value', 'label', false);
+}
+
 function loadViewAndEditForm() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
     userChoicesEditSelect = choiceService.initUserSelect("userSelect");
@@ -44,20 +52,23 @@ function loadViewAndEditForm() {
         checkInputField(userChoicesEditSelect);
     });
 
-    userChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
+    userChoicesEditSelect.passedElement.element.addEventListener('addItem', async function() {
         const userUuid = userChoicesEditSelect.passedElement.element.value;
-        fetch(`/rest/ous/user/${userUuid}/suggestion`).then(response => {
-            if (response.ok) {
-                response.json().then(suggestion => {
-                    if (suggestion.afdeling) {
-                        ouChoicesEditSelect.setChoiceByValue(suggestion.afdeling.uuid);
-                    }
-                    if (suggestion.forvaltning) {
-                        departmentOuChoicesEditSelect.setChoiceByValue(suggestion.forvaltning.uuid);
-                    }
-                });
+        try {
+            const response = await fetch(`/rest/ous/user/${userUuid}/suggestion`);
+            if (response.status === 204) {
+                return;
             }
-        }).catch(error => toastService.error(error));
+            if (!response.ok) {
+                return;
+            }
+            const suggestion = await response.json();
+            if (suggestion.ou) {
+                selectOu(ouChoicesEditSelect, suggestion.ou);
+            }
+        } catch (error) {
+            toastService.error(error);
+        }
     });
 
     document.querySelectorAll('.editField').forEach(elem => {

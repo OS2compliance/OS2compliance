@@ -112,12 +112,10 @@ public class DocumentService implements TagableService<Document> {
 
 	private void syncDocumentLinkOnTask(final Document document, final Task task) {
 		final String url = LinkHelper.linkify(document.getLink());
-		if (StringUtils.isEmpty(url)) {
-			return;
-		}
 
-		final boolean alreadyPresent = task.getLinks().stream().anyMatch(l -> url.equals(l.getUrl()));
-		if (!alreadyPresent) {
+		task.getLinks().removeIf(l -> !l.getUrl().equals(url));
+
+		if (StringUtils.isNotEmpty(url) && task.getLinks().stream().noneMatch(l -> url.equals(l.getUrl()))) {
 			task.getLinks().add(new TaskLink(null, url, task));
 		}
 	}

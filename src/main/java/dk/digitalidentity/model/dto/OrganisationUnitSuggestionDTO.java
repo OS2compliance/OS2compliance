@@ -10,6 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrganisationUnitSuggestionDTO {
-    private OrganisationUnitDTO afdeling;
-    private OrganisationUnitDTO forvaltning;
+    private OrganisationUnitDTO ou;
 }

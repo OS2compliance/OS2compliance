@@ -71,12 +71,9 @@ public class OrganisationRestController {
 	public ResponseEntity<OrganisationUnitSuggestionDTO> getOrgSuggestionByUser(@PathVariable final String id) {
 		final User user = userService.findByUuid(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		final OrganisationUnitDTO afdeling = organisationService.findAfdelingForUser(user).map(mapper::toDTO).orElse(null);
-		final OrganisationUnitDTO forvaltning = organisationService.findForvaltningForUser(user).map(mapper::toDTO).orElse(null);
-
-		return ResponseEntity.ok(OrganisationUnitSuggestionDTO.builder()
-			.afdeling(afdeling)
-			.forvaltning(forvaltning)
-			.build());
+		return organisationService.findOuForUser(user)
+			.map(ou -> OrganisationUnitSuggestionDTO.builder().ou(mapper.toDTO(ou)).build())
+			.map(ResponseEntity::ok)
+			.orElseGet(() -> ResponseEntity.noContent().build());
 	}
 }
