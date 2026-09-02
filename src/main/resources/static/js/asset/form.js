@@ -12,7 +12,7 @@ function formReset() {
 function formLoaded() {
     initUserChoices();
     initSuppliersChoices();
-    initFormValidationForFormChoicesOnly("createForm", () => validateChoices(userChoices));
+    initFormValidationForFormChoicesOnly("createForm", () => validateChoices(userChoices, supplierChoices));
 }
 
 function initUserChoices() {

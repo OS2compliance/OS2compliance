@@ -12,6 +12,9 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.NextInspection;
+import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -293,5 +297,74 @@ class AssetOversightServiceTest {
         verify(taskLogDao, never()).reassignTask(any(), any());
         assertThat(oldCheck.getLogs()).containsExactly(strayOnCheck);
         assertThat(dbsTask.getLogs()).containsExactly(existing);
+    }
+
+    @Test
+    void parkAssociatedOversightCheck_parksCheckWithoutTouchingAsset() {
+        // Sideeffektfri parkering: kontrollen til 2099 uden gentagelse - aktivets
+        // tilsynsopsætning røres IKKE (createOrUpdate-varianten nuller den ved manglende model).
+        final Asset asset = asset(null);
+        final Task dbsTask = oversightTask(1L, TaskType.TASK, "X - DBS tilsyn", LocalDate.of(2026, 9, 4));
+        final Task check = oversightTask(2L, TaskType.CHECK, "Tilsyn af X", LocalDate.of(2026, 9, 1));
+        check.setRepetition(TaskRepetition.YEARLY);
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(dbsTask, check));
+
+        assetOversightService.parkAssociatedOversightCheck(asset);
+
+        assertThat(check.getNextDeadline()).isEqualTo(AssetOversightService.PARKED_DEADLINE);
+        assertThat(check.getRepetition()).isEqualTo(TaskRepetition.NONE);
+        assertThat(dbsTask.getNextDeadline()).isEqualTo(LocalDate.of(2026, 9, 4));
+        assertThat(asset.getNextInspection()).isNull();
+        assertThat(asset.getSupervisoryModel()).isNull();
+    }
+
+    @Test
+    void parkAssociatedOversightCheck_isIdempotent_andHandlesMissingCheck() {
+        final Asset asset = asset(null);
+        final Task parkedCheck = oversightTask(2L, TaskType.CHECK, "Tilsyn af X", AssetOversightService.PARKED_DEADLINE);
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(parkedCheck));
+
+        assetOversightService.parkAssociatedOversightCheck(asset);
+        assertThat(parkedCheck.getNextDeadline()).isEqualTo(AssetOversightService.PARKED_DEADLINE);
+
+        // og et aktiv helt uden kontrol-opgave er en no-op
+        final Asset bareAsset = asset(null);
+        when(relationService.findAllRelatedTo(bareAsset)).thenReturn(List.of());
+        assetOversightService.parkAssociatedOversightCheck(bareAsset);
+    }
+
+    @Test
+    void createOrUpdateAssociatedOversightCheck_parksTheCheckTask_neverTheDbsTask() {
+        // linked_asset-mængden indeholder både den gentagne kontrol (CHECK) og DBS-opgaver
+        // (TASK). En findFirst() på tværs kunne parkere en frisk DBS-opgave til 2099 i stedet
+        // for kontrollen - og overskrive dens ansvarlige.
+        final Asset asset = asset(dbsModel());
+        asset.setNextInspection(NextInspection.DBS);
+        asset.setNextInspectionDate(null);
+        final Task dbsTask = oversightTask(1L, TaskType.TASK, "X - DBS tilsyn", LocalDate.of(2026, 9, 4));
+        final Task check = oversightTask(2L, TaskType.CHECK, "Tilsyn af X", LocalDate.of(2026, 9, 1));
+        // DBS-opgaven først, så testen beviser typefilteret og ikke bare rækkefølgen
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(dbsTask, check));
+
+        assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
+
+        assertThat(check.getNextDeadline()).isEqualTo(LocalDate.of(2099, 1, 1));
+        assertThat(dbsTask.getNextDeadline()).isEqualTo(LocalDate.of(2026, 9, 4));
+    }
+
+    // ========== setAssetsToDbsOversight ==========
+
+    @Test
+    void setAssetsToDbsOversight_doesNotAssignOversightResponsible() {
+        // Tilsynsansvarlig er et manuelt valg der vinder over den globale indstilling - den
+        // tidligere auto-udfyldning udpegede en vilkårlig person ("medarbejder der starter
+        // med A") og blokerede indstillingen.
+        final Asset asset = asset(null);
+        asset.getResponsibleUsers().add(new User());
+        when(choiceValueDao.findByIdentifier("supervision-model-dbs-123456")).thenReturn(Optional.empty());
+
+        assetOversightService.setAssetsToDbsOversight(List.of(asset));
+
+        assertThat(asset.getOversightResponsibleUser()).isNull();
     }
 }

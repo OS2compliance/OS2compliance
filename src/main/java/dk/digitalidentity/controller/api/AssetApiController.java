@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
@@ -24,7 +25,6 @@ import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
-import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,7 +52,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -63,7 +66,6 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @RequiredArgsConstructor
 public class AssetApiController {
     private final AssetService assetService;
-    private final OrganisationService organisationService;
     private final AssetMapper assetMapper;
     private final UserService userService;
     private final SupplierService supplierService;
@@ -104,7 +106,23 @@ public class AssetApiController {
 	public AssetEO create(@Valid @RequestBody final AssetCreateEO assetCreateEO) {
 		final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetCreateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
 		final Asset asset = assetMapper.fromEO(assetCreateEO);
+		asset.setActive(true);
 		asset.setResponsibleUsers(responsibleUsers);
+		asset.setOperationResponsibleUsers(responsibleUsers);
+		// The mapper leaves these null (rather than empty) whenever the corresponding
+		// field is omitted from the request, instead of the entity's normal empty-collection defaults.
+		asset.setManagers(new ArrayList<>());
+		if (asset.getProperties() == null) {
+			asset.setProperties(new HashSet<>());
+		}
+		asset.getProperties().forEach(property -> property.setEntity(asset));
+		if (asset.getProductLinks() == null) {
+			asset.setProductLinks(new ArrayList<>());
+		}
+		asset.getProductLinks().forEach(link -> link.setAsset(asset));
+		if (assetCreateEO.getAssetType() != null) {
+			assetService.setAssetType(assetCreateEO.getAssetType(), asset);
+		}
 		if (assetCreateEO.getResponsibleUsers() != null) {
 			addManagers(assetCreateEO.getResponsibleUsers(), asset);
 		}
@@ -114,8 +132,10 @@ public class AssetApiController {
 		if (assetCreateEO.getSubSuppliers() != null) {
 			addSubSuppliers(assetCreateEO.getSubSuppliers(), asset);
 		}
-		if (assetCreateEO.getProductLinks() != null) {
-			addProductLinks(assetCreateEO.getProductLinks(), asset);
+		if (assetCreateEO.getDepartments() != null) {
+			assetService.setDepartments(assetCreateEO.getDepartments(), asset);
+		} else {
+			asset.setDepartments(new ArrayList<>());
 		}
 		return assetMapper.toEO(assetService.create(asset));
 	}
@@ -188,7 +208,9 @@ public class AssetApiController {
 			addProductLinks(assetUpdateEO.getProductLinks(), asset);
 		}
 		asset.getProperties().clear();
-		asset.getProperties().addAll(assetMapper.fromEO(assetUpdateEO.getProperties()));
+		final Set<Property> properties = assetMapper.fromEO(assetUpdateEO.getProperties());
+		properties.forEach(property -> property.setEntity(asset));
+		asset.getProperties().addAll(properties);
     }
 
     @Operation(summary = "Delete an asset", description = "Deletes an asset")
@@ -236,4 +258,5 @@ public class AssetApiController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Supplier not found"));
         asset.setSupplier(supplier);
     }
+
 }

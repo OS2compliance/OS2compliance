@@ -211,7 +211,7 @@ public class ReportController {
      */
     private Page<Incident> incidentsForReport(final String dateField, final LocalDate from, final LocalDate to) {
         final IncidentQuery query = new IncidentQuery(IncidentDateFilter.parse(dateField),
-            from, to, null, Map.of(), Map.of());
+            from, to, null, Map.of(), Map.of(), List.of());
         final Page<Incident> incidents = incidentService.findIncidents(query,
             PageRequest.of(0, MAX_REPORT_INCIDENTS, Sort.by(Sort.Direction.DESC, "createdAt")));
         if (incidents.getTotalElements() > incidents.getNumberOfElements()) {

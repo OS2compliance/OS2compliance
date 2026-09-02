@@ -4,12 +4,14 @@ import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.dao.ThreatCatalogDao;
 import dk.digitalidentity.dao.ThreatCatalogThreatDao;
+import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -30,6 +32,18 @@ public class CatalogService {
 
     public List<ThreatCatalog> findAllVisible() {
         return threatCatalogDao.findAllByHiddenFalse();
+    }
+
+    /**
+     * Et skjult katalog skal stadig kunne sendes retur af formularen, ellers fravælger næste gem det - og
+     * fravalg sletter besvarelserne.
+     */
+    public List<ThreatCatalog> findSelectableFor(final ThreatAssessment threatAssessment) {
+        final List<ThreatCatalog> selectable = new ArrayList<>(findAllVisible());
+        threatAssessment.getThreatCatalogs().stream()
+            .filter(attached -> selectable.stream().noneMatch(v -> v.getIdentifier().equals(attached.getIdentifier())))
+            .forEach(selectable::add);
+        return selectable;
     }
 
     public Optional<ThreatCatalog> get(final String identifier) {

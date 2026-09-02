@@ -157,9 +157,47 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(44, this::seedV44);
 		incrementAndPerformIfVersion(45, this::seedV45);
 		incrementAndPerformIfVersion(46, this::seedV46);
+		incrementAndPerformIfVersion(47, this::seedV47);
 	}
 
+	/**
+	 * Bevidst tom. Version 1.8 af KL's ark følger med releasen i {@code data/registers/}, så nye
+	 * tilslutninger får den via {@link #addRegistersV0()} - men den bliver ikke rullet ud på
+	 * eksisterende installationer.
+	 * <p>
+	 * Den oprindelige udgave kaldte {@code importRegister} + {@code updateRegisterGdprChoices} +
+	 * {@code enrichWithKLE} for hver pakke, og gav hos den første installation der fik den
+	 * (11-08-2026) 33 dubletter, oven i at de to andre kald overskrev kommunens egne rettelser af
+	 * hjemmel og KLE på 20 og 29 fortegnelser.
+	 * <p>
+	 * <b>Årsagen er ikke v1.8.</b> 32 af de 33 dubletter har byte-identisk titel i v1.7 og v1.8, og
+	 * de eneste titelforskelle mellem de to udgaver er afsluttende blanktegn, som kollationen
+	 * {@code utf8mb4_danish_ci} (PAD SPACE) ignorerer. {@code importRegister} slår op med
+	 * {@code findByNameAndDeletedFalse}, og det opslag fejler af to grunde, som begge er ældre end
+	 * v1.8:
+	 * <ul>
+	 * <li><b>Titlen er ikke en stabil nøgle.</b> 23 af dubletterne havde ingen titel at ramme:
+	 * kommunens fortegnelser hedder noget andet end de pakker vi shipper i dag ({@code 10a.},
+	 * {@code 11b.}, dobbelte mellemrum, {@code \r\n} midt i titlen). Titlerne er drevet fra hinanden
+	 * over flere kvartalsopdateringer, og 22 af v1.7's 94 titler ramte allerede ved siden af samme
+	 * sted. Ingen v1.7→v1.8-mapping retter det - det, der skal bruges, er en identitet pr. aktivitet,
+	 * og den findes ikke: {@code packageName} står på {@code kl_article30} for dem alle.</li>
+	 * <li><b>Slettede fortegnelser er usynlige for opslaget.</b> De resterende 10 dubletter havde
+	 * eksakt titelmatch, men kommunen havde soft-deleted dem. {@code deleted}-filteret skjuler dem,
+	 * så seed'et genoprettede fortegnelser kommunen bevidst havde fjernet.</li>
+	 * </ul>
+	 * Et {@code seedVxx}, der kalder {@code importRegister} på en installation i drift, opretter
+	 * derfor dubletter, indtil begge dele er løst. Se {@code scripts/README.md}.
+	 * <p>
+	 * Slottet står tilbage som no-op med vilje: den ramte installation nåede at få
+	 * {@code seed_version} sat til 47, og fjernes kaldet i {@link #onApplicationEvent}, ville den
+	 * springe det næste seed over, fordi versionerne kun matcher eksakt.
+	 */
 	private void seedV46() {
+		// Med vilje tom - se javadoc.
+	}
+
+	private void seedV47() {
 		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL, "", "assetsync", true);
 		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_CREATED, "false", "assetsync", true);
 		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_DEACTIVATED, "false", "assetsync", true);
