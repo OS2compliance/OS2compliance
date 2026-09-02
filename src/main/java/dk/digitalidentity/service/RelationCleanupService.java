@@ -48,6 +48,11 @@ public class RelationCleanupService {
 	/**
 	 * The tables backing every {@link dk.digitalidentity.model.entity.Relatable} subclass - the ones
 	 * that draw ids from {@code shared_id_generator} and must therefore never contain the same id twice.
+	 * <p>
+	 * These names are baked into the {@code UNION ALL} built in {@link #findAllDuplicateIds()} and
+	 * {@link #checkGeneratorHeadroom()}. They must stay hardcoded constants - if this list were ever
+	 * sourced from configuration or another table, that string-built SQL would become an injection
+	 * point.
 	 */
 	private static final List<String> RELATABLE_TABLES = List.of(
 			"assets", "contacts", "dbs_asset", "documents", "dpia", "incidents",
@@ -136,6 +141,11 @@ public class RelationCleanupService {
 	}
 
 	public record GeneratorHeadroom(long nextVal, long highestIdInUse) {
+		/**
+		 * No upper-bound check against {@code next_val + 1}: this is a one-sided {@code >=}, so it
+		 * already catches {@code highestIdInUse} anywhere above {@code next_val - 48} too - including
+		 * past {@code next_val + 1}, e.g. a restore where {@code hibernate_sequences} didn't follow the data.
+		 */
 		public boolean isAtRisk() {
 			return nextVal - 48 <= highestIdInUse;
 		}
