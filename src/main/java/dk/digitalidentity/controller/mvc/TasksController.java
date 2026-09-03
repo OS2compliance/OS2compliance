@@ -106,6 +106,7 @@ public class TasksController {
 
 			boolean responsibleChooseable = SecurityUtil.isOperationAllowed(Roles.CREATE_ALL);
 			Task task = new Task();
+			task.setStartDate(LocalDate.now());
 			if (!responsibleChooseable) {
 				task.setResponsibleUsers(Set.of(
 						userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
@@ -150,15 +151,12 @@ public class TasksController {
                            @RequestParam(name = "relations", required = false) final Set<Long> relations,
                            @RequestParam(name = "taskRiskId", required = false) final Long riskId,
                            @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
-							@RequestParam(name = "templateDescription", required = false) final Long templateDescriptionId,
                            @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
 		List<TaskLink> links = new ArrayList<>();
 		for (TaskLink link : task.getLinks()) {
 			links.add(new TaskLink(null, linkify(link.getUrl()), task));
 		}
-		if (templateDescriptionId != null) {
-			choiceValueService.findById(templateDescriptionId).ifPresent(task::setTaskDescriptionTemplate);
-		}
+		defaultAndValidateStartDate(task);
 		List<SubTask> subTasks = new ArrayList<>();
 		for (SubTask subTask : task.getSubTasks()) {
 			subTasks.add(new SubTask(null, subTask.getName(), subTask.isCompleted(), task));
@@ -203,8 +201,13 @@ public class TasksController {
         existingTask.setInProgress(inProgress);
         existingTask.setNote(inProgress ? task.getNote() : null);
 		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
-        existingTask.setDescription(task.getDescription());
+        // en valgt skabelon låser beskrivelsesfeltet, og låste felter sendes slet ikke med
+        if (task.getOwnDescription() != null) {
+            existingTask.setDescription(task.getOwnDescription());
+        }
+        defaultAndValidateStartDate(task);
         existingTask.setNextDeadline(task.getNextDeadline());
+        existingTask.setStartDate(task.getStartDate());
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setDepartment(task.getDepartment());
         existingTask.setResponsibleUsers(task.getResponsibleUsers());
@@ -442,6 +445,7 @@ public class TasksController {
 			@Valid @ModelAttribute final Task taskForm,
 			@RequestParam(name = "relations", required = false) final List<Long> relations
 	) {
+		defaultAndValidateStartDate(taskForm);
 		final Task task = taskService.copyTask(taskForm);
 		setupRelations(task, relations);
 		if (task.getSubTasks() == null) {
@@ -464,6 +468,12 @@ public class TasksController {
 		notifyService.notifyTaskResponsible(task);
 		return "redirect:/tasks/" + task.getId();
 	}
+
+    private void defaultAndValidateStartDate(final Task task) {
+        if (taskService.defaultStartDateAndCheckAfterDeadline(task)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Startdato kan ikke være efter deadline");
+        }
+    }
 
     private void setupRelations(final Task task, final List<Long> relations) {
         final List<Relatable> relatables = relatableService.findAllById(relations);

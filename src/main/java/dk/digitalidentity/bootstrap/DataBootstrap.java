@@ -157,6 +157,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(44, this::seedV44);
 		incrementAndPerformIfVersion(45, this::seedV45);
 		incrementAndPerformIfVersion(46, this::seedV46);
+		incrementAndPerformIfVersion(47, this::seedV47);
 	}
 
 	/**
@@ -194,6 +195,12 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	 */
 	private void seedV46() {
 		// Med vilje tom - se javadoc.
+	}
+
+	private void seedV47() {
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL, "", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_CREATED, "false", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_DEACTIVATED, "false", "assetsync", true);
 	}
 
 	private void seedV45() {

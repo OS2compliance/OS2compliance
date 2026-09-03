@@ -102,6 +102,23 @@ class DBSPlatformSyncTaskTest {
 	}
 
 	@Test
+	void syncTask_clampsLastSyncToNow_whenWatermarkIsInTheFuture() {
+		// Given - vandmærket ligger foran vores ur (urskævhed mod DBS), som DBS afviser med HTTP 400
+		ZonedDateTime lastSync = ZonedDateTime.now(LOCAL_TZ_ID).plusMinutes(32);
+		when(settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null)).thenReturn(lastSync);
+		when(syncService.fetchAllAudits(any())).thenReturn(Collections.emptyList());
+		when(syncService.findNewestPublishedDate(any())).thenReturn(Optional.empty());
+
+		// When
+		syncTask.syncTask();
+
+		// Then
+		ArgumentCaptor<OffsetDateTime> captor = ArgumentCaptor.forClass(OffsetDateTime.class);
+		verify(syncService).fetchAllAudits(captor.capture());
+		assertThat(captor.getValue()).isBefore(OffsetDateTime.now());
+	}
+
+	@Test
 	void syncTask_skips_whenNoLastSyncAndNoBackfillFrom() {
 		// Given
 		dbsConfig.setBackfillFrom(null);

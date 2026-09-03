@@ -617,7 +617,7 @@ public class AssetsController {
 		existingAsset.setArchive(asset.getArchive());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY))) {
-			existingAsset.setActive(asset.isActive());
+			assetService.setActive(existingAsset, asset.isActive());
 		}
 
 		// These fields cannot be changed when the asset comes from OS2kitos, and the form locks them, so they are

@@ -238,10 +238,10 @@ public class DPIARestController {
     @PostMapping("create")
     public ResponseEntity<CreateDPIAResponse> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
 
-        final List<Asset> assets = assetService.findAllById(createDPIAFormDTO.assetIds);
-		if (assets.isEmpty()) {throw new IllegalArgumentException("Must choose at least one asset");}
+        final List<Asset> assets = createDPIAFormDTO.assetIds == null ? new ArrayList<>() : new ArrayList<>(assetService.findAllById(createDPIAFormDTO.assetIds));
 
-		if (!assetService.isEditable(assets)) {
+		// uden aktiver er der intet aktiv-ejerskab at tjekke, og adgangen styres alene af @RequireCreateAll
+		if (!assets.isEmpty() && !assetService.isEditable(assets)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -255,8 +255,7 @@ public class DPIARestController {
 	@RequireCreateAll
 	@PostMapping("{dpiaId}/edit")
 	public ResponseEntity<HttpStatus> createExternalDpia(@PathVariable Long dpiaId,  @RequestBody final EditDPIADTO editDPIADTO) {
-		List<Asset> assets	= assetService.findAllById(editDPIADTO.assetIds);
-		if (assets.isEmpty()) {throw new IllegalArgumentException("Must choose at least one asset");}
+		List<Asset> assets	= editDPIADTO.assetIds == null ? new ArrayList<>() : new ArrayList<>(assetService.findAllById(editDPIADTO.assetIds));
 
 		DPIA dpia = dpiaService.find(dpiaId);
 
@@ -284,25 +283,18 @@ public class DPIARestController {
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalDPIADTO createExternalDPIADTO) {
 
-        List<Asset> assets;
-        DPIA dpia = null;
-        if (!createExternalDPIADTO.assetIds.isEmpty()) {
-            assets = assetService.findAllById(createExternalDPIADTO.assetIds);
-			if (assets.isEmpty()) {throw new IllegalArgumentException("Must choose at least one asset");}
-        } else {
-            dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
-            assets = dpia.getAssets();
-        }
+        DPIA dpia = createExternalDPIADTO.dpiaId != null ? dpiaService.find(createExternalDPIADTO.dpiaId) : null;
+        final List<Asset> assets = createExternalDPIADTO.assetIds != null
+                ? new ArrayList<>(assetService.findAllById(createExternalDPIADTO.assetIds))
+                : (dpia != null ? dpia.getAssets() : new ArrayList<>());
 
-		if (!assetService.isEditable(assets)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
-
-        if (createExternalDPIADTO.dpiaId != null) {
+        if (dpia != null) {
 			//Update
-            if (dpia == null) {
-                dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
-            }
+			// ved opdatering ligger ejerskabet på konsekvensanalysen, ikke på de aktiver der sendes med
+			if (!dpiaService.isEditable(dpia)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+            dpia.setAssets(assets);
             dpia.setExternalLink(createExternalDPIADTO.link);
 			dpia.setUserUpdatedDate(createExternalDPIADTO.userUpdatedDate);
 			if (createExternalDPIADTO.responsibleUserUuid != null) {
@@ -319,6 +311,10 @@ public class DPIARestController {
             dpiaService.save(dpia);
         } else {
 			//Create
+			// uden aktiver er der intet aktiv-ejerskab at tjekke, og adgangen styres alene af @RequireCreateAll
+			if (!assets.isEmpty() && !assetService.isEditable(assets)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
             dpiaService.createExternal(assets,createExternalDPIADTO.link, createExternalDPIADTO.title, createExternalDPIADTO.userUpdatedDate, createExternalDPIADTO.responsibleUserUuid, createExternalDPIADTO.responsibleOuUuid);
         }
 

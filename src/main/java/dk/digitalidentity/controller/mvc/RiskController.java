@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatCatalog;
@@ -39,6 +40,7 @@ import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
@@ -72,6 +74,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -95,6 +98,7 @@ public class RiskController {
     private final UserService userService;
     private final EmailTemplateService emailTemplateService;
     private final IncidentService incidentService;
+	private final SupplierService supplierService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -114,16 +118,12 @@ public class RiskController {
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
             @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
             @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
-            @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
+            @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset,
+			@RequestParam(name = "selectedSupplier", required = false) final Long selectedSupplier) {
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation() && !threatAssessment.isSociety()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de tre vurderinger.");
         }
-        if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAsset == null || selectedAsset.isEmpty())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
-        }
-        if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
-        }
+        threatAssessmentService.validateRiskType(threatAssessment, selectedAsset, selectedRegister, selectedSupplier);
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
@@ -135,7 +135,9 @@ public class RiskController {
             relateAssets(selectedAsset, savedThreatAssessment);
         } else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
             relateRegister(selectedRegister, savedThreatAssessment);
-        }
+        } else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER)) {
+			relateSupplier(selectedSupplier, savedThreatAssessment);
+		}
         if (sendEmail) {
             createTaskAndSendMail(savedThreatAssessment);
         }
@@ -157,8 +159,12 @@ public class RiskController {
 			final List<Relation> registerRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER);
 			model.addAttribute("relatedRegisters", registerService.findAllByRelations(registerRelations));
 		}
+		if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.SUPPLIER) {
+			final List<Relation> supplierRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.SUPPLIER);
+			model.addAttribute("relatedSuppliers", supplierService.findAllByRelations(supplierRelations));
+		}
 
-		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
+		model.addAttribute("threatCatalogs", catalogService.findSelectableFor(threatAssessment));
         model.addAttribute("risk", threatAssessment);
 		model.addAttribute("isResponsible", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || threatAssessmentService.isResponsibleFor(threatAssessment));
         return "risks/editForm";
@@ -171,7 +177,9 @@ public class RiskController {
                               @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
 								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets,
-								@RequestParam(name = "selectedRegister", required = false) final Long selectedRegister
+								@RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+								@RequestParam(name = "selectedSupplier", required = false) final Long selectedSupplier,
+								@RequestParam(name = "_threatCatalogs", required = false) final String catalogFieldPresent
 	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
@@ -181,15 +189,16 @@ public class RiskController {
 		if (editedAssessment.getThreatAssessmentType() != assessment.getThreatAssessmentType()) {
 			editedAssessment.setThreatAssessmentType(assessment.getThreatAssessmentType());
 		}
-		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
-		}
+		threatAssessmentService.validateRiskType(assessment, selectedAssets, selectedRegister, selectedSupplier);
 
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
 			relationService.setRelationsAbsolute(editedAssessment, selectedAssets);
 		}
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
 			relateRegister(selectedRegister, editedAssessment);
+		}
+	 	if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER)) {
+			relateSupplier(selectedSupplier, editedAssessment);
 		}
         editedAssessment.setName(assessment.getName());
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
@@ -199,8 +208,11 @@ public class RiskController {
 			editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
 		}
 
-		// Handle threatCatalog changes
-		threatAssessmentService.handleThreatCatalogChanges(editedAssessment, assessment.getThreatCatalogs());
+		// En tom katalogliste betyder kun fravalg hvis formularen faktisk viste feltet - ellers ville et
+		// forældet eller afvist felt slette besvarelserne
+		if (catalogFieldPresent != null) {
+			threatAssessmentService.handleThreatCatalogChanges(editedAssessment, assessment.getThreatCatalogs());
+		}
 
         return "redirect:/risks";
     }
@@ -208,11 +220,17 @@ public class RiskController {
 	@RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("{id}/update-catalogs")
-	public String updateThreatCatalogs(@PathVariable("id") final long id, @RequestParam(name = "threatCatalogs", required = false) final Set<String> catalogIdentifiers) {
+	public String updateThreatCatalogs(@PathVariable("id") final long id,
+									   @RequestParam(name = "threatCatalogs", required = false) final Set<String> catalogIdentifiers,
+									   @RequestParam(name = "_threatCatalogs", required = false) final String catalogFieldPresent) {
 		final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(editedAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		if (catalogFieldPresent == null) {
+			return "redirect:/risks/" + id;
 		}
 
 		// Find selected catalogs
@@ -358,7 +376,7 @@ public class RiskController {
         model.addAttribute("relatedRegisters", findRelatedRegisters(threatAssessment));
         model.addAttribute("presentAtMeetingName", threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", ")));
         model.addAttribute("defaultSendReportTo", getFirstRelatedResponsible(threatAssessment));
-        model.addAttribute("threatCatalogs", catalogService.findAllVisible());
+        model.addAttribute("threatCatalogs", catalogService.findSelectableFor(threatAssessment));
 
         boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
         model.addAttribute("signed", signed);
@@ -508,25 +526,23 @@ public class RiskController {
 	private String findElementName(final ThreatAssessment threatAssessment) {
         final ThreatAssessmentType threatAssessmentType = threatAssessment.getThreatAssessmentType();
         if (ThreatAssessmentType.ASSET.equals(threatAssessmentType)) {
-            final List<Relation> relations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
-            return relations.stream()
-                .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
-                .map(assetService::findById)
-                .filter(Optional::isPresent)
-                .map(a -> a.get().getName())
-                .collect(Collectors.joining(", "));
+			return joinNames(threatAssessment, RelationType.ASSET, id -> assetService.findById(id).map(Asset::getName));
         } else if (ThreatAssessmentType.REGISTER.equals(threatAssessmentType)) {
-            final List<Relation> relations = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER);
-            return relations.stream()
-                .map(r -> r.getRelationAType().equals(RelationType.REGISTER) ? r.getRelationAId() : r.getRelationBId())
-                .map(registerService::findById)
-                .filter(Optional::isPresent)
-                .map(a -> a.get().getName())
-                .collect(Collectors.joining(", "));
-        } else {
+			return joinNames(threatAssessment, RelationType.REGISTER, id -> registerService.findById(id).map(Register::getName));
+        } else if (ThreatAssessmentType.SUPPLIER.equals(threatAssessmentType)) {
+			return joinNames(threatAssessment, RelationType.SUPPLIER, id -> supplierService.findById(id).map(Supplier::getName));
+		} else {
             return "";
         }
     }
+
+	private String joinNames(final ThreatAssessment threatAssessment, final RelationType relationType, final Function<Long, Optional<String>> findName) {
+		return relationService.findRelatedToWithType(threatAssessment, relationType).stream()
+				.map(r -> r.getRelationAType().equals(relationType) ? r.getRelationAId() : r.getRelationBId())
+				.map(findName)
+				.flatMap(Optional::stream)
+				.collect(Collectors.joining(", "));
+	}
 
 	private void createTaskAndSendMail(final ThreatAssessment savedThreatAssessment) {
 		if (savedThreatAssessment.getResponsibleUser() != null) {
@@ -581,6 +597,12 @@ public class RiskController {
             () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
         relationService.addRelation(savedThreatAssessment, register);
     }
+
+	private void relateSupplier(final Long selectedSupplier, final ThreatAssessment savedThreatAssessment) {
+		final Supplier supplier = supplierService.findById(selectedSupplier).orElseThrow(
+				() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt."));
+		relationService.addRelation(savedThreatAssessment, supplier);
+	}
 
     private User getFirstRelatedResponsible(final ThreatAssessment threatAssessment) {
         if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {

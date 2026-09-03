@@ -377,6 +377,8 @@ public class SearchRepositoryImpl implements SearchRepository {
 			predicates.add(searchPredicate);
 		}
 
+		predicates.add(criteriaBuilder.isFalse(root.get("deleted")));
+
 		if (filterOnUser) {
 			addUserPredicates(entityClass, user, root, criteriaBuilder, criteriaQuery, predicates);
 		}

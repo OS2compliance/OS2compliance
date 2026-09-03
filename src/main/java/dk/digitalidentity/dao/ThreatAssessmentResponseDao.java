@@ -17,4 +17,7 @@ public interface ThreatAssessmentResponseDao extends JpaRepository<ThreatAssessm
 	@Query("DELETE FROM ThreatAssessmentResponse r WHERE r.threatAssessment.id = :assessmentId AND r.threatCatalogThreat.threatCatalog.identifier IN :catalogIdentifiers")
 	void deleteResponsesByAssessmentAndCatalogIdentifiers(@Param("assessmentId") Long assessmentId, @Param("catalogIdentifiers") Set<String> catalogIdentifiers);
 
+	@Query("SELECT COUNT(r) FROM ThreatAssessmentResponse r WHERE r.threatAssessment.id = :assessmentId AND r.threatCatalogThreat.threatCatalog.identifier IN :catalogIdentifiers")
+	long countResponsesByAssessmentAndCatalogIdentifiers(@Param("assessmentId") Long assessmentId, @Param("catalogIdentifiers") Set<String> catalogIdentifiers);
+
 }
