@@ -94,7 +94,7 @@ function ViewTaskService() {
             }).replace(/\./g, '/').replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$1/$2-$3');
         }
         this.initNextDeadlinePreview();
-        var textarea = document.getElementById('description');
+        const textarea = document.getElementById('description');
         if (textarea) {
             this.fitDescription(textarea);
             textarea.addEventListener('input', function () {
@@ -119,7 +119,7 @@ function ViewTaskService() {
             return;
         }
 
-        let nextDeadlinePicker = initDatepicker("#NextDeadlineBtn", "#NextDeadline");
+        const nextDeadlinePicker = initDatepicker("#NextDeadlineBtn", "#NextDeadline");
         let nextDeadlineDirty = false;
         nextDeadline.addEventListener("input", () => {
             nextDeadlineDirty = true;
@@ -127,26 +127,24 @@ function ViewTaskService() {
 
         const setNextDeadlineValue = (day, month, year) => {
             nextDeadline.value = `${day}/${month}-${year}`;
-            nextDeadlinePicker.destroy();
-            const oldBtn = document.querySelector("#NextDeadlineBtn");
-            oldBtn.replaceWith(oldBtn.cloneNode(true));
-            nextDeadlinePicker = initDatepicker("#NextDeadlineBtn", "#NextDeadline", {
-                selectedDate: new Date(year, month - 1, day)
-            });
+            nextDeadlinePicker.setFullDate(new Date(year, month - 1, day));
         };
 
+        let previewRequestId = 0;
         const refreshPreview = () => {
             if (nextDeadlineDirty || !taskDeadline.value) {
                 return;
             }
+            const requestId = ++previewRequestId;
             fetch(`/tasks/${taskId}/next-deadline-preview?dateOfCompletion=${encodeURIComponent(taskDeadline.value)}`)
                 .then(response => response.ok ? response.json() : null)
                 .then(date => {
-                    if (date && !nextDeadlineDirty) {
+                    if (date && !nextDeadlineDirty && requestId === previewRequestId) {
                         const [year, month, day] = date.split('-');
                         setNextDeadlineValue(day, month, year);
                     }
-                });
+                })
+                .catch(defaultErrorHandler);
         };
 
         taskDeadline.addEventListener("change", refreshPreview);

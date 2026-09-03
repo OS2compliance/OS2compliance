@@ -54,7 +54,7 @@ class TaskServiceTest {
         final LocalDate deadline = intervalDeadline(repetition);
         final Task task = checkTask(deadline, repetition);
 
-        taskService.completeTask(task, completedOn(deadline));
+        taskService.completeTask(task, completedOn(deadline), null);
 
         assertThat(task.getNextDeadline()).isEqualTo(addInterval(deadline, repetition));
     }
@@ -65,7 +65,7 @@ class TaskServiceTest {
         final LocalDate deadline = intervalDeadline(repetition);
         final Task task = checkTask(deadline, repetition);
 
-        taskService.completeTask(task, completedOn(deadline.minusDays(1)));
+        taskService.completeTask(task, completedOn(deadline.minusDays(1)), null);
 
         assertThat(task.getNextDeadline()).isEqualTo(addInterval(deadline, repetition));
     }
@@ -77,7 +77,7 @@ class TaskServiceTest {
         final Task task = checkTask(deadline, repetition);
         final LocalDate completedLate = deadline.plusDays(20);
 
-        taskService.completeTask(task, completedOn(completedLate));
+        taskService.completeTask(task, completedOn(completedLate), null);
 
         assertThat(task.getNextDeadline()).isEqualTo(addInterval(deadline, repetition));
     }
@@ -91,7 +91,7 @@ class TaskServiceTest {
         final LocalDate completedVeryLate = addInterval(deadline, repetition).plusMonths(2);
         task.setNextDeadline(deadline);
 
-        taskService.completeTask(task, completedOn(completedVeryLate));
+        taskService.completeTask(task, completedOn(completedVeryLate), null);
 
         assertThat(task.getNextDeadline()).isAfter(completedVeryLate);
     }
@@ -103,13 +103,13 @@ class TaskServiceTest {
         final Task task = checkTask(originalDeadline, repetition);
 
         // First completion, on time: advances the deadline by one interval.
-        taskService.completeTask(task, completedOn(originalDeadline));
+        taskService.completeTask(task, completedOn(originalDeadline), null);
         final LocalDate afterFirstCompletion = task.getNextDeadline();
         assertThat(afterFirstCompletion).isEqualTo(addInterval(originalDeadline, repetition));
 
         // Second completion shortly after, still inside the period that was just closed.
         final LocalDate secondCompletionDate = originalDeadline.minusDays(15);
-        taskService.completeTask(task, completedOn(secondCompletionDate));
+        taskService.completeTask(task, completedOn(secondCompletionDate), null);
 
         assertThat(task.getNextDeadline()).isEqualTo(afterFirstCompletion);
     }
@@ -119,7 +119,7 @@ class TaskServiceTest {
         final LocalDate deadline = LocalDate.of(2026, 6, 1);
         final Task task = checkTask(deadline, TaskRepetition.NONE);
 
-        taskService.completeTask(task, completedOn(LocalDate.of(2026, 6, 1)));
+        taskService.completeTask(task, completedOn(LocalDate.of(2026, 6, 1)), null);
 
         assertThat(task.getNextDeadline()).isEqualTo(deadline);
     }
@@ -129,9 +129,20 @@ class TaskServiceTest {
         final LocalDate deadline = LocalDate.of(2026, 6, 1);
         final Task task = checkTask(deadline, null);
 
-        taskService.completeTask(task, completedOn(LocalDate.of(2026, 6, 1)));
+        taskService.completeTask(task, completedOn(LocalDate.of(2026, 6, 1)), null);
 
         assertThat(task.getNextDeadline()).isEqualTo(deadline);
+    }
+
+    @Test
+    void monthlyRepetitionDoesNotDriftOnShortMonths() {
+        final LocalDate deadline = LocalDate.of(2026, 1, 31);
+        final Task task = checkTask(deadline, TaskRepetition.MONTHLY);
+
+        // Missed two months in a row: naive single-step chaining would clamp Jan 31 -> Feb 28 -> Mar 28.
+        taskService.completeTask(task, completedOn(LocalDate.of(2026, 3, 15)), null);
+
+        assertThat(task.getNextDeadline()).isEqualTo(LocalDate.of(2026, 3, 31));
     }
 
     @Test
@@ -159,13 +170,13 @@ class TaskServiceTest {
         lenient().when(documentDao.findById(42L)).thenReturn(java.util.Optional.of(document));
 
         // First completion, on time: advances deadline (and the document) by one interval.
-        taskService.completeTask(task, completedOn(originalDeadline));
+        taskService.completeTask(task, completedOn(originalDeadline), null);
         final LocalDate afterFirstCompletion = task.getNextDeadline();
         assertThat(document.getNextRevision()).isEqualTo(afterFirstCompletion);
 
         // Second completion shortly after, inside the period that was just closed: neither the task
         // deadline nor the document's revision date should move again.
-        taskService.completeTask(task, completedOn(originalDeadline.minusDays(15)));
+        taskService.completeTask(task, completedOn(originalDeadline.minusDays(15)), null);
 
         assertThat(task.getNextDeadline()).isEqualTo(afterFirstCompletion);
         assertThat(document.getNextRevision()).isEqualTo(afterFirstCompletion);

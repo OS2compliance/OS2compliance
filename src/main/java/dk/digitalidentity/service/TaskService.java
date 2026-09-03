@@ -207,11 +207,6 @@ public class TaskService implements TagableService<Task> {
     }
 
     @Transactional
-    public void completeTask(final Task task, final TaskLog taskLog) {
-        completeTask(task, taskLog, null);
-    }
-
-    @Transactional
     public void completeTask(final Task task, final TaskLog taskLog, final LocalDate overrideNextDeadline) {
         task.getLogs().add(taskLog);
         task.setInProgress(false);
@@ -373,14 +368,16 @@ public class TaskService implements TagableService<Task> {
         if (!effectiveCompleted.isAfter(addInterval(deadline, repetition, -1))) {
             return deadline;
         }
-        LocalDate next = deadline;
+        long intervals = 0;
+        LocalDate next;
         do {
-            next = addInterval(next, repetition, 1);
+            intervals++;
+            next = addInterval(deadline, repetition, intervals);
         } while (!next.isAfter(effectiveCompleted));
         return next;
     }
 
-    private LocalDate addInterval(final LocalDate date, final TaskRepetition repetition, final int multiplier) {
+    private LocalDate addInterval(final LocalDate date, final TaskRepetition repetition, final long multiplier) {
         return switch (repetition) {
 			case EVERY_2_MONTHS -> date.plusMonths(2L * multiplier);
 			case EVERY_3_MONTHS -> date.plusMonths(3L * multiplier);
@@ -391,7 +388,7 @@ public class TaskService implements TagableService<Task> {
             case YEARLY -> date.plusYears(multiplier);
             case EVERY_SECOND_YEAR -> date.plusYears(2L * multiplier);
             case EVERY_THIRD_YEAR -> date.plusYears(3L * multiplier);
-            default -> date;
+            case NONE -> throw new IllegalStateException("addInterval called with NONE repetition");
         };
     }
 
