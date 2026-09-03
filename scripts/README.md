@@ -28,14 +28,22 @@ ledige nummer.
 
 Husk ved en opdatering:
 
-- **Titlen er nøglen.** `RegisterImporter` slår op på `name`, så en ændret titel
-  opretter en *ny* fortegnelse ved siden af den gamle i stedet for at opdatere.
-  Rapporten lister titler der kun findes i pakkerne - dem skal der omdøbes i et
-  `seedVxx`-trin, som `DataBootstrap.seedV28` gjorde det.
-- **Eksisterende kunder får ikke `addRegistersV0` igen.** De skal have et nyt
-  `seedVxx`-trin, der kalder `importRegister` (opretter de nye), og
-  `updateRegisterGdprChoices` + `enrichWithKLE` (opdaterer de eksisterende).
-  Bemærk at det overskriver eventuelle rettelser kunden selv har lavet.
+- **Rul ikke en opdatering ud på eksisterende kunder.** Pakkerne følger releasen og
+  rammer nye tilslutninger via `addRegistersV0`; eksisterende installationer får dem
+  ikke, og det er indtil videre med vilje. Et `seedVxx`-trin, der kalder
+  `importRegister`, opretter dubletter - det skete med v1.8 (11-08-2026, 33 dubletter
+  hos én kommune, genoprettet manuelt fra backup). To ting skal løses først:
+  - **Titlen er ikke en stabil nøgle.** `findByNameAndDeletedFalse` matcher på `name`,
+    men kundens titler er drevet fra pakkernes over flere kvartaler (`10a.`, dobbelte
+    mellemrum, `\r\n` midt i titlen), og kunden kan selv rette dem i UI'et. Det er
+    ikke nok at mappe forrige kvartals titler til dette - hver installation har sin
+    egen årgang. Der mangler en identitet pr. aktivitet; `packageName` står på
+    `kl_article30` for dem alle og duer ikke.
+  - **Soft-deletede fortegnelser er usynlige for opslaget.** Har kunden slettet en
+    KL-fortegnelse, ser `importRegister` den ikke og genopretter den.
+- **`updateRegisterGdprChoices` + `enrichWithKLE` overskriver kundens eget arbejde.**
+  De skriver KL's hjemmel og KLE oven i det der står, uanset om kunden har rettet i
+  det. `updateRegisterGdprChoices` har i øvrigt ingen kaldere i dag.
 - **KLE-koder appen ikke kender bliver droppet lydløst.** Enricheren lister dem;
   hvis de er gyldige i nyeste KLE, skal `data/kle-emneplan.xml` opdateres først.
 - **Konsekvensvurderingen (kolonne F-I) importeres ikke.** Feltet findes på entiteten

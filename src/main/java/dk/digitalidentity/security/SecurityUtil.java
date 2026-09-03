@@ -41,6 +41,15 @@ public class SecurityUtil {
         }
     }
 
+    // True for API calls (authenticated as the SYSTEM_USERID principal) and background jobs
+    // (no HTTP request, so no SecurityContext at all). False only for a real human SAML session.
+    public static boolean isSystemOrigin() {
+        if (!isLoggedIn()) {
+            return true;
+        }
+        return SYSTEM_USERID.equals(getLoggedInUserUuid());
+    }
+
     public static void loginSystemUser(final List<SamlGrantedAuthority> authorities, final String username) {
         final TokenUser tokenUser = TokenUser.builder()
             .cvr("N/A")

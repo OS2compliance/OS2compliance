@@ -34,6 +34,11 @@ public interface Examples {
     String USER_NAME_EXAMPLE = "Kaspar Bach Pedersen";
     String USER_EMAIL_EXAMPLE = "eksempel@email.com";
 
+    String OU_UUID_EXAMPLE = "d223b3d3-dabe-4d68-9fa8-2b0f27cf1626";
+    String OU_PARENT_UUID_EXAMPLE = "8b8ee295-e659-4e94-8a4d-853d2f2b0e1d";
+    String OU_NAME_EXAMPLE = "Borgerservice";
+    String POSITION_NAME_EXAMPLE = "Sagsbehandler";
+
     String SUPPLIER_STATUS_EXAMPLE = "IN_PROGRESS";
     String DOCUMENT_STATUS_EXAMPLE = "IN_PROGRESS";
     String DOCUMENT_TYPE_EXAMPLE = "GUIDE";

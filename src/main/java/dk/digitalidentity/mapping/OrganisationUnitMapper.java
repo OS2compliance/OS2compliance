@@ -1,6 +1,7 @@
 package dk.digitalidentity.mapping;
 
 
+import dk.digitalidentity.model.api.OrganisationUnitCreateEO;
 import dk.digitalidentity.model.api.OrganisationUnitEO;
 import dk.digitalidentity.model.api.PageEO;
 import dk.digitalidentity.model.dto.OrganisationUnitDTO;
@@ -29,6 +30,8 @@ public interface OrganisationUnitMapper {
     }
 
     OrganisationUnitEO toEO(final OrganisationUnit ou);
+
+    OrganisationUnit fromEO(final OrganisationUnitCreateEO organisationUnitCreateEO);
 
     List<OrganisationUnitEO> toEO(final List<OrganisationUnit> organisationUnits);
     default PageEO<OrganisationUnitEO> toEO(final Page<OrganisationUnit> page) {

@@ -36,6 +36,7 @@ class CustomGridFunctions {
         this.state.limit = 50
         this.gridId = gridId
         this.#INPUTCLASSNAME = `${this.gridId}_grid_columnSearchInput`
+        this.initialSortConfig = initialSortConfig
         this.state.sortDirection = initialSortConfig.sortDirection || 'ASC'
         this.state.sortColumn = initialSortConfig.sortColumn || ''
 
@@ -582,6 +583,23 @@ class CustomGridFunctions {
         if (retrievedState) {
             this.state = retrievedState
         }
+    }
+
+    /**
+     * Drops every search value and returns to the grid's own default sort, wiping the persisted
+     * state entirely rather than merely emptying it — so a stale key from an old grid version can't
+     * resurface fields that no longer apply.
+     */
+    resetState() {
+        localStorage.removeItem(`${this.dataUrl}_search`)
+        this.state = {
+            sortDirection: this.initialSortConfig.sortDirection || 'ASC',
+            sortColumn: this.initialSortConfig.sortColumn || '',
+            page: 0,
+            limit: this.state.limit,
+            searchValues: {}
+        }
+        this.onSearch()
     }
 
     /**

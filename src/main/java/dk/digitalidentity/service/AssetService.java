@@ -8,6 +8,9 @@ import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.dao.grid.DBSAssetGridDao;
+import dk.digitalidentity.integration.kitos.KitosConstants;
+import dk.digitalidentity.model.api.AssetTypeUpdateEO;
+import dk.digitalidentity.model.api.OrganisationUnitEO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -22,6 +25,7 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
@@ -118,6 +122,8 @@ public class AssetService implements TagableService<Asset> {
 	private final ChoiceDPIADao choiceDPIADao;
 	private final S3Service s3Service;
 	private final HtmlToDocxExporterService htmlToDocxExporterService;
+	private final NotifyService notifyService;
+	private final OrganisationService organisationService;
 
 	public boolean isResponsibleFor(Asset asset) {
 		return !asset.getResponsibleUsers().isEmpty() && asset.getResponsibleUsers().stream().map(User::getUuid).anyMatch(uuid -> uuid.equals(SecurityUtil.getPrincipalUuid()));
@@ -127,6 +133,24 @@ public class AssetService implements TagableService<Asset> {
 		boolean isResponsible = isResponsibleFor(asset);
 		boolean isManager = asset.getManagers().stream().map(User::getUuid).anyMatch(uuid -> uuid.equals(SecurityUtil.getPrincipalUuid()));
 		return isResponsible || isManager;
+	}
+
+	/**
+	 * True when the asset originates from OS2kitos, either through a live link or through a link that has since
+	 * been removed. Fields that are owned by OS2kitos are locked in the UI for these assets, so the same check
+	 * must be used when saving, otherwise the locked (and therefore unsubmitted) fields are wiped.
+	 */
+	public boolean isKitosLinked(final Asset asset) {
+		return hasProperty(asset, KitosConstants.KITOS_UUID_PROPERTY_KEY) || isOldKitos(asset);
+	}
+
+	/** True when the OS2kitos link has been removed, so the asset is no longer synchronized. */
+	public boolean isOldKitos(final Asset asset) {
+		return hasProperty(asset, KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY);
+	}
+
+	private static boolean hasProperty(final Asset asset, final String key) {
+		return asset.getProperties().stream().anyMatch(p -> p.getKey().equals(key));
 	}
 
 	public Optional<AssetOversight> getOversight(final Long oversightId) {
@@ -169,7 +193,22 @@ public class AssetService implements TagableService<Asset> {
 			saved.getTia().setAsset(asset);
 		}
 		addDefaultSubSupplier(saved);
+
+		if (SecurityUtil.isSystemOrigin()) {
+			notifyService.notifyAssetSystemCreated(saved);
+		}
+
 		return saved;
+	}
+
+	// The single place Asset.active should be toggled from - centralizes the
+	// "system-triggered deactivation" notification so callers don't need to know about it.
+	public void setActive(final Asset asset, final boolean active) {
+		final boolean wasActive = asset.isActive();
+		asset.setActive(active);
+		if (wasActive && !active && SecurityUtil.isSystemOrigin()) {
+			notifyService.notifyAssetSystemDeactivated(asset);
+		}
 	}
 
 	public void update(final Asset asset) {
@@ -287,28 +326,32 @@ public class AssetService implements TagableService<Asset> {
 		final LocalDate deadline = dpia.getNextRevision();
 		if (deadline != null && dpia.getRevisionInterval() != null) {
 			final Task task = findAssociatedCheck(dpia).orElseGet(() -> createAssociatedCheck(dpia));
-			String name = "DPIA for " + dpia.getAssets().getFirst().getName();
-			name += (dpia.getAssets().size() > 1) ? " med flere" : "";
-			task.setName(name);
+			task.setName(dpiaCheckName(dpia));
 			task.setNextDeadline(dpia.getNextRevision());
 			task.setResponsibleUsers(updatedUser != null ? Set.of(updatedUser) : Collections.emptySet());
-			task.setDescription("Revider DPIA for " + String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList()));
+			task.setDescription("Revider DPIA for " + (dpia.getAssets().isEmpty() ? dpia.getName()
+					: String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList())));
 			setTaskRevisionInterval(dpia, task);
 			return task;
 		}
 		return null;
 	}
 
-	private Task createAssociatedCheck(final DPIA dpia) {
+	/**
+	 * En konsekvensanalyse behøver ikke være knyttet til et aktiv, og falder da tilbage på sit eget navn.
+	 */
+	private static String dpiaCheckName(final DPIA dpia) {
 		final List<Asset> assets = dpia.getAssets();
+		if (assets.isEmpty()) {
+			return "DPIA for " + dpia.getName();
+		}
+		return "DPIA for " + assets.getFirst().getName() + (assets.size() > 1 ? " med flere" : "");
+	}
+
+	private Task createAssociatedCheck(final DPIA dpia) {
 		final Task task = new Task();
 
-		if (assets.size() > 1) {
-			task.setName("DPIA for " + assets.getFirst().getName() + " med flere");
-		}
-		else {
-			task.setName("DPIA for " + assets.getFirst().getName());
-		}
+		task.setName(dpiaCheckName(dpia));
 
 		task.setCreatedAt(LocalDateTime.now());
 		task.getProperties().add(Property.builder()
@@ -454,7 +497,10 @@ public class AssetService implements TagableService<Asset> {
 		context.setVariable("dpiaSections", sections);
 		context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
 		context.setVariable("conclusion", sanitizeHtmlFragment(dpia.getConclusion()));
-		context.setVariable("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
+		final String assetNames = String.join(", ", assets.stream().map(Asset::getName).toList());
+		context.setVariable("assetNames", assetNames);
+		// uden aktiv er der intet system at henvise til, og rapporten bruger konsekvensanalysens eget navn
+		context.setVariable("reportTitle", assets.isEmpty() ? dpia.getName() : "Konsekvensanalyse vedr. " + assetNames);
 		context.setVariable("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a -> a.getAssetType().getCaption()).toList()));
 		context.setVariable("responsibleUserNames", String.join(", ", assets.stream().flatMap(a -> a.getResponsibleUsers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));
 		context.setVariable("managerNames", String.join(", ", assets.stream().flatMap(a -> a.getManagers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));
@@ -963,5 +1009,23 @@ public class AssetService implements TagableService<Asset> {
 		tia.setAcceptedByUuid(null);
 		tia.setAcceptedByName(null);
 		tia.setAcceptedComment(null);
+	}
+
+	public void setDepartments(final List<OrganisationUnitEO> departmentsEO, final Asset asset) {
+		final List<OrganisationUnit> departments = departmentsEO.stream()
+				.map(d -> organisationService.findByUuid(d.getUuid())
+						.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Department not found")))
+				.toList();
+		asset.setDepartments(departments);
+	}
+
+	public void setAssetType(final AssetTypeUpdateEO assetTypeEO, final Asset asset) {
+		final ChoiceList assetTypeChoiceList = choiceService.findChoiceList("asset-type")
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No asset types found"));
+		final ChoiceValue assetType = assetTypeChoiceList.getValues().stream()
+				.filter(value -> value.getIdentifier().equals(assetTypeEO.getIdentifier()))
+				.findAny()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "AssetType identifier is not valid"));
+		asset.setAssetType(assetType);
 	}
 }

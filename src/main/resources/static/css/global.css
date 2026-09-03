@@ -229,3 +229,10 @@ html {
     resize: none;
     field-sizing:content;
 }
+
+/* Keep disabled column-option items clickable so the click is caught (and stopped from
+   bubbling) by ColumnOptions' own handler, instead of falling through to Bootstrap's
+   dropdown outside-click handling and closing the menu. */
+.optionItem.disabled {
+    pointer-events: auto;
+}

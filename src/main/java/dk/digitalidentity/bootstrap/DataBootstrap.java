@@ -157,34 +157,50 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(44, this::seedV44);
 		incrementAndPerformIfVersion(45, this::seedV45);
 		incrementAndPerformIfVersion(46, this::seedV46);
+		incrementAndPerformIfVersion(47, this::seedV47);
 	}
 
 	/**
-	 * Ruller opdateringen til version 1.8 af KL's ark ud på eksisterende installationer. En frisk
-	 * database har ikke brug for det - der importerer {@link #addRegistersV0()} pakkerne som de er.
+	 * Bevidst tom. Version 1.8 af KL's ark følger med releasen i {@code data/registers/}, så nye
+	 * tilslutninger får den via {@link #addRegistersV0()} - men den bliver ikke rullet ud på
+	 * eksisterende installationer.
 	 * <p>
-	 * De tre kald gør hver sin ting, og rækkefølgen er ikke tilfældig. {@code importRegister} slår op
-	 * på navn og opretter kun det der mangler, så de to nye aktiviteter kommer ind uden at røre de
-	 * øvrige. Til gengæld nulstiller den hovedgrupperne på en fortegnelse der i forvejen står uden
-	 * KLE, fordi den sender gruppenumre til et opslag på hovedgruppenummer - derfor skal
-	 * {@code enrichWithKLE} køre bagefter, som sætter alle tre niveauer korrekt.
+	 * Den oprindelige udgave kaldte {@code importRegister} + {@code updateRegisterGdprChoices} +
+	 * {@code enrichWithKLE} for hver pakke, og gav hos den første installation der fik den
+	 * (11-08-2026) 33 dubletter, oven i at de to andre kald overskrev kommunens egne rettelser af
+	 * hjemmel og KLE på 20 og 29 fortegnelser.
 	 * <p>
-	 * {@code updateRegisterGdprChoices} og {@code enrichWithKLE} skriver oven i det der står. Har en
-	 * kommune selv rettet hjemmel eller KLE på en KL-fortegnelse, får de KL's udgave tilbage. Det er
-	 * det bevidste valg her: pakkerne ER KL's mapping, og hjemlen er rettet på 56 af dem (§10 ud, §8
-	 * ind). Beskrivelserne røres derimod ikke - der findes ingen tilsvarende metode i importeren, så
-	 * de 7 aktiviteter med ny tekst i arket beholder den gamle beskrivelse hos eksisterende kunder.
+	 * <b>Årsagen er ikke v1.8.</b> 32 af de 33 dubletter har byte-identisk titel i v1.7 og v1.8, og
+	 * de eneste titelforskelle mellem de to udgaver er afsluttende blanktegn, som kollationen
+	 * {@code utf8mb4_danish_ci} (PAD SPACE) ignorerer. {@code importRegister} slår op med
+	 * {@code findByNameAndDeletedFalse}, og det opslag fejler af to grunde, som begge er ældre end
+	 * v1.8:
+	 * <ul>
+	 * <li><b>Titlen er ikke en stabil nøgle.</b> 23 af dubletterne havde ingen titel at ramme:
+	 * kommunens fortegnelser hedder noget andet end de pakker vi shipper i dag ({@code 10a.},
+	 * {@code 11b.}, dobbelte mellemrum, {@code \r\n} midt i titlen). Titlerne er drevet fra hinanden
+	 * over flere kvartalsopdateringer, og 22 af v1.7's 94 titler ramte allerede ved siden af samme
+	 * sted. Ingen v1.7→v1.8-mapping retter det - det, der skal bruges, er en identitet pr. aktivitet,
+	 * og den findes ikke: {@code packageName} står på {@code kl_article30} for dem alle.</li>
+	 * <li><b>Slettede fortegnelser er usynlige for opslaget.</b> De resterende 10 dubletter havde
+	 * eksakt titelmatch, men kommunen havde soft-deleted dem. {@code deleted}-filteret skjuler dem,
+	 * så seed'et genoprettede fortegnelser kommunen bevidst havde fjernet.</li>
+	 * </ul>
+	 * Et {@code seedVxx}, der kalder {@code importRegister} på en installation i drift, opretter
+	 * derfor dubletter, indtil begge dele er løst. Se {@code scripts/README.md}.
+	 * <p>
+	 * Slottet står tilbage som no-op med vilje: den ramte installation nåede at få
+	 * {@code seed_version} sat til 47, og fjernes kaldet i {@link #onApplicationEvent}, ville den
+	 * springe det næste seed over, fordi versionerne kun matcher eksakt.
 	 */
-	@SneakyThrows
 	private void seedV46() {
-		final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
-		sortedResources.sort(Comparator.comparing(Resource::getFilename));
-		for (final Resource register : sortedResources) {
-			registerImporter.importRegister(register);
-			registerImporter.updateRegisterGdprChoices(register);
-			registerImporter.enrichWithKLE(register);
-		}
-		log.info("seedV46: genindlæste {} KL-pakker fra version 1.8 af arket", sortedResources.size());
+		// Med vilje tom - se javadoc.
+	}
+
+	private void seedV47() {
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL, "", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_CREATED, "false", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_DEACTIVATED, "false", "assetsync", true);
 	}
 
 	private void seedV45() {
