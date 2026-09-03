@@ -48,6 +48,7 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.STNumberFormat;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STStyleType;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblLayoutType;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STVerticalJc;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -259,6 +260,7 @@ public class HtmlToDocxExporterService {
 						: format;
 					applyCellShading(htmlCells.get(x), currentCell);
 					processChildren(htmlCells.get(x), cellFormat);
+					currentCell.getCTTc().addNewTcPr().addNewVAlign().setVal(STVerticalJc.CENTER);
 					currentCell = null;
 				}
 				currentParagraph = null;
