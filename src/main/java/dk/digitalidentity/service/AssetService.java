@@ -453,7 +453,7 @@ public class AssetService implements TagableService<Asset> {
 		List<DPIASectionDTO> sections = buildDPIASections(dpia);
 		context.setVariable("dpiaSections", sections);
 		context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
-		context.setVariable("conclusion", dpia.getConclusion());
+		context.setVariable("conclusion", sanitizeHtmlFragment(dpia.getConclusion()));
 		context.setVariable("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
 		context.setVariable("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a -> a.getAssetType().getCaption()).toList()));
 		context.setVariable("responsibleUserNames", String.join(", ", assets.stream().flatMap(a -> a.getResponsibleUsers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));
@@ -590,7 +590,7 @@ public class AssetService implements TagableService<Asset> {
 				}
 			}
 
-			sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), templateSection.getExplainer(), questionDTOS));
+			sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), sanitizeHtmlFragment(templateSection.getExplainer()), questionDTOS));
 
 		}
 		return sections;
@@ -619,6 +619,18 @@ public class AssetService implements TagableService<Asset> {
 		var result = outputStream.toByteArray();
 		outputStream.close();
 		return result;
+	}
+
+	private String sanitizeHtmlFragment(String html) {
+		if (html == null || html.isBlank()) {
+			return html;
+		}
+		Document doc = Jsoup.parseBodyFragment(html);
+		doc.outputSettings()
+			.syntax(Document.OutputSettings.Syntax.xml)
+			.escapeMode(Entities.EscapeMode.xhtml)
+			.charset(StandardCharsets.UTF_8);
+		return doc.body().html();
 	}
 
 	private String handleResponseImg(String response) {
