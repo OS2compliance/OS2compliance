@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -69,9 +70,9 @@ public class OrganisationService {
 			return Optional.empty();
 		}
 		return user.getPositions().stream()
+			.filter(position -> StringUtils.isNotEmpty(position.getOuUuid()))
+			.min(Comparator.comparingLong(Position::getId))
 			.map(Position::getOuUuid)
-			.filter(StringUtils::isNotEmpty)
-			.findFirst()
 			.flatMap(this::findByUuid);
 	}
 }

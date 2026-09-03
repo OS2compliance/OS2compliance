@@ -1,5 +1,6 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 import initRelatedTagList from "../tags/related-tag-list.js";
+import { selectOu } from "./ou-select-helper.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let userChoicesEditSelect = null;
@@ -34,14 +35,6 @@ function formReset() {
     form.reset();
 }
 
-function selectOu(ouChoicesSelect, ou) {
-    ouChoicesSelect.setChoiceByValue(ou.uuid);
-    if (ouChoicesSelect.getValue(true) === ou.uuid) {
-        return;
-    }
-    ouChoicesSelect.setChoices([{ value: ou.uuid, label: ou.name, selected: true }], 'value', 'label', false);
-}
-
 function loadViewAndEditForm() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
     userChoicesEditSelect = choiceService.initUserSelect("userSelect");
@@ -57,6 +50,7 @@ function loadViewAndEditForm() {
         try {
             const response = await fetch(`/rest/ous/user/${userUuid}/suggestion`);
             if (response.status === 204) {
+                ouChoicesEditSelect.removeActiveItems();
                 return;
             }
             if (!response.ok) {

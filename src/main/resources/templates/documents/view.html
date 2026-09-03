@@ -166,7 +166,7 @@
                                     <label for="ouSelect" class="col-sm-2 col-form-label">Afdeling</label>
                                     <div class="col-sm-10">
                                         <select class="form-control form-select choices__input editField"
-                                                th:field="*{responsibleOu}" data-trigger="" name="afdeling"
+                                                th:field="*{responsibleOu}" data-trigger="" name="responsibleOu"
                                                 id="ouSelect" tabindex="-1" hidden>
                                             <option th:if="*{responsibleOu != null}"
                                                     th:value="*{responsibleOu?.uuid}"
@@ -179,7 +179,7 @@
                                     <label for="departmentOuSelect" class="col-sm-2 col-form-label">Forvaltning</label>
                                     <div class="col-sm-10">
                                         <select class="form-control form-select choices__input editField"
-                                                th:field="*{department}" data-trigger="" name="forvaltning"
+                                                th:field="*{department}" data-trigger="" name="department"
                                                 id="departmentOuSelect" tabindex="-1" hidden>
                                             <option th:if="*{department != null}"
                                                     th:value="*{department?.uuid}"

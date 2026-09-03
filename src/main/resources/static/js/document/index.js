@@ -2,6 +2,7 @@ import ColumnOptions from "../grid-js-extension/column-options.js";
 import initTagSelect from "../tags/tag-selector.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
+import { selectOu } from "./ou-select-helper.js";
 
 let userChoicesEditSelect
 
@@ -14,14 +15,6 @@ const defaultClassName = {
 const updateUrl = (prev, query) => {
     return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 };
-
-function selectOu(ouChoicesSelect, ou) {
-    ouChoicesSelect.setChoiceByValue(ou.uuid);
-    if (ouChoicesSelect.getValue(true) === ou.uuid) {
-        return;
-    }
-    ouChoicesSelect.setChoices([{ value: ou.uuid, label: ou.name, selected: true }], 'value', 'label', false);
-}
 
 function createDocumentFormLoaded() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
@@ -40,6 +33,7 @@ function createDocumentFormLoaded() {
         try {
             const response = await fetch(`/rest/ous/user/${userUuid}/suggestion`);
             if (response.status === 204) {
+                ouChoicesEditSelect.removeActiveItems();
                 return;
             }
             if (!response.ok) {

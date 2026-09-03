@@ -115,7 +115,7 @@ public class DocumentService implements TagableService<Document> {
 
 		task.getLinks().removeIf(l -> l.isDocumentGenerated() && !l.getUrl().equals(url));
 
-		if (StringUtils.isNotEmpty(url) && task.getLinks().stream().noneMatch(l -> url.equals(l.getUrl()))) {
+		if (StringUtils.isNotEmpty(url) && task.getLinks().stream().noneMatch(l -> l.isDocumentGenerated() && url.equals(l.getUrl()))) {
 			task.getLinks().add(new TaskLink(null, url, true, task));
 		}
 	}
