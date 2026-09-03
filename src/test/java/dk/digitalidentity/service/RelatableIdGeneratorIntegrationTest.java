@@ -70,7 +70,7 @@ class RelatableIdGeneratorIntegrationTest extends BaseIntegrationTest {
 		final String table = tableNameOf(subclass);
 
 		assertThat(idColumnExtra(table))
-				.as("%s.id still has AUTO_INCREMENT - ids must come only from hibernate_sequences (V1_125 dropped this for contacts/suppliers)", table)
+				.as("%s.id still has AUTO_INCREMENT - ids must come only from hibernate_sequences", table)
 				.doesNotContainIgnoringCase("auto_increment");
 	}
 

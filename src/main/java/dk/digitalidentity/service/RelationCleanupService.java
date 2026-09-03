@@ -46,13 +46,7 @@ public class RelationCleanupService {
 	private final JdbcTemplate jdbcTemplate;
 
 	/**
-	 * The tables backing every {@link dk.digitalidentity.model.entity.Relatable} subclass - the ones
-	 * that draw ids from {@code shared_id_generator} and must therefore never contain the same id twice.
-	 * <p>
-	 * These names are baked into the {@code UNION ALL} built in {@link #findAllDuplicateIds()} and
-	 * {@link #checkGeneratorHeadroom()}. They must stay hardcoded constants - if this list were ever
-	 * sourced from configuration or another table, that string-built SQL would become an injection
-	 * point.
+	 * Hardcoded constants of the tables that extend Relatable.
 	 */
 	private static final List<String> RELATABLE_TABLES = List.of(
 			"assets", "contacts", "dbs_asset", "documents", "dpia", "incidents",
@@ -61,8 +55,7 @@ public class RelationCleanupService {
 	);
 
 	/**
-	 * {@code custom_threats} draws from the same generator (see
-	 * {@link dk.digitalidentity.model.entity.CustomThreat}) without being a Relatable subclass, so it
+	 * {@code custom_threats} draws from the same generator without being a Relatable subclass, so it
 	 * counts towards how much headroom the generator has left but is not itself scanned for duplicates.
 	 */
 	private static final List<String> ID_GENERATOR_TABLES =
@@ -96,9 +89,7 @@ public class RelationCleanupService {
 	}
 
 	/**
-	 * Every id shared by two or more Relatable tables, found directly against the tables themselves.
-	 * The previous approach only ever saw ids referenced from the {@code relations} join table, so a
-	 * collision between two rows that happen not to be related to anything went undetected.
+	 * Detects shared IDs between two relatable entities directly against their tables.
 	 */
 	@Transactional(readOnly = true)
 	public Map<Long, List<String>> findAllDuplicateIds() {
@@ -121,10 +112,7 @@ public class RelationCleanupService {
 	}
 
 	/**
-	 * Whether the next block the generator hands out could collide with an id already in use.
-	 * {@code allocationSize = 50}'s PooledOptimizer serves {@code [next_val - 48 .. next_val + 1]}
-	 * before it touches {@code next_val} again (see {@code Relatable.ID_GENERATOR}'s Javadoc), so
-	 * {@code next_val} must clear the highest id in use by more than that.
+	 * Checks whether the next block the generator hands out could collide with an id already in use.
 	 */
 	@Transactional(readOnly = true)
 	public GeneratorHeadroom checkGeneratorHeadroom() {
@@ -142,9 +130,8 @@ public class RelationCleanupService {
 
 	public record GeneratorHeadroom(long nextVal, long highestIdInUse) {
 		/**
-		 * No upper-bound check against {@code next_val + 1}: this is a one-sided {@code >=}, so it
-		 * already catches {@code highestIdInUse} anywhere above {@code next_val - 48} too - including
-		 * past {@code next_val + 1}, e.g. a restore where {@code hibernate_sequences} didn't follow the data.
+		 * No upper-bound check against {@code next_val + 1} because this is a one-sided {@code >=}, so it
+		 * already catches {@code highestIdInUse} anywhere above {@code next_val - 48} too.
 		 */
 		public boolean isAtRisk() {
 			return nextVal - 48 <= highestIdInUse;
