@@ -47,11 +47,13 @@ import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.exporter.HtmlToDocxExporterService;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -119,6 +121,7 @@ public class AssetService implements TagableService<Asset> {
 	private final ChoiceService choiceService;
 	private final ChoiceDPIADao choiceDPIADao;
 	private final S3Service s3Service;
+	private final HtmlToDocxExporterService htmlToDocxExporterService;
 	private final NotifyService notifyService;
 	private final OrganisationService organisationService;
 
@@ -468,6 +471,11 @@ public class AssetService implements TagableService<Asset> {
 		return convertHtmlToPdf(html);
 	}
 
+	public ByteArrayOutputStream getDPIADocx(DPIA dpia) throws IOException {
+		String html = getDPIAHTML(dpia);
+		return htmlToDocxExporterService.convert(html);
+	}
+
 	public byte[] getDPIAScreeningPdf(DPIA dpia) throws IOException {
 		String html = getDPIAScreeningHTML(dpia);
 		return convertHtmlToPdf(html);
@@ -488,7 +496,7 @@ public class AssetService implements TagableService<Asset> {
 		List<DPIASectionDTO> sections = buildDPIASections(dpia);
 		context.setVariable("dpiaSections", sections);
 		context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
-		context.setVariable("conclusion", dpia.getConclusion());
+		context.setVariable("conclusion", sanitizeHtmlFragment(dpia.getConclusion()));
 		final String assetNames = String.join(", ", assets.stream().map(Asset::getName).toList());
 		context.setVariable("assetNames", assetNames);
 		// uden aktiv er der intet system at henvise til, og rapporten bruger konsekvensanalysens eget navn
@@ -628,7 +636,7 @@ public class AssetService implements TagableService<Asset> {
 				}
 			}
 
-			sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), templateSection.getExplainer(), questionDTOS));
+			sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), sanitizeHtmlFragment(templateSection.getExplainer()), questionDTOS));
 
 		}
 		return sections;
@@ -657,6 +665,18 @@ public class AssetService implements TagableService<Asset> {
 		var result = outputStream.toByteArray();
 		outputStream.close();
 		return result;
+	}
+
+	private String sanitizeHtmlFragment(String html) {
+		if (html == null || html.isBlank()) {
+			return html;
+		}
+		Document doc = Jsoup.parseBodyFragment(html);
+		doc.outputSettings()
+			.syntax(Document.OutputSettings.Syntax.xml)
+			.escapeMode(Entities.EscapeMode.xhtml)
+			.charset(StandardCharsets.UTF_8);
+		return doc.body().html();
 	}
 
 	private String handleResponseImg(String response) {
