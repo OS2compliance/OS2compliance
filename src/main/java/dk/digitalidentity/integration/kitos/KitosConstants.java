@@ -15,6 +15,8 @@ public interface KitosConstants {
     String KITOS_UUID_PROPERTY_KEY = "kitos_uuid";
     String KITOS_USAGE_UUID_PROPERTY_KEY = "kitos_usage_uuid";
     String X_KITOS_USAGE_UUID_PROPERTY_KEY = "old_kitos_usage_uuid";
+    /** Set while every Kitos contract on the asset's it-system usage has ended. */
+    String KITOS_CONTRACT_ENDED_PROPERTY_KEY = "kitos_contract_ended";
 	String KITOS_RISK_LAST_SYNC_PROPERTY_KEY = "kitos_risk_last_sync";
 	String KITOS_DPIA_LAST_SYNC_PROPERTY_KEY = "kitos_dpia_last_sync";
     String KITOS_OWNER_ROLE_SETTING_KEY = "kitos_owner_role_uuid";

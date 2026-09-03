@@ -211,6 +211,7 @@ public class KitosSyncService {
             .filter(contract -> !hasEnded(contract))
             .findFirst();
         if (runningContract.isPresent()) {
+            setContractEnded(asset.get(), false);
             mapContractData(asset.get(), runningContract.get());
             return;
         }
@@ -218,6 +219,7 @@ public class KitosSyncService {
         if (runningContractOutsideBatch) {
             // Let that contract supply the data — overwriting it with an ended contract's dates would
             // make the asset look like it has no running agreement.
+            setContractEnded(asset.get(), false);
             return;
         }
 
@@ -226,9 +228,36 @@ public class KitosSyncService {
         // Every contract on the system usage has ended, so the system is no longer in use. The Kitos
         // link is deliberately kept: breaking it would make Kitos re-import the asset as a brand new
         // one if a contract is later made valid again.
-        asset.get().setActive(false);
-        log.info("All Kitos contracts for asset id={} have ended (last one {}), marking asset inactive",
-            asset.get().getId(), lastEnded.getUuid());
+        final boolean alreadyEnded = hasContractEnded(asset.get());
+        setContractEnded(asset.get(), true);
+        assetService.setActive(asset.get(), false);
+        if (!alreadyEnded) {
+            log.info("All Kitos contracts for asset id={} have ended (last one {}), marking asset inactive",
+                asset.get().getId(), lastEnded.getUuid());
+        }
+    }
+
+    private static boolean hasContractEnded(final Asset asset) {
+        return asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY));
+    }
+
+    /**
+     * Records whether every Kitos contract on the asset's it-system usage has ended, so the lifecycle
+     * sync knows not to raise the asset back to active on the next run.
+     */
+    private static void setContractEnded(final Asset asset, final boolean ended) {
+        final Optional<Property> existing = asset.getProperties().stream()
+            .filter(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY))
+            .findFirst();
+        if (ended && existing.isEmpty()) {
+            asset.getProperties().add(Property.builder()
+                .key(KITOS_CONTRACT_ENDED_PROPERTY_KEY)
+                .value("1")
+                .entity(asset)
+                .build());
+        } else if (!ended) {
+            existing.ifPresent(asset.getProperties()::remove);
+        }
     }
 
     /**
@@ -343,7 +372,14 @@ public class KitosSyncService {
 
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
 
-        assetService.setActive(asset, valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
+        final boolean activeByLifecycle = valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus);
+        // Kitos keeps reporting a system as operational after its last contract ran out, so raising the
+        // asset back to active here would undo the contract sync every night — and each round trip would
+        // send another "deactivated" notification. The contract verdict therefore wins until a contract
+        // runs again.
+        if (!activeByLifecycle || !hasContractEnded(asset)) {
+            assetService.setActive(asset, activeByLifecycle);
+        }
 
         if (!valid) {
             return;

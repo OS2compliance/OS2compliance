@@ -12,10 +12,16 @@ import dk.digitalidentity.kitos_client.auth.exception.KitosAuthException;
 import dk.kitos.api.model.ContractGeneralDataResponseDTO;
 import dk.kitos.api.model.ContractTerminationDataResponseDTO;
 import dk.kitos.api.model.ContractTerminationTermsResponseDTO;
+import dk.kitos.api.model.ArchivingRegistrationsResponseDTO;
 import dk.kitos.api.model.ContractValidityResponseDTO;
+import dk.kitos.api.model.GeneralDataResponseDTO;
 import dk.kitos.api.model.IdentityNamePairResponseDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItContractValidationErrorChoice;
+import dk.kitos.api.model.ItSystemUsageResponseDTO;
+import dk.kitos.api.model.ItSystemUsageValidityResponseDTO;
+import dk.kitos.api.model.LifeCycleStatusChoice;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,10 +38,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_CONTRACT_ENDED_PROPERTY_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -70,6 +78,19 @@ class KitosSyncServiceContractTest {
     // Fixed past date: the fallback branch compares against LocalDate.now(), so deriving the fixture
     // from now() too would share the clock with the code under test and hide an off-by-one.
     private static final LocalDate ENDED_BEFORE_FALLBACK = LocalDate.of(2024, 6, 15);
+
+    /**
+     * Active is toggled through {@link AssetService#setActive} so the "deactivated by the system"
+     * notification is sent from one place; the mock delegates to the entity, so the tests below can
+     * keep asserting on the asset itself.
+     */
+    @BeforeEach
+    void applySetActiveToAsset() {
+        lenient().doAnswer(invocation -> {
+            invocation.<Asset>getArgument(0).setActive(invocation.getArgument(1));
+            return null;
+        }).when(assetService).setActive(any(), anyBoolean());
+    }
 
     private Asset asset() {
         final Asset asset = new Asset();
@@ -366,5 +387,90 @@ class KitosSyncServiceContractTest {
 
         assertThat(asset.getContractDate()).isEqualTo(VALID_FROM);
         assertThat(asset.getContractTermination()).isEqualTo(LocalDate.of(2030, 1, 1));
+    }
+
+    @Test
+    void endedContractDeactivatesThroughAssetServiceSoTheNotificationIsSent() {
+        final Asset asset = asset();
+        assetFoundFor(USAGE_UUID, asset);
+        noSettingsConfigured();
+        when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID)).thenReturn(List.of());
+
+        kitosSyncService.syncItContracts(List.of(contract(ended())));
+
+        verify(assetService).setActive(asset, false);
+    }
+
+    @Test
+    void endedContractMarksTheAssetAsContractEnded() {
+        final Asset asset = asset();
+        assetFoundFor(USAGE_UUID, asset);
+        noSettingsConfigured();
+        when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID)).thenReturn(List.of());
+
+        kitosSyncService.syncItContracts(List.of(contract(ended())));
+
+        assertThat(asset.getProperties()).anyMatch(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY));
+    }
+
+    @Test
+    void runningContractClearsTheContractEndedMark() {
+        final Asset asset = asset();
+        asset.getProperties().add(contractEndedMark(asset));
+        assetFoundFor(USAGE_UUID, asset);
+        noSettingsConfigured();
+
+        kitosSyncService.syncItContracts(List.of(contract(running())));
+
+        assertThat(asset.getProperties()).noneMatch(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY));
+    }
+
+    /**
+     * Kitos keeps reporting the system as operational after the contract ran out. Without this guard the
+     * lifecycle sync would reactivate the asset, the contract sync would deactivate it again, and the
+     * customer would get a "deactivated" mail on every full sync.
+     */
+    @Test
+    void lifecycleSyncDoesNotReactivateAssetWhoseContractsHaveEnded() {
+        final Asset asset = asset();
+        asset.setActive(false);
+        asset.getProperties().add(contractEndedMark(asset));
+        when(assetService.findByProperty(KITOS_UUID_PROPERTY_KEY, SYSTEM_UUID.toString()))
+            .thenReturn(Optional.of(asset));
+
+        kitosSyncService.syncItSystemUsages(List.of(operationalUsage()));
+
+        assertThat(asset.isActive()).isFalse();
+        verify(assetService, never()).setActive(any(), anyBoolean());
+    }
+
+    @Test
+    void lifecycleSyncStillActivatesAssetWithoutTheContractEndedMark() {
+        final Asset asset = asset();
+        asset.setActive(false);
+        noSettingsConfigured();
+        when(assetService.findByProperty(KITOS_UUID_PROPERTY_KEY, SYSTEM_UUID.toString()))
+            .thenReturn(Optional.of(asset));
+
+        kitosSyncService.syncItSystemUsages(List.of(operationalUsage()));
+
+        assertThat(asset.isActive()).isTrue();
+    }
+
+    private Property contractEndedMark(final Asset asset) {
+        return Property.builder().entity(asset).key(KITOS_CONTRACT_ENDED_PROPERTY_KEY).value("1").build();
+    }
+
+    /** An it-system usage Kitos still reports as operational. */
+    private ItSystemUsageResponseDTO operationalUsage() {
+        return new ItSystemUsageResponseDTO()
+            .uuid(USAGE_UUID)
+            .systemContext(new IdentityNamePairResponseDTO().uuid(SYSTEM_UUID))
+            .general(new GeneralDataResponseDTO()
+                .validity(new ItSystemUsageValidityResponseDTO()
+                    .valid(true)
+                    .lifeCycleStatus(LifeCycleStatusChoice.OPERATIONAL)))
+            .roles(List.of())
+            .archiving(new ArchivingRegistrationsResponseDTO());
     }
 }
