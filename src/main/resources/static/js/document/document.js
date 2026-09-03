@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 function initEditButton() {
     const editButton = document.getElementById("editBtn");
     editButton?.addEventListener("click", function () {
-        const responsibleFieldsChangeable = editButton.getAttribute('responsible-changeable');
+        const responsibleFieldsChangeable = editButton.dataset.responsibleChangeable === 'true';
         editMode(true, responsibleFieldsChangeable);
         onUnSubmittedService.setChangesMade();
     })

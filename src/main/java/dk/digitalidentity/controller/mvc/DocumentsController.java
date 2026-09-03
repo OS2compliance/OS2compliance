@@ -120,7 +120,7 @@ public class DocumentsController {
 		model.addAttribute("document", document);
 		model.addAttribute("documentEditForm", editForm);
 		model.addAttribute("changeableDocument", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || documentService.isResponsibleFor(document)));
-		model.addAttribute("responsibleFieldChangeable", !documentService.isResponsibleFor(document));
+		model.addAttribute("responsibleFieldChangeable", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || documentService.isResponsibleFor(document)));
 		model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
 		model.addAttribute("possibleDocumentTypes", choiceService.findChoiceValuesForListIdentifier("document-type"));
 		return "documents/view";

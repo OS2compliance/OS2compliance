@@ -11,4 +11,6 @@ public interface DBSOversightDao extends JpaRepository<DBSOversight, Long> {
 
     List<DBSOversight> findByCreatedGreaterThanAndTaskCreatedFalse(LocalDateTime created);
 
+    long countByPublishedDateIsNullAndAuditLinkIsNotNull();
+
 }

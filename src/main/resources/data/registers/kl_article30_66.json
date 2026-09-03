@@ -3,10 +3,10 @@
   "name": "67. Behandling af personoplysninger i forbindelse med regulering af private erhverv",
   "description": "Behandlingen af personoplysninger sker med henblik på regulering af privat erhverv, herunder butikker, hotel- og restauration",
   "gdprChoices": [
-    "register-gdpr-valp6",
     "register-gdpr-p6-e",
-    "register-gdpr-valp10",
-    "register-gdpr-valp11"
+    "register-gdpr-valp11",
+    "register-gdpr-valp6",
+    "register-gdpr-valp8"
   ],
   "kleMainGroups": [
     "22"
@@ -15,7 +15,6 @@
     "22.00",
     "22.01",
     "22.03",
-    "22.09",
     "22.11"
   ],
   "kleSubjects": [
@@ -25,7 +24,6 @@
     "22.01.02",
     "22.01.10",
     "22.03.00",
-    "22.09.00",
     "22.11.00",
     "22.11.01",
     "22.11.02",

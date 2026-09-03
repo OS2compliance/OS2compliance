@@ -6,10 +6,23 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-446) (Risikostyring) Konsekvensanalyser uden aktiv
+- (https://os2web.atlassian.net/browse/COMPLY-375) (Aktiver) Notifikation når et system oprettes eller inaktiveres automatisk. Modtager(e) og de to hændelser slås til under Indstillinger, og mailteksten rettes under Mailskabeloner. Inaktivering udløses kun af OS2kitos-synkronisering — API'et kan ikke ændre aktiv/inaktiv.
+
+### Changed
+- (Fortegnelser) KL's mappede behandlingsaktiviteter opdateret til version 1.8 af arket (95 pakker, ny aktivitet F, hjemmel rettet fra databeskyttelseslovens §10 til §8 på 56 aktiviteter) og den bundtede KLE-emneplan fornyet til 2026-05-01. **Kun nye tilslutninger får indholdet** — eksisterende installationer beholder deres nuværende fortegnelser, indtil `importRegister` kan matche på andet end titlen.
+
 ### Fixed
 - (Standarder) Nye krav fik numre med huller (fx 1.5, 1.10, 1.11), fordi kravets viste nummer blev udledt af en primærnøgle der deles på tværs af alle standarder
 - (Standarder) Kravets nummer blev ikke opdateret i relationer, opgaver, rapporter og global søgning når rækkefølgen blev ændret med træk og slip
 - (Standarder) Omsortering var ikke afgrænset til den standard kaldet angav
+- (OS2kitos-integration) Al skrivning til OS2kitos med en dato blev afvist. Datoer blev sendt som epoch-tal i stedet for som tekst, og OS2kitos afviste hele opdateringen — ikke kun datofeltet. Det ramte synkronisering af risikovurdering og DPIA samt forretningskritisk/arkiveringspligt, og fejlede fra opdateringen af Kitos-klienten d. 2. juli 2026. Rettet i kitos-client release-1.3.3
+- (OS2kitos-integration) "Synkroniser til OS2kitos" på risikovurderingen fejlede lydløst ved manuel udfyldning, fordi et tomt dokumentationslink blev sendt med og afvist af OS2kitos
+- (OS2kitos-integration) DPIA-linket blev skrevet i risikovurderingens dokumentationsfelt i OS2kitos og overskrev dermed linket til risikovurderingen
+- (Fortegnelser) Udrulningen af version 1.8 på eksisterende installationer trukket tilbage. Den oprettede dubletter i stedet for at opdatere og overskrev kommunens egne rettelser af hjemmel og KLE. Én kommune nåede at få den og er genoprettet fra backup.
+- (Opgavecenter/Årshjul) Gentagne opgaver vises ikke længere i årene før deres første deadline. En årlig opgave med første deadline 12/08-2027 dukkede op som overskredet d. 12/08-2026, fordi årshjulet regnede baglæns fra næste deadline helt tilbage til opgavens oprettelsesdato. Baglæns fremskrivning stopper nu ved den ældste deadline, opgaven har haft.
+- (Opgavecenter/Årshjul) En enkelt opgave uden deadline fik hele årshjulet til at fejle. Den springes nu over.
 
 
 ## [2.7.0] - 2026-06-14

@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function notRelevantSelectChanged() {
     const selected = this.value;
     const rowId = this.dataset.rowid;
+    setNotRelevantSelectStyle(this, selected);
     setStyleNotRelevant(selected, rowId, 'rowId' + rowId);
     updateAverage();
 }
@@ -43,7 +44,27 @@ function notRelevantSelectChanged() {
 function notRelevantSelectInit(elem) {
     const selected = elem.value;
     const rowId = elem.dataset.rowid;
+    setNotRelevantSelectStyle(elem, selected);
     setStyleNotRelevant(selected, rowId, 'rowId' + rowId);
+}
+
+function setNotRelevantSelectStyle(elem, selected) {
+    const chosen = selected === 'true';
+    elem.classList.toggle('notRelevantChosen', chosen);
+    const wrapper = elem.closest('.notRelevantSelectWrapper');
+    if (wrapper) {
+        wrapper.classList.toggle('notRelevantChosen', chosen);
+    }
+}
+
+function notRelevantCellClicked(event) {
+    if (event.target.closest('select')) {
+        return;
+    }
+    const select = this.querySelector('.notRelevantSelect');
+    if (select && typeof select.showPicker === 'function') {
+        select.showPicker();
+    }
 }
 
 this.initCommentField = ()=> {
@@ -612,6 +633,11 @@ function pageLoaded() {
     for (let i = 0; i < notRelevantSelects.length; i++) {
         notRelevantSelects[i].addEventListener('change', notRelevantSelectChanged, false);
         notRelevantSelectInit(notRelevantSelects[i]);
+    }
+
+    const notRelevantCells = document.querySelectorAll('.notRelevantCell');
+    for (let i = 0; i < notRelevantCells.length; i++) {
+        notRelevantCells[i].addEventListener('click', notRelevantCellClicked, false);
     }
 
     const numberSelects = document.querySelectorAll('.rowNumbers');

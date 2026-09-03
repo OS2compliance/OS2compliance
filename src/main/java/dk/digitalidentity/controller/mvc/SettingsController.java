@@ -75,7 +75,7 @@ public class SettingsController {
         settings.getSettingsList()
             .forEach(setting -> {
                 if (setting.getSettingValue() == null && setting.getAssociation() != null
-						&& (setting.getAssociation().equals("notification") || setting.getAssociation().equals("risk"))) {
+						&& (setting.getAssociation().equals("notification") || setting.getAssociation().equals("risk") || setting.getAssociation().equals("assetsync"))) {
                     setting.setSettingValue("false");
                 }
 				if (setting.getSettingKey() != null && setting.getSettingKey().equals(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS) && setting.getSettingValue() != null) {

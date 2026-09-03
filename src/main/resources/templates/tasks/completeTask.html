@@ -7,7 +7,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="min-height: 200px;">
-                    <form th:name="${referral}" id="completeTaskForm" class="row g-3 needs-validation" action="#" th:action="${referral} ?  @{/tasks/complete} + '?referral=' + ${referral} :  @{/tasks/complete}" method="post" th:object="${completionForm}" novalidate>
+                    <form th:name="${referral}" id="completeTaskForm" class="row g-3 needs-validation" action="#" th:action="@{/tasks/complete}" method="post" th:object="${completionForm}" novalidate>
+                        <input name="referral" th:if="${referral}" th:value="${referral}" type="hidden">
                         <input name="taskId" th:value="${task.id}" type="hidden">
                         <input name="taskType" th:value="${task.taskType.name()}" type="hidden">
                         <div class="row mt-3" th:if="${task.taskType.name() == 'CHECK'}">
@@ -68,8 +69,9 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuller</button>
-                    <button type="submit" form="completeTaskForm" class="btn btn-secondary">Gem</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                    <button type="submit" form="completeTaskForm" id="completeAndStayBtn" name="stay" value="true" class="btn btn-primary">Udfør og bliv her</button>
+                    <button type="submit" form="completeTaskForm" class="btn btn-primary">Udfør og gå til oversigt</button>
                 </div>
             </div>
         </div>

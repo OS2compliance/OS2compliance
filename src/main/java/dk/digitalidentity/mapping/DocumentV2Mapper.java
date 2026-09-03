@@ -3,7 +3,9 @@ package dk.digitalidentity.mapping;
 import dk.digitalidentity.model.api.DocumentCreateEOV2;
 import dk.digitalidentity.model.api.DocumentEOV2;
 import dk.digitalidentity.model.api.PageEO;
+import dk.digitalidentity.model.api.UserEO;
 import dk.digitalidentity.model.entity.Document;
+import dk.digitalidentity.model.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -14,6 +16,13 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface DocumentV2Mapper {
+
+	// embedded user references keep the shallow shape, positions/active are only exposed by the users API
+	@Mappings({
+			@Mapping(target = "active", ignore = true),
+			@Mapping(target = "positions", ignore = true)
+	})
+	UserEO toEO(User user);
 
 	@Mapping(target = "documentTypeIdentifier", source = "documentType.identifier")
 	DocumentEOV2 toEO(Document document);

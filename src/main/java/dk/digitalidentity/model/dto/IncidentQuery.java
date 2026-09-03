@@ -1,10 +1,13 @@
 package dk.digitalidentity.model.dto;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,13 +22,15 @@ import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
  * @param search        free text matched across the title and every answer, or null
  * @param columnFilters filters on built-in columns, keyed by {@link dk.digitalidentity.model.entity.Incident} property
  * @param fieldFilters  filters on custom field columns, keyed by incident field id
+ * @param assetIds      restricts to incidents related to one of these assets; empty means unrestricted
  */
 public record IncidentQuery(IncidentDateFilter dateFilter,
                             LocalDate from,
                             LocalDate to,
                             String search,
                             Map<String, String> columnFilters,
-                            Map<Long, String> fieldFilters) {
+                            Map<Long, String> fieldFilters,
+                            List<Long> assetIds) {
 
     /**
      * Built-in incident properties the grid is allowed to filter and sort on. Anything else coming in
@@ -40,7 +45,7 @@ public record IncidentQuery(IncidentDateFilter dateFilter,
      * browser still holding the old saved grid state cannot smuggle it in as a column filter.
      */
     private static final Set<String> RESERVED_PARAMS =
-        Set.of("page", "limit", "size", "order", "dir", "fileName", "search", "dateField", "fromDate", "toDate");
+        Set.of("page", "limit", "size", "order", "dir", "fileName", "search", "dateField", "fromDate", "toDate", "assetIds");
 
     /**
      * Builds a query from the raw request parameters sent by CustomGridFunctions.
@@ -71,7 +76,8 @@ public record IncidentQuery(IncidentDateFilter dateFilter,
             parseDate(parameters.get("toDate")),
             StringUtils.trimToNull(parameters.get("search")),
             columnFilters,
-            fieldFilters);
+            fieldFilters,
+            parseAssetIds(parameters.get("assetIds")));
     }
 
     private static LocalDate parseDate(final String value) {
@@ -83,5 +89,16 @@ public record IncidentQuery(IncidentDateFilter dateFilter,
         } catch (final DateTimeParseException e) {
             return null;
         }
+    }
+
+    private static List<Long> parseAssetIds(final String value) {
+        if (StringUtils.isBlank(value)) {
+            return List.of();
+        }
+        return Arrays.stream(StringUtils.split(value, ","))
+            .map(String::trim)
+            .filter(NumberUtils::isParsable)
+            .map(Long::valueOf)
+            .toList();
     }
 }

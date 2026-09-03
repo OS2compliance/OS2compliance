@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -342,9 +343,7 @@ public class KitosSyncService {
 
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
 
-        if (lifeCycleStatus != null) {
-            asset.setActive(valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
-        }
+        assetService.setActive(asset, valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
 
         if (!valid) {
             return;
@@ -379,15 +378,29 @@ public class KitosSyncService {
 
 		String setting = settingsService.getString(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, null);
 		if (setting != null && KitosField.SYSTEMS_REFS_DOCUMENT.equals(KitosField.valueOf(setting))) {
-			asset.getProductLinks().clear();
-			asset.getProductLinks().addAll(
-				itSystemUsageResponseDTO.getExternalReferences().stream()
-						.filter(e -> e.getUrl() != null && !e.getUrl().isBlank())
-						.map(e -> new AssetProductLink(null, e.getUrl(), asset))
-					.toList()
-			);
+			final List<String> urls = itSystemUsageResponseDTO.getExternalReferences().stream()
+					.filter(e -> e.getUrl() != null && !e.getUrl().isBlank())
+					.map(e -> e.getUrl())
+					.toList();
+			setProductLinksIfChanged(asset, urls);
 		}
     }
+
+	private void setProductLinksIfChanged(final Asset asset, final List<String> urls) {
+		final Set<String> desired = new HashSet<>(urls);
+		final Set<String> existing = asset.getProductLinks().stream()
+				.map(AssetProductLink::getUrl)
+				.collect(Collectors.toSet());
+		if (existing.equals(desired)) {
+			return;
+		}
+		asset.getProductLinks().clear();
+		asset.getProductLinks().addAll(
+				urls.stream()
+						.map(url -> new AssetProductLink(null, url, asset))
+						.toList()
+		);
+	}
 
     private void setUsersWithRole(final List<User> target, final ItSystemUsageResponseDTO itSystemUsageResponseDTO, final String roleSettingKey) {
 		final String roleUuid = settingsService.getString(roleSettingKey, "");
@@ -413,17 +426,26 @@ public class KitosSyncService {
 				.filter(r -> ownerRoleUuid.equalsIgnoreCase(r.getRole().getUuid().toString()))
 				.map(r -> r.getUser().getUuid())
 				.findFirst().orElse(null);
+		final List<User> desired;
 		if (ownerUuid != null) {
 			final List<User> userEntities = userService.findByPropertyKeyValue(KITOS_UUID_PROPERTY_KEY, ownerUuid.toString());
 			if (userEntities.size() == 1) {
-				asset.setResponsibleUsers(List.of(userEntities.getFirst()));
+				desired = List.of(userEntities.getFirst());
 			} else if (userEntities.isEmpty()) {
 				log.warn("User not found kitos uuid {}", ownerUuid);
+				return;
 			} else {
 				log.warn("Unexpected number of users found for kitos uuid {}, found {}", ownerUuid, userEntities.size());
+				return;
 			}
 		} else {
-			asset.setResponsibleUsers(Collections.emptyList());
+			desired = Collections.emptyList();
+		}
+		final Set<String> existingUuids = asset.getResponsibleUsers().stream().map(User::getUuid).collect(Collectors.toSet());
+		final Set<String> desiredUuids = desired.stream().map(User::getUuid).collect(Collectors.toSet());
+		if (!existingUuids.equals(desiredUuids)) {
+			asset.getResponsibleUsers().clear();
+			asset.getResponsibleUsers().addAll(desired);
 		}
 	}
 
@@ -535,9 +557,9 @@ public class KitosSyncService {
 				copyOfProperty.setValue(property.getValue());
 				copyOfProperty.setEntity(asset);
 				asset.getProperties().add(copyOfProperty);
-				asset.setActive(false);
 				asset.getProperties().remove(property);
 			});
+        assetService.setActive(asset, false);
     }
 
     private Optional<Asset> findItSystem(final String kitosUuid) {
@@ -591,13 +613,11 @@ public class KitosSyncService {
 	private void setLinksFromKitosSystem(ItSystemResponseDTO responseDTO, Asset asset) {
 		String setting = settingsService.getString(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, null);
 		if (setting != null && KitosField.SYSTEMS_FRONTPAGE_REFS.equals(KitosField.valueOf(setting))) {
-			asset.getProductLinks().clear();
-			asset.getProductLinks().addAll(
-				responseDTO.getExternalReferences().stream()
-						.filter(e -> e.getUrl() != null && !e.getUrl().isBlank())
-						.map(e -> new AssetProductLink(null, e.getUrl(), asset))
-					.toList()
-			);
+			final List<String> urls = responseDTO.getExternalReferences().stream()
+					.filter(e -> e.getUrl() != null && !e.getUrl().isBlank())
+					.map(e -> e.getUrl())
+					.toList();
+			setProductLinksIfChanged(asset, urls);
 		}
 	}
 

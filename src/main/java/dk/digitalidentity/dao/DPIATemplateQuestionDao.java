@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface DPIATemplateQuestionDao extends JpaRepository<DPIATemplateQuestion, Long> {
 
-    List<DPIATemplateQuestion> findByAnswerTemplateNotNull();
+    List<DPIATemplateQuestion> findByAnswerTemplateNotNullAndDeletedFalse();
 }

@@ -161,16 +161,24 @@ public class IncidentService {
         final List<PredicateBuilder<Incident>> predicates = new ArrayList<>();
         predicates.add(IncidentPredicates.notDeleted());
 
+        final List<QueryPredicateBuilder<Incident>> queryPredicates = buildQueryPredicates(query);
+
+        return incidentDao.findAllWithColumnSearch(query.columnFilters(), pageable, Incident.class,
+            predicates, queryPredicates);
+    }
+
+    private List<QueryPredicateBuilder<Incident>> buildQueryPredicates(final IncidentQuery query) {
         final List<QueryPredicateBuilder<Incident>> queryPredicates = new ArrayList<>();
         queryPredicates.add(IncidentPredicates.dateWithin(resolveDateFilter(query.dateFilter()), query.from(), query.to()));
         if (StringUtils.isNotBlank(query.search())) {
             queryPredicates.add(IncidentPredicates.matchesAnywhere(query.search()));
         }
+        if (!query.assetIds().isEmpty()) {
+            queryPredicates.add(IncidentPredicates.relatedToAssets(query.assetIds()));
+        }
         filtersOnVisibleColumns(query.fieldFilters()).forEach((fieldId, value) ->
             queryPredicates.add(IncidentPredicates.fieldMatches(fieldId, value)));
-
-        return incidentDao.findAllWithColumnSearch(query.columnFilters(), pageable, Incident.class,
-            predicates, queryPredicates);
+        return queryPredicates;
     }
 
     /**
@@ -291,6 +299,28 @@ public class IncidentService {
 
 	public List<Incident> getIncidentsMatching(Long incidentFieldId, LocalDateTime fromDate, LocalDateTime toDate) {
 		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(incidentFieldId, fromDate, toDate);
+	}
+
+	/**
+	 * Counts incidents related to any of the given assets in the last 12 months, built through the same
+	 * {@link IncidentQuery}/predicate path as {@link #findIncidents(IncidentQuery, Pageable)}, so a link
+	 * to the incident log carrying the same {@code from}/{@code to}/{@code assetIds} filters is
+	 * guaranteed to show exactly this many rows.
+	 */
+	public long countIncidentsForAssetsLastYear(final List<Long> assetIds) {
+		if (assetIds.isEmpty()) {
+			return 0;
+		}
+
+		final IncidentQuery query = new IncidentQuery(IncidentDateFilter.DEFAULT,
+			LocalDateTime.now().minusMonths(12).toLocalDate(), null, null, Map.of(), Map.of(), assetIds);
+
+		final List<PredicateBuilder<Incident>> predicates = List.of(
+			IncidentPredicates.notDeleted(),
+			IncidentPredicates.notDraft());
+		final List<QueryPredicateBuilder<Incident>> queryPredicates = buildQueryPredicates(query);
+
+		return incidentDao.countWithColumnSearch(Map.of(), Incident.class, predicates, queryPredicates);
 	}
 
 	public List<Incident> getByIds (List<Long> ids) {

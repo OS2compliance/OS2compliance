@@ -111,4 +111,25 @@ public class IncidentQueryTest {
     public void readsUpdatedCaseInsensitively() {
         assertThat(IncidentDateFilter.parse("updated").target()).isEqualTo(IncidentDateFilter.Target.UPDATED);
     }
+
+    @Test
+    public void parsesCommaSeparatedAssetIds() {
+        IncidentQuery query = IncidentQuery.of(Map.of("assetIds", "12, 34,56"));
+
+        assertThat(query.assetIds()).containsExactly(12L, 34L, 56L);
+    }
+
+    @Test
+    public void defaultsToNoAssetRestriction() {
+        IncidentQuery query = IncidentQuery.of(Map.of());
+
+        assertThat(query.assetIds()).isEmpty();
+    }
+
+    @Test
+    public void assetIdsAreNotAlsoAColumnFilter() {
+        IncidentQuery query = IncidentQuery.of(Map.of("assetIds", "12"));
+
+        assertThat(query.columnFilters()).isEmpty();
+    }
 }

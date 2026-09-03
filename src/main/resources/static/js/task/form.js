@@ -56,6 +56,7 @@ function EditTaskService() {
         });
 
         this.initSubTaskButtons();
+        this.initTemplateDescriptionSelect();
 
         subTaskLinkService.validateExistingInputs();
 
@@ -83,6 +84,32 @@ function EditTaskService() {
 
         const editTaskModal = new bootstrap.Modal(this.taskModalDialog, { backdrop: 'static' });
         editTaskModal.show();
+    }
+
+    // Feltet viser skabelonens tekst når en skabelon er valgt, så det låses - ellers ville den tekst blive
+    // gemt oven i opgavens egen beskrivelse
+    this.initTemplateDescriptionSelect = function() {
+        const select = document.getElementById('taskEditFormTemplateDescriptionSelect');
+        const descriptionBox = document.getElementById('taskEditFormdescription');
+        if (select === null || descriptionBox === null) {
+            return;
+        }
+
+        let ownDescription = descriptionBox.dataset.ownDescription || '';
+        descriptionBox.disabled = select.value !== '';
+
+        select.addEventListener('change', function() {
+            if (select.value !== '') {
+                if (!descriptionBox.disabled) {
+                    ownDescription = descriptionBox.value;
+                }
+                descriptionBox.value = '';
+                descriptionBox.disabled = true;
+            } else {
+                descriptionBox.value = ownDescription;
+                descriptionBox.disabled = false;
+            }
+        });
     }
 
     this.initSubTaskButtons = function() {
@@ -123,6 +150,7 @@ function CopyTaskService() {
 
     this.onLoaded = function() {
         this.modalContainer = document.getElementById('copyModal');
+        initDatepicker("#copyTaskStartDateBtn", "#copyTaskStartDate");
         initDatepicker("#copyTaskDeadlineBtn", "#copyTaskDeadline");
 
         let responsibleSelect = this.getScopedElementById('copyTaskUserSelect');

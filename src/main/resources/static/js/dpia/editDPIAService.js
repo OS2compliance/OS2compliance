@@ -30,7 +30,8 @@ class EditDPIAService {
         })
 
         if (!response.ok)  {
-            toastService.error(response.statusText)
+            toastService.error('Konsekvensanalysen kunne ikke gemmes')
+            return
         }
 
         location.reload()

@@ -5,6 +5,7 @@ export class CreateThreatAssessmentService {
 
         this.initRegisterSelect()
         this.initAssetSelect()
+        this.initSupplierSelect();
         this.initUserSelect()
         this.initOuSelect()
 
@@ -67,6 +68,15 @@ export class CreateThreatAssessmentService {
         });
     }
 
+    initSupplierSelect() {
+        const supplierSelect = this.getScopedElementById('supplierSelect');
+        this.supplierChoicesSelect = initSupplierSelectRisk(supplierSelect);
+        this.supplierChoicesSelect.passedElement.element.addEventListener('change', () => {
+            this.clearSupplierValidationError();
+            loadSupplierResponsible(supplierSelect, this.userChoicesSelect);
+        });
+    }
+
     initUserSelect() {
         this.userChoicesSelect = choiceService.initUserSelect("createRiskUserSelect");
         this.userChoicesSelect.passedElement.element.addEventListener('change', () => {
@@ -101,19 +111,20 @@ export class CreateThreatAssessmentService {
     }
 
     typeChanged(selectedType) {
-        if (selectedType === 'ASSET') {
-            this.getScopedElementById("registerSelectRow").style.display = 'none';
-            this.getScopedElementById("assetSelectRow").style.display = '';
-        } else if (selectedType === 'REGISTER') {
-            this.getScopedElementById("registerSelectRow").style.display = '';
-            this.getScopedElementById("assetSelectRow").style.display = 'none';
-        } else {
-            this.getScopedElementById("registerSelectRow").style.display = 'none';
-            this.getScopedElementById("assetSelectRow").style.display = 'none';
+        const rows = {
+            ASSET: "assetSelectRow",
+            REGISTER: "registerSelectRow",
+            SUPPLIER: "supplierSelectRow"
         }
+
+        for (const [type, rowId] of Object.entries(rows)) {
+            this.getScopedElementById(rowId).style.display = type === selectedType ? '' : 'none';
+        }
+
         this.getScopedElementById("inheritRow").style.display = 'none';
         this.registerChoicesSelect.removeActiveItems();
         this.assetChoicesSelect.removeActiveItems();
+        this.supplierChoicesSelect.removeActiveItems();
         this.selectedType = selectedType;
     }
 
@@ -128,31 +139,35 @@ export class CreateThreatAssessmentService {
         this.getScopedElementById("assetError").classList.remove('show');
     }
 
+    clearSupplierValidationError() {
+        this.getScopedElementById("supplierSelect").parentElement.classList.remove('is-invalid');
+        this.getScopedElementById("supplierError").classList.remove('show');
+    }
+
     validateEntitySelection() {
-        let result = true;
-        if (this.selectedType === "ASSET") {
-            // Check that at least one asset is selected
-            let assetSelect = this.getScopedElementById("assetSelect");
-            let assetSelected = assetSelect.value !== "";
-            if (assetSelected) {
-                this.clearAssetValidationError();
-            } else {
-                assetSelect.parentElement.classList.add('is-invalid');
-                this.getScopedElementById("assetError").classList.add('show');
-            }
-            result &= assetSelected;
-        } else if (this.selectedType === 'REGISTER') {
-            let registerSelect = this.getScopedElementById("registerSelect");
-            let registerSelected = registerSelect.value !== "";
-            if (registerSelected) {
-                this.clearRegisterValidationError();
-            } else {
-                registerSelect.parentElement.classList.add('is-invalid');
-                this.getScopedElementById("registerError").classList.add('show');
-            }
-            result &= registerSelected;
+        const config = {
+            ASSET:    { select: "assetSelect",    error: "assetError",    clear: () => this.clearAssetValidationError() },
+            REGISTER: { select: "registerSelect", error: "registerError", clear: () => this.clearRegisterValidationError() },
+            SUPPLIER: { select: "supplierSelect", error: "supplierError", clear: () => this.clearSupplierValidationError() },
+        };
+
+        const entry = config[this.selectedType];
+        if (!entry) {
+            // Anything that isn't mapped falls through as true immediately
+            return true;
         }
-        return result;
+
+        const select = this.getScopedElementById(entry.select);
+        const isSelected = select.value !== "";
+
+        if (isSelected) {
+            entry.clear()
+        } else {
+            select.parentElement.classList.add('is-invalid');
+            this.getScopedElementById(entry.error).classList.add('show');
+        }
+
+        return isSelected;
     };
 
     validateChoicesAndCheckboxesRisk(...choiceList) {
@@ -261,24 +276,37 @@ export function initAssetSelectRisk(assetSelectElement) {
     return assetChoices;
 }
 
-function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
-    let selectedRegister = selectedRegisterElement.value;
-    fetch(`/rest/risks/register?registerId=${selectedRegister}`)
-        .then(response => response.json()
-            .then(data => {
-                let user = data.users[0];
-                if (user) {
-                    userChoicesSelect.setChoiceByValue(user.uuid);
-                } else {
-                    userChoicesSelect.removeActiveItems();
-                }
+export function initSupplierSelectRisk(supplierSelectElement) {
+    const supplierChoices = initSelect(supplierSelectElement);
+    supplierSelectElement.addEventListener("search",
+        function (event) {
+            updateTypeSelect(supplierChoices, event.detail.value, "SUPPLIER");
+        },
+        false,
+    );
+    return supplierChoices;
+}
 
-                if (data.elementName) {
-                    document.getElementById('name').value = data.elementName;
-                } else {
-                    document.getElementById('name').value = "";
-                }
-            }))
+function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
+    loadResponsible(`/rest/risks/register?registerId=${selectedRegisterElement.value}`, userChoicesSelect);
+}
+
+function loadSupplierResponsible(selectedSupplierElement, userChoicesSelect) {
+    loadResponsible(`/rest/risks/supplier?supplierId=${selectedSupplierElement.value}`, userChoicesSelect);
+}
+
+function loadResponsible(url, userChoicesSelect) {
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const user = data.users[0];
+            if (user) {
+                userChoicesSelect.setChoiceByValue(user.uuid);
+            } else {
+                userChoicesSelect.removeActiveItems();
+            }
+            document.getElementById('name').value = data.elementName || "";
+        })
         .catch(error => toastService.error(error));
 }
 

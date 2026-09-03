@@ -55,6 +55,16 @@
                                             <input type="hidden" name="enabled" th:value="${template.enabled}" />
 
                                             <div class="form-group row mb-2">
+                                                <label class="col-lg-2 control-label" th:for="'enabledCheckbox' + ${template.id}">Udsendelse aktiv</label>
+                                                <div class="col-lg-8">
+                                                    <div class="form-check form-switch mt-2">
+                                                        <!-- Uden name: checkboxen må ikke selv med i FormData - hidden-feltet 'enabled' bærer værdien (se mailtemplates.js) -->
+                                                        <input type="checkbox" class="form-check-input checkboxFancy" th:id="'enabledCheckbox' + ${template.id}" th:checked="${template.enabled}" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row mb-2">
                                                 <label class="col-lg-2 control-label">Overskrift</label>
                                                 <div class="col-lg-8">
                                                     <input name="title" th:value="${template.title}" class="form-control" />

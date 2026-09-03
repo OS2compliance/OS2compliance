@@ -69,7 +69,6 @@ public class SigningController {
     private final UserService userService;
     private final OS2complianceConfiguration configuration;
     private final DPIAReportService dpiaReportService;
-    private DPIAReport dpiaReport;
 
 	@RequireReadOwnerOnly
     @GetMapping("view/{S3DocumentId}")
@@ -105,6 +104,7 @@ public class SigningController {
 	@RequireReadOwnerOnly
     @GetMapping("preview/{S3DocumentId}")
     public String previewDocumentToSign(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) {
+        model.addAttribute("id", s3DocumentId);
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
         final DPIAReport dpiaReport = dpiaReportService.findByS3Document(s3Document);
@@ -133,17 +133,16 @@ public class SigningController {
             }
         }
 
-        model.addAttribute("id", s3DocumentId);
-
         return "sign/preview";
     }
 
 	@RequireUpdateOwnerOnly
     @GetMapping("{S3DocumentId}")
     public String signDocument(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) throws IOException, GeneralSecurityException {
+        model.addAttribute("id", s3DocumentId);
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
-        dpiaReport = dpiaReportService.findByS3Document(s3Document);
+        final DPIAReport dpiaReport = dpiaReportService.findByS3Document(s3Document);
 
         if (threatAssessment == null && dpiaReport == null) {
             return "sign/withdrawn";
@@ -179,9 +178,6 @@ public class SigningController {
         byte[] signedPDF = signPdf(s3Document);
         s3Service.uploadWithKey(s3Document.getS3FileKey(), signedPDF);
 
-
-        model.addAttribute("id", s3DocumentId);
-
         return "sign/signed";
     }
 
@@ -190,7 +186,10 @@ public class SigningController {
 	public String signedPage(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) {
 		final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
-		model.addAttribute("threatAssessmentId", threatAssessment.getId());
+		model.addAttribute("id", s3DocumentId);
+		if (threatAssessment != null) {
+			model.addAttribute("threatAssessmentId", threatAssessment.getId());
+		}
 		return "sign/signed";
 	}
 

@@ -176,6 +176,11 @@ public class TaskRestController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
+		if (taskService.defaultStartDateAndCheckAfterDeadline(task)) {
+			log.debug("Start date is after deadline");
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
 		// Process links
 		if (request.getTask().getLinks() != null && !request.getTask().getLinks().isEmpty()) {
 			List<TaskLink> links = new ArrayList<>();

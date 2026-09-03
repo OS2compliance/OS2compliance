@@ -300,7 +300,7 @@
                         <td th:text="${threat.threatType}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td class="preserve-linebreaks" th:text="${threat.threat}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.initialRisk.probability > 0 ? threat.initialRisk.probability : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
-                        <td th:text="${threat.initialRisk.consequence > 0 ? threat.initialRisk.consequence : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td class="preserve-linebreaks" th:text="${threat.initialRisk.consequence > 0 ? threat.initialRisk.consequenceBreakdown : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.initialRisk.score > 0  && threat.initialRisk.color != null? threat.initialRisk.score : ''}" th:style="'background-color:' + ${threat.initialRisk.color}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.problem}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.method}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
@@ -336,6 +336,7 @@
                     <th>Opgave navn</th>
                     <th>Beskrivelse</th>
                     <th>Frekvens</th>
+                    <th>Startdato</th>
                     <th>Deadline</th>
                     <th>Ansvarlig</th>
                     <th>Afdeling</th>
@@ -346,6 +347,7 @@
                     <td th:text="${task.name}"></td>
                     <td th:text="${task.description}"></td>
                     <td th:text="${task.taskType}"></td>
+                    <td th:text="${task.startDate}"></td>
                     <td th:text="${task.nextDeadline}"></td>
                     <td th:text="${task.responsible}"></td>
                     <td th:text="${task.department}"></td>
@@ -364,6 +366,7 @@
                     <th>Opgave navn</th>
                     <th>Beskrivelse</th>
                     <th>Frekvens</th>
+                    <th>Startdato</th>
                     <th>Deadline</th>
                     <th>Ansvarlig</th>
                     <th>Afdeling</th>
@@ -374,6 +377,7 @@
                     <td th:text="${task.name}"></td>
                     <td th:text="${task.description}"></td>
                     <td th:text="${task.taskType}"></td>
+                    <td th:text="${task.startDate}"></td>
                     <td th:text="${task.nextDeadline}"></td>
                     <td th:text="${task.responsible}"></td>
                     <td th:text="${task.department}"></td>

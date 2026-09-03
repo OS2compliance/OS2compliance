@@ -76,6 +76,8 @@ export default function IncidentGridService () {
         this.customGridFunctions.onSearch();
     }
 
+    this.datePickers = {};
+
     this.initDatePickers = () => {
         this.initDatePicker('#filterFromBtn', '#filterFrom', 'fromDate');
         this.initDatePicker('#filterToBtn', '#filterTo', 'toDate');
@@ -91,6 +93,29 @@ export default function IncidentGridService () {
         // "Ryd" empties the input without firing onSelect, so without this the box goes blank while
         // the grid and the reports keep filtering on the old date.
         picker.onClear(() => this.setFilter(filterKey, ''));
+        this.datePickers[filterKey] = { picker, inputSelector };
+    }
+
+    /**
+     * Wipes every filter the log offers: the grid's own column/search state, plus the toolbar
+     * controls that live outside the grid and therefore do not refresh themselves from that state.
+     */
+    this.clearFilters = () => {
+        this.customGridFunctions.resetState();
+
+        Object.values(this.datePickers).forEach(({ inputSelector }) => {
+            document.querySelector(inputSelector).value = '';
+        });
+
+        const searchInput = document.getElementById("incidentSearch");
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        const dateFieldSelect = document.getElementById("dateFieldSelect");
+        if (dateFieldSelect) {
+            dateFieldSelect.value = 'CREATED';
+        }
     }
 
     /**

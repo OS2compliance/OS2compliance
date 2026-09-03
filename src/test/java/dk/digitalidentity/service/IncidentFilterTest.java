@@ -1,15 +1,24 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.BaseIntegrationTest;
+import dk.digitalidentity.Constants;
+import dk.digitalidentity.dao.AssetDao;
+import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.IncidentDao;
 import dk.digitalidentity.dao.IncidentFieldDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.dto.IncidentDateFilter;
 import dk.digitalidentity.model.dto.IncidentQuery;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.AssetStatus;
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
+import dk.digitalidentity.model.entity.enums.Criticality;
+import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.IncidentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +51,12 @@ public class IncidentFilterTest extends BaseIntegrationTest {
     private IncidentDao incidentDao;
     @Autowired
     private UserDao userDao;
+    @Autowired
+    private AssetDao assetDao;
+    @Autowired
+    private ChoiceValueDao choiceValueDao;
+    @Autowired
+    private RelationService relationService;
 
     private IncidentField occurredOn;
     private IncidentField location;
@@ -102,7 +117,7 @@ public class IncidentFilterTest extends BaseIntegrationTest {
 
         Page<Incident> result = incidentService.findIncidents(
                 new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, null,
-                        Map.of(), Map.of(location.getId(), "råd")),
+                        Map.of(), Map.of(location.getId(), "råd"), List.of()),
                 FIRST_PAGE);
 
         assertThat(result.getContent()).extracting(Incident::getName).containsExactly("Sag A");
@@ -116,7 +131,7 @@ public class IncidentFilterTest extends BaseIntegrationTest {
 
         Page<Incident> result = incidentService.findIncidents(
                 new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, null,
-                        Map.of(), Map.of(999_999L, "hvad som helst")),
+                        Map.of(), Map.of(999_999L, "hvad som helst"), List.of()),
                 FIRST_PAGE);
 
         assertThat(result.getContent()).extracting(Incident::getName).containsExactly("Sag A");
@@ -132,7 +147,7 @@ public class IncidentFilterTest extends BaseIntegrationTest {
 
         Page<Incident> result = incidentService.findIncidents(
                 new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, null,
-                        Map.of(), Map.of(hidden.getId(), "biblioteket")),
+                        Map.of(), Map.of(hidden.getId(), "biblioteket"), List.of()),
                 FIRST_PAGE);
 
         assertThat(result.getContent()).extracting(Incident::getName).containsExactly("Sag A");
@@ -149,7 +164,7 @@ public class IncidentFilterTest extends BaseIntegrationTest {
                 new IncidentQuery(
                         new IncidentDateFilter(IncidentDateFilter.Target.FIELD, occurredOn.getId()),
                         LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 31), null,
-                        Map.of(), Map.of(location.getId(), "Rådhuset")),
+                        Map.of(), Map.of(location.getId(), "Rådhuset"), List.of()),
                 FIRST_PAGE);
 
         assertThat(result.getContent()).extracting(Incident::getName).containsExactly("Begge");
@@ -167,7 +182,7 @@ public class IncidentFilterTest extends BaseIntegrationTest {
 
         Page<Incident> result = incidentService.findIncidents(
                 new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, null,
-                        Map.of(), Map.of(reporters.getId(), "Bertelsen")),
+                        Map.of(), Map.of(reporters.getId(), "Bertelsen"), List.of()),
                 FIRST_PAGE);
 
         assertThat(result.getContent()).extracting(Incident::getName).containsExactly("Flere anmeldere");
@@ -181,7 +196,7 @@ public class IncidentFilterTest extends BaseIntegrationTest {
 
         Page<Incident> result = incidentService.findIncidents(
                 new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, "rådhuset",
-                        Map.of(), Map.of()),
+                        Map.of(), Map.of(), List.of()),
                 FIRST_PAGE);
 
         assertThat(result.getContent()).extracting(Incident::getName)
@@ -195,7 +210,7 @@ public class IncidentFilterTest extends BaseIntegrationTest {
 
         Page<Incident> result = incidentService.findIncidents(
                 new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, "råd",
-                        Map.of(), Map.of()),
+                        Map.of(), Map.of(), List.of()),
                 FIRST_PAGE);
 
         assertThat(result.getContent()).hasSize(1);
@@ -261,15 +276,67 @@ public class IncidentFilterTest extends BaseIntegrationTest {
 
         Page<Incident> result = incidentService.findIncidents(
                 new IncidentQuery(IncidentDateFilter.DEFAULT, null, null, null,
-                        Map.of(), Map.of(location.getId(), "råd")),
+                        Map.of(), Map.of(location.getId(), "råd"), List.of()),
                 PageRequest.of(0, 2));
 
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(3);
     }
 
+    @Test
+    public void countsEveryIncidentRelatedToAnAssetEvenSeveralOnTheSameDate() {
+        // Reproduces the risk assessment's "incidents last 12 months" count: several incidents can
+        // legitimately share both the same asset and the same creation date, and every one of them has
+        // its own Relation row, so an EXISTS-based match must count each independently.
+        Asset asset = saveAsset("Mit aktiv");
+        Asset otherAsset = saveAsset("Et andet aktiv");
+        for (int i = 0; i < 4; i++) {
+            Incident incident = saveIncident("Sag " + i);
+            relationService.addRelation(incident, asset);
+        }
+        Incident unrelated = saveIncident("Sag uden aktiv");
+        relationService.addRelation(unrelated, otherAsset);
+
+        long count = incidentService.countIncidentsForAssetsLastYear(List.of(asset.getId()));
+
+        assertThat(count).isEqualTo(4);
+    }
+
+    @Test
+    public void countMatchesFindIncidentsForTheSameAssetFilter() {
+        // The count on the risk assessment view and the incident log it links to have to agree exactly,
+        // or a user clicking through sees a different number of rows than the count promised.
+        Asset asset = saveAsset("Mit aktiv");
+        for (int i = 0; i < 4; i++) {
+            Incident incident = saveIncident("Sag " + i);
+            relationService.addRelation(incident, asset);
+        }
+
+        long count = incidentService.countIncidentsForAssetsLastYear(List.of(asset.getId()));
+
+        IncidentQuery query = new IncidentQuery(IncidentDateFilter.DEFAULT,
+            LocalDate.now().minusMonths(12), null, null, Map.of(), Map.of(), List.of(asset.getId()));
+        Page<Incident> gridResult = incidentService.findIncidents(query, FIRST_PAGE);
+
+        assertThat(count).isEqualTo(4);
+        assertThat(gridResult.getTotalElements()).isEqualTo(count);
+    }
+
+    private Asset saveAsset(final String name) {
+        ChoiceValue assetType = choiceValueDao.findByIdentifier(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID)
+            .orElseThrow(() -> new IllegalStateException("IT system asset type not seeded"));
+        Asset asset = new Asset();
+        asset.setName(name);
+        asset.setAssetType(assetType);
+        asset.setAssetStatus(AssetStatus.NOT_STARTED);
+        asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
+        asset.setCriticality(Criticality.CRITICAL);
+        asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NOT_RELEVANT);
+        return assetDao.save(asset);
+    }
+
     private IncidentQuery query(final IncidentDateFilter dateFilter, final LocalDate from, final LocalDate to) {
-        return new IncidentQuery(dateFilter, from, to, null, Map.of(), Map.of());
+        return new IncidentQuery(dateFilter, from, to, null, Map.of(), Map.of(), List.of());
     }
 
     private IncidentField saveField(final IncidentType type, final String question, final boolean obligatory) {

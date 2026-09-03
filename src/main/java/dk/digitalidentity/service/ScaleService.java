@@ -271,6 +271,79 @@ public class ScaleService {
                 "4 = Meget høj (Graverende, meget kritisk)"
             ))
             .consequenceScale(Map.of(1, "GRØN", 2, "GUL", 3, "ORANGE", 4, "RØD"))
+            .build(),
+
+        ScaleSetting.builder()
+            .type(RiskScaleType.SCALE_1_5_VIBORG)
+            .colorsMatrix(
+                new HashMap<>() {{
+                    // consequence, probability
+                    put("1,1", SCALE_COLOR_LIGHT_GREEN);
+                    put("1,2", SCALE_COLOR_LIGHT_GREEN);
+                    put("1,3", SCALE_COLOR_GREEN);
+                    put("1,4", SCALE_COLOR_GREEN);
+                    put("1,5", SCALE_COLOR_YELLOW);
+                    put("2,1", SCALE_COLOR_LIGHT_GREEN);
+                    put("2,2", SCALE_COLOR_GREEN);
+                    put("2,3", SCALE_COLOR_GREEN);
+                    put("2,4", SCALE_COLOR_YELLOW);
+                    put("2,5", SCALE_COLOR_YELLOW);
+                    put("3,1", SCALE_COLOR_GREEN);
+                    put("3,2", SCALE_COLOR_GREEN);
+                    put("3,3", SCALE_COLOR_YELLOW);
+                    put("3,4", SCALE_COLOR_ORANGE);
+                    put("3,5", SCALE_COLOR_ORANGE);
+                    put("4,1", SCALE_COLOR_YELLOW);
+                    put("4,2", SCALE_COLOR_YELLOW);
+                    put("4,3", SCALE_COLOR_ORANGE);
+                    put("4,4", SCALE_COLOR_ORANGE);
+                    put("4,5", SCALE_COLOR_RED);
+                    put("5,1", SCALE_COLOR_YELLOW);
+                    put("5,2", SCALE_COLOR_ORANGE);
+                    put("5,3", SCALE_COLOR_ORANGE);
+                    put("5,4", SCALE_COLOR_RED);
+                    put("5,5", SCALE_COLOR_RED);
+                }}
+            )
+            .assessmentLookup(
+                (p, c) -> {
+                    if (c == null || p == null) {
+                        return null;
+                    }
+                    final String lookup = "" + c + p;
+                    return switch (lookup) {
+                        case "11", "12", "21" -> RiskAssessment.LIGHT_GREEN;
+                        case "13", "14", "22", "23", "31", "32" -> RiskAssessment.GREEN;
+                        case "15", "24", "25", "33", "41", "42", "51" -> RiskAssessment.YELLOW;
+                        case "34", "35", "43", "44", "52", "53" -> RiskAssessment.ORANGE;
+                        case "45", "54", "55" -> RiskAssessment.RED;
+                        default -> null;
+                    };
+                }
+            )
+            .riskScore(List.of(
+                "Risikoscore = sandsynlighed * konsekvens",
+                "Lysegrøn = Meget lav risiko",
+                "Grøn = Lav risiko",
+                "Gul = Under middel risiko",
+                "Orange = Over middel risiko",
+                "Rød = Høj risiko"
+            ))
+            .probabilityScore(List.of(
+                "1 = Lav (Usandsynligt)",
+                "2 = Medium (Mindre sandsynligt)",
+                "3 = Høj (Sandsynligt)",
+                "4 = Meget høj (Forventet)",
+                "5 = Ekstrem høj (Næsten sikkert)"
+            ))
+            .consequenceNumber(List.of(
+                "1 = Lav (Ubetydelig, uvæsentlig)",
+                "2 = Medium (Mindre alvorlig, generende)",
+                "3 = Høj (Alvorlig, kritisk)",
+                "4 = Meget høj (Graverende, meget kritisk)",
+                "5 = Ekstrem høj (Katastrofal)"
+            ))
+            .consequenceScale(Map.of(1, "LYSEGRØN", 2, "GRØN", 3, "GUL", 4, "ORANGE", 5, "RØD"))
             .build()
     );
     @Builder

@@ -62,10 +62,14 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     searchable: {searchKey: 'responsibleOU.name'}
                 },
                 {
-                    name: "Deadline",
+                    name: "Startdato",
+                    searchable: {searchKey: 'startDate'},
+                },
+                {
+                    name: "Slutdato",
                     searchable: {searchKey: 'nextDeadline'},
                     formatter: (cell, row) => {
-                        var completed = row.cells[7]['data'];
+                        var completed = row.cells[8]['data'];
                         var type = row.cells[2]['data'];
                         if (completed && type == "Opgave") {
                             return gridjs.html(`<span>${cell}</span>`);
@@ -97,9 +101,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
                         // Null-safe access to row cells and data
                         let type = row?.cells?.[2]?.data || null;
-                        let deadline = row?.cells?.[5]?.data || null;
-                        let inProgress = row?.cells?.[9]?.data === true;
-                        let note = row?.cells?.[10]?.data || null;
+                        let deadline = row?.cells?.[6]?.data || null;
+                        let inProgress = row?.cells?.[10]?.data === true;
+                        let note = row?.cells?.[11]?.data || null;
 
                         // if completed and task type opgave
                         if (cell && type === "Opgave") {
@@ -160,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(task =>
-                    [task.id, task.name, task.taskType, task.responsibleNames, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags, task.inProgress, task.inProgressNote]
+                    [task.id, task.name, task.taskType, task.responsibleNames, task.responsibleOU, task.startDate, task.nextDeadline, task.taskRepetition, task.completed, task.tags, task.inProgress, task.inProgressNote]
                 ),
                 total: data => data.totalCount ? data.totalCount : 0
             },
@@ -192,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             taskDatatableId,
             gridTasks,
             ['opgavenavn'],
-            ['opgavenavn','deadline','status', 'OpgaveType'],
+            ['opgavenavn','startdato','slutdato','status', 'OpgaveType'],
             ['id', 'completed', 'inProgress', 'note'],
             '.taskTableOptionsContainer')
 

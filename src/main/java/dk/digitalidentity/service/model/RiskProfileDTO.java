@@ -10,6 +10,7 @@ import lombok.Setter;
 public class RiskProfileDTO {
     private int index;
     private int consequence;
+    private String consequenceBreakdown;
     private int probability;
     private int residualConsequence;
     private int residualProbability;

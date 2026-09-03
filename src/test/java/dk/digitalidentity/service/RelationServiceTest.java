@@ -66,6 +66,64 @@ public class RelationServiceTest extends BaseIntegrationTest {
                 .containsExactlyInAnyOrder("Some other doc name", "Fancy task name", "Some other task name");
     }
 
+    @Test
+    public void listsRelatedEntityOnceWhenPairIsStoredTwice() {
+        // Given — the same pair saved twice, as could happen before addRelation became idempotent
+        final var user = createTestUser(UUID.randomUUID().toString(), "abo", "Amalie");
+        final var ou = createTestOU(UUID.randomUUID().toString(), "Enhed 1");
+        final var doc = createTestDocument("Fancy doc name", user);
+        final var task = createTestTask("Fancy task name", user, ou);
+        relateEntities(doc, task);
+        relateEntities(task, doc); // reversed A/B, same pair
+
+        // When
+        final List<Relatable> related = relationService.findAllRelatedTo(doc);
+
+        // Then
+        assertThat(related).hasSize(1)
+                .extracting(Relatable::getName)
+                .containsExactly("Fancy task name");
+    }
+
+    @Test
+    public void addRelationDoesNotCreateDuplicates() {
+        // Given
+        final var user = createTestUser(UUID.randomUUID().toString(), "abo", "Amalie");
+        final var ou = createTestOU(UUID.randomUUID().toString(), "Enhed 1");
+        final var doc = createTestDocument("Fancy doc name", user);
+        final var task = createTestTask("Fancy task name", user, ou);
+
+        // When — added three times, including with the arguments swapped
+        final Relation first = relationService.addRelation(doc, task);
+        final Relation second = relationService.addRelation(doc, task);
+        final Relation third = relationService.addRelation(task, doc);
+
+        // Then
+        assertThat(second.getId()).isEqualTo(first.getId());
+        assertThat(third.getId()).isEqualTo(first.getId());
+        assertThat(relationDao.findAllRelatedTo(doc.getId())).hasSize(1);
+    }
+
+    @Test
+    public void addRelationsSkipsExistingAndCollapsesDuplicateInput() {
+        // Given
+        final var user = createTestUser(UUID.randomUUID().toString(), "abo", "Amalie");
+        final var ou = createTestOU(UUID.randomUUID().toString(), "Enhed 1");
+        final var doc = createTestDocument("Fancy doc name", user);
+        final var task1 = createTestTask("Fancy task name", user, ou);
+        final var task2 = createTestTask("Some other task name", user, ou);
+        relationService.addRelation(doc, task1);
+
+        // When — task1 is already related, and task2 appears twice in the input
+        relationService.addRelations(doc, List.of(task1, task2, task2));
+
+        // Then
+        assertThat(relationDao.findAllRelatedTo(doc.getId())).hasSize(2);
+        assertThat(relationService.findAllRelatedTo(doc))
+                .extracting(Relatable::getName)
+                .containsExactlyInAnyOrder("Fancy task name", "Some other task name");
+    }
+
     private void relateEntities(final Relatable ra, final Relatable rb) {
         relationDao.save(Relation.builder()
                         .relationAType(ra.getRelationType())

@@ -74,6 +74,10 @@ function initEditButtons() {
     editForm?.addEventListener('submit', () => {
         onUnSubmittedService.reset();
     });
+
+    if (editForm) {
+        initFormValidationForFormChoicesOnly('editForm', () => validateChoices(suppliersChoicesEditSelect));
+    }
 }
 
 function initTabs() {

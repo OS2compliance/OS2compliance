@@ -7,9 +7,11 @@ import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.IncidentType;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
@@ -44,6 +46,36 @@ public final class IncidentPredicates {
 
     public static PredicateBuilder<Incident> notDeleted() {
         return (cb, root) -> cb.isFalse(root.get("deleted"));
+    }
+
+    /**
+     * Excludes drafts, so an unfinished incident does not skew a count before it is finished.
+     */
+    public static PredicateBuilder<Incident> notDraft() {
+        return (cb, root) -> cb.isFalse(root.get("draft"));
+    }
+
+    /**
+     * Restricts to incidents related, through the relations table, to one of the given assets. The
+     * relation can be stored in either direction, so both are checked.
+     */
+    public static QueryPredicateBuilder<Incident> relatedToAssets(final List<Long> assetIds) {
+        return (cb, query, root) -> {
+            final Subquery<Long> subquery = query.subquery(Long.class);
+            final Root<Relation> relation = subquery.from(Relation.class);
+            subquery.select(relation.get("id")).where(cb.or(
+                cb.and(
+                    cb.equal(relation.get("relationAType"), RelationType.INCIDENT),
+                    cb.equal(relation.get("relationAId"), root.get("id")),
+                    cb.equal(relation.get("relationBType"), RelationType.ASSET),
+                    relation.get("relationBId").in(assetIds)),
+                cb.and(
+                    cb.equal(relation.get("relationBType"), RelationType.INCIDENT),
+                    cb.equal(relation.get("relationBId"), root.get("id")),
+                    cb.equal(relation.get("relationAType"), RelationType.ASSET),
+                    relation.get("relationAId").in(assetIds))));
+            return cb.exists(subquery);
+        };
     }
 
     /**

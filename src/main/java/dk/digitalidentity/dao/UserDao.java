@@ -33,6 +33,8 @@ public interface UserDao extends JpaRepository<User, String>, SearchRepository {
 
     Optional<User> findByUserIdAndActiveIsTrue(final String userId);
 
+    List<User> findByUserIdIgnoreCase(final String userId);
+
     Optional<User> findFirstByEmailEqualsIgnoreCaseAndActiveIsTrue(final String email);
 
     List<User> findByNameEqualsIgnoreCaseAndActiveIsTrue(final String name);

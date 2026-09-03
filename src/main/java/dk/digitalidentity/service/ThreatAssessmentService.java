@@ -42,12 +42,15 @@ import dk.digitalidentity.service.model.ThreatDTO;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -79,6 +82,7 @@ import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ThreatAssessmentService implements TagableService<ThreatAssessment> {
@@ -490,7 +494,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 					continue;
 				}
 
-				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
+				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, buildConsequenceBreakdown(threat), probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
             }
         }
         return riskProfiles;
@@ -566,6 +570,30 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 
     private int findHighestConsequence(final ThreatDTO threat) {
         return findHighestConsequence(threat.getRf(), threat.getRi(), threat.getRt(), threat.getOf(), threat.getOi(), threat.getOt(), threat.getSf(), threat.getSi(), threat.getSt(), threat.getSa());
+    }
+
+    // One line per subject (R=Registered, O=Organisation, S=Society) showing that subject's own highest
+    // consequence value and which dimension (F=Fortrolighed, I=Integritet, T=Tilgængelighed, A=Autenticitet
+    // — society only) it came from, e.g. "R: 3 · I". Subjects with no answered value are omitted.
+    private String buildConsequenceBreakdown(final ThreatDTO threat) {
+        final List<String> lines = new ArrayList<>();
+        addConsequenceBreakdownLine(lines, "R", threat.getRf(), threat.getRi(), threat.getRt(), -1);
+        addConsequenceBreakdownLine(lines, "O", threat.getOf(), threat.getOi(), threat.getOt(), -1);
+        addConsequenceBreakdownLine(lines, "S", threat.getSf(), threat.getSi(), threat.getSt(), threat.getSa());
+        return String.join("\n", lines);
+    }
+
+    private void addConsequenceBreakdownLine(final List<String> lines, final String subject, final int f, final int i, final int t, final int a) {
+        final Map<String, Integer> dimensions = new LinkedHashMap<>();
+        dimensions.put("F", f);
+        dimensions.put("I", i);
+        dimensions.put("T", t);
+        dimensions.put("A", a);
+
+        dimensions.entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .filter(highest -> highest.getValue() > 0)
+            .ifPresent(highest -> lines.add(subject + ": " + highest.getValue() + " · " + highest.getKey()));
     }
 
     public void setThreatAssessmentColor(final ThreatAssessment savedThreatAssessment) {
@@ -750,6 +778,9 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 
 		// remove catalogs and responses
 		if (!catalogIdsToRemove.isEmpty()) {
+			log.warn("Fravalgte trusselskataloger {} på risikovurdering {} - sletter {} besvarelser",
+					catalogIdsToRemove, assessment.getId(),
+					threatAssessmentResponseDao.countResponsesByAssessmentAndCatalogIdentifiers(assessment.getId(), catalogIdsToRemove));
 			threatAssessmentResponseDao.deleteResponsesByAssessmentAndCatalogIdentifiers(
 					assessment.getId(), catalogIdsToRemove);
 			currentCatalogs.removeIf(catalog -> catalogIdsToRemove.contains(catalog.getIdentifier()));
@@ -990,7 +1021,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return result;
     }
 
-    record TaskPDFDTO(String name, String description, String taskType, String nextDeadline, String responsible, String department) {}
+    record TaskPDFDTO(String name, String description, String taskType, String startDate, String nextDeadline, String responsible, String department) {}
     private List<TaskPDFDTO> buildTasks(List<Task> riskAssessmentTasks) {
         List<TaskPDFDTO> result = new ArrayList<>();
         riskAssessmentTasks.forEach(
@@ -999,6 +1030,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                     task.getName(),
                     task.getDescription(),
                     task.getTaskType().getMessage(),
+                    nullSafe(() -> DK_DATE_FORMATTER.format(task.getStartDate())),
                     DK_DATE_FORMATTER.format(task.getNextDeadline()),
                     nullSafe(() -> task.getResponsibleUsers().stream()
 							.map(User::getName)
@@ -1010,7 +1042,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return result;
     }
 
-    record RiskCalculationDTO(int probability, int consequence, int score, String color) {}
+    record RiskCalculationDTO(int probability, int consequence, String consequenceBreakdown, int score, String color) {}
     record ThreatPDFDTO(int index,
                         String threatType,
                         String threat,
@@ -1042,6 +1074,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                         new RiskCalculationDTO(
                             profile.getProbability(),
                             profile.getConsequence(),
+                            profile.getConsequenceBreakdown(),
                             score,
                             color),
                         t.getProblem(),
@@ -1055,6 +1088,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                         new RiskCalculationDTO(
                             profile.getResidualProbability(),
                             profile.getResidualConsequence(),
+                            null,
                             residualScore,
                             residualColor),
 							true
@@ -1277,5 +1311,17 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 	private static boolean uuidListContains(final String commaSeparatedUuids, final String userUuid) {
 		return commaSeparatedUuids != null
 				&& Arrays.stream(commaSeparatedUuids.split(",")).anyMatch(uuid -> uuid.trim().equals(userUuid));
+	}
+
+	public void validateRiskType(ThreatAssessment editedAssessment, Set<Long> selectedAssets, Long selectedRegister, Long selectedSupplier) {
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER) && selectedSupplier == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt.");
+		}
 	}
 }

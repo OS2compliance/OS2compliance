@@ -294,6 +294,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t1.setDescription("Regndans udføres jævnligt");
                 t1.setRepetition(TaskRepetition.MONTHLY);
                 t1.setNextDeadline(LocalDate.now().plusDays(10));
+                t1.setStartDate(LocalDate.now());
                 t1.setTaskType(TaskType.TASK);
                 t1.setResponsibleOu(nibisOu);
                 t1.setResponsibleUsers(Set.of(testAdmin));
@@ -306,6 +307,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t2.setDescription("Medbring kage ofte");
                 t2.setRepetition(TaskRepetition.MONTHLY);
                 t2.setNextDeadline(LocalDate.now().plusDays(1));
+                t2.setStartDate(LocalDate.now());
                 t2.setTaskType(TaskType.TASK);
                 t2.setResponsibleOu(diOu);
                 t2.setResponsibleUsers(Set.of(testAdmin));
@@ -318,6 +320,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t3.setDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam maximus nisl in vestibulum consequat");
                 t3.setRepetition(TaskRepetition.HALF_YEARLY);
                 t3.setNextDeadline(LocalDate.now().plusDays(3));
+                t3.setStartDate(LocalDate.now());
                 t3.setTaskType(TaskType.CHECK);
                 t3.setName("Opdater dokument");
                 t3.setResponsibleOu(hjelmOu);

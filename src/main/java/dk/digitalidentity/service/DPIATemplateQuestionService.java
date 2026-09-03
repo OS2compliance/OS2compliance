@@ -26,7 +26,7 @@ public class DPIATemplateQuestionService {
         return dpiaTemplateQuestionDao.findAll();
     }
 
-    public List<DPIATemplateQuestion> findByAnswerTemplateNotNull() {
-        return dpiaTemplateQuestionDao.findByAnswerTemplateNotNull();
+    public List<DPIATemplateQuestion> findActiveByAnswerTemplateNotNull() {
+        return dpiaTemplateQuestionDao.findByAnswerTemplateNotNullAndDeletedFalse();
     }
 }

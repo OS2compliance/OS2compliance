@@ -26,23 +26,11 @@
             font-size: 9px;
         }
 
+        .col-4 { width: 34%; }
+        .col-6 { width: 66%; }
+
         tr, th, td {
             border: 1px solid black;
-        }
-
-        .col-4 {
-            flex: 0 0 auto;
-            width: 34%;
-        }
-
-        .col-8 {
-            flex: 0 0 auto;
-            width: 66%;
-        }
-
-        .riskProfileTable {
-            font-size: 12px;
-            text-align: left;
         }
 
         table {
@@ -58,49 +46,6 @@
             white-space: normal;
         }
 
-        table td > .answer-container {
-            display: block;
-            width: 100%;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            white-space: normal;
-        }
-
-        img {
-            display: block;
-            margin: auto;
-            object-fit: contain;
-        }
-
-        .beforeTableSection, .afterTableSection {
-            width: 47%;
-            display: inline-block;
-            vertical-align: top;
-        }
-
-        .threatAndTasksTables {
-            font-size: 9px;
-            word-wrap: break-word;
-            table-layout: fixed;
-            width: 100%;
-        }
-
-        .threatAndTasksTables td, .threatAndTasksTables th {
-            overflow-wrap: break-word;
-            max-width: 100px;
-            white-space: normal;
-        }
-
-        .riskScoreField {
-            width: 65px !important;
-            height: 65px !important;
-        }
-
-        tr {
-            page-break-inside:avoid
-        }
-
         .bg-green {
             background-color:#9FCC2E;
         }
@@ -113,42 +58,59 @@
             background-color: #df5645;
         }
 
+        tr { page-break-inside: avoid; }
+        img { display: block; margin: auto; object-fit: contain; }
+
     </style>
 </head>
 <body>
 
-<h1 th:text="'Konsekvensanalyse vedr. ' + ${assetNames}" style="text-align: center;"></h1>
+<h1 th:text="${reportTitle}" style="text-align: center;"></h1>
 <div th:each="section : ${dpiaSections}">
     <h2 th:text="${section.heading}"></h2>
     <p th:utext="${section.explainer}"></p>
     <table class="table">
+        <colgroup>
+            <col width="34%"/>
+            <col width="66%"/>
+        </colgroup>
         <thead>
         <tr>
-            <th class="col-4">Spørgsmål</th>
-            <th class="col-6">Besvarelse</th>
+            <th>Spørgsmål</th>
+            <th>Besvarelse</th>
         </tr>
         </thead>
         <tbody>
-        <th:block th:if="${section.sectionIdentifier == 'scope'}">
+        <th:block th:if="${section.sectionIdentifier == 'scope' and !#strings.isEmpty(assetNames)}">
             <tr>
                 <td>Systemets navn</td>
-                <td th:text="${assetNames}"></td>
+                <td>
+                    <div class="answer-container" th:text="${assetNames}" ></div>
+                </td>
             </tr>
             <tr>
                 <td>Systemejer</td>
-                <td th:text="${responsibleUserNames}"></td>
+                <td>
+                    <div class="answer-container" th:text="${responsibleUserNames}" ></div>
+                </td>
             </tr>
             <tr>
                 <td>Systemtype</td>
-                <td th:text="${assetTypeNames}"></td>
+                <td>
+                    <div class="answer-container" th:text="${assetTypeNames}" ></div>
+                </td>
             </tr>
             <tr>
                 <td>Leverandør</td>
-                <td th:text="${supplierName}"></td>
+                <td>
+                    <div class="answer-container" th:text="${supplierName}" ></div>
+                </td>
             </tr>
             <tr>
                 <td>Systemansvarlig</td>
-                <td th:text="${managerNames}"></td>
+                <td>
+                    <div class="answer-container" th:text="${managerNames}" ></div>
+                </td>
             </tr>
         </th:block>
         <tr th:each="question : ${section.questions}">
@@ -166,10 +128,10 @@
     <table class="table">
         <thead>
         <tr>
-            <th class="col-lg-8">Risikovurdering</th>
-            <th class="col-lg-2">Dato</th>
-            <th class="col-lg-1">Signeret?</th>
-            <th class="col-lg-2">Status</th>
+            <th>Risikovurdering</th>
+            <th>Dato</th>
+            <th>Signeret?</th>
+            <th>Status</th>
         </tr>
         </thead>
         <tbody>

@@ -14,7 +14,9 @@ public enum EmailTemplateType {
 	TASK_REMINDER("Påmindelse om en opgaves deadline", Arrays.asList(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.DAYS_TILL_DEADLINE)),
 	INACTIVE_USERS("Mail omkring nye inaktive ansvarlige", Arrays.asList(EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.USER_LIST)),
     DPIA_REPORT("Send DPIA-rapport", Arrays.asList(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER, EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.MESSAGE_FROM_SENDER, EmailTemplatePlaceholder.SENDER)),
-    DPIA_REPORT_TO_SIGN("Send DPIA-rapport til signering", Arrays.asList(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.MESSAGE_FROM_SENDER, EmailTemplatePlaceholder.SENDER));
+    DPIA_REPORT_TO_SIGN("Send DPIA-rapport til signering", Arrays.asList(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.MESSAGE_FROM_SENDER, EmailTemplatePlaceholder.SENDER)),
+    ASSET_SYSTEM_CREATED("Mail ved nyt system oprettet automatisk", Arrays.asList(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.SOURCE_ID_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.EVENT_TIME_PLACEHOLDER)),
+    ASSET_SYSTEM_DEACTIVATED("Mail ved system inaktiveret automatisk", Arrays.asList(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER, EmailTemplatePlaceholder.SOURCE_ID_PLACEHOLDER, EmailTemplatePlaceholder.LINK_PLACEHOLDER, EmailTemplatePlaceholder.EVENT_TIME_PLACEHOLDER));
 
 
     private final String message;

@@ -14,7 +14,6 @@ import dk.digitalidentity.service.kle.KLEMainGroupService;
 import dk.digitalidentity.service.kle.KLESubjectService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
