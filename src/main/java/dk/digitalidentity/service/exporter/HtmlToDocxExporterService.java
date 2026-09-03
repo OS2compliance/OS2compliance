@@ -318,7 +318,6 @@ public class HtmlToDocxExporterService {
 			}
 			applyParagraphStyle(element);
 			final XWPFRun run = currentParagraph.createRun();
-			currentParagraph.setSpacingAfter(100);
 			run.setBold(true);
 			run.setFontSize(switch (level) {
 				case 1 -> 24;
@@ -351,7 +350,6 @@ public class HtmlToDocxExporterService {
 				}
 			}
 			applyParagraphStyle(element);
-			currentParagraph.setSpacingAfter(100);
 			processChildren(element, format);
 		}
 
@@ -410,7 +408,6 @@ public class HtmlToDocxExporterService {
 		private void processListItem(final Element element, final FormatState format,
 				final BigInteger numId, final int depth) {
 			currentParagraph = createParagraph();
-			currentParagraph.setSpacingAfter(100);
 
 			final CTNumPr numPr = currentParagraph.getCTP().addNewPPr().addNewNumPr();
 			numPr.addNewNumId().setVal(numId);
