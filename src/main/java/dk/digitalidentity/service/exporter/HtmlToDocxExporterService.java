@@ -403,7 +403,7 @@ public class HtmlToDocxExporterService {
 		}
 
 		private void processBlock(final Element element, final FormatState format) {
-			if (element.text().isBlank() && element.select("img, table, ul, ol, br").isEmpty()) {
+			if (currentCell == null && element.text().isBlank() && element.select("img, table, ul, ol, br").isEmpty()) {
 				return;
 			}
 			if (currentCell == null || !currentParagraph.getRuns().isEmpty()) {
