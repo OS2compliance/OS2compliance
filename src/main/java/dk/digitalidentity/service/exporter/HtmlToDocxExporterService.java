@@ -35,6 +35,9 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTFonts;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTInd;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTLvl;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTNumPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageMar;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageSz;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSectPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTStyle;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblBorders;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblGrid;
@@ -42,6 +45,7 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblLayoutType;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPrBase;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblWidth;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTrPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STBorder;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STBorder.Enum;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STNumberFormat;
@@ -57,15 +61,28 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HtmlToDocxExporterService {
 
+	// Must match @page in reports/dpia/dpia_pdf.html (A4, margins top/bottom 10%, left 11%, right 5%).
+	// A4 = 11906 x 16838 twips. Content width = 11906 - 1310 - 595 = 10001 twips.
+	private static final int CONTENT_WIDTH_TWIPS = 10001;
+
 	public ByteArrayOutputStream convert(@NonNull final String html) throws IOException {
 		final Document doc = Jsoup.parseBodyFragment(html);
 
 		try (final XWPFDocument xwpfDoc = new XWPFDocument()) {
+			final CTSectPr sectPr = xwpfDoc.getDocument().getBody().addNewSectPr();
+			final CTPageSz pgSz = sectPr.addNewPgSz();
+			pgSz.setW(BigInteger.valueOf(11906));
+			pgSz.setH(BigInteger.valueOf(16838));
+			final CTPageMar pgMar = sectPr.addNewPgMar();
+			pgMar.setLeft(BigInteger.valueOf(1310));
+			pgMar.setRight(BigInteger.valueOf(595));
+			pgMar.setTop(BigInteger.valueOf(1191));
+			pgMar.setBottom(BigInteger.valueOf(1191));
 			final CssParser cssParser = new CssParser(doc);
 
 			cssParser.applyStyles(xwpfDoc);
 
-			final HtmlParser parser = new HtmlParser(xwpfDoc, cssParser.getClassBackgroundColors());
+			final HtmlParser parser = new HtmlParser(xwpfDoc, cssParser.getClassBackgroundColors(), cssParser);
 			parser.parse(doc);
 
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -78,12 +95,14 @@ public class HtmlToDocxExporterService {
 
 		private final XWPFDocument document;
 		private final Map<String, String> classBackgroundColors;
+		private final CssParser cssParser;
 		private XWPFParagraph currentParagraph;
 		private XWPFTableCell currentCell;
 
-		HtmlParser(final XWPFDocument document, final Map<String, String> classBackgroundColors) {
+		HtmlParser(final XWPFDocument document, final Map<String, String> classBackgroundColors, final CssParser cssParser) {
 			this.document = document;
 			this.classBackgroundColors = classBackgroundColors;
+			this.cssParser = cssParser;
 		}
 
 		private Optional<Integer> parsePx(final String value) {
@@ -130,7 +149,19 @@ public class HtmlToDocxExporterService {
 				if (format.underline()) {
 					run.setUnderline(UnderlinePatterns.SINGLE);
 				}
-				run.setText(content);
+				String font = format.fontFamily();
+				if (font == null) {
+					font = cssParser.getDefaultFontFamily();
+				}
+			if (font != null) {
+				run.setFontFamily(font);
+			}
+			if (format.fontSize() != null) {
+				run.setFontSize(format.fontSize());
+			} else {
+				run.setFontSize(9);
+			}
+			run.setText(content);
 			}
 			else if (node instanceof final Element element) {
 				applyParagraphStyle(element);
@@ -151,16 +182,30 @@ public class HtmlToDocxExporterService {
 		private void processElement(final Element element, final FormatState format) {
 			final HtmlTag tag = HtmlTag.from(element);
 
+		FormatState effectiveFormat = format;
+		String cssFont = cssParser.getFontFamily(element.tagName().toLowerCase());
+		if (cssFont != null) {
+			effectiveFormat = effectiveFormat.withFontFamily(cssFont);
+		}
+		String inlineStyle = element.attr("style");
+		if (!inlineStyle.isEmpty()) {
+			Map<String, String> styles = parseStyle(inlineStyle);
+			String inlineFont = styles.get("font-family");
+			if (inlineFont != null) {
+				effectiveFormat = effectiveFormat.withFontFamily(parseCssFontFamilyValue(inlineFont));
+			}
+		}
+
 			switch (tag) {
 				case HEADING -> processHeading(element);
-				case P, DIV -> processBlock(element, format);
-				case TABLE -> processTable(element, format);
-				case TR, TD, TH -> processChildren(element, format);
-				case B -> processChildren(element, format.withBold());
-				case I -> processChildren(element, format.withItalic());
-				case U -> processChildren(element, format.withUnderline());
+				case P, DIV -> processBlock(element, effectiveFormat);
+				case TABLE -> processTable(element, effectiveFormat);
+				case TR, TD, TH -> processChildren(element, effectiveFormat);
+				case B -> processChildren(element, effectiveFormat.withBold());
+				case I -> processChildren(element, effectiveFormat.withItalic());
+				case U -> processChildren(element, effectiveFormat.withUnderline());
 				case IMG -> processImage(element);
-				case OL, UL -> processList(element, format, 0, null);
+				case OL, UL -> processList(element, effectiveFormat, 0, null);
 			case BR -> {
 				if (currentParagraph != null) {
 					if (!currentParagraph.getRuns().isEmpty()) {
@@ -170,7 +215,7 @@ public class HtmlToDocxExporterService {
 					}
 				}
 			}
-				default -> processChildren(element, format);
+				default -> processChildren(element, effectiveFormat);
 			}
 		}
 
@@ -241,7 +286,7 @@ public class HtmlToDocxExporterService {
 
 			final CTTblGrid tblGrid = table.getCTTbl().addNewTblGrid();
 			for (int i = 0; i < cols; i++) {
-				tblGrid.addNewGridCol().setW(BigInteger.valueOf(12240 / cols));
+				tblGrid.addNewGridCol().setW(BigInteger.valueOf(CONTENT_WIDTH_TWIPS / cols));
 			}
 
 			applyTableStyle(element, table);
@@ -249,6 +294,11 @@ public class HtmlToDocxExporterService {
 			for (int y = 0; y < htmlRows.size(); y++) {
 				final Elements htmlCells = htmlRows.get(y).select("td, th");
 				final XWPFTableRow row = table.getRow(y);
+				CTTrPr trPr = row.getCtRow().getTrPr();
+				if (trPr == null) {
+					trPr = row.getCtRow().addNewTrPr();
+				}
+				trPr.addNewCantSplit();
 
 				final int cellCount = Math.min(htmlCells.size(), cols);
 				for (int x = 0; x < cellCount; x++) {
@@ -256,8 +306,8 @@ public class HtmlToDocxExporterService {
 					currentParagraph = currentCell.getParagraphs().getFirst();
 
 					final FormatState cellFormat = htmlCells.get(x).tagName().equalsIgnoreCase("th")
-						? format.withBold()
-						: format;
+						? format.withBold().withFontSize(9)
+						: format.withFontSize(9);
 					applyCellShading(htmlCells.get(x), currentCell);
 					processChildren(htmlCells.get(x), cellFormat);
 					currentCell.getCTTc().addNewTcPr().addNewVAlign().setVal(STVerticalJc.CENTER);
@@ -317,16 +367,29 @@ public class HtmlToDocxExporterService {
 				currentParagraph = createParagraph();
 			}
 			applyParagraphStyle(element);
+			currentParagraph.setSpacingAfter(200);
+			if (currentParagraph.getCTP().getPPr() == null) {
+				currentParagraph.getCTP().addNewPPr();
+			}
+			currentParagraph.getCTP().getPPr().addNewKeepNext();
 			final XWPFRun run = currentParagraph.createRun();
+			String headingTag = "h" + level;
+			String headingFont = cssParser.getFontFamily(headingTag);
+			if (headingFont == null) {
+				headingFont = cssParser.getDefaultFontFamily();
+			}
+			if (headingFont != null) {
+				run.setFontFamily(headingFont);
+			}
 			run.setBold(true);
 			run.setFontSize(switch (level) {
-				case 1 -> 24;
-				case 2 -> 18;
-				case 3 -> 14;
-				case 4 -> 12;
-				case 5 -> 11;
-				case 6 -> 10;
-				default -> 12;
+				case 1 -> 16;
+				case 2 -> 12;
+				case 3 -> 9;
+				case 4 -> 8;
+				case 5 -> 7;
+				case 6 -> 7;
+				default -> 8;
 			});
 			run.setText(element.text());
 		}
@@ -340,6 +403,9 @@ public class HtmlToDocxExporterService {
 		}
 
 		private void processBlock(final Element element, final FormatState format) {
+			if (element.text().isBlank() && element.select("img, table, ul, ol, br").isEmpty()) {
+				return;
+			}
 			if (currentCell == null || !currentParagraph.getRuns().isEmpty()) {
 				if (currentCell != null && isWhitespaceOnly(currentParagraph)) {
 					for (int i = currentParagraph.getRuns().size() - 1; i >= 0; i--) {
@@ -437,7 +503,7 @@ public class HtmlToDocxExporterService {
 
 			final int gridCols = tblGrid.sizeOfGridColArray();
 
-			final int pageWidth = 12240;
+			final int pageWidth = CONTENT_WIDTH_TWIPS;
 
 			for (int i = 0; i < cols.size() && i < gridCols; i++) {
 				final String width = cols.get(i).attr("width");
@@ -456,15 +522,24 @@ public class HtmlToDocxExporterService {
 		}
 
 		private void applyTableStyle(final Element element, final XWPFTable table) {
-			final CTTblPr tblPr = table.getCTTbl().addNewTblPr();
-			tblPr.addNewTblStyle().setVal("TableGrid");
+			CTTblPr tblPr = table.getCTTbl().getTblPr();
+			if (tblPr == null) {
+				tblPr = table.getCTTbl().addNewTblPr();
+			}
+			if (!tblPr.isSetTblStyle()) {
+				tblPr.addNewTblStyle().setVal("TableGrid");
+			}
 
-			final CTTblWidth tblW = tblPr.addNewTblW();
-			tblW.setW(BigInteger.valueOf(5000));
-			tblW.setType(STTblWidth.Enum.forString("pct"));
+			if (!tblPr.isSetTblW()) {
+				final CTTblWidth tblW = tblPr.addNewTblW();
+				tblW.setW(BigInteger.valueOf(5000));
+				tblW.setType(STTblWidth.Enum.forString("pct"));
+			}
 
-			final CTTblLayoutType tblLayout = tblPr.addNewTblLayout();
-			tblLayout.setType(STTblLayoutType.Enum.forString("fixed"));
+			if (!tblPr.isSetTblLayout()) {
+				final CTTblLayoutType tblLayout = tblPr.addNewTblLayout();
+				tblLayout.setType(STTblLayoutType.Enum.forString("fixed"));
+			}
 		}
 
 		private void applyParagraphStyle(final Element element) {
@@ -525,24 +600,37 @@ public class HtmlToDocxExporterService {
 			}
 		}
 
-		private record FormatState(boolean bold, boolean italic, boolean underline) {
+		private record FormatState(boolean bold, boolean italic, boolean underline, String fontFamily, Integer fontSize) {
 
 			static FormatState none() {
-				return new FormatState(false, false, false);
+				return new FormatState(false, false, false, null, null);
 			}
 
 			FormatState withBold() {
-				return new FormatState(true, italic, underline);
+				return new FormatState(true, italic, underline, fontFamily, fontSize);
 			}
 
 			FormatState withItalic() {
-				return new FormatState(bold, true, underline);
+				return new FormatState(bold, true, underline, fontFamily, fontSize);
 			}
 
 			FormatState withUnderline() {
-				return new FormatState(bold, italic, true);
+				return new FormatState(bold, italic, true, fontFamily, fontSize);
+			}
+
+			FormatState withFontFamily(final String font) {
+				return new FormatState(bold, italic, underline, font, fontSize);
+			}
+
+			FormatState withFontSize(final int size) {
+				return new FormatState(bold, italic, underline, fontFamily, size);
 			}
 		}
+	}
+
+	private static String parseCssFontFamilyValue(final String cssValue) {
+		final String first = cssValue.split(",")[0].trim();
+		return first.replaceAll("^['\"]|['\"]$", "");
 	}
 
 	private static class CssParser {
@@ -684,6 +772,25 @@ public class HtmlToDocxExporterService {
 			}
 
 			return result;
+		}
+
+		String getDefaultFontFamily() {
+			for (final String selector : List.of("body", "html", "*")) {
+				final String ff = getFontFamily(selector);
+				if (ff != null) {
+					return ff;
+				}
+			}
+			return null;
+		}
+
+		String getFontFamily(final String selector) {
+			final Map<String, String> props = getAllProperties(selector);
+			final String value = props.get("font-family");
+			if (value == null) {
+				return null;
+			}
+			return parseCssFontFamilyValue(value);
 		}
 
 		Map<String, String> getClassBackgroundColors() {
