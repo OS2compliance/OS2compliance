@@ -39,15 +39,15 @@ function createDocumentFormLoaded() {
         const userUuid = userChoicesEditSelect.passedElement.element.value;
         try {
             const response = await fetch(`/rest/ous/user/${userUuid}/suggestion`);
-            if (response.status === 204 || !response.ok) {
-                ouChoicesEditSelect.removeActiveItems();
+            if (response.status === 204) {
+                return;
+            }
+            if (!response.ok) {
                 return;
             }
             const suggestion = await response.json();
             if (suggestion.ou) {
                 selectOu(ouChoicesEditSelect, suggestion.ou);
-            } else {
-                ouChoicesEditSelect.removeActiveItems();
             }
         } catch (error) {
             toastService.error(error);
