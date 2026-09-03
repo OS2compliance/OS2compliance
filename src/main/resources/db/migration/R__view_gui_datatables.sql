@@ -777,3 +777,12 @@ FROM dpia d
 WHERE d.deleted = false
 GROUP BY d.id, d.name, d.responsible_user_uuid, d.responsible_ou_uuid,
          d.user_updated_date, d.from_external_source, dr.report_approver_uuid;
+
+CREATE OR REPLACE VIEW view_gridjs_catalogs AS
+SELECT tc.identifier                                                                                       AS identifier,
+       tc.name                                                                                             AS name,
+       tc.hidden                                                                                           AS hidden,
+       (SELECT COUNT(1) FROM threat_catalog_threats tct WHERE tct.thread_catalog_identifier = tc.identifier) AS threat_count,
+       EXISTS(SELECT 1 FROM threat_assessment_catalogs tac WHERE tac.threat_catalog_identifier = tc.identifier) AS in_use
+FROM threat_catalogs tc
+WHERE tc.deleted = false;
