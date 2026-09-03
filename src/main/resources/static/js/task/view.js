@@ -125,10 +125,10 @@ function ViewTaskService() {
             nextDeadlineDirty = true;
         });
 
-        const setNextDeadlineValue = (day, month, year) => {
+        function setNextDeadlineValue(day, month, year) {
             nextDeadline.value = `${day}/${month}-${year}`;
             nextDeadlinePicker.setFullDate(new Date(year, month - 1, day));
-        };
+        }
 
         let previewRequestId = 0;
         const refreshPreview = () => {
