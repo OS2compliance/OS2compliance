@@ -3,7 +3,6 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.mapping.OrganisationUnitMapper;
 import dk.digitalidentity.model.dto.OrganisationUnitDTO;
-import dk.digitalidentity.model.dto.OrganisationUnitSuggestionDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Position;
 import dk.digitalidentity.model.entity.User;
@@ -68,11 +67,11 @@ public class OrganisationRestController {
 
 	@RequireReadOwnerOnly
 	@GetMapping("/user/{id}/suggestion")
-	public ResponseEntity<OrganisationUnitSuggestionDTO> getOrgSuggestionByUser(@PathVariable final String id) {
+	public ResponseEntity<OrganisationUnitDTO> getOrgSuggestionByUser(@PathVariable final String id) {
 		final User user = userService.findByUuid(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		return organisationService.findOuForUser(user)
-			.map(ou -> OrganisationUnitSuggestionDTO.builder().ou(mapper.toDTO(ou)).build())
+			.map(mapper::toDTO)
 			.map(ResponseEntity::ok)
 			.orElseGet(() -> ResponseEntity.noContent().build());
 	}

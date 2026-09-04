@@ -71,8 +71,10 @@ public class OrganisationService {
 		}
 		return user.getPositions().stream()
 			.filter(position -> StringUtils.isNotEmpty(position.getOuUuid()))
-			.min(Comparator.comparingLong(Position::getId))
 			.map(Position::getOuUuid)
-			.flatMap(this::findByUuid);
+			.map(this::findByUuid)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.min(Comparator.comparing(OrganisationUnit::getName));
 	}
 }

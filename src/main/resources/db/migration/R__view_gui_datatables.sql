@@ -602,12 +602,14 @@ SELECT d.id,
             WHEN d.status = 'READY' THEN 3
            END)                                                             as status_order,
        d.localized_enums,
-       (SELECT ou.name FROM ous ou WHERE ou.uuid = d.responsible_ou_uuid)   AS responsible_ou_name,
-       (SELECT ou.name FROM ous ou WHERE ou.uuid = d.department_uuid)      AS department_name,
+       responsible_ou.name                                                  AS responsible_ou_name,
+       department_ou.name                                                   AS department_name,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
 FROM documents d
          LEFT JOIN choice_values cv_type ON cv_type.id = d.document_type
+         LEFT JOIN ous responsible_ou ON responsible_ou.uuid = d.responsible_ou_uuid
+         LEFT JOIN ous department_ou ON department_ou.uuid = d.department_uuid
          LEFT JOIN document_tag rt on rt.document_id = d.id
          LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE d.deleted = false

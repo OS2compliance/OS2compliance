@@ -56,9 +56,9 @@ function loadViewAndEditForm() {
             if (!response.ok) {
                 return;
             }
-            const suggestion = await response.json();
-            if (suggestion.ou) {
-                selectOu(ouChoicesEditSelect, suggestion.ou);
+            const suggestedOu = await response.json();
+            if (suggestedOu) {
+                selectOu(ouChoicesEditSelect, suggestedOu);
             }
         } catch (error) {
             toastService.error(error);
