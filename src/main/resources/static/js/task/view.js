@@ -8,23 +8,34 @@ document.addEventListener("DOMContentLoaded", function(event) {
     initRelatedTagList('#editForm')
 });
 
-function applyNextDeadlinePickerValue(nextDeadline, nextDeadlinePicker, day, month, year) {
-    nextDeadline.value = `${day}/${month}-${year}`;
-    nextDeadlinePicker.setFullDate(new Date(year, month - 1, day));
+function NextDeadlineField(inputEl, picker) {
+    this.inputEl = inputEl;
+    this.picker = picker;
+    this.lastSetValue = inputEl.value;
 }
 
+NextDeadlineField.prototype.isDirty = function() {
+    return this.inputEl.value !== this.lastSetValue;
+};
+
+NextDeadlineField.prototype.setPreviewValue = function(day, month, year) {
+    this.lastSetValue = `${day}/${month}-${year}`;
+    this.inputEl.value = this.lastSetValue;
+    this.picker.setFullDate(new Date(year, month - 1, day));
+};
+
 function refreshNextDeadlinePreview(context) {
-    const { taskId, taskDeadline, nextDeadline, nextDeadlinePicker, dirtyState, previewState } = context;
-    if (dirtyState.dirty || !taskDeadline.value) {
+    const { taskId, taskDeadline, nextDeadlineField, previewState } = context;
+    if (nextDeadlineField.isDirty() || !taskDeadline.value) {
         return;
     }
     const requestId = ++previewState.requestId;
     fetch(`/tasks/${taskId}/next-deadline-preview?dateOfCompletion=${encodeURIComponent(taskDeadline.value)}`)
         .then(response => response.ok ? response.json() : null)
         .then(date => {
-            if (date && !dirtyState.dirty && requestId === previewState.requestId) {
+            if (date && !nextDeadlineField.isDirty() && requestId === previewState.requestId) {
                 const [year, month, day] = date.split('-');
-                applyNextDeadlinePickerValue(nextDeadline, nextDeadlinePicker, day, month, year);
+                nextDeadlineField.setPreviewValue(day, month, year);
             }
         })
         .catch(defaultErrorHandler);
@@ -142,12 +153,9 @@ function ViewTaskService() {
         }
 
         const nextDeadlinePicker = initDatepicker("#NextDeadlineBtn", "#NextDeadline");
-        const dirtyState = { dirty: false };
-        nextDeadline.addEventListener("input", () => {
-            dirtyState.dirty = true;
-        });
+        const nextDeadlineField = new NextDeadlineField(nextDeadline, nextDeadlinePicker);
 
-        const previewContext = { taskId, taskDeadline, nextDeadline, nextDeadlinePicker, dirtyState, previewState: { requestId: 0 } };
+        const previewContext = { taskId, taskDeadline, nextDeadlineField, previewState: { requestId: 0 } };
         const refreshPreview = () => refreshNextDeadlinePreview(previewContext);
 
         taskDeadline.addEventListener("change", refreshPreview);
