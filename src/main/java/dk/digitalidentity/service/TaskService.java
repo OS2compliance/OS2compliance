@@ -365,7 +365,7 @@ public class TaskService implements TagableService<Task> {
             return deadline;
         }
         final LocalDate effectiveCompleted = completed != null ? completed : LocalDate.now();
-        if (!effectiveCompleted.isAfter(addInterval(deadline, repetition, -1))) {
+        if (isWithinPeriodPrecedingDeadline(effectiveCompleted, deadline, repetition)) {
             return deadline;
         }
         long intervals = 0;
@@ -375,6 +375,11 @@ public class TaskService implements TagableService<Task> {
             next = addInterval(deadline, repetition, intervals);
         } while (!next.isAfter(effectiveCompleted));
         return next;
+    }
+
+    private boolean isWithinPeriodPrecedingDeadline(final LocalDate completed, final LocalDate deadline, final TaskRepetition repetition) {
+        final LocalDate periodStart = addInterval(deadline, repetition, -1);
+        return !completed.isAfter(periodStart);
     }
 
     private LocalDate addInterval(final LocalDate date, final TaskRepetition repetition, final long multiplier) {
@@ -389,6 +394,7 @@ public class TaskService implements TagableService<Task> {
             case EVERY_SECOND_YEAR -> date.plusYears(2L * multiplier);
             case EVERY_THIRD_YEAR -> date.plusYears(3L * multiplier);
             case NONE -> throw new IllegalStateException("addInterval called with NONE repetition");
+            default -> throw new IllegalStateException("addInterval called with unsupported repetition: " + repetition);
         };
     }
 
