@@ -55,7 +55,7 @@ public class DocumentsController {
 	@RequireReadOwnerOnly
     @GetMapping
     public String documentsList(final Model model) {
-		model.addAttribute("document", new DocumentFormDTO(null, null, null, null, null, null, null, null, null, List.of(), false));
+		model.addAttribute("document", new DocumentFormDTO(null, null, null, null, null, null, null, null, null, null, null, List.of(), false));
         model.addAttribute("isSuperuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 		model.addAttribute("possibleDocumentTypes", choiceService.findChoiceValuesForListIdentifier("document-type"));
         return "documents/index";
@@ -80,6 +80,8 @@ public class DocumentsController {
 		document.setRevisionInterval(documentForm.getRevisionInterval());
 		document.setNextRevision(documentForm.getNextRevision());
 		document.setResponsibleUser(documentForm.getResponsibleUser());
+		document.setResponsibleOu(documentForm.getResponsibleOu());
+		document.setDepartment(documentForm.getDepartment());
 		document.setIncludeInYearWheel(documentForm.isIncludeInYearWheel());
 		if (documentForm.getTags() != null && !documentForm.getTags().isEmpty()) {
 			document.setTags(new HashSet<>(documentForm.getTags()));
@@ -114,6 +116,8 @@ public class DocumentsController {
 				document.getRevisionInterval(),
 				document.getNextRevision(),
 				document.getResponsibleUser(),
+				document.getResponsibleOu(),
+				document.getDepartment(),
 				document.isIncludeInYearWheel()
 		);
 
@@ -148,6 +152,8 @@ public class DocumentsController {
 		existingDocument.setRevisionInterval(documentEditForm.getRevisionInterval());
 		existingDocument.setNextRevision(documentEditForm.getNextRevision());
 		existingDocument.setResponsibleUser(documentEditForm.getResponsibleUser());
+		existingDocument.setResponsibleOu(documentEditForm.getResponsibleOu());
+		existingDocument.setDepartment(documentEditForm.getDepartment());
 		existingDocument.setDocumentVersion(documentEditForm.getDocumentVersion());
 		existingDocument.setIncludeInYearWheel(documentEditForm.isIncludeInYearWheel());
 

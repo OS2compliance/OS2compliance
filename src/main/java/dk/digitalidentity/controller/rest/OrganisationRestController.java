@@ -8,6 +8,7 @@ import dk.digitalidentity.model.entity.Position;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.annotations.RequireAuthenticated;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class OrganisationRestController {
     private final OrganisationUnitDao organisationUnitDao;
     private final OrganisationUnitMapper mapper;
     private final UserService userService;
+    private final OrganisationService organisationService;
 
 	@RequireReadOwnerOnly
     @GetMapping("autocomplete")
@@ -62,4 +64,15 @@ public class OrganisationRestController {
 		// If a user has a position we return the OrgUnit that it's mapped to
         return ResponseEntity.ok(mapper.toDTO(organisationUnitDao.findByUuid(position.getOuUuid())));
     }
+
+	@RequireReadOwnerOnly
+	@GetMapping("/user/{id}/suggestion")
+	public ResponseEntity<OrganisationUnitDTO> getOrgSuggestionByUser(@PathVariable final String id) {
+		final User user = userService.findByUuid(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		return organisationService.findOuForUser(user)
+			.map(mapper::toDTO)
+			.map(ResponseEntity::ok)
+			.orElseGet(() -> ResponseEntity.noContent().build());
+	}
 }

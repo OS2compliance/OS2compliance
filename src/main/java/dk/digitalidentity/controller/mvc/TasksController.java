@@ -57,6 +57,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.LinkHelper.linkify;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -215,11 +216,17 @@ public class TasksController {
 		existingTask.getNotificationReminders().clear();
 		existingTask.getNotificationReminders().addAll(task.getNotificationReminders());
 		existingTask.getSubTasks().clear();
+		final Set<String> documentGeneratedUrls = existingTask.getLinks().stream()
+			.filter(TaskLink::isDocumentGenerated)
+			.map(TaskLink::getUrl)
+			.collect(Collectors.toSet());
 		existingTask.getLinks().clear();
 		for (TaskLink link : task.getLinks()) {
 			if (link.getUrl() != null && !link.getUrl().isBlank()) {
+				final String url = linkify(link.getUrl());
 				link.setTask(existingTask);
-				link.setUrl(linkify(link.getUrl()));
+				link.setUrl(url);
+				link.setDocumentGenerated(documentGeneratedUrls.contains(url));
 				existingTask.getLinks().add(link);
 			}
 		}

@@ -3,6 +3,8 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.Position;
+import dk.digitalidentity.model.entity.User;
 import jakarta.persistence.EntityManager;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -60,5 +63,18 @@ public class OrganisationService {
 			return Optional.empty();
 		}
 		return Optional.ofNullable(organisationUnitDao.findByUuid(uuid));
+	}
+
+	public Optional<OrganisationUnit> findOuForUser(final User user) {
+		if (user == null) {
+			return Optional.empty();
+		}
+		return user.getPositions().stream()
+			.filter(position -> StringUtils.isNotEmpty(position.getOuUuid()))
+			.map(Position::getOuUuid)
+			.map(this::findByUuid)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.min(Comparator.comparing(OrganisationUnit::getName));
 	}
 }

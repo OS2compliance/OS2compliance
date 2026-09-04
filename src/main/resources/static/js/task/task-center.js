@@ -141,6 +141,10 @@ function initGrid() {
                         return gridjs.html(`<span>${cell}</span>`);
                     }
 
+                    if (!cell) {
+                        return gridjs.html(`<span>-</span>`);
+                    }
+
                     var dateString = cell.replace(" ", "/");
                     dateString = dateString.replace("-", "/");
                     var dateSplit = dateString.split("/");
