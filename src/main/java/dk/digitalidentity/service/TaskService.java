@@ -365,7 +365,7 @@ public class TaskService implements TagableService<Task> {
             return deadline;
         }
         final LocalDate effectiveCompleted = completed != null ? completed : LocalDate.now();
-        if (isWithinPeriodPrecedingDeadline(effectiveCompleted, deadline, repetition)) {
+        if (isBeforeCurrentPeriodStart(effectiveCompleted, deadline, repetition)) {
             return deadline;
         }
         long intervals = 0;
@@ -377,7 +377,7 @@ public class TaskService implements TagableService<Task> {
         return next;
     }
 
-    private boolean isWithinPeriodPrecedingDeadline(final LocalDate completed, final LocalDate deadline, final TaskRepetition repetition) {
+    private boolean isBeforeCurrentPeriodStart(final LocalDate completed, final LocalDate deadline, final TaskRepetition repetition) {
         final LocalDate periodStart = addInterval(deadline, repetition, -1);
         return !completed.isAfter(periodStart);
     }
