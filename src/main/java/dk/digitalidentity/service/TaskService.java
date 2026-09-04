@@ -207,12 +207,14 @@ public class TaskService implements TagableService<Task> {
     }
 
     @Transactional
-    public void completeTask(final Task task, final TaskLog taskLog) {
+    public void completeTask(final Task task, final TaskLog taskLog, final LocalDate overrideNextDeadline) {
         task.getLogs().add(taskLog);
         task.setInProgress(false);
         task.setNote(null);
         if (task.getTaskType() == TaskType.CHECK) {
-            final LocalDate nextDeadline = getNextDeadline(task.getNextDeadline(), task.getRepetition());
+            final LocalDate nextDeadline = overrideNextDeadline != null
+                ? overrideNextDeadline
+                : getNextDeadline(task.getNextDeadline(), taskLog.getCompleted(), task.getRepetition());
             // Check if we need to move date on related assets
             findLinkedDocument(task)
                 .ifPresent(d -> {
@@ -222,6 +224,10 @@ public class TaskService implements TagableService<Task> {
                 });
             task.setNextDeadline(nextDeadline);
         }
+    }
+
+    public LocalDate previewNextDeadline(final Task task, final LocalDate completed) {
+        return getNextDeadline(task.getNextDeadline(), completed, task.getRepetition());
     }
 
     public boolean isTaskDone(final Task task) {
@@ -354,21 +360,41 @@ public class TaskService implements TagableService<Task> {
                 documentDao.findById(Long.parseLong(property.getValue())));
     }
 
-    private LocalDate getNextDeadline(final LocalDate deadline, final TaskRepetition repetition) {
-        if (repetition == null) {
+    private LocalDate getNextDeadline(final LocalDate deadline, final LocalDate completed, final TaskRepetition repetition) {
+        if (repetition == null || repetition == TaskRepetition.NONE || deadline == null) {
             return deadline;
         }
+        final LocalDate effectiveCompleted = completed != null ? completed : LocalDate.now();
+        if (isBeforeCurrentPeriodStart(effectiveCompleted, deadline, repetition)) {
+            return deadline;
+        }
+        long intervals = 0;
+        LocalDate next;
+        do {
+            intervals++;
+            next = addInterval(deadline, repetition, intervals);
+        } while (!next.isAfter(effectiveCompleted));
+        return next;
+    }
+
+    private boolean isBeforeCurrentPeriodStart(final LocalDate completed, final LocalDate deadline, final TaskRepetition repetition) {
+        final LocalDate periodStart = addInterval(deadline, repetition, -1);
+        return !completed.isAfter(periodStart);
+    }
+
+    private LocalDate addInterval(final LocalDate date, final TaskRepetition repetition, final long multiplier) {
         return switch (repetition) {
-			case EVERY_2_MONTHS -> deadline.plusMonths(2);
-			case EVERY_3_MONTHS -> deadline.plusMonths(3);
-			case EVERY_4_MONTHS -> deadline.plusMonths(4);
-            case MONTHLY -> deadline.plusMonths(1);
-            case QUARTERLY -> deadline.plusMonths(3);
-            case HALF_YEARLY -> deadline.plusMonths(6);
-            case YEARLY -> deadline.plusYears(1);
-            case EVERY_SECOND_YEAR -> deadline.plusYears(2);
-            case EVERY_THIRD_YEAR -> deadline.plusYears(3);
-            default -> deadline;
+			case EVERY_2_MONTHS -> date.plusMonths(2L * multiplier);
+			case EVERY_3_MONTHS -> date.plusMonths(3L * multiplier);
+			case EVERY_4_MONTHS -> date.plusMonths(4L * multiplier);
+            case MONTHLY -> date.plusMonths(multiplier);
+            case QUARTERLY -> date.plusMonths(3L * multiplier);
+            case HALF_YEARLY -> date.plusMonths(6L * multiplier);
+            case YEARLY -> date.plusYears(multiplier);
+            case EVERY_SECOND_YEAR -> date.plusYears(2L * multiplier);
+            case EVERY_THIRD_YEAR -> date.plusYears(3L * multiplier);
+            case NONE -> throw new IllegalStateException("addInterval called with NONE repetition");
+            default -> throw new IllegalStateException("addInterval called with unsupported repetition: " + repetition);
         };
     }
 
