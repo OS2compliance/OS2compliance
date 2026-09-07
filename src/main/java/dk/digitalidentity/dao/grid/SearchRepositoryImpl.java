@@ -389,7 +389,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 					}
 				})
 				.toArray(Predicate[]::new);
-		return criteriaBuilder.or(orArr);
+		return orArr.length == 0 ? criteriaBuilder.disjunction() : criteriaBuilder.or(orArr);
 	}
 
 	private static <T> List<Order> buildOrderBy(final Pageable page, CriteriaBuilder cb, final Root<T> root) {

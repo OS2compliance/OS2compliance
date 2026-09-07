@@ -43,6 +43,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -409,6 +410,7 @@ public class TaskService implements TagableService<Task> {
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user, boolean onlyMine) {
 		Page<TaskGrid> tasks;
+		filters = new HashMap<>(filters);
 		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(extractDateWithinPredicate(filters));
 
 		// if onlyMine is true - only show the tasks assigned to the user, even if read_all
@@ -435,6 +437,7 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public Page<TaskGrid> getTasksForUser(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		filters = new HashMap<>(filters);
 		return taskGridDao.findAllWithAssignedUser(
 				validateSearchFilters(filters, TaskGrid.class),
 				user,
@@ -444,12 +447,6 @@ public class TaskService implements TagableService<Task> {
 		);
 	}
 
-	/**
-	 * Pulls the date-range filter out of the generic filter map, so it does not have to be threaded
-	 * through every caller as separate parameters. Mutates {@code filters}: the three keys are consumed
-	 * here and must not reach {@link dk.digitalidentity.service.FilterService#validateSearchFilters},
-	 * which knows nothing about them.
-	 */
 	private static QueryPredicateBuilder<TaskGrid> extractDateWithinPredicate(final Map<String, String> filters) {
 		final TaskDateFilter dateFilter = TaskDateFilter.parse(filters.remove("dateField"));
 		final LocalDate from = parseDate(filters.remove("fromDate"));
