@@ -313,7 +313,16 @@ function initGrid() {
     //Enables custom column search, serverside sorting and pagination
     const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, datatableId);
 
-    initDateRangeFilter(customGridFunctions);
+    const taskDateFieldSelect = document.getElementById('taskDateFieldSelect');
+    if (taskDateFieldSelect) {
+        initTaskDateFilter(customGridFunctions, {
+            fromInput: '#taskFilterFrom',
+            fromBtn: '#taskFilterFromBtn',
+            toInput: '#taskFilterTo',
+            toBtn: '#taskFilterToBtn',
+            dateFieldSelect: taskDateFieldSelect
+        });
+    }
 
     new ColumnOptions(
         datatableId,
@@ -325,21 +334,6 @@ function initGrid() {
     initGridActions()
 
     initSaveAsExcelButton(customGridFunctions, 'task', 'tasks', 'Opgavecenter')
-}
-
-function initDateRangeFilter(customGridFunctions) {
-    const dateFieldSelect = document.getElementById('taskDateFieldSelect');
-    if (!dateFieldSelect) {
-        return;
-    }
-
-    initTaskDateFilter(customGridFunctions, {
-        fromInput: '#taskFilterFrom',
-        fromBtn: '#taskFilterFromBtn',
-        toInput: '#taskFilterTo',
-        toBtn: '#taskFilterToBtn',
-        dateFieldSelect
-    });
 }
 
 function initGridActions() {

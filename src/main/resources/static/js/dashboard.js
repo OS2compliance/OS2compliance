@@ -22,21 +22,6 @@ function escapeAttribute(value) {
         .replaceAll("'", '&#39;');
 }
 
-function initTaskDateRangeFilter(customGridFunctions) {
-    const dateFieldSelect = document.getElementById('taskDateFieldSelectDashboard');
-    if (!dateFieldSelect) {
-        return;
-    }
-
-    initTaskDateFilter(customGridFunctions, {
-        fromInput: '#taskFilterFromDashboard',
-        fromBtn: '#taskFilterFromBtnDashboard',
-        toInput: '#taskFilterToDashboard',
-        toBtn: '#taskFilterToBtnDashboard',
-        dateFieldSelect
-    });
-}
-
 document.addEventListener("DOMContentLoaded", function (event) {
 
     initSystemOwnerRapportButton();
@@ -226,7 +211,16 @@ document.addEventListener("DOMContentLoaded", function (event) {
         //Enables custom column search, serverside sorting and pagination
         const customGridFunctionsTasks = new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId, 'tasksDatatable');
 
-        initTaskDateRangeFilter(customGridFunctionsTasks);
+        const taskDateFieldSelect = document.getElementById('taskDateFieldSelectDashboard');
+        if (taskDateFieldSelect) {
+            initTaskDateFilter(customGridFunctionsTasks, {
+                fromInput: '#taskFilterFromDashboard',
+                fromBtn: '#taskFilterFromBtnDashboard',
+                toInput: '#taskFilterToDashboard',
+                toBtn: '#taskFilterToBtnDashboard',
+                dateFieldSelect: taskDateFieldSelect
+            });
+        }
 
         new ColumnOptions(
             taskDatatableId,
