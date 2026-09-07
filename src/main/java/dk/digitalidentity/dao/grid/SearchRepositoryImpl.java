@@ -316,8 +316,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 
 	@Override
 	public <T> Page<T> findAllWithAssignedUser(final Map<String, String> searchableProperties, final User user, final Pageable page, final Class<T> entityClass) {
-		Map<String, Object> orMap = assignedUserOrConditions(user, entityClass);
-		return findAllWithColumnSearch(searchableProperties, null, orMap, page, entityClass);
+		return findAllWithAssignedUser(searchableProperties, user, page, entityClass, List.of());
 	}
 
 	@Override
