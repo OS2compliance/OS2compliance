@@ -438,12 +438,13 @@ public class TaskService implements TagableService<Task> {
 
 	public Page<TaskGrid> getTasksForUser(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
 		filters = new HashMap<>(filters);
+		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(extractDateWithinPredicate(filters));
 		return taskGridDao.findAllWithAssignedUser(
 				validateSearchFilters(filters, TaskGrid.class),
 				user,
 				buildPageable(page, pageLimit, sortColumn, sortDirection),
 				TaskGrid.class,
-				List.of(extractDateWithinPredicate(filters))
+				queryPredicates
 		);
 	}
 
