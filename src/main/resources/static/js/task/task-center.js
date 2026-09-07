@@ -4,7 +4,7 @@ import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 import {BadgeData, createBadges} from "../component/badge.js";
 import { initYearWheel } from "./year-wheel.js";
-import { DateRangeFilter } from "../component/date-range-filter.js";
+import { initTaskDateFilter } from "../component/task-date-filter.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -328,30 +328,18 @@ function initGrid() {
 }
 
 function initDateRangeFilter(customGridFunctions) {
-    const filterValue = (key) => customGridFunctions.state.searchValues[key] || '';
-    const setFilter = (key, value) => {
-        customGridFunctions.updateColumnValue(key, value || '');
-        customGridFunctions.state.page = 0;
-        customGridFunctions.saveState();
-        customGridFunctions.onSearch();
-    };
-
-    new DateRangeFilter({
-        containerEl: document.getElementById('taskDateRangeFilter'),
-        getValue: () => ({ from: filterValue('fromDate'), to: filterValue('toDate') }),
-        onApply: (from, to) => {
-            setFilter('fromDate', from);
-            setFilter('toDate', to);
-        },
-        onClear: () => {
-            setFilter('fromDate', '');
-            setFilter('toDate', '');
-        }
-    });
-
     const dateFieldSelect = document.getElementById('taskDateFieldSelect');
-    dateFieldSelect.value = filterValue('dateField') || 'DEADLINE';
-    dateFieldSelect.addEventListener('change', (event) => setFilter('dateField', event.target.value));
+    if (!dateFieldSelect) {
+        return;
+    }
+
+    initTaskDateFilter(customGridFunctions, {
+        fromInput: '#taskFilterFrom',
+        fromBtn: '#taskFilterFromBtn',
+        toInput: '#taskFilterTo',
+        toBtn: '#taskFilterToBtn',
+        dateFieldSelect
+    });
 }
 
 function initGridActions() {

@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 public enum TaskDateFilter implements HasMessage {
-    DEADLINE("Deadline"),
+    DEADLINE("Slutdato"),
     LAST_COMPLETION("Sidst udført");
 
     private final String message;

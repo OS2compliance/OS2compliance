@@ -41,12 +41,32 @@
                                             <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
                                         </div>
                                     </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <select id="taskDateFieldSelect" class="form-control form-select form-select-sm w-auto">
-                                            <option th:each="dateFilter : ${T(dk.digitalidentity.model.dto.TaskDateFilter).values()}"
-                                                    th:value="${dateFilter}" th:text="${dateFilter.message}"></option>
-                                        </select>
-                                        <div id="taskDateRangeFilter"></div>
+                                    <div class="d-flex gap-2 flex-column">
+                                        <div class="input-group gap-2">
+                                            <label for="taskDateFieldSelect" class="col-form-label text-nowrap">Filtrer efter dato</label>
+                                            <select id="taskDateFieldSelect" class="form-control form-select w-auto">
+                                                <option th:each="dateFilter : ${T(dk.digitalidentity.model.dto.TaskDateFilter).values()}"
+                                                        th:value="${dateFilter}" th:text="${dateFilter.message}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2 flex-column">
+                                        <div class="input-group gap-2">
+                                            <label for="taskFilterFrom" class="col-form-label">Fra</label>
+                                            <input id="taskFilterFrom" type="text" class="form-control"
+                                                   name="taskFilterFrom">
+                                            <button id="taskFilterFromBtn" class="btn btn-primary" type="button">
+                                                <i class="pli-calendar-4 fs-5"></i>
+                                            </button>
+                                        </div>
+                                        <div class="input-group gap-2">
+                                            <label for="taskFilterTo" class="col-form-label">Til</label>
+                                            <input id="taskFilterTo" type="text" class="form-control"
+                                                   name="taskFilterTo">
+                                            <button id="taskFilterToBtn" class="btn btn-primary" type="button">
+                                                <i class="pli-calendar-4 fs-5"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="tasksDatatable"></div>

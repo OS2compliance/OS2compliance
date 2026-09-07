@@ -129,6 +129,18 @@ public class SearchRepositoryImpl implements SearchRepository {
 	}
 
 	/**
+	 * Same as {@link #findAllWithColumnSearch(Map, Pageable, Class, List, List)}, for callers that have
+	 * no caller-supplied {@link PredicateBuilder} restrictions of their own.
+	 */
+	@Override
+	public <T> Page<T> findAllWithColumnSearch(final Map<String, String> searchableProperties,
+			final Pageable page,
+			final Class<T> entityClass,
+			final List<QueryPredicateBuilder<T>> queryPredicates) {
+		return findAllWithColumnSearch(searchableProperties, page, entityClass, List.of(), queryPredicates);
+	}
+
+	/**
 	 * Same restrictions as {@link #findAllWithColumnSearch(Map, Pageable, Class, List, List)}, but only
 	 * the count — for callers that need an exact match total without paging through the rows.
 	 */

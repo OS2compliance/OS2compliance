@@ -1,13 +1,10 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.dao.TaskPredicates;
-import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.mapping.TaskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SubTaskDTO;
 import dk.digitalidentity.model.dto.TaskCreateRequestDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
-import dk.digitalidentity.model.dto.TaskDateFilter;
 import dk.digitalidentity.model.dto.TaskLinkDTO;
 import dk.digitalidentity.model.dto.YearWheelDTO;
 import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
@@ -55,8 +52,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -64,9 +59,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
-import static dk.digitalidentity.service.FilterService.buildPageable;
-import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 import static dk.digitalidentity.util.LinkHelper.linkify;
 
 @Slf4j
@@ -76,7 +68,6 @@ import static dk.digitalidentity.util.LinkHelper.linkify;
 @RequiredArgsConstructor
 public class TaskRestController {
     private final UserService userService;
-    private final TaskGridDao taskGridDao;
     private final TaskMapper mapper;
 	private final SecurityUserService securityUserService;
 	private final TaskService taskService;
@@ -99,10 +90,8 @@ public class TaskRestController {
 			@RequestParam Map<String, String> filters // Dynamic filters for search fields
 	) {
 		User user = securityUserService.getCurrentUserOrThrow();
-		final DateRange range = extractDateRange(filters);
 
-		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, page, limit, user,
-				false, range.dateFilter(), range.from(), range.to());
+		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, page, limit, user, false);
 
 		Set<Long> taskIds = tasks.getContent().stream().map(TaskGrid::getId).collect(Collectors.toSet());
 		Map<Long, Tag> tagsById = taskService.findTagsByEntityIds(taskIds).stream()
@@ -125,15 +114,8 @@ public class TaskRestController {
 
         final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		log.info("Listing tasks for user {} with principal id {}", user.getUuid(), SecurityUtil.getPrincipalUuid());
-		final DateRange range = extractDateRange(filters);
 
-        Page<TaskGrid> tasks = taskGridDao.findAllWithAssignedUser(
-				validateSearchFilters(filters, TaskGrid.class),
-				user,
-				buildPageable(page, limit, sortColumn, sortDirection),
-				TaskGrid.class,
-				List.of(TaskPredicates.dateWithin(range.dateFilter(), range.from(), range.to()))
-		);
+        Page<TaskGrid> tasks = taskService.getTasksForUser(sortColumn, sortDirection, filters, page, limit, user);
 
 		Map<Long, Tag> tagsById = tagService.findAll().stream()
 				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
@@ -142,27 +124,6 @@ public class TaskRestController {
 
         return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), tagsById));
     }
-
-	private static DateRange extractDateRange(final Map<String, String> filters) {
-		final TaskDateFilter dateFilter = TaskDateFilter.parse(filters.remove("dateField"));
-		final LocalDate from = parseDate(filters.remove("fromDate"));
-		final LocalDate to = parseDate(filters.remove("toDate"));
-		return new DateRange(dateFilter, from, to);
-	}
-
-	private static LocalDate parseDate(final String value) {
-		if (!StringUtils.hasText(value)) {
-			return null;
-		}
-		try {
-			return LocalDate.parse(value, DK_DATE_FORMATTER);
-		} catch (final DateTimeParseException e) {
-			return null;
-		}
-	}
-
-	private record DateRange(TaskDateFilter dateFilter, LocalDate from, LocalDate to) {
-	}
 
 	@RequireCreateOwnerOnly
 	@PostMapping("create")
@@ -290,7 +251,6 @@ public class TaskRestController {
 	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
 		User user = securityUserService.getCurrentUserOrThrow();
 		final Map<String, String> filters = request.getFilters();
-		final DateRange range = extractDateRange(filters);
 
 		Page<TaskGrid> tasks = taskService.getTasks(
 				null,
@@ -299,10 +259,7 @@ public class TaskRestController {
 				0,
 				Integer.MAX_VALUE,
 				user,
-				false,
-				range.dateFilter(),
-				range.from(),
-				range.to());
+				false);
 
 		return excelExportHelperService.toEntityListItems(
 				tasks.getContent(),

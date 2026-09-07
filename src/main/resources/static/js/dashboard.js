@@ -1,7 +1,7 @@
 import {initStatisticView} from "./statistic/statisticView.js";
 import ColumnOptions from "./grid-js-extension/column-options.js";
 import formatTags from "./tags/tag-grid-formatter.js";
-import { DateRangeFilter } from "./component/date-range-filter.js";
+import { initTaskDateFilter } from "./component/task-date-filter.js";
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -23,35 +23,18 @@ function escapeAttribute(value) {
 }
 
 function initTaskDateRangeFilter(customGridFunctions) {
-    const container = document.getElementById('taskDateRangeFilterDashboard');
-    if (!container) {
+    const dateFieldSelect = document.getElementById('taskDateFieldSelectDashboard');
+    if (!dateFieldSelect) {
         return;
     }
 
-    const filterValue = (key) => customGridFunctions.state.searchValues[key] || '';
-    const setFilter = (key, value) => {
-        customGridFunctions.updateColumnValue(key, value || '');
-        customGridFunctions.state.page = 0;
-        customGridFunctions.saveState();
-        customGridFunctions.onSearch();
-    };
-
-    new DateRangeFilter({
-        containerEl: container,
-        getValue: () => ({ from: filterValue('fromDate'), to: filterValue('toDate') }),
-        onApply: (from, to) => {
-            setFilter('fromDate', from);
-            setFilter('toDate', to);
-        },
-        onClear: () => {
-            setFilter('fromDate', '');
-            setFilter('toDate', '');
-        }
+    initTaskDateFilter(customGridFunctions, {
+        fromInput: '#taskFilterFromDashboard',
+        fromBtn: '#taskFilterFromBtnDashboard',
+        toInput: '#taskFilterToDashboard',
+        toBtn: '#taskFilterToBtnDashboard',
+        dateFieldSelect
     });
-
-    const dateFieldSelect = document.getElementById('taskDateFieldSelectDashboard');
-    dateFieldSelect.value = filterValue('dateField') || 'DEADLINE';
-    dateFieldSelect.addEventListener('change', (event) => setFilter('dateField', event.target.value));
 }
 
 document.addEventListener("DOMContentLoaded", function (event) {

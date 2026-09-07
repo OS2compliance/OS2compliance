@@ -34,9 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -406,13 +408,8 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user, boolean onlyMine) {
-		return getTasks(sortColumn, sortDirection, filters, page, pageLimit, user, onlyMine, TaskDateFilter.DEADLINE, null, null);
-	}
-
-	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user,
-			boolean onlyMine, TaskDateFilter dateFilter, LocalDate from, LocalDate to) {
 		Page<TaskGrid> tasks;
-		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(TaskPredicates.dateWithin(dateFilter, from, to));
+		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(extractDateWithinPredicate(filters));
 
 		// if onlyMine is true - only show the tasks assigned to the user, even if read_all
 		if (!onlyMine && SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
@@ -421,7 +418,6 @@ public class TaskService implements TagableService<Task> {
 					validateSearchFilters(filters, TaskGrid.class),
 					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					TaskGrid.class,
-					List.of(),
 					queryPredicates
 			);
 		}
@@ -436,6 +432,40 @@ public class TaskService implements TagableService<Task> {
 			);
 		}
 		return tasks;
+	}
+
+	public Page<TaskGrid> getTasksForUser(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		return taskGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, TaskGrid.class),
+				user,
+				buildPageable(page, pageLimit, sortColumn, sortDirection),
+				TaskGrid.class,
+				List.of(extractDateWithinPredicate(filters))
+		);
+	}
+
+	/**
+	 * Pulls the date-range filter out of the generic filter map, so it does not have to be threaded
+	 * through every caller as separate parameters. Mutates {@code filters}: the three keys are consumed
+	 * here and must not reach {@link dk.digitalidentity.service.FilterService#validateSearchFilters},
+	 * which knows nothing about them.
+	 */
+	private static QueryPredicateBuilder<TaskGrid> extractDateWithinPredicate(final Map<String, String> filters) {
+		final TaskDateFilter dateFilter = TaskDateFilter.parse(filters.remove("dateField"));
+		final LocalDate from = parseDate(filters.remove("fromDate"));
+		final LocalDate to = parseDate(filters.remove("toDate"));
+		return TaskPredicates.dateWithin(dateFilter, from, to);
+	}
+
+	private static LocalDate parseDate(final String value) {
+		if (!StringUtils.hasText(value)) {
+			return null;
+		}
+		try {
+			return LocalDate.parse(value, DK_DATE_FORMATTER);
+		} catch (final DateTimeParseException e) {
+			return null;
+		}
 	}
 
 	public List<Task> getByIds (List<Long> ids) {
