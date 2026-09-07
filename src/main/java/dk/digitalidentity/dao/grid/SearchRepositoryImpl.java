@@ -325,37 +325,10 @@ public class SearchRepositoryImpl implements SearchRepository {
 			final Pageable page, final Class<T> entityClass, final List<QueryPredicateBuilder<T>> queryPredicates) {
 		final Map<String, Object> orMap = assignedUserOrConditions(user, entityClass);
 
-		final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-		final boolean hasJoinFilter = searchableProperties.keySet().stream().anyMatch(k -> k.contains("."));
+		final List<QueryPredicateBuilder<T>> allPredicates = new ArrayList<>(queryPredicates);
+		allPredicates.add((cb, query, root) -> userOrConditionPredicate(orMap, cb, root));
 
-		final CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
-		final Root<T> root = criteriaQuery.from(entityClass);
-
-		final List<Predicate> predicates = new ArrayList<>();
-		predicates.add(buildSearchPredicates(searchableProperties, criteriaBuilder, root, false));
-		predicates.add(userOrConditionPredicate(orMap, criteriaBuilder, root));
-		queryPredicates.forEach(p -> predicates.add(p.build(criteriaBuilder, criteriaQuery, root)));
-
-		criteriaQuery.select(root)
-				.where(predicates.toArray(new Predicate[0]))
-				.distinct(hasJoinFilter);
-		criteriaQuery.orderBy(buildOrderBy(page, criteriaBuilder, root));
-
-		final TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
-		query.setFirstResult(page.getPageNumber() * page.getPageSize());
-		query.setMaxResults(page.getPageSize());
-
-		final CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
-		final Root<T> countRoot = countQuery.from(entityClass);
-		final List<Predicate> countPredicates = new ArrayList<>();
-		countPredicates.add(buildSearchPredicates(searchableProperties, criteriaBuilder, countRoot, false));
-		countPredicates.add(userOrConditionPredicate(orMap, criteriaBuilder, countRoot));
-		queryPredicates.forEach(p -> countPredicates.add(p.build(criteriaBuilder, countQuery, countRoot)));
-		countQuery.select(hasJoinFilter ? criteriaBuilder.countDistinct(countRoot) : criteriaBuilder.count(countRoot))
-				.where(countPredicates.toArray(new Predicate[0]));
-		final long totalRows = entityManager.createQuery(countQuery).getSingleResult();
-
-		return new PageImpl<>(query.getResultList(), page, totalRows);
+		return findAllWithColumnSearch(searchableProperties, page, entityClass, allPredicates);
 	}
 
 	private <T> Map<String, Object> assignedUserOrConditions(final User user, final Class<T> entityClass) {

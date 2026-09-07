@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
         new ColumnOptions(
             taskDatatableId,
-            gridTasks,as
+            gridTasks,
             ['opgavenavn'],
             ['opgavenavn','startdato','slutdato','status', 'OpgaveType'],
             ['id', 'completed', 'inProgress', 'note'],
