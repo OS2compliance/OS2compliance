@@ -3,8 +3,11 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
+import dk.digitalidentity.dao.TaskPredicates;
+import dk.digitalidentity.dao.grid.QueryPredicateBuilder;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
+import dk.digitalidentity.model.dto.TaskDateFilter;
 import dk.digitalidentity.model.dto.TaskFirstDeadlineDTO;
 import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.dto.enums.StatusColor;
@@ -31,13 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -430,6 +436,9 @@ public class TaskService implements TagableService<Task> {
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user, boolean onlyMine) {
 		Page<TaskGrid> tasks;
+		filters = new HashMap<>(filters);
+		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(extractDateWithinPredicate(filters));
+		filters.keySet().removeAll(DATE_WITHIN_FILTER_KEYS);
 
 		// if onlyMine is true - only show the tasks assigned to the user, even if read_all
 		if (!onlyMine && SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
@@ -437,7 +446,8 @@ public class TaskService implements TagableService<Task> {
 			tasks = taskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, TaskGrid.class),
 					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					TaskGrid.class
+					TaskGrid.class,
+					queryPredicates
 			);
 		}
 		else {
@@ -446,10 +456,45 @@ public class TaskService implements TagableService<Task> {
 					validateSearchFilters(filters, TaskGrid.class),
 					user,
 					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					TaskGrid.class
+					TaskGrid.class,
+					queryPredicates
 			);
 		}
 		return tasks;
+	}
+
+	@Transactional(readOnly = true)
+	public Page<TaskGrid> getTasksForUser(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		filters = new HashMap<>(filters);
+		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(extractDateWithinPredicate(filters));
+		filters.keySet().removeAll(DATE_WITHIN_FILTER_KEYS);
+		return taskGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, TaskGrid.class),
+				user,
+				buildPageable(page, pageLimit, sortColumn, sortDirection),
+				TaskGrid.class,
+				queryPredicates
+		);
+	}
+
+	private static final Set<String> DATE_WITHIN_FILTER_KEYS = Set.of("dateField", "fromDate", "toDate");
+
+	private static QueryPredicateBuilder<TaskGrid> extractDateWithinPredicate(final Map<String, String> filters) {
+		final TaskDateFilter dateFilter = TaskDateFilter.parse(filters.get("dateField"));
+		final LocalDate from = parseDate(filters.get("fromDate"));
+		final LocalDate to = parseDate(filters.get("toDate"));
+		return TaskPredicates.dateWithin(dateFilter, from, to);
+	}
+
+	private static LocalDate parseDate(final String value) {
+		if (!StringUtils.hasText(value)) {
+			return null;
+		}
+		try {
+			return LocalDate.parse(value, DK_DATE_FORMATTER);
+		} catch (final DateTimeParseException e) {
+			return null;
+		}
 	}
 
 	public List<Task> getByIds (List<Long> ids) {
