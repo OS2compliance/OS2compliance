@@ -412,6 +412,7 @@ public class TaskService implements TagableService<Task> {
 		Page<TaskGrid> tasks;
 		filters = new HashMap<>(filters);
 		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(extractDateWithinPredicate(filters));
+		filters.keySet().removeAll(DATE_WITHIN_FILTER_KEYS);
 
 		// if onlyMine is true - only show the tasks assigned to the user, even if read_all
 		if (!onlyMine && SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
@@ -436,9 +437,11 @@ public class TaskService implements TagableService<Task> {
 		return tasks;
 	}
 
+	@Transactional(readOnly = true)
 	public Page<TaskGrid> getTasksForUser(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
 		filters = new HashMap<>(filters);
 		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(extractDateWithinPredicate(filters));
+		filters.keySet().removeAll(DATE_WITHIN_FILTER_KEYS);
 		return taskGridDao.findAllWithAssignedUser(
 				validateSearchFilters(filters, TaskGrid.class),
 				user,
@@ -448,10 +451,12 @@ public class TaskService implements TagableService<Task> {
 		);
 	}
 
+	private static final Set<String> DATE_WITHIN_FILTER_KEYS = Set.of("dateField", "fromDate", "toDate");
+
 	private static QueryPredicateBuilder<TaskGrid> extractDateWithinPredicate(final Map<String, String> filters) {
-		final TaskDateFilter dateFilter = TaskDateFilter.parse(filters.remove("dateField"));
-		final LocalDate from = parseDate(filters.remove("fromDate"));
-		final LocalDate to = parseDate(filters.remove("toDate"));
+		final TaskDateFilter dateFilter = TaskDateFilter.parse(filters.get("dateField"));
+		final LocalDate from = parseDate(filters.get("fromDate"));
+		final LocalDate to = parseDate(filters.get("toDate"));
 		return TaskPredicates.dateWithin(dateFilter, from, to);
 	}
 

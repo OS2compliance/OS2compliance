@@ -71,21 +71,20 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     searchable: {searchKey: 'nextDeadline'},
                     formatter: (cell, row) => {
                         if (!cell) {
-                            return gridjs.html(`<span>-</span>`);
+                            return '-';
                         }
-                        var completed = row.cells[9]['data'];
-                        var type = row.cells[2]['data'];
+                        const completed = row.cells[9]['data'];
+                        const type = row.cells[2]['data'];
                         if (completed && type == "Opgave") {
-                            return gridjs.html(`<span>${cell}</span>`);
+                            return cell;
                         }
-                        var dateString = cell.replace(" ", "/");
-                        dateString = dateString.replace("-", "/");
-                        var dateSplit = dateString.split("/");
-                        var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                        const dateString = cell.replace(" ", "/").replace("-", "/");
+                        const dateSplit = dateString.split("/");
+                        const cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
                         if (cellDate < today) {
                             return gridjs.html(`<span style="color: red;">${cell}</span>`);
                         } else {
-                            return gridjs.html(`<span>${cell}</span>`);
+                            return cell;
                         }
                     }
                 },
@@ -94,14 +93,13 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     searchable: {searchKey: 'lastCompletionDate'},
                     formatter: (cell) => {
                         if (!cell || cell.trim() === '') {
-                            return gridjs.html(`<span>-</span>`);
+                            return '-';
                         }
-                        var dateParts = cell.split('-');
+                        const dateParts = cell.split('-');
                         if (dateParts.length === 3) {
-                            var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
-                            return gridjs.html(`<span>${formattedDate}</span>`);
+                            return `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
                         }
-                        return gridjs.html(`<span>${cell}</span>`);
+                        return cell;
                     }
                 },
                 {

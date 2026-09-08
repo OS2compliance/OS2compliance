@@ -25,7 +25,5 @@ function initDatePicker(buttonSelector, inputSelector, filterKey, filterValue, s
         picker.setFullDate(saved);
     }
     picker.onSelect((date, formatedDate) => setFilter(filterKey, formatedDate));
-    // "Ryd" empties the input without firing onSelect, so without this the box goes blank while the
-    // grid keeps filtering on the old date.
     picker.onClear(() => setFilter(filterKey, ''));
 }

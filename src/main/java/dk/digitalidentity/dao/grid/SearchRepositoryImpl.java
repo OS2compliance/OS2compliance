@@ -325,7 +325,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 		final Map<String, Object> orMap = assignedUserOrConditions(user, entityClass);
 
 		final List<QueryPredicateBuilder<T>> allPredicates = new ArrayList<>(queryPredicates);
-		allPredicates.add((cb, query, root) -> userOrConditionPredicate(orMap, cb, root));
+		allPredicates.add((cb, query, root) -> buildAssignedUserOrPredicate(orMap, cb, root));
 
 		return findAllWithColumnSearch(searchableProperties, page, entityClass, allPredicates);
 	}
@@ -350,7 +350,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 		return orMap;
 	}
 
-	private <T> Predicate userOrConditionPredicate(final Map<String, Object> orMap, final CriteriaBuilder criteriaBuilder, final Root<T> root) {
+	private <T> Predicate buildAssignedUserOrPredicate(final Map<String, Object> orMap, final CriteriaBuilder criteriaBuilder, final Root<T> root) {
 		final Predicate[] orArr = orMap.entrySet().stream()
 				.map(e -> {
 					if (e.getValue() instanceof String) {
