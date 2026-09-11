@@ -26,8 +26,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -36,9 +34,7 @@ import java.util.UUID;
 @RequireConfiguration
 @RequiredArgsConstructor
 public class IncidentController {
-    private static final String FORM_TOKENS = "incidentFormTokens";
-    /** Enough to cover a session's worth of open create dialogs without letting the session grow. */
-    private static final int REMEMBERED_FORM_TOKENS = 20;
+    private static final String FORM_TOKEN_PREFIX = "incidentFormToken:";
 
     private final IncidentService incidentService;
     private final ApplicationEventPublisher eventPublisher;
@@ -164,63 +160,53 @@ public class IncidentController {
 		}
 
         if (incident.getId() != null) {
-            final Incident existingIncident = incidentService.findById(incident.getId()).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            existingIncident.setName(incident.getName());
-            existingIncident.setDraft(incident.isDraft());
-            existingIncident.getResponses().clear();
-            existingIncident.getResponses().addAll(incident.getResponses());
-            existingIncident.getResponses()
-                .forEach(r -> r.setIncident(existingIncident));
-            incidentService.ensureRelations(incident);
-            return "redirect:/incidents/logs/" + incident.getId();
-        } else {
-            final Long alreadyCreated = incidentCreatedWith(session, formToken);
-            if (alreadyCreated != null) {
-                return "redirect:/incidents/logs/" + alreadyCreated;
-            }
-            incident.getResponses()
-                .forEach(r -> r.setIncident(incident));
-            final Incident saved = incidentService.save(incident);
-            incidentService.ensureRelations(saved);
-            rememberFormToken(session, formToken, saved.getId());
-            return "redirect:/incidents/logs/" + saved.getId();
+            return applyToExisting(incident, incident.getId());
         }
+        // A token whose incident has since been deleted belongs to a form that may be saved again
+        final Long alreadyCreated = incidentCreatedWith(session, formToken);
+        if (alreadyCreated != null && incidentService.findById(alreadyCreated).isPresent()) {
+            return applyToExisting(incident, alreadyCreated);
+        }
+        incident.getResponses()
+            .forEach(r -> r.setIncident(incident));
+        final Incident saved = incidentService.save(incident);
+        // Before the relations: they are written in a transaction of their own, and an incident that
+        // is already committed must not be created a second time if that one fails
+        rememberFormToken(session, formToken, saved.getId());
+        incidentService.ensureRelations(saved);
+        return "redirect:/incidents/logs/" + saved.getId();
     }
 
     /**
-     * The incident a form token has already created, or null if this is the first time it is seen.
-     * <p>
-     * Saving is not idempotent: the form carries no id until the incident exists, so every post of
-     * the same form inserts another incident. The token makes the second post land on the incident
-     * the first one created instead. It covers the back button and a proxy retrying the post;
-     * several posts in flight at once are stopped in the browser, where the buttons are disabled on
-     * submit, because a session attribute is only written back once a request ends.
+     * Writes the posted form onto an incident that already exists - either the one the form names, or
+     * the one this form created the first time it was sent.
+     */
+    private String applyToExisting(final Incident posted, final Long incidentId) {
+        final Incident existingIncident = incidentService.findById(incidentId).orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        existingIncident.setName(posted.getName());
+        existingIncident.setDraft(posted.isDraft());
+        existingIncident.getResponses().clear();
+        existingIncident.getResponses().addAll(posted.getResponses());
+        existingIncident.getResponses()
+            .forEach(r -> r.setIncident(existingIncident));
+        posted.setId(incidentId);
+        incidentService.ensureRelations(posted);
+        return "redirect:/incidents/logs/" + incidentId;
+    }
+
+    /**
+     * The incident the one-time token on the create form has already created, or null the first time
+     * the form is sent. Saving is not idempotent, so without it every post of the same form inserts
+     * another incident - a repeat now edits the first one instead.
      */
     private static Long incidentCreatedWith(final HttpSession session, final String formToken) {
-        if (formToken == null) {
-            return null;
-        }
-        return formTokens(session).get(formToken);
+        return formToken == null ? null : (Long) session.getAttribute(FORM_TOKEN_PREFIX + formToken);
     }
 
     private static void rememberFormToken(final HttpSession session, final String formToken, final Long incidentId) {
-        if (formToken == null) {
-            return;
+        if (formToken != null) {
+            session.setAttribute(FORM_TOKEN_PREFIX + formToken, incidentId);
         }
-        final Map<String, Long> tokens = formTokens(session);
-        tokens.put(formToken, incidentId);
-        while (tokens.size() > REMEMBERED_FORM_TOKENS) {
-            tokens.remove(tokens.keySet().iterator().next());
-        }
-        // Re-set rather than mutate in place: the session store only persists attributes it is told
-        // about, and these sessions live in the database, shared across instances.
-        session.setAttribute(FORM_TOKENS, tokens);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Long> formTokens(final HttpSession session) {
-        final Map<String, Long> tokens = (Map<String, Long>) session.getAttribute(FORM_TOKENS);
-        return tokens != null ? tokens : new LinkedHashMap<>();
     }
 }

@@ -1,5 +1,4 @@
-import FormValidationService from "../FormValidationService.js";
-import {lockSubmitButtons} from "./incident-validation-service.js";
+import {validateFormBeforeSubmit} from "./incident-validation-service.js";
 
 export default function IncidentService() {
 
@@ -18,7 +17,7 @@ export default function IncidentService() {
 
                 const modal = document.getElementById(targetId);
                 const form = modal.querySelector("form");
-                form.addEventListener("submit", (event) => self.validateFormBeforeSubmit(event, form));
+                form.addEventListener("submit", (event) => validateFormBeforeSubmit(event, form));
             })
     }
 
@@ -153,86 +152,4 @@ export default function IncidentService() {
             select.choices = choiceService.initOUSelect(select.getAttribute('id'), false);
         })
     }
-
-    this.setFieldValidity = (field, feedback, isValid) => {
-        if (isValid) {
-            field.classList.remove("is-invalid");
-            if (feedback) feedback.style.display = "none";
-        } else {
-            field.classList.add("is-invalid");
-            if (feedback) feedback.style.display = "block";
-        }
-    };
-
-    this.validateFormBeforeSubmit = (event, form) => {
-        let valid = true;
-        let invalidFields = [];
-
-        // When saving as draft, obligatory fields are allowed to be empty
-        const isDraft = event.submitter != null && event.submitter.dataset.draft === 'true';
-        const draftInput = form.querySelector('input[name="draft"]');
-        if (draftInput) {
-            draftInput.value = isDraft;
-        }
-
-        // validate name field
-        const nameInput = form.querySelector('input[name="name"]');
-        if (nameInput) {
-            const val = nameInput.value.trim();
-            const feedback = nameInput.parentElement.querySelector('.invalid-feedback');
-            const isValid = val !== "" && val.length <= 768;
-
-            if (!isValid) {
-                valid = false;
-                invalidFields.push(nameInput);
-            }
-            this.setFieldValidity(nameInput, feedback, isValid);
-        }
-
-        // validate textField textarea max length
-        const maxLength = 65000;
-        const textAreas = form.querySelectorAll("textarea.textField");
-        textAreas.forEach(textArea => {
-            const val = textArea.value.trim();
-            const feedback = textArea.parentElement.querySelector('.invalid-feedback');
-            const isValid = val.length <= maxLength;
-
-            if (!isValid) {
-                valid = false;
-                invalidFields.push(textArea);
-            }
-            this.setFieldValidity(textArea, feedback, isValid);
-        });
-
-        // validate date fields
-        const dateFields = form.querySelectorAll(".dateTimePicker");
-        dateFields.forEach(input => {
-            const val = input.value.trim();
-            const feedback = input.parentElement.querySelector('.invalid-feedback');
-            const isValid = val === "" || isValidDateDMY(val);
-
-            if (!isValid) {
-                valid = false;
-                invalidFields.push(input);
-            }
-            this.setFieldValidity(input, feedback, isValid);
-        });
-
-        // Validate obligatory fields
-        const fvs = new FormValidationService(form)
-        fvs.removeValidationMessages()
-        if (!isDraft && !fvs.validate_isNotEmpty()) {
-            valid = false;
-        }
-
-        if (!valid) {
-            event.preventDefault();
-            if (invalidFields.length > 0) {
-                invalidFields[0].scrollIntoView({behavior: 'smooth', block: 'center'});
-                invalidFields[0].focus();
-            }
-        } else {
-            lockSubmitButtons(form);
-        }
-    };
 }

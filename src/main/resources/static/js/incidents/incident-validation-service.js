@@ -73,24 +73,26 @@ export function validateFormBeforeSubmit (event, form) {
     }
 };
 
-/**
- * Saving is a plain form post and the buttons sit outside the form, so clicking again while the
- * first post is in flight starts another one - and the server completes every one of them, each as
- * a new incident. Only locked once validation has passed: a form that never left the page has to
- * stay submittable.
- */
-export function lockSubmitButtons (form) {
-    const buttons = [...document.querySelectorAll(`[form="${form.id}"]`), ...form.querySelectorAll('button, input')]
-        .filter(element => element.type === 'submit');
-    buttons.forEach(button => button.disabled = true);
+const lockedButtons = new Set();
 
-    // The back button restores the page from the bfcache exactly as it was left, disabled buttons
-    // included, which would otherwise leave the form permanently unsubmittable.
-    window.addEventListener('pageshow', event => {
-        if (event.persisted) {
-            buttons.forEach(button => button.disabled = false);
-        }
-    });
+// The back button restores the page from the bfcache with the buttons still disabled, which would
+// leave a form that never got saved - a rejected post, say - permanently unsubmittable.
+window.addEventListener('pageshow', event => {
+    if (event.persisted) {
+        lockedButtons.forEach(button => button.disabled = false);
+        lockedButtons.clear();
+    }
+});
+
+/** Clicking Gem again while the post is in flight starts another one, and each creates an incident. */
+export function lockSubmitButtons (form) {
+    new Set([...document.querySelectorAll(`[form="${form.id}"]`), ...form.querySelectorAll('button, input')])
+        .forEach(element => {
+            if (element.type === 'submit') {
+                element.disabled = true;
+                lockedButtons.add(element);
+            }
+        });
 }
 
 function setFieldValidity (field, feedback, isValid) {
