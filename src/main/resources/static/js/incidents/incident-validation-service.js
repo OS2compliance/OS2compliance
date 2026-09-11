@@ -68,8 +68,30 @@ export function validateFormBeforeSubmit (event, form) {
             invalidFields[0].scrollIntoView({behavior: 'smooth', block: 'center'});
             invalidFields[0].focus();
         }
+    } else {
+        lockSubmitButtons(form);
     }
 };
+
+/**
+ * Saving is a plain form post and the buttons sit outside the form, so clicking again while the
+ * first post is in flight starts another one - and the server completes every one of them, each as
+ * a new incident. Only locked once validation has passed: a form that never left the page has to
+ * stay submittable.
+ */
+export function lockSubmitButtons (form) {
+    const buttons = [...document.querySelectorAll(`[form="${form.id}"]`), ...form.querySelectorAll('button, input')]
+        .filter(element => element.type === 'submit');
+    buttons.forEach(button => button.disabled = true);
+
+    // The back button restores the page from the bfcache exactly as it was left, disabled buttons
+    // included, which would otherwise leave the form permanently unsubmittable.
+    window.addEventListener('pageshow', event => {
+        if (event.persisted) {
+            buttons.forEach(button => button.disabled = false);
+        }
+    });
+}
 
 function setFieldValidity (field, feedback, isValid) {
     if (isValid) {

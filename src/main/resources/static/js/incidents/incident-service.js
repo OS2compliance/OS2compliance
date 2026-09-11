@@ -1,4 +1,5 @@
 import FormValidationService from "../FormValidationService.js";
+import {lockSubmitButtons} from "./incident-validation-service.js";
 
 export default function IncidentService() {
 
@@ -230,6 +231,8 @@ export default function IncidentService() {
                 invalidFields[0].scrollIntoView({behavior: 'smooth', block: 'center'});
                 invalidFields[0].focus();
             }
+        } else {
+            lockSubmitButtons(form);
         }
     };
 }

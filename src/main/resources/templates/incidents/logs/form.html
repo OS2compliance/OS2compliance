@@ -8,6 +8,8 @@
             <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post" novalidate>
                 <input id="id" th:field="*{id}" type="hidden">
                 <input th:field="*{draft}" type="hidden">
+                <!-- Only handed to the create form: an update carries the id and is idempotent -->
+                <input th:if="${formToken != null}" type="hidden" name="formToken" th:value="${formToken}">
                 <div class="row mt-2" >
                     <label for="title" class="col-sm-4 col-form-label">Titel</label>
                     <div class="col-sm-8">
