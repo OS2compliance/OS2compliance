@@ -1,0 +1,99 @@
+{
+  "realm": "os2compliance",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginTheme": "keycloak",
+  "bruteForceProtected": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "administrator",
+        "description": "Administrator (all access) -> ROLE_administrator"
+      },
+      {
+        "name": "forandre",
+        "description": "Super user (create/update/delete limited parts) -> ROLE_forandre"
+      },
+      {
+        "name": "adgang",
+        "description": "Regular user -> ROLE_adgang"
+      },
+      {
+        "name": "begrænset",
+        "description": "Limited user -> ROLE_begrænset"
+      },
+      {
+        "name": "læs_kun",
+        "description": "Read only user -> ROLE_læs_kun"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "https://os2compliance",
+      "name": "OS2compliance",
+      "enabled": true,
+      "protocol": "saml",
+      "publicClient": true,
+      "fullScopeAllowed": true,
+      "redirectUris": [
+        "https://os2compliance:8343/*"
+      ],
+      "defaultClientScopes": [
+        "saml_organization"
+      ],
+      "attributes": {
+        "saml.assertion.signature": "true",
+        "saml.force.post.binding": "true",
+        "saml.multivalued.roles": "false",
+        "saml.encrypt": "false",
+        "saml.server.signature": "false",
+        "saml.server.signature.keyinfo.ext": "false",
+        "exclude.session.state.from.auth.response": "false",
+        "saml_force_name_id_username": "true",
+        "saml_name_id_format": "unspecified",
+        "saml.client.signature": "true",
+        "saml.allow.ecp.flow": "false",
+        "saml_assertion_consumer_url_post": "https://os2compliance:8343/saml/login",
+        "saml_single_logout_service_url_post": "https://os2compliance:8343/saml/logout",
+        "saml_single_logout_service_url_redirect": "https://os2compliance:8343/saml/logout",
+        "saml.signing.certificate": "MIIDZjCCAk6gAwIBAgIEZUn6RjANBgkqhkiG9w0BAQsFADB1MQswCQYDVQQGEwJESzEQMA4GA1UECAwHSnlsbGFuZDEPMA0GA1UEBwwGQWFyaHVzMRYwFAYDVQQKDA1PUzJjb21wbGlhbmNlMQwwCgYDVQQLDANEZXYxHTAbBgNVBAMMFERpZ2l0YWwgSWRlbnRpdHkgQXBTMB4XDTIzMTEwNzA4NTAxNFoXDTMzMTEwNzA4NTAxNFowdTELMAkGA1UEBhMCREsxEDAOBgNVBAgMB0p5bGxhbmQxDzANBgNVBAcMBkFhcmh1czEWMBQGA1UECgwNT1MyY29tcGxpYW5jZTEMMAoGA1UECwwDRGV2MR0wGwYDVQQDDBREaWdpdGFsIElkZW50aXR5IEFwUzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAK5tJE8Y1BZDLlGBFg73SjbSRTi/C4nCDRZ8eCGk/sNQEuf8HU9Uwe9EoduVmgfVgR0SP3zQntcX5m/9B2STblwhmD0lOvur0Z37M1bqzoSH14bxWH4Vb1M/3NvLYfhtCDYfDfL63fi/f54j7THm10fIixCJEjovA8PkOU4eXLi2dTWx04RCVAqMG8Qc2u6IJ6DGPDmgDwQg8C8wyAVbHORcXNYPuaqewSSfgFDSrpTKqPdLpeM8A4DxMMYKk8Zj/sHLhFEmR6qt+a+49+VgGcFtccxuueSjQjSwTxz967FB6RdQDyW78xjJik/D30ZbAIZPultdCXPwTU+FNJbW490CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAGt+A6ZXBTwI4DzpisWQ4Gqv08IURMj49UyvmeBSO/EuttQXLWbt3Sa+LlKRwY8xe+y35007azDQeDlYhnJEQHaZ7lhc/OBR9oWB9y0CvqMJsv9I1pstGui/5Lw8ueHgvQZ+vzqq+h/zFJ6kEu51fGzzOEH+ZyNpQ2CgW7eV9dBSZ5BnxwUhfEWLDclSTjyJXpxUtkedmh+f7cgWV0gjtt67YUYEn52NQtLsypz+lFNtPE7KvwsxWAudhftuCM8NphuVmPVdMDuMV3+nxszcBxPo40n89UUEgZFXkf5a4WUcF7GXmM5awJ8BRIGxvZkHtCBX4svpOZZx+E1jSPOfqqg=="
+      },
+      "protocolMappers": [
+        {
+          "name": "roles",
+          "protocol": "saml",
+          "protocolMapper": "saml-role-list-mapper",
+          "consentRequired": false,
+          "config": {
+            "single": "false",
+            "attribute.name": "roles",
+            "attribute.nameformat": "Basic"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "00000000-0000-4000-8000-000000000001",
+      "enabled": true,
+      "email": "admin@os2compliance.local",
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "realmRoles": [
+        "default-roles-os2compliance",
+        "administrator"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
