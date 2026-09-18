@@ -196,3 +196,8 @@ select::-ms-expand {
     max-width: 400px;
 }
 
+/* chip-navnet er et link til foranstaltningen - behold chippens farve frem for browserens link-blå */
+.riskViewTd .choices__list--multiple .choices__item-link {
+    color: inherit;
+    text-decoration: underline;
+}

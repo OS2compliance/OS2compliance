@@ -607,6 +607,22 @@ function setPrecautions() {
         }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.log(error)});
 }
 
+/** Foranstaltninger har ingen egen side, så chippen peger på oversigten filtreret til den ene. */
+function linkItemLabel(itemEl, precautionId) {
+    const textNode = [...itemEl.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+    if (!textNode || !precautionId) {
+        return;
+    }
+    const link = document.createElement('a');
+    link.className = 'choices__item-link';
+    link.href = `/precautions?precautionId=${encodeURIComponent(precautionId)}`;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = textNode.textContent;
+    link.addEventListener('click', event => event.stopPropagation());
+    itemEl.replaceChild(link, textNode);
+}
+
 function pageLoaded() {
     initFormValidationForForm("createCustomThreatModal");
 
@@ -732,6 +748,7 @@ function pageLoaded() {
                             const shortName = !showFullDescription && choice.customProperties && choice.customProperties.name;
                             const itemChoice = shortName ? Object.assign({}, choice, {label: shortName}) : choice;
                             const itemEl = defaultTemplates.item.call(this, classNames, itemChoice, removeItemButton);
+                            linkItemLabel(itemEl, choice.value);
                             if (!showFullDescription && choice.labelDescription) {
                                 const infoIcon = document.createElement('span');
                                 infoIcon.className = 'choices__info-icon';
