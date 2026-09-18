@@ -870,6 +870,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         // threat list
         Map<String, List<ThreatDTO>> threatList = buildThreatList(threatAssessment);
         context.setVariable("threatsForPDF", buildThreatsForPDF(threatList, riskProfiles, colorMap));
+        context.setVariable("showFullMeasureDescription", settingsService.getBoolean(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, true));
 
         // taskLists
         context.setVariable("tasksForPDF", buildTasks(riskAssessmentTasks));

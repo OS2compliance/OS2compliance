@@ -1,5 +1,6 @@
 package dk.digitalidentity.report.replacers;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.PlaceHolder;
 import dk.digitalidentity.model.entity.Asset;
@@ -300,6 +301,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
 
         final int[] idx = { 1 };
+		final boolean showFullMeasureDescription = settingsService.getBoolean(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, true);
         threatList.forEach((threatType, threats) -> {
             threats.forEach(t -> {
                 final XWPFTableRow row = table.getRow(idx[0]);
@@ -345,7 +347,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 							lastRow = table.getRow(idx[0]);
 						}
 						setCellTextSmall(lastRow, 9, precaution.getName());
-						setCellTextSmall(lastRow, 10, precaution.getDescription());
+						setCellTextSmall(lastRow, 10, showFullMeasureDescription ? precaution.getDescription() : "");
 					}
 					//Supplerende bemærkninger goes in the last row of the group
 					if (!t.getRelatedPrecautions().isEmpty()) {
