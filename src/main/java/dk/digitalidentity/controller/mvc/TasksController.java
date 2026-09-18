@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -56,6 +57,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.LinkHelper.linkify;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -151,14 +153,10 @@ public class TasksController {
                            @RequestParam(name = "relations", required = false) final Set<Long> relations,
                            @RequestParam(name = "taskRiskId", required = false) final Long riskId,
                            @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
-							@RequestParam(name = "templateDescription", required = false) final Long templateDescriptionId,
                            @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
 		List<TaskLink> links = new ArrayList<>();
 		for (TaskLink link : task.getLinks()) {
 			links.add(new TaskLink(null, linkify(link.getUrl()), task));
-		}
-		if (templateDescriptionId != null) {
-			choiceValueService.findById(templateDescriptionId).ifPresent(task::setTaskDescriptionTemplate);
 		}
 		defaultAndValidateStartDate(task);
 		List<SubTask> subTasks = new ArrayList<>();
@@ -205,7 +203,10 @@ public class TasksController {
         existingTask.setInProgress(inProgress);
         existingTask.setNote(inProgress ? task.getNote() : null);
 		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
-        existingTask.setDescription(task.getDescription());
+        // en valgt skabelon låser beskrivelsesfeltet, og låste felter sendes slet ikke med
+        if (task.getOwnDescription() != null) {
+            existingTask.setDescription(task.getOwnDescription());
+        }
         defaultAndValidateStartDate(task);
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setStartDate(task.getStartDate());
@@ -215,11 +216,17 @@ public class TasksController {
 		existingTask.getNotificationReminders().clear();
 		existingTask.getNotificationReminders().addAll(task.getNotificationReminders());
 		existingTask.getSubTasks().clear();
+		final Set<String> documentGeneratedUrls = existingTask.getLinks().stream()
+			.filter(TaskLink::isDocumentGenerated)
+			.map(TaskLink::getUrl)
+			.collect(Collectors.toSet());
 		existingTask.getLinks().clear();
 		for (TaskLink link : task.getLinks()) {
 			if (link.getUrl() != null && !link.getUrl().isBlank()) {
+				final String url = linkify(link.getUrl());
 				link.setTask(existingTask);
-				link.setUrl(linkify(link.getUrl()));
+				link.setUrl(url);
+				link.setDocumentGenerated(documentGeneratedUrls.contains(url));
 				existingTask.getLinks().add(link);
 			}
 		}
@@ -240,7 +247,7 @@ public class TasksController {
     }
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, ChoiceValue taskResult) {}
-    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, String documentLink, Long documentRelation, Long resultId, List<Long> subTasksCompleted) {}
+    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate nextDeadline, String documentLink, Long documentRelation, Long resultId, List<Long> subTasksCompleted) {}
     @RequireReadOwnerOnly
 	@GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
@@ -259,7 +266,7 @@ public class TasksController {
 
 		model.addAttribute("taskDescriptionTemplates", values);
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
-        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, "", null, null, null));
+        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, null, "", null, null, null));
 		model.addAttribute("possibleResults", choiceService.findChoiceValuesForListIdentifier("control-result"));
 
         if (task.getTaskType().equals(TaskType.TASK)) {
@@ -424,8 +431,17 @@ public class TasksController {
             taskLog.setDocument(documentService.get(dto.documentRelation()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
-        taskService.completeTask(task, taskLog);
+        taskService.completeTask(task, taskLog, dto.nextDeadline());
         return task;
+    }
+
+    @RequireReadOwnerOnly
+    @GetMapping("{id}/next-deadline-preview")
+    @ResponseBody
+    public LocalDate nextDeadlinePreview(@PathVariable("id") final long id,
+            @RequestParam("dateOfCompletion") @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate dateOfCompletion) {
+        final Task task = taskService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return taskService.previewNextDeadline(task, dateOfCompletion);
     }
 
 	@RequireCreateAll

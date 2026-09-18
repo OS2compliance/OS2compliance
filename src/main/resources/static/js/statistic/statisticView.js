@@ -113,7 +113,6 @@ function collectChartConfig() {
     const groupTimeBy = document.getElementById('periodGroupingSelector')?.selectedOptions[0]?.value;
     const startDate = document.getElementById('fromTimePicker')?.value
     const endDate = document.getElementById('toTimePicker')?.value
-    const dateField = document.getElementById('dateField')?.selectedOptions[0]?.value;
     const incidentFieldId = yChoice?.dataset.incidentFieldId;
 
     const config = {
@@ -121,7 +120,6 @@ function collectChartConfig() {
         x: x,
         y: y,
         groupTimeBy: groupTimeBy,
-        dateField: dateField,
         startDate: startDate,
         endDate: endDate,
         incidentFieldId: incidentFieldId,

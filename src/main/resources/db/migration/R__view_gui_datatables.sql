@@ -602,10 +602,14 @@ SELECT d.id,
             WHEN d.status = 'READY' THEN 3
            END)                                                             as status_order,
        d.localized_enums,
+       responsible_ou.name                                                  AS responsible_ou_name,
+       department_ou.name                                                   AS department_name,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
 FROM documents d
          LEFT JOIN choice_values cv_type ON cv_type.id = d.document_type
+         LEFT JOIN ous responsible_ou ON responsible_ou.uuid = d.responsible_ou_uuid
+         LEFT JOIN ous department_ou ON department_ou.uuid = d.department_uuid
          LEFT JOIN document_tag rt on rt.document_id = d.id
          LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE d.deleted = false
@@ -777,3 +781,12 @@ FROM dpia d
 WHERE d.deleted = false
 GROUP BY d.id, d.name, d.responsible_user_uuid, d.responsible_ou_uuid,
          d.user_updated_date, d.from_external_source, dr.report_approver_uuid;
+
+CREATE OR REPLACE VIEW view_gridjs_catalogs AS
+SELECT tc.identifier                                                                                       AS identifier,
+       tc.name                                                                                             AS name,
+       tc.hidden                                                                                           AS hidden,
+       (SELECT COUNT(1) FROM threat_catalog_threats tct WHERE tct.thread_catalog_identifier = tc.identifier) AS threat_count,
+       EXISTS(SELECT 1 FROM threat_assessment_catalogs tac WHERE tac.threat_catalog_identifier = tc.identifier) AS in_use
+FROM threat_catalogs tc
+WHERE tc.deleted = false;

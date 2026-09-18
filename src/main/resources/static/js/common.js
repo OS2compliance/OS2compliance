@@ -77,6 +77,11 @@ const initSelect = (element, containerInner = 'form-control', extraOptions = {})
 }
 
 const initSelectWithConfirmation = (element, containerInner = 'form-control') => {
+    const selectedValues = () => Array.from(element.options).filter(option => option.selected).map(option => option.value);
+
+    // Læses før Choices tager over, så vi kan se hvad brugeren har fjernet når der gemmes
+    const initialValues = selectedValues();
+
     let choices = new Choices(element, {
         searchChoices: false,
         removeItemButton: true,
@@ -91,31 +96,56 @@ const initSelectWithConfirmation = (element, containerInner = 'form-control') =>
         duplicateItemsAllowed: false,
     });
 
-    element.addEventListener("removeItem", function (event) {
-        event.preventDefault(); // Stop the removal temporarily
+    // Bekræftelsen hører ved gem, ikke ved klik på chippen: indtil der gemmes er der ikke sket noget, og
+    // Choices' removeItem kan i øvrigt ikke afbrydes - elementet er væk før eventet når hertil
+    const form = element.closest('form');
+    if (form === null) {
+        console.warn('Katalogfeltet ligger uden for en formular - fravalg bliver ikke bekræftet', element.id);
+    } else {
+        // Sættes kun mens det bekræftede gem sendes igen, så et gem der bliver afvist af valideringen ikke
+        // efterlader en blanko-tilladelse til næste fravalg
+        let resubmitting = false;
 
-        const removedItem = event.detail;
-        const removedCatalogName = removedItem.label;
-
-        Swal.fire({
-            title: 'Bekræft fjernelse',
-            text: `Er du sikker på at du vil fjerne trusselskataloget "${removedCatalogName}"? Alle besvarelser relateret til dette katalog vil blive slettet.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ja, fjern det!',
-            cancelButtonText: 'Annuller'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // User confirmed - actually remove the item
-                choices.removeActiveItemsByValue(removedItem.value);
-            } else {
-                // User cancelled - restore the item by re-adding it
-                choices.setChoiceByValue(removedItem.value);
+        form.addEventListener("submit", function (event) {
+            if (resubmitting) {
+                return;
             }
-        });
-    }, false);
+            if (event.defaultPrevented) {
+                return; // valideringen har allerede afvist gemmet
+            }
+            const stillSelected = selectedValues();
+            const removed = Array.from(element.options)
+                .filter(option => initialValues.includes(option.value) && !stillSelected.includes(option.value));
+            if (removed.length === 0) {
+                return;
+            }
+            event.preventDefault();
+
+            const one = removed.length === 1;
+            const names = removed.map(option => option.textContent.trim()).join(', ');
+            Swal.fire({
+                title: 'Bekræft fjernelse',
+                text: `Du fjerner ${one ? 'trusselskataloget' : 'trusselskatalogerne'} "${names}". Alle besvarelser under ${one ? 'det' : 'dem'} bliver slettet.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ja, fjern og gem',
+                cancelButtonText: 'Annuller'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    resubmitting = true;
+                    try {
+                        form.requestSubmit();
+                    } finally {
+                        resubmitting = false;
+                    }
+                } else {
+                    removed.forEach(option => choices.setChoiceByValue(option.value));
+                }
+            });
+        }, false);
+    }
 
     element.addEventListener("change", function (event) {
         choices.hideDropdown();

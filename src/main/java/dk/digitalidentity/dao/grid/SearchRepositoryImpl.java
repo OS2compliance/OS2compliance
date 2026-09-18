@@ -129,6 +129,18 @@ public class SearchRepositoryImpl implements SearchRepository {
 	}
 
 	/**
+	 * Same as {@link #findAllWithColumnSearch(Map, Pageable, Class, List, List)}, for callers that have
+	 * no caller-supplied {@link PredicateBuilder} restrictions of their own.
+	 */
+	@Override
+	public <T> Page<T> findAllWithColumnSearch(final Map<String, String> searchableProperties,
+			final Pageable page,
+			final Class<T> entityClass,
+			final List<QueryPredicateBuilder<T>> queryPredicates) {
+		return findAllWithColumnSearch(searchableProperties, page, entityClass, List.of(), queryPredicates);
+	}
+
+	/**
 	 * Same restrictions as {@link #findAllWithColumnSearch(Map, Pageable, Class, List, List)}, but only
 	 * the count — for callers that need an exact match total without paging through the rows.
 	 */
@@ -304,6 +316,21 @@ public class SearchRepositoryImpl implements SearchRepository {
 
 	@Override
 	public <T> Page<T> findAllWithAssignedUser(final Map<String, String> searchableProperties, final User user, final Pageable page, final Class<T> entityClass) {
+		return findAllWithAssignedUser(searchableProperties, user, page, entityClass, List.of());
+	}
+
+	@Override
+	public <T> Page<T> findAllWithAssignedUser(final Map<String, String> searchableProperties, final User user,
+			final Pageable page, final Class<T> entityClass, final List<QueryPredicateBuilder<T>> queryPredicates) {
+		final Map<String, Object> orMap = assignedUserOrConditions(user, entityClass);
+
+		final List<QueryPredicateBuilder<T>> allPredicates = new ArrayList<>(queryPredicates);
+		allPredicates.add((cb, query, root) -> buildAssignedUserOrPredicate(orMap, cb, root));
+
+		return findAllWithColumnSearch(searchableProperties, page, entityClass, allPredicates);
+	}
+
+	private <T> Map<String, Object> assignedUserOrConditions(final User user, final Class<T> entityClass) {
 		Map<String, Object> orMap = new HashMap<>();
 		if (HasMultipleResponsibleUsers.class.isAssignableFrom(entityClass)) {
 			orMap.put("responsibleUserUuids", user.getUuid());
@@ -320,7 +347,21 @@ public class SearchRepositoryImpl implements SearchRepository {
 		if (HasSigner.class.isAssignableFrom(entityClass)) {
 			orMap.put("signerUuid", user.getUuid());
 		}
-		return findAllWithColumnSearch(searchableProperties, null, orMap, page, entityClass);
+		return orMap;
+	}
+
+	private <T> Predicate buildAssignedUserOrPredicate(final Map<String, Object> orMap, final CriteriaBuilder criteriaBuilder, final Root<T> root) {
+		final Predicate[] orArr = orMap.entrySet().stream()
+				.map(e -> {
+					if (e.getValue() instanceof String) {
+						return criteriaBuilder.like(root.get(e.getKey()), "%" + e.getValue() + "%");
+					}
+					else {
+						return criteriaBuilder.equal(root.get(e.getKey()), e.getValue());
+					}
+				})
+				.toArray(Predicate[]::new);
+		return orArr.length == 0 ? criteriaBuilder.disjunction() : criteriaBuilder.or(orArr);
 	}
 
 	private static <T> List<Order> buildOrderBy(final Pageable page, CriteriaBuilder cb, final Root<T> root) {

@@ -560,6 +560,7 @@
                                 <option th:each="catalog : ${threatCatalogs}"
                                         th:value="${catalog.identifier}" th:text="${catalog.name}"></option>
                             </select>
+                            <input type="hidden" name="_threatCatalogs" value="on">
                         </div>
                     </div>
                 </div>

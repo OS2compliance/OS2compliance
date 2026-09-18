@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
@@ -43,6 +44,10 @@ public class DocumentFormDTO {
 
 	@NotNull
 	private User responsibleUser;
+
+	private OrganisationUnit responsibleOu;
+
+	private OrganisationUnit department;
 
 	private List<Tag> tags;
 

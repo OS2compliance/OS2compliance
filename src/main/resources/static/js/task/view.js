@@ -8,6 +8,39 @@ document.addEventListener("DOMContentLoaded", function(event) {
     initRelatedTagList('#editForm')
 });
 
+function NextDeadlineField(inputEl, picker) {
+    this.inputEl = inputEl;
+    this.picker = picker;
+    this.lastSetValue = inputEl.value;
+}
+
+NextDeadlineField.prototype.isDirty = function() {
+    return this.inputEl.value !== this.lastSetValue;
+};
+
+NextDeadlineField.prototype.setPreviewValue = function(day, month, year) {
+    this.lastSetValue = `${day}/${month}-${year}`;
+    this.inputEl.value = this.lastSetValue;
+    this.picker.setFullDate(new Date(year, month - 1, day));
+};
+
+function refreshNextDeadlinePreview(context) {
+    const { taskId, taskDeadline, nextDeadlineField, previewState } = context;
+    if (nextDeadlineField.isDirty() || !taskDeadline.value) {
+        return;
+    }
+    const requestId = ++previewState.requestId;
+    fetch(`/tasks/${taskId}/next-deadline-preview?dateOfCompletion=${encodeURIComponent(taskDeadline.value)}`)
+        .then(response => response.ok ? response.json() : null)
+        .then(date => {
+            if (date && !nextDeadlineField.isDirty() && requestId === previewState.requestId) {
+                const [year, month, day] = date.split('-');
+                nextDeadlineField.setPreviewValue(day, month, year);
+            }
+        })
+        .catch(defaultErrorHandler);
+}
+
 function ViewTaskService() {
     this.userChoicesEditSelect = null;
     this.ouChoicesEditSelect = null;
@@ -93,7 +126,8 @@ function ViewTaskService() {
                 year: 'numeric'
             }).replace(/\./g, '/').replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$1/$2-$3');
         }
-        var textarea = document.getElementById('description');
+        this.initNextDeadlinePreview();
+        const textarea = document.getElementById('description');
         if (textarea) {
             this.fitDescription(textarea);
             textarea.addEventListener('input', function () {
@@ -109,6 +143,23 @@ function ViewTaskService() {
 
         this.initInProgressNoteToggle();
         this.initCompleteAndStay();
+    }
+
+    this.initNextDeadlinePreview = function() {
+        const taskDeadline = document.querySelector("#TaskDeadline");
+        const nextDeadline = document.querySelector("#NextDeadline");
+        if (!taskDeadline || !nextDeadline) {
+            return;
+        }
+
+        const nextDeadlinePicker = initDatepicker("#NextDeadlineBtn", "#NextDeadline");
+        const nextDeadlineField = new NextDeadlineField(nextDeadline, nextDeadlinePicker);
+
+        const previewContext = { taskId, taskDeadline, nextDeadlineField, previewState: { requestId: 0 } };
+        const refreshPreview = () => refreshNextDeadlinePreview(previewContext);
+
+        taskDeadline.addEventListener("change", refreshPreview);
+        refreshPreview();
     }
 
     this.initCompleteAndStay = function() {
@@ -214,24 +265,35 @@ function ViewTaskService() {
         textarea.style.height = textarea.scrollHeight + 'px';
     }
 
+    // Feltet viser skabelonens tekst når en skabelon er valgt, så det låses - ellers ville den tekst blive
+    // gemt oven i opgavens egen beskrivelse
+    this.syncDescriptionLock = function() {
+        const select = document.getElementById('taskDescriptionTemplateSelect');
+        const descriptionField = document.getElementById('description');
+        if (select === null || descriptionField === null) {
+            return;
+        }
+        descriptionField.disabled = select.value !== '';
+    }
+
     this.loadDescriptionTemplateSelect = function() {
         const select = document.getElementById('taskDescriptionTemplateSelect');
         const descriptionField = document.getElementById('description');
-        let previousDescription = ''; // Store previous value
+        let ownDescription = descriptionField.dataset.ownDescription || '';
 
         select.addEventListener("change", async function () {
             const selectedValue = this.value;
 
             // If "Ingen valgt" (no selection) or empty value
             if (!selectedValue || selectedValue === '') {
-                descriptionField.value = previousDescription;
+                descriptionField.value = ownDescription;
                 descriptionField.disabled = false;
                 return;
             }
 
             // Save current description before replacing it
-            if (descriptionField.value) {
-                previousDescription = descriptionField.value;
+            if (!descriptionField.disabled) {
+                ownDescription = descriptionField.value;
             }
 
             const response = await fetch(`/rest/choicelists/custom/choiceValue/${selectedValue}`);
@@ -262,6 +324,7 @@ function ViewTaskService() {
             document.getElementById('editTaskBtn').hidden = true;
             performButton.hidden = true;
             this.nameField.disabled = false
+            this.syncDescriptionLock();
             document.getElementById("linksViewContainer").hidden = true;
             document.getElementById("subTaskViewContainer").hidden = true;
             document.getElementById("linksEditContainer").hidden = false;
