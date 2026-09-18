@@ -195,12 +195,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	 * {@code seed_version} sat til 47, og fjernes kaldet i {@link #onApplicationEvent}, ville den
 	 * springe det næste seed over, fordi versionerne kun matcher eksakt.
 	 */
-	private void seedV49() {
-		settingsService.createSetting(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, "false", "risk", true);
-	}
-
 	private void seedV46() {
 		// Med vilje tom - se javadoc.
+	}
+
+	/** Sand som udgangspunkt, så ingen installation mister den fulde beskrivelse den har i dag. */
+	private void seedV49() {
+		settingsService.createSetting(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, "true", "risk", true);
 	}
 
 	/**
