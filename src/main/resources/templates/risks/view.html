@@ -345,7 +345,7 @@
                                                         <option th:each="precaution : ${row.relatedPrecautions}"
                                                                 th:value="${precaution.id}"
                                                                 th:text="${showFullMeasureDescription} ? (${precaution.name} + ': ' + ${precaution.description}) : ${precaution.name}"
-                                                                th:attr="data-label-description=${precaution.description}"
+                                                                th:attr="data-label-description=${precaution.description}, data-custom-properties=${precaution.name}"
                                                                 selected></option>
                                                     </select>
                                                 </div>

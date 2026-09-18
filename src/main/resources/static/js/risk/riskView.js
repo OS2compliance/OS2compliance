@@ -572,13 +572,13 @@ function updateRelatedPrecautions(choices, search, threatType, threatId, threatI
     fetch( `/rest/relatable/autocomplete/relatedprecautions?search=${search}&threatType=${threatType}&threatIdentifier=${threatIdentifier}&threatId=${threatId}&riskId=${riskId}`)
         .then(response => response.json()
             .then(data => {
-                // customProperties.name lets the item template show just the name when needed
+                // customProperties bærer det rene navn, som item-templaten både viser og linker
                 choices.setChoices(data.content.map(reg => {
                     return {
                         id: reg.id,
                         name: reg.name + ": " + reg.description,
                         labelDescription: reg.description,
-                        customProperties: { name: reg.name },
+                        customProperties: reg.name,
                     };
                 }), 'id', 'name', true);
 
@@ -608,9 +608,9 @@ function setPrecautions() {
 }
 
 /** Foranstaltninger har ingen egen side, så chippen peger på oversigten filtreret til den ene. */
-function linkItemLabel(itemEl, precautionId) {
+function linkItemLabel(itemEl, precautionId, name) {
     const textNode = [...itemEl.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
-    if (!textNode || !precautionId) {
+    if (!textNode || !precautionId || !name || !textNode.textContent.startsWith(name)) {
         return;
     }
     const link = document.createElement('a');
@@ -618,9 +618,16 @@ function linkItemLabel(itemEl, precautionId) {
     link.href = `/precautions?precautionId=${encodeURIComponent(precautionId)}`;
     link.target = '_blank';
     link.rel = 'noopener';
-    link.textContent = textNode.textContent;
+    link.textContent = name;
     link.addEventListener('click', event => event.stopPropagation());
-    itemEl.replaceChild(link, textNode);
+    // navn og beskrivelse skal blive ét flex-element, ellers brækker navnet i sin egen kolonne
+    const label = document.createElement('span');
+    label.appendChild(link);
+    const rest = textNode.textContent.slice(name.length);
+    if (rest) {
+        label.appendChild(document.createTextNode(rest));
+    }
+    itemEl.replaceChild(label, textNode);
 }
 
 function pageLoaded() {
@@ -717,7 +724,7 @@ function pageLoaded() {
         let dbType = relationsSelect.dataset.dbtype;
         let id = relationsSelect.dataset.id;
         let identifier = relationsSelect.dataset.identifier;
-        let showFullDescription = relationsSelect.dataset.showFullDescription === 'true';
+        let showFullDescription = relationsSelect.dataset.showFullDescription !== 'false';
 
         const initPrecautionSelect = (element, containerInner = 'form-control') => {
             let choices = new Choices(element, {
@@ -744,15 +751,18 @@ function pageLoaded() {
                         },
                         // add info button when the "showFullDescription" is disabled
                         item(classNames, choice, removeItemButton) {
+                            const plainName = choice.customProperties ? String(choice.customProperties) : null;
                             // use the plain name for the chip when the setting is off
-                            const shortName = !showFullDescription && choice.customProperties && choice.customProperties.name;
+                            const shortName = !showFullDescription && plainName;
                             const itemChoice = shortName ? Object.assign({}, choice, {label: shortName}) : choice;
                             const itemEl = defaultTemplates.item.call(this, classNames, itemChoice, removeItemButton);
-                            linkItemLabel(itemEl, choice.value);
+                            linkItemLabel(itemEl, choice.value, plainName);
                             if (!showFullDescription && choice.labelDescription) {
                                 const infoIcon = document.createElement('span');
                                 infoIcon.className = 'choices__info-icon';
                                 infoIcon.textContent = 'ⓘ';
+                                infoIcon.setAttribute('role', 'button');
+                                infoIcon.setAttribute('tabindex', '0');
                                 infoIcon.setAttribute('data-bs-toggle', 'tooltip');
                                 infoIcon.setAttribute('title', choice.labelDescription);
                                 infoIcon.setAttribute('aria-label', choice.labelDescription);
@@ -770,7 +780,7 @@ function pageLoaded() {
                                         }
                                     });
                                 });
-                                new bootstrap.Tooltip(infoIcon, {trigger: 'click', customClass: 'choices__info-tooltip'});
+                                new bootstrap.Tooltip(infoIcon, {trigger: 'click focus', customClass: 'choices__info-tooltip'});
                             }
                             return itemEl;
                         },

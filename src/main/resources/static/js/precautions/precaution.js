@@ -108,7 +108,7 @@ function initGrid() {
     });
 
     initSaveAsExcelButtonClientside('precautionsDatatable', 'precaution', 'precautions', 'Foranstaltninger', () => {
-        return data.map(item => ({
+        return gridData.map(item => ({
             id: String(item.id),
             name: item.name
         }));
