@@ -1,7 +1,7 @@
 import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
-import {CreateThreatAssessmentService, initRegisterSelect, initAssetSelectRisk, userChanged} from "./createThreatAssessmentService.js";
+import {CreateThreatAssessmentService, initRegisterSelect, initAssetSelectRisk, userChanged, initSupplierSelectRisk} from "./createThreatAssessmentService.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 import {BadgeData, createBadges} from "../component/badge.js";
 
@@ -429,6 +429,11 @@ function EditRiskService() {
             this.editRegisterChoicesSelect = initRegisterSelect(editRegisterSelect);
         }
 
+        const editSupplierSelect = this.getScopedElementById('editSupplierSelect');
+        if (editSupplierSelect !== null) {
+            this.editSupplierChoicesSelect = initSupplierSelectRisk(editSupplierSelect);
+        }
+
         const catalogSelect = this.getScopedElementById('editThreatCatalogSelect');
         initSelectWithConfirmation(catalogSelect);
 
@@ -460,24 +465,37 @@ function EditRiskService() {
 
     this.typeChanged = function(selectedType, clearTitle = true) {
         // skopet til #editModal: den eksterne redigeringsmodal bruger samme id'er og ligger før denne i DOM'en
-        const registerRow = this.getScopedElementById("editRegisterSelectRow");
-        const assetRow = this.getScopedElementById("editAssetSelectRow");
-        const titleRow = this.getScopedElementById("editTitleRow");
-        const titleValue = this.getScopedElementById("editName");
+        const registerRow = document.getElementById("editRegisterSelectRow");
+        const assetRow = document.getElementById("editAssetSelectRow");
+        const supplierRow = document.getElementById("editSupplierSelectRow");
+        const titleRow = document.getElementById("editTitleRow");
+        const titleValue = document.getElementById("editName");
 
         if (selectedType === 'ASSET') {
-            if (registerRow) registerRow.style.display = 'none';
+            if (registerRow) {
+                registerRow.style.display = 'none';
+            }
             if (titleRow) {
                 titleRow.style.display = '';
                 if (titleValue && clearTitle) {
                     titleValue.value = '';
                 }
             }
-            if (assetRow) assetRow.style.display = '';
+            if (assetRow) {
+                assetRow.style.display = '';
+            }
+            if (supplierRow) {
+                supplierRow.style.display = 'none';
+            }
 
             if (this.editRegisterChoicesSelect) {
                 this.editRegisterChoicesSelect.removeActiveItems();
                 this.editRegisterChoicesSelect.passedElement.element.removeAttribute('required');
+            }
+
+            if (this.editSupplierChoicesSelect) {
+                this.editSupplierChoicesSelect.removeActiveItems();
+                this.editSupplierChoicesSelect.passedElement.element.removeAttribute('required');
             }
 
             if (this.editAssetChoicesSelect) {
@@ -485,8 +503,15 @@ function EditRiskService() {
             }
 
         } else if (selectedType === 'REGISTER') {
-            if (registerRow) registerRow.style.display = '';
-            if (assetRow) assetRow.style.display = 'none';
+            if (registerRow) {
+                registerRow.style.display = '';
+            }
+            if (supplierRow) {
+                supplierRow.style.display = 'none';
+            }
+            if (assetRow) {
+                assetRow.style.display = 'none';
+            }
             if (titleRow) {
                 titleRow.style.display = '';
                 if (titleValue && clearTitle) {
@@ -503,10 +528,55 @@ function EditRiskService() {
                 this.editAssetChoicesSelect.passedElement.element.removeAttribute('required');
             }
 
+            if (this.editSupplierChoicesSelect) {
+                this.editSupplierChoicesSelect.removeActiveItems();
+                this.editSupplierChoicesSelect.passedElement.element.removeAttribute('required');
+            }
+
+        } else if (selectedType === 'SUPPLIER') {
+            if (registerRow) {
+                registerRow.style.display = 'none';
+            }
+            if (assetRow) {
+                assetRow.style.display = 'none';
+            }
+            if (supplierRow) {
+                supplierRow.style.display = '';
+            }
+            if (titleRow) {
+                titleRow.style.display = '';
+                if (titleValue) {
+                    titleValue.value = '';
+                }
+            }
+
+            if (this.editSupplierChoicesSelect) {
+                this.editSupplierChoicesSelect.passedElement.element.setAttribute('required', 'required');
+            }
+
+            if (this.editAssetChoicesSelect) {
+                this.editAssetChoicesSelect.removeActiveItems();
+                this.editAssetChoicesSelect.passedElement.element.removeAttribute('required');
+            }
+
+            if (this.editRegisterChoicesSelect) {
+                this.editRegisterChoicesSelect.removeActiveItems();
+                this.editRegisterChoicesSelect.passedElement.element.removeAttribute('required');
+            }
+
         } else {
-            if (titleRow) titleRow.style.display = '';
-            if (registerRow) registerRow.style.display = 'none';
-            if (assetRow) assetRow.style.display = 'none';
+            if (titleRow) {
+                titleRow.style.display = '';
+            }
+            if (registerRow) {
+                registerRow.style.display = 'none';
+            }
+            if (assetRow) {
+                assetRow.style.display = 'none';
+            }
+            if (supplierRow) {
+                supplierRow.style.display = 'none';
+            }
 
             if (this.editAssetChoicesSelect) {
                 this.editAssetChoicesSelect.removeActiveItems();
@@ -515,6 +585,10 @@ function EditRiskService() {
             if (this.editRegisterChoicesSelect) {
                 this.editRegisterChoicesSelect.removeActiveItems();
                 this.editRegisterChoicesSelect.passedElement.element.removeAttribute('required');
+            }
+            if (this.editSupplierChoicesSelect) {
+                this.editSupplierChoicesSelect.removeActiveItems();
+                this.editSupplierChoicesSelect.passedElement.element.removeAttribute('required');
             }
         }
     }

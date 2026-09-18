@@ -29,8 +29,15 @@ public class TaskLink {
 	@Column(nullable = false)
 	private String url;
 
+	@Column(nullable = false)
+	private boolean documentGenerated;
+
 	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "task_id", nullable = false)
 	private Task task;
+
+	public TaskLink(final Long id, final String url, final Task task) {
+		this(id, url, false, task);
+	}
 }

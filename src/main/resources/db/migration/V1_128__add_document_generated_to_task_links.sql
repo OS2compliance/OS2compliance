@@ -1,0 +1,1 @@
+ALTER TABLE task_links ADD COLUMN document_generated BOOLEAN NOT NULL DEFAULT FALSE;

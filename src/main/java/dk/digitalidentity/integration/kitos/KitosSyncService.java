@@ -207,7 +207,7 @@ public class KitosSyncService {
 
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
 
-        asset.setActive(valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
+        assetService.setActive(asset, valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
 
         if (!valid) {
             return;
@@ -421,9 +421,9 @@ public class KitosSyncService {
 				copyOfProperty.setValue(property.getValue());
 				copyOfProperty.setEntity(asset);
 				asset.getProperties().add(copyOfProperty);
-				asset.setActive(false);
 				asset.getProperties().remove(property);
 			});
+        assetService.setActive(asset, false);
     }
 
     private Optional<Asset> findItSystem(final String kitosUuid) {

@@ -158,6 +158,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(45, this::seedV45);
 		incrementAndPerformIfVersion(46, this::seedV46);
 		incrementAndPerformIfVersion(47, this::seedV47);
+		incrementAndPerformIfVersion(48, this::seedV48);
 	}
 
 	/**
@@ -202,11 +203,17 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	 * fra søjlediagram-konfigurationen. Feltet overskrev cirkeldiagrammets valglistebaserede fordeling
 	 * med en månedsgruppering, uanset hvilket felt brugeren valgte - se {@code generatePieChart}.
 	 */
-	private void seedV47() {
+	private void seedV48() {
 		chartConfigurationService.findByName("Hændelser (Cirkeldiagram)").ifPresent(chart -> {
 			chart.setGroupTimeByField(null);
 			chartConfigurationService.saveAll(List.of(chart));
 		});
+	}
+
+	private void seedV47() {
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL, "", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_CREATED, "false", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_DEACTIVATED, "false", "assetsync", true);
 	}
 
 	private void seedV45() {
