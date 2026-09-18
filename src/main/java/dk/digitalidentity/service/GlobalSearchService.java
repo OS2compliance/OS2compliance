@@ -599,7 +599,7 @@ public class GlobalSearchService {
 			case "nsisSmart" -> "NSIS Smart";
 			case "reason" -> "Begrundelse";
 			case "problem" -> "Problem";
-			case "existingMeasures" -> "Eksisterende Tiltag";
+			case "additionalMeasures" -> "Supplerende bemærkninger";
 			case "elaboration" -> "Uddybning";
 			case "contact" -> "Kontakt";
 			case "email" -> "Email";

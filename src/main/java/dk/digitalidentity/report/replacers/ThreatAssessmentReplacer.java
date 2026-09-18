@@ -1,5 +1,6 @@
 package dk.digitalidentity.report.replacers;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.PlaceHolder;
 import dk.digitalidentity.model.entity.Asset;
@@ -300,6 +301,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
 
         final int[] idx = { 1 };
+		final boolean showFullMeasureDescription = settingsService.getBoolean(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, true);
         threatList.forEach((threatType, threats) -> {
             threats.forEach(t -> {
                 final XWPFTableRow row = table.getRow(idx[0]);
@@ -330,21 +332,31 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 						setCellTextSmall(row, 13, ""+residualScore);
 					}
 
-					//set first precaution row to Existing
-                    setCellTextSmall(row, 9, "Eksisterende");
-                    setCellTextSmall(row, 10, t.getExistingMeasures());
-
 					//Save index of first row, for future merging
 					int mergeStartIndex = idx[0];
+					XWPFTableRow lastRow = row;
+					boolean firstPrecaution = true;
 					for (var relatable : t.getRelatedPrecautions()) {
-						idx[0]++;
-						//Create a row for each related precaution
+						//Create a row for each related precaution, reusing the first (already existing) row
 						Precaution precaution = (Precaution)relatable;
-						table.createRow();
-						XWPFTableRow precautionRow =  table.getRow(idx[0]);
-						setCellTextSmall(precautionRow, 9, precaution.getName());
-						setCellTextSmall(precautionRow, 10, precaution.getDescription());
+						if (firstPrecaution) {
+							firstPrecaution = false;
+						} else {
+							idx[0]++;
+							table.createRow();
+							lastRow = table.getRow(idx[0]);
+						}
+						setCellTextSmall(lastRow, 9, precaution.getName());
+						setCellTextSmall(lastRow, 10, showFullMeasureDescription ? precaution.getDescription() : "");
 					}
+					//Supplerende bemærkninger goes in the last row of the group
+					if (!t.getRelatedPrecautions().isEmpty()) {
+						idx[0]++;
+						table.createRow();
+						lastRow = table.getRow(idx[0]);
+					}
+					setCellTextSmall(lastRow, 9, "Supplerende bemærkninger");
+					setCellTextSmall(lastRow, 10, t.getAdditionalMeasures());
 					//Merge all other columns than precautions
 					for(int i =0; i < 14; i++) {
 						if (i==9 || i ==10) {

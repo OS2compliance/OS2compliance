@@ -159,6 +159,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(46, this::seedV46);
 		incrementAndPerformIfVersion(47, this::seedV47);
 		incrementAndPerformIfVersion(48, this::seedV48);
+		incrementAndPerformIfVersion(49, this::seedV49);
 	}
 
 	/**
@@ -196,6 +197,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	 */
 	private void seedV46() {
 		// Med vilje tom - se javadoc.
+	}
+
+	/** Sand som udgangspunkt, så ingen installation mister den fulde beskrivelse den har i dag. */
+	private void seedV49() {
+		settingsService.createSetting(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, "true", "risk", true);
 	}
 
 	/**

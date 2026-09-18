@@ -170,7 +170,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsxView {
 				"Konf. Registrerede", "Konf. Organisation", "Konf. Samfund",
 				"Integr. Registrerede", "Integr. Organisation", "Integr. Samfund",
 				"Tilg. Registrerede", "Tilg. Organisation", "Tilg. Samfund", "Autent. Samfund",
-				"Problem", "Eksisterende Foranstaltninger", "Metode", "Uddybning",
+				"Problem", "Supplerende Bemærkninger", "Metode", "Uddybning",
 				"Restrisiko Sandsynlighed", "Restrisiko Konsekvens"
 		};
 		int columnCount = headers.length;
@@ -314,7 +314,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsxView {
 
 		// Assessment details (columns 17-22)
 		createCell(row, cellNum++, safeString(response.getProblem()), styles.normalStyle);
-		createCell(row, cellNum++, safeString(response.getExistingMeasures()), styles.normalStyle);
+		createCell(row, cellNum++, safeString(response.getAdditionalMeasures()), styles.normalStyle);
 		createCell(row, cellNum++, response.getMethod() != null ? response.getMethod().getMessage() : "", styles.normalStyle);
 		createCell(row, cellNum++, safeString(response.getElaboration()), styles.normalStyle);
 		createCell(row, cellNum++, safeString(String.valueOf(response.getResidualRiskProbability())), styles.normalStyle);

@@ -9,6 +9,14 @@ document.addEventListener("DOMContentLoaded", function (event) {
 });
 
 function initGrid() {
+    // risikoskemaets foranstaltnings-chips linker hertil med et id, så vis kun den ene
+    const focusId = new URLSearchParams(window.location.search).get('precautionId');
+    const focused = focusId ? data.filter(p => String(p.id) === focusId) : [];
+    const gridData = focused.length ? focused : data;
+    if (focused.length) {
+        document.getElementById('precautionsShowAll')?.classList.remove('d-none');
+    }
+
     fetch(formUrl)
         .then(response => response.text()
             .then(data => document.getElementById('createPrecautionDialog').innerHTML = data))
@@ -69,7 +77,7 @@ function initGrid() {
                 }
             }
         ],
-        data: data,
+        data: gridData,
         language: {
             'noRecordsFound': "Ingen data fundet",
             'search': {
@@ -100,7 +108,7 @@ function initGrid() {
     });
 
     initSaveAsExcelButtonClientside('precautionsDatatable', 'precaution', 'precautions', 'Foranstaltninger', () => {
-        return data.map(item => ({
+        return gridData.map(item => ({
             id: String(item.id),
             name: item.name
         }));
