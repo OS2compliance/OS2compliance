@@ -54,7 +54,7 @@ DB_USERNAME=root DB_PASSWORD=Test1234 \
 SSL_ENABLED=false SERVER_PORT="$APP_PORT" \
 SCHEDULING_ENABLED=false DEVELOPMENT_MODE=true \
 KLECLIENT_ENABLED=false INTEGRATION_MAIL_ENABLED=false \
-MUNICIPAL_NAME="E2E Testorganisation" \
+MUNICIPAL_NAME="${MUNICIPAL_NAME:-E2E Testorganisation}" \
 nohup ./mvnw -q -o spring-boot:run \
   -Dspring-boot.run.profiles=locallogin \
   -Dspring-boot.run.additional-classpath-elements=target/test-classes \

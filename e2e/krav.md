@@ -27,7 +27,7 @@ kan gøre det beskrevne i en browser — ikke når en enhedstest er grøn.
 | KRAV-RIS-2 | En risikovurdering kan oprettes med titel, ejer og trusselskatalog | Risiko |
 | KRAV-RIS-3 | Trusler kan besvares med sandsynlighed og konsekvens, og risikotallet beregnes | Risiko |
 | KRAV-RIS-4 | En risikovurdering kan kopieres, og kopien indeholder de samme trusler og svar | Risiko |
-| KRAV-RIS-5 | En risikovurdering kan revideres, og revisionen bevarer historikken | Risiko |
+| KRAV-RIS-5 | En risikovurdering kan få en revideringsdato og -frekvens, der består | Risiko |
 | KRAV-DPI-1 | En konsekvensanalyse kan oprettes på et aktiv | DPIA |
 | KRAV-DPI-2 | Screeningen kan besvares, og resultatet slår igennem på oversigten | DPIA |
 | KRAV-STD-1 | En standards afsnit vises i strukturen og kan åbnes | Standarder |

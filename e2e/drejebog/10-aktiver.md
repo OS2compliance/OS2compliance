@@ -49,10 +49,11 @@ Kode: AKT
 
 | # | Trin | Forventet |
 |---|------|-----------|
-| 1 | Skriv `E2E Aktiv` i kolonnefilteret Navn | Kun matchende rækker vises, og kørslens aktiv er iblandt dem |
+| 1 | Skriv `E2E Aktiv` i kolonnefilteret Navn og tryk Enter | Kun matchende rækker vises, og kørslens aktiv er iblandt dem |
 | 2 | Filtrér på en tekst der ikke findes, fx `zzzfindesikke` | Listen viser "Ingen data fundet", ikke en fejl |
-| 3 | Ryd filterfeltet | Den fulde liste vises igen |
+| 3 | Ryd filterfeltet og tryk Enter | Den fulde liste vises igen |
 
+- **Bemærk:** Kolonnefiltrene slår først til når feltet forlades eller der trykkes Enter — de filtrerer ikke mens man skriver
 - **Skærmbillede:** trin 1, trin 2
 
 ### AKT-05 — Relatér aktivet til et andet element

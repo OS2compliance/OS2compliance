@@ -35,7 +35,7 @@ Kode: RAP
 
 | # | Trin | Forventet |
 |---|------|-----------|
-| 1 | Åbn Årshjulet | Årets opgaver vises fordelt på måneder |
-| 2 | Find kørslens opgave | `E2E Opgave {KØRSEL}` står i måneden for dens frist |
+| 1 | Åbn fanen Årshjul i Opgavecenter | Årets opgaver vises fordelt på måneder |
+| 2 | Find en opgave der er markeret "Skal indgå i årshjul" | Opgaven står i måneden for dens frist. Opgaver uden markeringen vises ikke — feltet er fra som standard |
 
 - **Skærmbillede:** trin 1, trin 2

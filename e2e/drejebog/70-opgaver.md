@@ -47,8 +47,8 @@ Kode: OPG
 
 | # | Trin | Forventet |
 |---|------|-----------|
-| 1 | Udfør `E2E Opgave {KØRSEL}` med en bemærkning | Opgaven lukkes og står ikke længere som åben på listen |
-| 2 | Udfør `E2E Gentagen {KØRSEL}` med en bemærkning | Opgaven bliver stående på listen med en ny frist beregnet ud fra gentagelsen |
+| 1 | Udfør `E2E Opgave {KØRSEL}` med en bemærkning | Opgaven får status Udført. Den bliver stående på listen — opgavelisten viser alle opgaver, ikke kun åbne |
+| 2 | Udfør `E2E Gentagen {KØRSEL}` med en bemærkning | Opgaven får status Udført og bliver stående. Udføres den før deadline, rulles fristen ikke frem |
 | 3 | Genindlæs listen | Begge opgaver står som i trin 1 og 2 |
 
 - **Skærmbillede:** trin 1, trin 2

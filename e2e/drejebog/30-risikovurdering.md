@@ -59,15 +59,15 @@ Kode: RIS
 
 - **Skærmbillede:** trin 3, trin 4
 
-### RIS-05 — Revidér risikovurdering
+### RIS-05 — Sæt revisionsinterval
 - **Krav:** KRAV-RIS-5
 - **Forudsætning:** RIS-03 er gennemført
 - **Start:** risikovurderingen `E2E Risiko {KØRSEL}`
 
 | # | Trin | Forventet |
 |---|------|-----------|
-| 1 | Start en revision af vurderingen | Revisionen oprettes uden at slette den oprindelige besvarelse |
-| 2 | Ret et svar i revisionen og gem | Det nye svar står i revisionen |
-| 3 | Find historikken på vurderingen | Den tidligere version kan stadig ses |
+| 1 | Klik "Sæt revisions interval", vælg en revideringsdato i kalenderen og en frekvens, og gem | Dialogen accepterer begge felter |
+| 2 | Genindlæs siden og åbn dialogen igen | Dato og frekvens står stadig |
 
-- **Skærmbillede:** trin 2, trin 3
+- **Bemærk:** Datofeltet skal udfyldes ved at vælge i kalenderen. Skrives datoen direkte i feltet, gemmes den ikke
+- **Skærmbillede:** trin 1, trin 2
