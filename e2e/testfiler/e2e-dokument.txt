@@ -1,0 +1,1 @@
+E2E-testfil. Indholdet bruges til at kontrollere at et uploadet dokument kan hentes igen uændret.
