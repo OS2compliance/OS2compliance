@@ -340,7 +340,7 @@
                                         <tr th:classappend="'categoryRow' + ${stat.index} + ' rowId' + ${row.index}">
                                             <td class="riskViewTh">Eksisterende foranstaltninger</td>
                                             <td class="riskViewTd editCell" colspan="17">
-                                                <div th:with="showFullMeasureDescription=${@settingsService.getBoolean('riskAssessmentShowFullMeasureDescription', true)}">
+                                                <div>
                                                     <select class="choices__input select-precaution" data-type="select-multiple" data-trigger="" name="relations" th:id="${formId + 'RelationsSelect'}" hidden="" tabindex="-1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}, data-show-full-description=${showFullMeasureDescription}" multiple>
                                                         <option th:each="precaution : ${row.relatedPrecautions}"
                                                                 th:value="${precaution.id}"
