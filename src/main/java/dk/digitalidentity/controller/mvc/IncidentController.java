@@ -10,11 +10,11 @@ import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.IncidentService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -34,8 +35,6 @@ import java.util.UUID;
 @RequireConfiguration
 @RequiredArgsConstructor
 public class IncidentController {
-    private static final String FORM_TOKEN_PREFIX = "incidentFormToken:";
-
     private final IncidentService incidentService;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -146,8 +145,7 @@ public class IncidentController {
 	@RequireCreateAll
     @PostMapping("log")
     public String createOrUpdateIncident(@ModelAttribute final Incident incident,
-                                         @RequestParam(name = "formToken", required = false) final String formToken,
-                                         final HttpSession session) {
+                                         @RequestParam(name = "formToken", required = false) final String formToken) {
 		if (!incident.isDraft() && incident.getResponses().stream().anyMatch(r ->
 				r.getIncidentField().isObligatoryAnswer() && (
 						(r.getAnswerText() == null || r.getAnswerText().isEmpty())
@@ -160,53 +158,45 @@ public class IncidentController {
 		}
 
         if (incident.getId() != null) {
-            return applyToExisting(incident, incident.getId());
+            return applyToExisting(incident, loadIncident(incident.getId()));
         }
         // A token whose incident has since been deleted belongs to a form that may be saved again
-        final Long alreadyCreated = incidentCreatedWith(session, formToken);
-        if (alreadyCreated != null && incidentService.findById(alreadyCreated).isPresent()) {
-            return applyToExisting(incident, alreadyCreated);
+        final Optional<Incident> alreadyCreated = findByFormToken(formToken);
+        if (alreadyCreated.isPresent()) {
+            return applyToExisting(incident, alreadyCreated.get());
         }
+        incident.setFormToken(formToken);
         incident.getResponses()
             .forEach(r -> r.setIncident(incident));
-        final Incident saved = incidentService.save(incident);
-        // Before the relations: they are written in a transaction of their own, and an incident that
-        // is already committed must not be created a second time if that one fails
-        rememberFormToken(session, formToken, saved.getId());
+        final Incident saved;
+        try {
+            saved = incidentService.create(incident);
+        } catch (final DataIntegrityViolationException e) {
+            // A request running at the same time won the race for the token and created the incident
+            return applyToExisting(incident, findByFormToken(formToken).orElseThrow(() -> e));
+        }
         incidentService.ensureRelations(saved);
         return "redirect:/incidents/logs/" + saved.getId();
     }
 
-    /**
-     * Writes the posted form onto an incident that already exists - either the one the form names, or
-     * the one this form created the first time it was sent.
-     */
-    private String applyToExisting(final Incident posted, final Long incidentId) {
-        final Incident existingIncident = incidentService.findById(incidentId).orElseThrow(
+    /** Writes the posted form onto an incident that already exists. */
+    private String applyToExisting(final Incident posted, final Incident existing) {
+        existing.setName(posted.getName());
+        existing.setDraft(posted.isDraft());
+        existing.getResponses().clear();
+        existing.getResponses().addAll(posted.getResponses());
+        existing.getResponses()
+            .forEach(r -> r.setIncident(existing));
+        incidentService.ensureRelations(existing);
+        return "redirect:/incidents/logs/" + existing.getId();
+    }
+
+    private Incident loadIncident(final Long incidentId) {
+        return incidentService.findById(incidentId).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        existingIncident.setName(posted.getName());
-        existingIncident.setDraft(posted.isDraft());
-        existingIncident.getResponses().clear();
-        existingIncident.getResponses().addAll(posted.getResponses());
-        existingIncident.getResponses()
-            .forEach(r -> r.setIncident(existingIncident));
-        posted.setId(incidentId);
-        incidentService.ensureRelations(posted);
-        return "redirect:/incidents/logs/" + incidentId;
     }
 
-    /**
-     * The incident the one-time token on the create form has already created, or null the first time
-     * the form is sent. Saving is not idempotent, so without it every post of the same form inserts
-     * another incident - a repeat now edits the first one instead.
-     */
-    private static Long incidentCreatedWith(final HttpSession session, final String formToken) {
-        return formToken == null ? null : (Long) session.getAttribute(FORM_TOKEN_PREFIX + formToken);
-    }
-
-    private static void rememberFormToken(final HttpSession session, final String formToken, final Long incidentId) {
-        if (formToken != null) {
-            session.setAttribute(FORM_TOKEN_PREFIX + formToken, incidentId);
-        }
+    private Optional<Incident> findByFormToken(final String formToken) {
+        return formToken == null ? Optional.empty() : incidentService.findByFormToken(formToken);
     }
 }
