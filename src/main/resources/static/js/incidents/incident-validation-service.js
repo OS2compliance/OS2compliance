@@ -74,15 +74,15 @@ export function validateFormBeforeSubmit (event, form) {
 };
 
 const lockedButtons = new Set();
+const UNLOCK_AFTER_MS = 15000;
 
-// The back button restores the page from the bfcache with the buttons still disabled, which would
-// leave a form that never got saved - a rejected post, say - permanently unsubmittable.
-window.addEventListener('pageshow', event => {
-    if (event.persisted) {
-        lockedButtons.forEach(button => button.disabled = false);
-        lockedButtons.clear();
-    }
-});
+function unlockSubmitButtons () {
+    lockedButtons.forEach(button => button.disabled = false);
+    lockedButtons.clear();
+}
+
+// Covers a page restored from the bfcache, where the buttons come back disabled.
+window.addEventListener('pageshow', unlockSubmitButtons);
 
 /** Clicking Gem again while the post is in flight starts another one, and each creates an incident. */
 export function lockSubmitButtons (form) {
@@ -93,6 +93,8 @@ export function lockSubmitButtons (form) {
                 lockedButtons.add(element);
             }
         });
+    // When the navigation never happens the form would otherwise sit unusable with the typed data in it.
+    setTimeout(unlockSubmitButtons, UNLOCK_AFTER_MS);
 }
 
 function setFieldValidity (field, feedback, isValid) {
