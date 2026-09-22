@@ -42,6 +42,10 @@ class CustomGridFunctions {
 
         this.loadState()
 
+        // Must run before the initial url is built below, so seeded default values
+        // (e.g. from a select's HTML `selected` option) are included in the first request.
+        this.addSearchFields()
+
         const originalThenFunction = this.grid.config.server.then
         //Update vital config of grid to enable custom search, sort and pagination
         const gridConfig = this.grid.updateConfig({
@@ -77,10 +81,8 @@ class CustomGridFunctions {
                     'of': 'af',
                     'to': 'til'
                 },
-        }
+            }
         })
-
-        this.addSearchFields()
 
         if (this.grid.config.container && this.grid.config.container.childNodes.length > 0) {
             gridConfig.forceRender()
@@ -429,6 +431,7 @@ class CustomGridFunctions {
                 console.warn('No pre-rendered dropdown found for multi-select', fieldId);
                 return '<div></div>';
             }
+            this.#seedDefaultSearchValue(searchKey, Array.from(foundElement.selectedOptions).map(o => o.value))
             dropdown.dataset.multiselectId = fieldId;
             dropdown.dataset.searchKey = searchKey;
             delete dropdown.dataset.multiselectFor;
@@ -439,6 +442,7 @@ class CustomGridFunctions {
 
         // Single selects keep the original behaviour: inject the element markup
         // into the grid header and let initializeInputFields() wire it up.
+        this.#seedDefaultSearchValue(searchKey, foundElement.value)
         const html = foundElement.outerHTML
         if (isHidden) {
             foundElement.style.display = 'none'
@@ -550,6 +554,20 @@ class CustomGridFunctions {
             return searchField;
         }
         return null;
+    }
+
+    /**
+     * Seeds a search field's state with its default DOM value, but only if no
+     * value was already restored from persisted state — a saved filter must
+     * take priority over the field's static HTML default.
+     */
+    #seedDefaultSearchValue(key, value) {
+        if (!key || value === undefined || value === null || value === '') {
+            return
+        }
+        if (this.state.searchValues[key] === undefined) {
+            this.state.searchValues[key] = value
+        }
     }
 
     /**
