@@ -16,19 +16,19 @@ Kode: HAE
 - **Skærmbillede:** trin 2, trin 3, trin 4
 - **Efterlader:** hændelsen `E2E Hændelse {KØRSEL}`
 
-### HAE-02 — Gentagen indsendelse giver ikke en kopi
+### HAE-02 — Den samme formular kan kun oprette én hændelse
 - **Krav:** KRAV-HAE-2
 - **Forudsætning:** Logget ind som `e2e-admin`
-- **Start:** `/incidents/logForm`
+- **Start:** `/incidents/logs`
 
 | # | Trin | Forventet |
 |---|------|-----------|
-| 1 | Udfyld en hændelse med titlen `E2E Dobbelt {KØRSEL}` og gem | Hændelsen gemmes |
-| 2 | Gå tilbage i browseren til formularen og gem igen uden at ændre noget | Der oprettes ikke en ny hændelse — indsendelsen rammer den samme hændelse |
+| 1 | Udfyld en hændelse med titlen `E2E Dobbelt {KØRSEL}`, og klik Gem to gange hurtigt efter hinanden | Knapperne slås fra ved første klik, så det andet klik ikke sender noget |
+| 2 | Gentag den samme indsendelse uden at hente formularen på ny — kopiér POST'en til `/incidents/log` fra netværksfanen og send den igen | Svaret peger på den hændelse den første indsendelse oprettede; der oprettes ingen ny |
 | 3 | Åbn `/incidents/logs` og filtrér på `E2E Dobbelt` | Der står præcis én række |
 
-- **Bemærk:** Dobbeltindsendelse har tidligere lagt en kopi i loggen. Tilfældet findes for at fange det igen
-- **Skærmbillede:** trin 3
+- **Bemærk:** Formularen bærer en engangstoken, der ligger unikt på hændelsen, så det er databasen der afgør kapløbet mellem to samtidige indsendelser. Hentes formularen på ny — fx ved at åbne `/incidents/logForm` direkte og gå tilbage — får den en ny token, og en indsendelse derfra bliver med vilje en ny hændelse. I brugerfladen kommer man kun tilbage til en tom formular
+- **Skærmbillede:** trin 1, trin 3
 
 ### HAE-03 — Filtrering og excel-udtræk
 - **Krav:** KRAV-HAE-3

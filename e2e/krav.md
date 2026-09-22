@@ -39,7 +39,7 @@ kan gøre det beskrevne i en browser — ikke når en enhedstest er grøn.
 | KRAV-OPG-3 | En opgave kan kopieres fra opgavelisten | Opgaver |
 | KRAV-OPG-4 | En opgaves historik viser tidligere udførelser | Opgaver |
 | KRAV-HAE-1 | En hændelse kan registreres og fremgår af hændelsesloggen | Hændelser |
-| KRAV-HAE-2 | Gentagen indsendelse af den samme hændelse giver ikke en kopi | Hændelser |
+| KRAV-HAE-2 | Den samme indsendte formular kan kun oprette én hændelse, også ved samtidige indsendelser | Hændelser |
 | KRAV-HAE-3 | Hændelsesloggen kan filtreres på dato og hentes som excel | Hændelser |
 | KRAV-DOK-1 | Et dokument kan oprettes med link og fremgår af listen | Dokumenter |
 | KRAV-DOK-2 | Et dokument kan oprettes med fil og hentes igen | Dokumenter |
