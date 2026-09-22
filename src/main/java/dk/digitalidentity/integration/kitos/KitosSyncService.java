@@ -363,7 +363,6 @@ public class KitosSyncService {
         asset.setAssetStatus(AssetStatus.NOT_STARTED);
         asset.setSupplier(supplier);
         asset.setCriticality(Criticality.NON_CRITICAL);
-        asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
 		setLinksFromKitosSystem(responseDTO, asset);
 
 		assetService.create(asset);

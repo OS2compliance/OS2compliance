@@ -193,11 +193,10 @@ public class AssetsController {
             assetService.save(existingAsset);
 
             return "redirect:/assets";
-        } else {
-            asset.setAssetStatus(AssetStatus.NOT_STARTED);
+		} else {
+			asset.setAssetStatus(AssetStatus.NOT_STARTED);
 			asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
-            asset.setCriticality(Criticality.NON_CRITICAL);
-            asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
+			asset.setCriticality(Criticality.NON_CRITICAL);
 			asset.setActive(true);
             final Asset newAsset = assetService.create(asset);
             return "redirect:/assets/" + newAsset.getId();
@@ -762,9 +761,8 @@ public class AssetsController {
 				asset.getAdditionalSupervisoryModels().clear();
 			}
 		}
-		if (body.getDataProcessingAgreementStatus() != null) {
-			asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
-		}
+
+		asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
 		asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
 		asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
         asset.setNextInspection(body.getNextInspection());
