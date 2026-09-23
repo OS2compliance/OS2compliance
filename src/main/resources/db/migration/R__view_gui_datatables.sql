@@ -329,6 +329,7 @@ SELECT a.id,
        departments.department_names,
        a.description,
        operation_responsible.operation_responsible_user_names,
+       operation_responsible.operation_responsible_user_uuids,
        a.criticality,
        (CASE
             WHEN a.criticality = 'CRITICAL' THEN 1
@@ -475,7 +476,8 @@ FROM assets a
          ) departments ON departments.asset_id = a.id
          LEFT JOIN (
              SELECT orum.asset_id,
-                    GROUP_CONCAT(DISTINCT oru.name ORDER BY oru.name SEPARATOR ',') AS operation_responsible_user_names
+                    GROUP_CONCAT(DISTINCT oru.name ORDER BY oru.name SEPARATOR ',') AS operation_responsible_user_names,
+                    GROUP_CONCAT(DISTINCT oru.uuid SEPARATOR ',')                   AS operation_responsible_user_uuids
              FROM assets_operation_responsible_users_mapping orum
                       JOIN users oru ON oru.uuid = orum.user_uuid
              GROUP BY orum.asset_id
