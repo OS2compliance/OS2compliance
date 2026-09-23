@@ -40,6 +40,7 @@ import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -99,6 +100,7 @@ public class RiskController {
     private final EmailTemplateService emailTemplateService;
     private final IncidentService incidentService;
 	private final SupplierService supplierService;
+	private final SettingsService settingsService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -377,6 +379,7 @@ public class RiskController {
         model.addAttribute("presentAtMeetingName", threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", ")));
         model.addAttribute("defaultSendReportTo", getFirstRelatedResponsible(threatAssessment));
         model.addAttribute("threatCatalogs", catalogService.findSelectableFor(threatAssessment));
+		model.addAttribute("showFullMeasureDescription", settingsService.getBoolean("riskAssessmentShowFullMeasureDescription", true));
 
         boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
         model.addAttribute("signed", signed);
