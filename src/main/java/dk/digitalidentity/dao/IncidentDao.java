@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface IncidentDao extends JpaRepository<Incident, Long>, SearchRepository {
 
@@ -21,4 +22,6 @@ public interface IncidentDao extends JpaRepository<Incident, Long>, SearchReposi
 	List<Incident> findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBeforeAndDraftFalse(Long id, LocalDateTime createdAt, LocalDateTime createdAt1);
 
 	List<Incident> findAllById(Long id);
+
+	Optional<Incident> findByFormToken(String formToken);
 }
