@@ -355,6 +355,9 @@ public class GlobalSearchService {
 		searchableProperties.put("createdAt", query);
 		searchableProperties.put("updatedAt", query);
 		searchableProperties.put("nextRevision", query);
+		searchableProperties.put("threatAssessmentResponses.problem", query);
+		searchableProperties.put("threatAssessmentResponses.additionalMeasures", query);
+		searchableProperties.put("threatAssessmentResponses.elaboration", query);
 
 		Page<ThreatAssessment> page;
 		if (filterResults) {
@@ -393,9 +396,9 @@ public class GlobalSearchService {
 	private <T extends Relatable> Page<SearchResultDTO> convertToSearchResultDTO(Page<T> page, String query, Set<String> searchFields) {
 		List<SearchResultDTO> dtos = page.getContent().stream()
 				.map(entity -> {
-					String matchingFieldPath = findMatchingField(entity, query, searchFields, entity.getName());
-					String matchingFieldDisplayName = getDisplayFieldName(matchingFieldPath);
-					String matchingFieldContent = extractFieldContent(entity, matchingFieldPath, query);
+					FieldMatch match = findMatchingField(entity, query, searchFields, entity.getName());
+					String matchingFieldDisplayName = getDisplayFieldName(match.fieldPath());
+					String matchingFieldContent = extractFieldContent(match.value(), query);
 					String highlightedContent = highlightSearchTerm(matchingFieldContent, query);
 
 					return new SearchResultDTO(
@@ -411,7 +414,9 @@ public class GlobalSearchService {
 		return new PageImpl<>(dtos, page.getPageable(), page.getTotalElements());
 	}
 
-	private String findMatchingField(Object entity, String query, Set<String> searchFields, String name) {
+	private record FieldMatch(String fieldPath, String value) {}
+
+	private FieldMatch findMatchingField(Object entity, String query, Set<String> searchFields, String name) {
 		String queryLower = query.toLowerCase();
 
 		// Always check date fields first if we have any date fields
@@ -419,22 +424,67 @@ public class GlobalSearchService {
 			if (isDateField(fieldPath)) {
 				String fieldValue = getFormattedDateValue(entity, fieldPath);
 				if (fieldValue != null && fieldValue.toLowerCase().contains(queryLower)) {
-					return fieldPath;
+					return new FieldMatch(fieldPath, fieldValue);
 				}
 			}
 		}
 
-		// Then check regular string fields
+		// Then check regular string fields, including collection-valued ones
 		for (String fieldPath : searchFields) {
 			if (!isDateField(fieldPath)) {
-				String fieldValue = getFieldValue(entity, fieldPath);
-				if (fieldValue != null && fieldValue.toLowerCase().contains(queryLower)) {
-					return fieldPath;
+				String matchingValue = findFieldValueContaining(entity, fieldPath, queryLower);
+				if (matchingValue != null) {
+					return new FieldMatch(fieldPath, matchingValue);
 				}
 			}
 		}
 
-		return "name"; // fallback
+		return new FieldMatch("name", name); // fallback
+	}
+
+	// Unlike getFieldValue, this checks every item in a collection for the actual
+	// match instead of returning the first item's non-null value.
+	private String findFieldValueContaining(Object entity, String fieldPath, String queryLower) {
+		if (entity == null || fieldPath == null) {
+			return null;
+		}
+
+		try {
+			if (!fieldPath.contains(".")) {
+				String value = getFieldValue(entity, fieldPath);
+				return (value != null && value.toLowerCase().contains(queryLower)) ? value : null;
+			}
+
+			String[] parts = fieldPath.split("\\.", 2);
+			String currentFieldName = parts[0];
+			String remainingPath = parts[1];
+
+			Field currentField = findField(entity.getClass(), currentFieldName);
+			if (currentField == null) {
+				return null;
+			}
+
+			currentField.setAccessible(true);
+			Object currentValue = currentField.get(entity);
+
+			if (currentValue == null) {
+				return null;
+			}
+
+			if (currentValue instanceof Collection<?> collection) {
+				for (Object item : collection) {
+					String value = findFieldValueContaining(item, remainingPath, queryLower);
+					if (value != null) {
+						return value;
+					}
+				}
+				return null;
+			}
+
+			return findFieldValueContaining(currentValue, remainingPath, queryLower);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	private String getFormattedDateValue(Object entity, String fieldPath) {
@@ -535,16 +585,7 @@ public class GlobalSearchService {
 		return null;
 	}
 
-	private String extractFieldContent(Object entity, String fieldPath, String query) {
-		String fieldValue;
-
-		// Handle date fields specially
-		if (isDateField(fieldPath)) {
-			fieldValue = getFormattedDateValue(entity, fieldPath);
-		} else {
-			fieldValue = getFieldValue(entity, fieldPath);
-		}
-
+	private String extractFieldContent(String fieldValue, String query) {
 		if (fieldValue == null || fieldValue.isEmpty()) {
 			return "";
 		}
@@ -578,8 +619,15 @@ public class GlobalSearchService {
 
 		return excerpt;
 	}
-
 	private String getDisplayFieldName(String fieldPath) {
+		return switch (fieldPath) {
+			case "threatAssessmentResponses.problem" -> "Problemstilling";
+			case "threatAssessmentResponses.elaboration" -> "Uddybning af risikohåndtering";
+			default -> getDisplayFieldNameByLastPart(fieldPath);
+		};
+	}
+
+	private String getDisplayFieldNameByLastPart(String fieldPath) {
 		String[] parts = fieldPath.split("\\.");
 		String lastPart = parts[parts.length - 1];
 
