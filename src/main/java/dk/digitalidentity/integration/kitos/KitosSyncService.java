@@ -14,7 +14,6 @@ import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
-import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.SettingsService;
@@ -363,7 +362,6 @@ public class KitosSyncService {
         asset.setAssetStatus(AssetStatus.NOT_STARTED);
         asset.setSupplier(supplier);
         asset.setCriticality(Criticality.NON_CRITICAL);
-        asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
 		setLinksFromKitosSystem(responseDTO, asset);
 
 		assetService.create(asset);
