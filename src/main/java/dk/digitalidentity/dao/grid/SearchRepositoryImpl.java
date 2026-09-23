@@ -8,6 +8,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasOperationResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasSigner;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import jakarta.persistence.EntityManager;
@@ -340,6 +341,9 @@ public class SearchRepositoryImpl implements SearchRepository {
 		}
 		if (HasManagers.class.isAssignableFrom(entityClass)) {
 			orMap.put("managerUuids", user.getUuid());
+		}
+		if (HasOperationResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			orMap.put("operationResponsibleUserUuids", user.getUuid());
 		}
 		if (HasCustomResponsibleUsers.class.isAssignableFrom(entityClass)) {
 			orMap.put("customResponsibleUserUuids", user.getUuid());
