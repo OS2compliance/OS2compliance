@@ -627,9 +627,13 @@ class CustomGridFunctions {
     getFilters() {
         const filters = {};
         for (const [key, value] of Object.entries(this.state.searchValues)) {
-            if (value !== null && value !== undefined && value !== '') {
-                filters[key] = value;
+            if (value === null || value === undefined || value === '') {
+                continue
             }
+            if (Array.isArray(value) && value.length === 0) {
+                continue
+            }
+            filters[key] = value;
         }
         return filters;
     }
