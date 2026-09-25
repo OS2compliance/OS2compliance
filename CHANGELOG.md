@@ -12,7 +12,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-45) (Generelt) Ensartede knapper på tværs af siderne
 - (https://os2web.atlassian.net/browse/COMPLY-119) (Opgavecenter) Filtrering på listevisninger med multiselect pr. status
-- (https://os2web.atlassian.net/browse/COMPLY-137) (Aktiver) Nye valgfri kolonner på aktiv-oversigten, med i Excel-eksporten
+- (https://os2web.atlassian.net/browse/COMPLY-137) (Aktiver) Nye valgfri kolonner på aktiv-oversigten
 - (https://os2web.atlassian.net/browse/COMPLY-151) (Aktiver/TIA) Systemejer kan markere TIA som gennemgået og accepteret, med bemærkningsfelt
 - (https://os2web.atlassian.net/browse/COMPLY-164) (Opgavecenter) Startdato på opgaver og kontroller; "Deadline" hedder nu "Slutdato" på listerne
 - (https://os2web.atlassian.net/browse/COMPLY-287) (Rapporter) Højeste konsekvens vises med registreret/organisation og fortrolighed/integritet/tilgængelighed i PDF og Word
@@ -24,7 +24,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-346) (Aktiver) Aktiv/inaktiv afledes af systemets status
 - (https://os2web.atlassian.net/browse/COMPLY-361) (Opgavecenter) Valg mellem at blive på siden eller gå til oversigten efter udført kontrol
 - (https://os2web.atlassian.net/browse/COMPLY-367) (OS2kitos-integration) Aktiv/inaktiv følger livscyklusfasen fra OS2kitos
-- (https://os2web.atlassian.net/browse/COMPLY-368) (Risikovurderinger) Sortering og filtrering på risikofarve
+- (https://os2web.atlassian.net/browse/COMPLY-368) (Risikovurderinger) Farvefilteret på risikolisten tilbyder kun de farver, den valgte risikomodel bruger
 - (https://os2web.atlassian.net/browse/COMPLY-375) (Aktiver) Notifikation når et system oprettes eller inaktiveres automatisk. Modtager(e) og de to hændelser slås til under Indstillinger, og mailteksten rettes under Mailskabeloner. Inaktivering udløses kun af OS2kitos-synkronisering — API'et kan ikke ændre aktiv/inaktiv.
 - (https://os2web.atlassian.net/browse/COMPLY-376) (Standarder) Pænere Word-eksport af informationssikkerhedshåndbogen, tydeligere klik-for-at-redigere og "Vis HTML" i editoren
 - (https://os2web.atlassian.net/browse/COMPLY-381) (Leverandører) Land som valgfri kolonne
