@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -44,6 +45,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -55,6 +57,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.LinkHelper.linkify;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -105,6 +108,7 @@ public class TasksController {
 
 			boolean responsibleChooseable = SecurityUtil.isOperationAllowed(Roles.CREATE_ALL);
 			Task task = new Task();
+			task.setStartDate(LocalDate.now());
 			if (!responsibleChooseable) {
 				task.setResponsibleUsers(Set.of(
 						userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
@@ -149,15 +153,12 @@ public class TasksController {
                            @RequestParam(name = "relations", required = false) final Set<Long> relations,
                            @RequestParam(name = "taskRiskId", required = false) final Long riskId,
                            @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
-							@RequestParam(name = "templateDescription", required = false) final Long templateDescriptionId,
                            @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
 		List<TaskLink> links = new ArrayList<>();
 		for (TaskLink link : task.getLinks()) {
 			links.add(new TaskLink(null, linkify(link.getUrl()), task));
 		}
-		if (templateDescriptionId != null) {
-			choiceValueService.findById(templateDescriptionId).ifPresent(task::setTaskDescriptionTemplate);
-		}
+		defaultAndValidateStartDate(task);
 		List<SubTask> subTasks = new ArrayList<>();
 		for (SubTask subTask : task.getSubTasks()) {
 			subTasks.add(new SubTask(null, subTask.getName(), subTask.isCompleted(), task));
@@ -198,20 +199,34 @@ public class TasksController {
         }
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
         existingTask.setIncludeInReport(task.getIncludeInReport());
+        final boolean inProgress = Boolean.TRUE.equals(task.getInProgress());
+        existingTask.setInProgress(inProgress);
+        existingTask.setNote(inProgress ? task.getNote() : null);
 		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
-        existingTask.setDescription(task.getDescription());
+        // en valgt skabelon låser beskrivelsesfeltet, og låste felter sendes slet ikke med
+        if (task.getOwnDescription() != null) {
+            existingTask.setDescription(task.getOwnDescription());
+        }
+        defaultAndValidateStartDate(task);
         existingTask.setNextDeadline(task.getNextDeadline());
+        existingTask.setStartDate(task.getStartDate());
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setDepartment(task.getDepartment());
         existingTask.setResponsibleUsers(task.getResponsibleUsers());
 		existingTask.getNotificationReminders().clear();
 		existingTask.getNotificationReminders().addAll(task.getNotificationReminders());
 		existingTask.getSubTasks().clear();
+		final Set<String> documentGeneratedUrls = existingTask.getLinks().stream()
+			.filter(TaskLink::isDocumentGenerated)
+			.map(TaskLink::getUrl)
+			.collect(Collectors.toSet());
 		existingTask.getLinks().clear();
 		for (TaskLink link : task.getLinks()) {
 			if (link.getUrl() != null && !link.getUrl().isBlank()) {
+				final String url = linkify(link.getUrl());
 				link.setTask(existingTask);
-				link.setUrl(linkify(link.getUrl()));
+				link.setUrl(url);
+				link.setDocumentGenerated(documentGeneratedUrls.contains(url));
 				existingTask.getLinks().add(link);
 			}
 		}
@@ -232,7 +247,7 @@ public class TasksController {
     }
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, ChoiceValue taskResult) {}
-    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, String documentLink, Long documentRelation, Long resultId, List<Long> subTasksCompleted) {}
+    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate nextDeadline, String documentLink, Long documentRelation, Long resultId, List<Long> subTasksCompleted) {}
     @RequireReadOwnerOnly
 	@GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
@@ -251,7 +266,7 @@ public class TasksController {
 
 		model.addAttribute("taskDescriptionTemplates", values);
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
-        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, "", null, null, null));
+        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, null, "", null, null, null));
 		model.addAttribute("possibleResults", choiceService.findChoiceValuesForListIdentifier("control-result"));
 
         if (task.getTaskType().equals(TaskType.TASK)) {
@@ -332,8 +347,38 @@ public class TasksController {
     @SuppressWarnings("ClassEscapesDefinedScope")
 	@RequireUpdateOwnerOnly
     @Transactional
+    @PostMapping("complete/stay")
+    public ResponseEntity<String> completeTaskStaying(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
+        completeTaskInternal(dto);
+        return ResponseEntity.ok(resolveReferralUrl(referral));
+    }
+
+    @SuppressWarnings("ClassEscapesDefinedScope")
+	@RequireUpdateOwnerOnly
+    @Transactional
     @PostMapping("complete")
-    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
+    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto) {
+        completeTaskInternal(dto);
+        return "redirect:/tasks";
+    }
+
+    private String resolveReferralUrl(final String referral) {
+        if (StringUtils.isBlank(referral)) {
+            return "/tasks";
+        }
+
+        final String type = StringUtils.substringBefore(referral, "-");
+        final String id = StringUtils.substringAfter(referral, "-");
+
+        return switch (type) {
+            case "dashboard" -> "/dashboard";
+            case "asset" -> "/assets/" + id;
+            case "register" -> "/registers/" + id;
+            default -> "/tasks";
+        };
+    }
+
+    private Task completeTaskInternal(final CompletionFormDTO dto) {
         final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !taskService.isResponsibleFor(task)) {
@@ -386,11 +431,17 @@ public class TasksController {
             taskLog.setDocument(documentService.get(dto.documentRelation()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
-        taskService.completeTask(task, taskLog);
-        if ("dashboard".equals(referral)) {
-            return "redirect:/dashboard";
-        }
-        return "redirect:/tasks";
+        taskService.completeTask(task, taskLog, dto.nextDeadline());
+        return task;
+    }
+
+    @RequireReadOwnerOnly
+    @GetMapping("{id}/next-deadline-preview")
+    @ResponseBody
+    public LocalDate nextDeadlinePreview(@PathVariable("id") final long id,
+            @RequestParam("dateOfCompletion") @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate dateOfCompletion) {
+        final Task task = taskService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return taskService.previewNextDeadline(task, dateOfCompletion);
     }
 
 	@RequireCreateAll
@@ -411,6 +462,7 @@ public class TasksController {
 			@Valid @ModelAttribute final Task taskForm,
 			@RequestParam(name = "relations", required = false) final List<Long> relations
 	) {
+		defaultAndValidateStartDate(taskForm);
 		final Task task = taskService.copyTask(taskForm);
 		setupRelations(task, relations);
 		if (task.getSubTasks() == null) {
@@ -433,6 +485,12 @@ public class TasksController {
 		notifyService.notifyTaskResponsible(task);
 		return "redirect:/tasks/" + task.getId();
 	}
+
+    private void defaultAndValidateStartDate(final Task task) {
+        if (taskService.defaultStartDateAndCheckAfterDeadline(task)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Startdato kan ikke være efter deadline");
+        }
+    }
 
     private void setupRelations(final Task task, final List<Long> relations) {
         final List<Relatable> relatables = relatableService.findAllById(relations);

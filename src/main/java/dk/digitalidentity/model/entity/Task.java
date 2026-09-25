@@ -22,6 +22,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -29,6 +30,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.Formula;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -42,6 +46,7 @@ import java.util.stream.Collectors;
 @Table(name = "tasks")
 @Getter
 @Setter
+@Audited
 public class Task extends Relatable implements HasMultipleResponsibleUsers, StatisticEnabled, Tagable {
 
 	@StatisticLabel("Type")
@@ -62,10 +67,12 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	@StatisticLabel("Ansvarlig Afdeling")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsible_ou_uuid")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private OrganisationUnit responsibleOu;
 
 	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_uuid")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private OrganisationUnit department;
 
 	@StatisticLabel("Næste deadline")
@@ -73,6 +80,11 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     @NotNull
     private LocalDate nextDeadline;
+
+	@StatisticLabel("Startdato")
+	@Column
+	@DateTimeFormat(pattern = "dd/MM-yyyy")
+	private LocalDate startDate;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -87,23 +99,33 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
     @Column(name = "include_in_report")
     private Boolean includeInReport = false;
 
+    @Column(name = "in_progress")
+    private Boolean inProgress = false;
+
+    @Column(name = "in_progress_note")
+    private String note;
+
 	@Column(name = "preserved_responsible_users")
 	private String preservedResponsibleUserUuids;
 
 	@ManyToOne
 	@JoinColumn(name = "task_description_template")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private ChoiceValue taskDescriptionTemplate;
 
 	@OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
+	@NotAudited
 	private List<TaskLink> links = new ArrayList<>();
 
     @OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
+    @NotAudited
     private Set<TaskLog> logs  = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinTable(name = "task_tag", joinColumns = { @JoinColumn(name = "task_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Set<Tag> tags = new HashSet<>();
 
 	@Column(name = "notification_reminders")
@@ -111,7 +133,15 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	private Set<NotificationSetting> notificationReminders = new HashSet<>();
 
 	@OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
+	@NotAudited
 	private List<SubTask> subTasks  = new ArrayList<>();
+
+    @PrePersist
+    protected void onTaskCreate() {
+        if (startDate == null) {
+            startDate = LocalDate.now();
+        }
+    }
 
     @Override
     public RelationType getRelationType() {
@@ -141,12 +171,14 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 
 	@Formula("(SELECT CASE " +
 			"WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = id) THEN 'COMPLETED' " +
+			"WHEN t.in_progress THEN 'IN_PROGRESS' " +
 			"WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE' " +
 			"ELSE 'EXCEEDED' " +
 			"END " +
 			"FROM tasks t " +
 			"WHERE t.id = id)")
 	@Enumerated(EnumType.STRING)
+	@NotAudited
 	private TaskDeadlineStatus status;
 
 	@Override
@@ -154,9 +186,14 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 		return responsibleUsers.stream().map(User::getName).collect(Collectors.joining(","));
 	}
 
-	// No one calls this one for now, its just for convenience
+	// En valgt skabelon vinder over opgavens egen tekst overalt hvor beskrivelsen vises
 	public String getDescription() {
 		return taskDescriptionTemplate != null ? taskDescriptionTemplate.getDescription() : description;
+	}
+
+	// Opgavens egen tekst, som getDescription() maskerer så snart der er valgt en skabelon
+	public String getOwnDescription() {
+		return description;
 	}
 
 }

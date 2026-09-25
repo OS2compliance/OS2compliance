@@ -20,3 +20,8 @@
     color: white;
     text-decoration: none;
 }
+
+.badge.bg-lightblue {
+    background-color: lightblue;
+    color: #212529;
+}

@@ -364,6 +364,9 @@
 .yw-status-overdue {
     color: #dc3545;
 }
+.yw-status-inprogress {
+    color: #0d6efd;
+}
 
 /* --- Month Count --- */
 .month-count {

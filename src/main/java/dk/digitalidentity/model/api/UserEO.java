@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 import static dk.digitalidentity.model.api.Examples.USER_EMAIL_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.USER_ID_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.USER_NAME_EXAMPLE;
@@ -27,4 +29,8 @@ public class UserEO {
     private String name;
     @Schema(description = "Email of the user", example = USER_EMAIL_EXAMPLE)
     private String email;
+    @Schema(description = "Whether the user is active", example = "true")
+    private Boolean active;
+    @Schema(description = "The users positions, each links the user to an organisation unit")
+    private Set<PositionEO> positions;
 }

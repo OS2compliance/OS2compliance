@@ -56,10 +56,10 @@
                     </table>
                 </div>
 
-                <div class="row mb-3 gap-1">
-                    <button id="editDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDataprocessingEditState(true)">Rediger databehandlingsindstillinger</button>
-                    <button id="cancelDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDataprocessingEditState(false)" hidden>Annuller</button>
-                    <button id="saveDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                <div class="mb-3 gap-1">
+                    <button id="editDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary btn-lg" onclick="setDataprocessingEditState(true)">Rediger</button>
+                    <button id="cancelDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-danger btn-lg" onclick="setDataprocessingEditState(false)" hidden>Annuller</button>
+                    <button id="saveDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="submit" class="btn btn-secondary btn-lg" hidden>Gem</button>
                 </div>
 
 
@@ -125,8 +125,13 @@
 
                     //Init choices.js
                     const supplierSelect = document.getElementById('supplierSelect');
+                    const selectedSupplierId = supplierSelect.dataset.selectedSupplierId;
                     supplierChoices = initSelect(supplierSelect);
-                    choiceService.updateSuppliers(supplierChoices, "");
+                    choiceService.updateSuppliers(supplierChoices, "").then(() => {
+                        if (selectedSupplierId) {
+                            supplierChoices.setChoiceByValue(selectedSupplierId);
+                        }
+                    });
                     supplierSelect.addEventListener("search",
                         function(event) {
                             choiceService.updateSuppliers(supplierChoices, event.detail.value);
@@ -137,6 +142,8 @@
                         checkInputField(supplierChoices);
                     });
                     dpChoiceElements.push(supplierChoices);
+
+                    initFormValidationForFormChoicesOnly('subSupplierForm', () => validateChoices(supplierChoices));
                 }))
             .catch(error => toastService.error(error))
         }

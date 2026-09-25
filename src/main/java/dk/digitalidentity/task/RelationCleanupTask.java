@@ -9,7 +9,6 @@ import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
-import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.Supplier;
@@ -27,8 +26,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,7 +41,7 @@ public class RelationCleanupTask {
 	private final RelationCleanupService relationCleanupService;
 
 	@Transactional
-	@Scheduled(cron = "${os2complicance.task.relation.cleanup.cron}")
+	@Scheduled(cron = "${os2compliance.task.relation.cleanup.cron}")
 	public void cleanupRelations() {
 		final Map<String, RelationType> CLASS_NAME_TO_TYPE = createClassNameToTypeMap();
 
@@ -75,26 +74,19 @@ public class RelationCleanupTask {
 	}
 
 	@Transactional
-	@Scheduled(cron = "${os2complicance.task.relation.duplicate.cron}")
+	@Scheduled(cron = "${os2compliance.task.relation.duplicate.cron}")
 	public void findDuplicateRelationIds() {
-		Map<RelationType, Collection<? extends Relatable>> duplicateIDRelatable = relationCleanupService.findAllDuplicateIds();
+		log.info("Searching for ids shared across Relatable tables");
 
-		log.info("Searching for Relatables with ids among other relations");
-		int foundIssuesCount = 0;
-		for (Map.Entry<RelationType, Collection<? extends Relatable>> entry : duplicateIDRelatable.entrySet()) {
-			if (entry.getValue().isEmpty()) {
-				continue;
-			}
-			log.warn("Type: {}, Ids: {}",
-					entry.getKey(),
-					entry.getValue().stream()
-							.map(Relatable::getId)
-							.sorted()
-							.toList());
-			foundIssuesCount += entry.getValue().size();
+		Map<Long, List<String>> duplicateIds = relationCleanupService.findAllDuplicateIds();
+		if (!duplicateIds.isEmpty()) {
+			log.error("Found {} ids shared across Relatable tables: {}", duplicateIds.size(), duplicateIds);
 		}
-		if (foundIssuesCount > 0) {
-			log.warn("Found {} relatables with ids found among other relations:", foundIssuesCount);
+
+		RelationCleanupService.GeneratorHeadroom headroom = relationCleanupService.checkGeneratorHeadroom();
+		if (headroom.isAtRisk()) {
+			log.error("hibernate_sequences.next_val ({}) is not clear of the highest Relatable id in use ({}) - the next block handed out risks colliding with a live id",
+					headroom.nextVal(), headroom.highestIdInUse());
 		}
 	}
 

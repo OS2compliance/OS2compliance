@@ -8,6 +8,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasOperationResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasSigner;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import jakarta.persistence.EntityManager;
@@ -33,6 +34,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +97,106 @@ public class SearchRepositoryImpl implements SearchRepository {
 		return new PageImpl<>(query.getResultList(), page, totalRows);
 	}
 
+	/**
+	 * Column search with caller supplied restrictions. {@code queryPredicates} also get hold of the
+	 * {@link CriteriaQuery}, which is what a predicate needs to build a subquery of its own.
+	 */
+	@Override
+	public <T> Page<T> findAllWithColumnSearch(final Map<String, String> searchableProperties,
+			final Pageable page,
+			final Class<T> entityClass,
+			final List<PredicateBuilder<T>> extraPredicates,
+			final List<QueryPredicateBuilder<T>> queryPredicates) {
+		final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+
+		// A filter on a joined property multiplies the rows, a filter on the root does not
+		final boolean hasJoinFilter = searchableProperties.keySet().stream().anyMatch(k -> k.contains("."));
+
+		final CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+		final Root<T> root = criteriaQuery.from(entityClass);
+		criteriaQuery.select(root)
+				.where(restrictions(searchableProperties, extraPredicates, queryPredicates, criteriaBuilder, criteriaQuery, root))
+				.distinct(hasJoinFilter);
+		criteriaQuery.orderBy(buildOrderBy(page, criteriaBuilder, root));
+
+		final TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
+		query.setFirstResult(page.getPageNumber() * page.getPageSize());
+		query.setMaxResults(page.getPageSize());
+
+		final long totalRows = countMatching(searchableProperties, entityClass, extraPredicates,
+				queryPredicates, criteriaBuilder, hasJoinFilter);
+
+		return new PageImpl<>(query.getResultList(), page, totalRows);
+	}
+
+	/**
+	 * Same as {@link #findAllWithColumnSearch(Map, Pageable, Class, List, List)}, for callers that have
+	 * no caller-supplied {@link PredicateBuilder} restrictions of their own.
+	 */
+	@Override
+	public <T> Page<T> findAllWithColumnSearch(final Map<String, String> searchableProperties,
+			final Pageable page,
+			final Class<T> entityClass,
+			final List<QueryPredicateBuilder<T>> queryPredicates) {
+		return findAllWithColumnSearch(searchableProperties, page, entityClass, List.of(), queryPredicates);
+	}
+
+	/**
+	 * Same restrictions as {@link #findAllWithColumnSearch(Map, Pageable, Class, List, List)}, but only
+	 * the count — for callers that need an exact match total without paging through the rows.
+	 */
+	@Override
+	public <T> long countWithColumnSearch(final Map<String, String> searchableProperties,
+			final Class<T> entityClass,
+			final List<PredicateBuilder<T>> extraPredicates,
+			final List<QueryPredicateBuilder<T>> queryPredicates) {
+		final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		final boolean hasJoinFilter = searchableProperties.keySet().stream().anyMatch(k -> k.contains("."));
+		return countMatching(searchableProperties, entityClass, extraPredicates, queryPredicates,
+				criteriaBuilder, hasJoinFilter);
+	}
+
+	/**
+	 * Assembles the column filters and the caller's own restrictions. A predicate is bound to the root
+	 * it was built against, so the count query has to build its own set rather than borrow the page
+	 * query's.
+	 */
+	private <T> Predicate[] restrictions(final Map<String, String> searchableProperties,
+			final List<PredicateBuilder<T>> extraPredicates,
+			final List<QueryPredicateBuilder<T>> queryPredicates,
+			final CriteriaBuilder criteriaBuilder,
+			final CriteriaQuery<?> criteriaQuery,
+			final Root<T> root) {
+		final List<Predicate> predicates = new ArrayList<>();
+		predicates.add(buildSearchPredicates(searchableProperties, criteriaBuilder, root, false));
+		extraPredicates.forEach(p -> predicates.add(p.build(criteriaBuilder, root)));
+		queryPredicates.forEach(p -> predicates.add(p.build(criteriaBuilder, criteriaQuery, root)));
+		return predicates.toArray(new Predicate[0]);
+	}
+
+	/**
+	 * Counts in the database rather than fetching every match to call {@code size()} on it. The other
+	 * overloads in here still do the latter; this one cannot, because the reports and the Excel export
+	 * ask for page sizes in the thousands — fetching the whole result set just to arrive at a number
+	 * would load it twice over.
+	 * <p>
+	 * {@code distinct} has to mirror the page query's: counting rows the page query would collapse
+	 * gives a total the grid cannot page through.
+	 */
+	private <T> long countMatching(final Map<String, String> searchableProperties,
+			final Class<T> entityClass,
+			final List<PredicateBuilder<T>> extraPredicates,
+			final List<QueryPredicateBuilder<T>> queryPredicates,
+			final CriteriaBuilder criteriaBuilder,
+			final boolean distinct) {
+		final CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+		final Root<T> countRoot = countQuery.from(entityClass);
+		countQuery.select(distinct ? criteriaBuilder.countDistinct(countRoot) : criteriaBuilder.count(countRoot))
+				.where(restrictions(searchableProperties, extraPredicates, queryPredicates,
+						criteriaBuilder, countQuery, countRoot));
+		return entityManager.createQuery(countQuery).getSingleResult();
+	}
+
 	private <T> Predicate buildSearchPredicates(final Map<String, String> searchableProperties, CriteriaBuilder criteriaBuilder, Root<T> root, boolean orSearch) {
 		final List<Predicate> predicates = new ArrayList<>();
 		for (final Map.Entry<String, String> searchEntry : searchableProperties.entrySet()) {
@@ -119,7 +221,20 @@ public class SearchRepositoryImpl implements SearchRepository {
 				predicates.add(criteriaBuilder.or(criteriaBuilder.isNull(propertyPath), criteriaBuilder.equal(propertyPath.as(String.class), "")));
 			}
 			else {
-				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath), "%" + searchEntry.getValue().toLowerCase() + "%"));
+				if (value != null && !value.isEmpty()) {
+					List<String> values = Arrays.asList(StringUtils.split(value, ","));
+					List<Predicate> valuePredicates = new ArrayList<>();
+					for (String val : values) {
+						String trimmed = val.trim();
+						valuePredicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath.as(String.class)),
+								"%" + trimmed.toLowerCase() + "%"));
+					}
+					if (valuePredicates.size() == 1) {
+						predicates.add(valuePredicates.getFirst());
+					} else if (!valuePredicates.isEmpty()) {
+						predicates.add(criteriaBuilder.or(valuePredicates.toArray(new Predicate[0])));
+					}
+				}
 			}
 		}
 
@@ -202,6 +317,21 @@ public class SearchRepositoryImpl implements SearchRepository {
 
 	@Override
 	public <T> Page<T> findAllWithAssignedUser(final Map<String, String> searchableProperties, final User user, final Pageable page, final Class<T> entityClass) {
+		return findAllWithAssignedUser(searchableProperties, user, page, entityClass, List.of());
+	}
+
+	@Override
+	public <T> Page<T> findAllWithAssignedUser(final Map<String, String> searchableProperties, final User user,
+			final Pageable page, final Class<T> entityClass, final List<QueryPredicateBuilder<T>> queryPredicates) {
+		final Map<String, Object> orMap = assignedUserOrConditions(user, entityClass);
+
+		final List<QueryPredicateBuilder<T>> allPredicates = new ArrayList<>(queryPredicates);
+		allPredicates.add((cb, query, root) -> buildAssignedUserOrPredicate(orMap, cb, root));
+
+		return findAllWithColumnSearch(searchableProperties, page, entityClass, allPredicates);
+	}
+
+	private <T> Map<String, Object> assignedUserOrConditions(final User user, final Class<T> entityClass) {
 		Map<String, Object> orMap = new HashMap<>();
 		if (HasMultipleResponsibleUsers.class.isAssignableFrom(entityClass)) {
 			orMap.put("responsibleUserUuids", user.getUuid());
@@ -212,13 +342,30 @@ public class SearchRepositoryImpl implements SearchRepository {
 		if (HasManagers.class.isAssignableFrom(entityClass)) {
 			orMap.put("managerUuids", user.getUuid());
 		}
+		if (HasOperationResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			orMap.put("operationResponsibleUserUuids", user.getUuid());
+		}
 		if (HasCustomResponsibleUsers.class.isAssignableFrom(entityClass)) {
 			orMap.put("customResponsibleUserUuids", user.getUuid());
 		}
 		if (HasSigner.class.isAssignableFrom(entityClass)) {
 			orMap.put("signerUuid", user.getUuid());
 		}
-		return findAllWithColumnSearch(searchableProperties, null, orMap, page, entityClass);
+		return orMap;
+	}
+
+	private <T> Predicate buildAssignedUserOrPredicate(final Map<String, Object> orMap, final CriteriaBuilder criteriaBuilder, final Root<T> root) {
+		final Predicate[] orArr = orMap.entrySet().stream()
+				.map(e -> {
+					if (e.getValue() instanceof String) {
+						return criteriaBuilder.like(root.get(e.getKey()), "%" + e.getValue() + "%");
+					}
+					else {
+						return criteriaBuilder.equal(root.get(e.getKey()), e.getValue());
+					}
+				})
+				.toArray(Predicate[]::new);
+		return orArr.length == 0 ? criteriaBuilder.disjunction() : criteriaBuilder.or(orArr);
 	}
 
 	private static <T> List<Order> buildOrderBy(final Pageable page, CriteriaBuilder cb, final Root<T> root) {
@@ -274,6 +421,8 @@ public class SearchRepositoryImpl implements SearchRepository {
 			Predicate searchPredicate = buildSearchPredicates(searchableProperties, criteriaBuilder, root, true);
 			predicates.add(searchPredicate);
 		}
+
+		predicates.add(criteriaBuilder.isFalse(root.get("deleted")));
 
 		if (filterOnUser) {
 			addUserPredicates(entityClass, user, root, criteriaBuilder, criteriaQuery, predicates);

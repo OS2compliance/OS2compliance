@@ -3,13 +3,13 @@
 <body>
 <div th:fragment="generelt(supplier)">
     <div class="card shadow-none">
-        <div class="card-header toolbar">
-            <h5 class="toolbar-start m-0">Stamdata</h5>
-            <div class="toolbar-end">
-                <button th:if="${changeableSupplier}" id="editDescBtn" type="button" class="btn btn-secondary btn-xs">Rediger</button>
-                <button th:if="${changeableSupplier}" id="cancelBtn" type="button" class="btn btn-light btn-xs" style="display: none">Annuller</button>
-                <button th:if="${changeableSupplier}" id="saveBtn" form="editDataForm" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+        <div class="card-header border-0 toolbar">
+            <div class="toolbar-start d-flex gap-1">
+                <button th:if="${changeableSupplier}" id="editDescBtn" type="button" class="btn btn-secondary btn-lg">Rediger</button>
+                <button th:if="${changeableSupplier}" id="cancelBtn" type="button" class="btn btn-danger btn-lg" style="display: none">Annuller</button>
+                <button th:if="${changeableSupplier}" id="saveBtn" form="editDataForm" type="submit" class="btn btn-secondary btn-lg" style="display: none">Gem</button>
             </div>
+            <div class="toolbar-end"></div>
         </div>
         <div class="card-body">
             <form id="editDataForm" class="row" action="#" th:action="@{/suppliers/edit(id=${supplier.id})}" name="generelt" method="post">

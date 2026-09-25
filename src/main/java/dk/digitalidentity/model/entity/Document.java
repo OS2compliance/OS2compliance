@@ -19,6 +19,8 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -29,6 +31,7 @@ import java.util.Set;
 @Table(name = "documents")
 @Getter
 @Setter
+@Audited
 public class Document extends Relatable implements HasSingleResponsibleUser, Tagable {
 
     @NotNull
@@ -42,6 +45,7 @@ public class Document extends Relatable implements HasSingleResponsibleUser, Tag
 
 	@ManyToOne
 	@JoinColumn(name = "document_type")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private ChoiceValue documentType;
 
     @Column
@@ -64,8 +68,19 @@ public class Document extends Relatable implements HasSingleResponsibleUser, Tag
 	@Column
 	private boolean includeInYearWheel;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "responsible_ou_uuid")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	private OrganisationUnit responsibleOu;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "department_uuid")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	private OrganisationUnit department;
+
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
 	@JoinTable(name = "document_tag", joinColumns = { @JoinColumn(name = "document_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<Tag> tags = new HashSet<>();
 
     @Override

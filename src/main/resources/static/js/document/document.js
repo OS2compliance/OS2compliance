@@ -1,8 +1,11 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 import initRelatedTagList from "../tags/related-tag-list.js";
+import { selectOu } from "./ou-select-helper.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let userChoicesEditSelect = null;
+let ouChoicesEditSelect = null;
+let departmentOuChoicesEditSelect = null;
 
 document.addEventListener("DOMContentLoaded", function(event) {
     loadViewAndEditForm();
@@ -21,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 function initEditButton() {
     const editButton = document.getElementById("editBtn");
     editButton?.addEventListener("click", function () {
-        const responsibleFieldsChangeable = editButton.getAttribute('responsible-changeable');
+        const responsibleFieldsChangeable = editButton.dataset.responsibleChangeable === 'true';
         editMode(true, responsibleFieldsChangeable);
         onUnSubmittedService.setChangesMade();
     })
@@ -35,9 +38,31 @@ function formReset() {
 function loadViewAndEditForm() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
     userChoicesEditSelect = choiceService.initUserSelect("userSelect");
+    ouChoicesEditSelect = choiceService.initOUSelect("ouSelect");
+    departmentOuChoicesEditSelect = choiceService.initOUSelect("departmentOuSelect");
 
     userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
         checkInputField(userChoicesEditSelect);
+    });
+
+    userChoicesEditSelect.passedElement.element.addEventListener('addItem', async function() {
+        const userUuid = userChoicesEditSelect.passedElement.element.value;
+        try {
+            const response = await fetch(`/rest/ous/user/${userUuid}/suggestion`);
+            if (response.status === 204) {
+                ouChoicesEditSelect.removeActiveItems();
+                return;
+            }
+            if (!response.ok) {
+                return;
+            }
+            const suggestedOu = await response.json();
+            if (suggestedOu) {
+                selectOu(ouChoicesEditSelect, suggestedOu);
+            }
+        } catch (error) {
+            toastService.error(error);
+        }
     });
 
     document.querySelectorAll('.editField').forEach(elem => {
@@ -45,6 +70,8 @@ function loadViewAndEditForm() {
     });
 
     userChoicesEditSelect.disable();
+    ouChoicesEditSelect.disable();
+    departmentOuChoicesEditSelect.disable();
 
     initFormValidationForForm("editForm", () => validateChoices(userChoicesEditSelect));
 }
@@ -57,6 +84,8 @@ function editMode(enabled, responsibleFieldsChangeable = false) {
 
         if (responsibleFieldsChangeable) {
             userChoicesEditSelect.enable();
+            ouChoicesEditSelect.enable();
+            departmentOuChoicesEditSelect.enable();
         }
 
         document.getElementById('saveEditBtn').hidden = false;
@@ -69,6 +98,8 @@ function editMode(enabled, responsibleFieldsChangeable = false) {
         });
 
         userChoicesEditSelect.disable();
+        ouChoicesEditSelect.disable();
+        departmentOuChoicesEditSelect.disable();
         document.getElementById('saveEditBtn').hidden = true;
         document.getElementById('editBtn').hidden = false;
         document.querySelector('.clickableDocLink').style.display = '';

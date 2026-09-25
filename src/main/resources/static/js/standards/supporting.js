@@ -191,8 +191,18 @@ function editField(elem) {
             setField(id, type, editor.getData(), index);
         });
 
+        // save when leaving source-mode, since the visual editor's blur does not fire there
+        const sourceEditingPlugin = editor.plugins.has('SourceEditing') ? editor.plugins.get('SourceEditing') : null;
+        if (sourceEditingPlugin) {
+            sourceEditingPlugin.on('change:isSourceEditingMode', (evt, name, isSourceMode) => {
+                if (!isSourceMode) {
+                    setField(id, type, editor.getData(), index);
+                }
+            });
+        }
+
         showEditor(index, type);
-    });
+    }, { sourceEditing: true });
 }
 
 function showEditor(index, type) {
@@ -334,14 +344,16 @@ function initDragAndDrop() {
         onReorder: (identifiers, draggedRow) => {
             const tbody = draggedRow.closest('tbody');
             const parentSectionNumber = draggedRow.dataset.parentSection;
-            const groupRows = [...tbody.querySelectorAll(`.draggable-section[data-parent="${draggedRow.dataset.parent}"]`)];
+            const groupRows = [...tbody.querySelectorAll(
+                `.draggable-section[data-parent="${CSS.escape(draggedRow.dataset.parent)}"]`)];
+            // Formatet "<nummer> <titel>" skal matche renumberInOrder paa serveren.
             groupRows.forEach((r, i) => {
                 const firstTd = r.querySelector('td:first-child');
                 const description = firstTd.textContent.trim().replace(/^\S+\s*/, '');
                 firstTd.textContent = parentSectionNumber + '.' + (i + 1) + ' ' + description;
             });
 
-            postData('/rest/standards/section/reorder', identifiers).then(response => {
+            postData('/rest/standards/' + templateIdentifier + '/section/reorder', identifiers).then(response => {
                 if (!response.ok) {
                     console.error('Reorder failed:', response.statusText);
                     toastService.error('Fejl ved gemning af rækkefølge');

@@ -214,6 +214,8 @@ function createTaskChip(task, state) {
     // Status indicator icon
     if (task.status === 'completed') {
         chip.appendChild(cloneTemplate('tmplChipIconCompleted'));
+    } else if (task.status === 'inprogress') {
+        chip.appendChild(cloneTemplate('tmplChipIconInProgress'));
     } else if (task.status === 'overdue') {
         chip.appendChild(cloneTemplate('tmplChipIconOverdue'));
     }
@@ -234,9 +236,10 @@ function createTaskChip(task, state) {
 // --- Detail Panel ---
 
 var STATUS_CONFIG = {
-    completed: { className: 'd-inline-block badge bg-success', text: 'Udført' },
-    overdue:   { className: 'd-inline-block badge bg-danger',  text: 'Overskredet' },
-    upcoming:  { className: 'd-inline-block badge bg-secondary', text: 'Kommende' }
+    completed:  { className: 'd-inline-block badge bg-success', text: 'Udført' },
+    inprogress: { className: 'd-inline-block badge bg-lightblue', text: 'I gang' },
+    overdue:    { className: 'd-inline-block badge bg-danger',  text: 'Overskredet' },
+    upcoming:   { className: 'd-inline-block badge bg-secondary', text: 'Kommende' }
 };
 
 function showDetailPanel(chip) {

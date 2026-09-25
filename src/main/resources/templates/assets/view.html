@@ -84,10 +84,10 @@
                             <div id="assetTab" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
                                 <form id="editForm" action="#" th:action="@{/assets/edit}" th:object="${asset}" method="post" class="needs-validation was-validated">
                                     <!-- buttons row -->
-                                    <div class="row mb-3 gap-1">
-                                        <button id="saveEditAssetBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" hidden>Annuller</button>
-                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger stamdata</button>
+                                    <div class="mb-3 gap-1">
+                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-lg" th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger</button>
+                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-lg" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" hidden>Annuller</button>
+                                        <button id="saveEditAssetBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-lg" hidden>Gem</button>
                                     </div>
                                     <div class="row mb-3">
                                         <!-- Column 1 -->
@@ -131,10 +131,12 @@
                                                     <select class="form-control form-select choices__input"
                                                         data-trigger="" id="supplier" th:field="*{supplier}" hidden=""
                                                         tabindex="-1">
+                                                        <option value="">-- Vælg leverandør --</option>
                                                         <option th:value="${asset.supplier?.id}"
                                                             th:text="${asset.supplier?.name}"
                                                             th:if="${asset.supplier != null}"></option>
                                                     </select>
+                                                    <div class="invalid-feedback">Leverandør er påkrævet</div>
                                                 </div>
                                             </div>
 
@@ -229,11 +231,16 @@
                                             </div>
 
                                             <div class="row mb-3">
-                                                <label for="activeAsset" class="col-sm-3 col-form-label">Aktiv/Inaktiv</label>
+                                                <label for="activeAsset" class="col-sm-3 col-form-label">
+                                                    Aktiv/Inaktiv
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select editField"
                                                             th:field="*{active}" id="activeAsset"
-                                                            tabindex="-1" disabled>
+                                                            tabindex="-1" disabled
+                                                            th:attr="data-kitos-locked=${isKitosUsage}">
                                                         <option th:value="true">Aktiv</option>
                                                         <option th:value="false">Inaktiv</option>
                                                     </select>
@@ -331,9 +338,8 @@
                                                 </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select editField"
-                                                            th:field="*{aiStatus}" name="assetCategory" id="aiStatus"
+                                                            th:field="*{aiStatus}" id="aiStatus"
                                                             tabindex="-1" disabled>
-                                                        <option value=""></option>
                                                         <option
                                                                 th:each="status : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
                                                                 th:value="${status}" th:text="${status.danishName}"></option>
@@ -349,7 +355,7 @@
                                                 </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select editField"
-                                                            th:field="*{aiRisk}" name="assetCategory" id="riskFactor"
+                                                            th:field="*{aiRisk}" id="riskFactor"
                                                             tabindex="-1" disabled>
                                                         <option value=""></option>
                                                         <option
@@ -467,7 +473,7 @@
                                                     <!--                                                             th:value="${crit.name}" th:text="${crit.message}"></option> -->
                                                     <!--                                                 </select> -->
                                                     <input th:unless="${isKitos}" class="form-control editField" id="terminationNotice"
-                                                        th:value="*{terminationNotice}" disabled>
+                                                        th:field="*{terminationNotice}" disabled>
                                                 </div>
                                             </div>
 
@@ -575,7 +581,7 @@
                                                         <tbody>
                                                         <tr th:each="task : ${tasks}">
                                                             <td>
-                                                                <a th:text="${task.title}" th:href="@{/tasks/{id}(id=${task.id})}"></a>
+                                                                <a th:text="${task.title}" th:href="@{/tasks/{id}(id=${task.id},referral='asset-' + ${asset.id})}"></a>
                                                             </td>
                                                             <td th:text="${task.responsibleUserName}"></td>
                                                             <td th:text="${task.responsibleOuName}"></td>
@@ -843,6 +849,7 @@
         /*[+
             var isKitos = [[${isKitos}]];
             var isOldKitos = [[${isOldKitos}]];
+            var isKitosUsage = [[${isKitosUsage}]];
             var scaleMap = [[${scale}]];
             var scaleColorMap = [[${riskScoreColorMap}]];
             var riskProfiles = [[${riskProfiles}]];

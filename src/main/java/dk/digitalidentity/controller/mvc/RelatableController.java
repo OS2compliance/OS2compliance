@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,16 +67,9 @@ public class RelatableController {
         dto.relations().stream()
 				.map(relatedId -> relatableService.findById(relatedId)
 						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet")))
-				.map(relatable -> Relation.builder()
-						.relationAId(relateTo.getId())
-						.relationAType(relateTo.getRelationType())
-						.relationAName(relateTo.getName())
-						.relationBId(relatable.getId())
-						.relationBType(relatable.getRelationType())
-						.relationBName(relatable.getName())
-                        .properties(new HashSet<>())
-						.build())
-				.map(relationService::save)
+				// Via addRelation, so picking an already related entity (or double-clicking the button)
+				// updates the existing relation instead of adding a second row for the same pair.
+				.map(relatable -> relationService.addRelation(relateTo, relatable))
                 .forEach(relation -> {
                     setRelationProperties(relation, dto.properties);
                     relationService.save(relation);

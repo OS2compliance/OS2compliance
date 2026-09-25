@@ -9,6 +9,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.annotations.BatchSize;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -24,6 +27,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Audited
 public class User implements Serializable {
 
     @Id
@@ -49,7 +53,9 @@ public class User implements Serializable {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 100)
     @Builder.Default
+    @NotAudited
     private Set<Position> positions = new HashSet<>();
 
     @ToString.Exclude
@@ -58,6 +64,7 @@ public class User implements Serializable {
     @OneToMany(orphanRemoval = true,
         cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
         mappedBy = "user")
+    @NotAudited
     private Set<UserProperty> properties = new HashSet<>();
 
     @PrePersist

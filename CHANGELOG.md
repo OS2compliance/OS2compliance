@@ -8,6 +8,79 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 
+## [2.8.0] - 2026-09-25
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-45) (Generelt) Ensartede knapper på tværs af siderne
+- (https://os2web.atlassian.net/browse/COMPLY-119) (Opgavecenter) Filtrering på listevisninger med multiselect pr. status
+- (https://os2web.atlassian.net/browse/COMPLY-137) (Aktiver) Nye valgfri kolonner på aktiv-oversigten
+- (https://os2web.atlassian.net/browse/COMPLY-151) (Aktiver/TIA) Systemejer kan markere TIA som gennemgået og accepteret, med bemærkningsfelt
+- (https://os2web.atlassian.net/browse/COMPLY-164) (Opgavecenter) Startdato på opgaver og kontroller; "Deadline" hedder nu "Slutdato" på listerne
+- (https://os2web.atlassian.net/browse/COMPLY-287) (Rapporter) Højeste konsekvens vises med registreret/organisation og fortrolighed/integritet/tilgængelighed i PDF og Word
+- (https://os2web.atlassian.net/browse/COMPLY-306) (Opgavecenter/Dashboard) Fra/til-datointerval på opgavelisterne, med valg af om intervallet rammer slutdato eller sidst udført
+- (https://os2web.atlassian.net/browse/COMPLY-333) (Risikobillede) Filtrering på kritikalitet, samfundskritisk og afdeling
+- (https://os2web.atlassian.net/browse/COMPLY-337) (Opgaver) Markering af at en opgave er i gang, med statusnote
+- (https://os2web.atlassian.net/browse/COMPLY-342) (Administration) Overførsel af ansvar kan afgrænses til udvalgte elementer
+- (https://os2web.atlassian.net/browse/COMPLY-343) (Risikovurdering) Antal hændelser de seneste 12 måneder vises på vurderingen
+- (https://os2web.atlassian.net/browse/COMPLY-346) (Aktiver) Aktiv/inaktiv afledes af systemets status
+- (https://os2web.atlassian.net/browse/COMPLY-361) (Opgavecenter) Valg mellem at blive på siden eller gå til oversigten efter udført kontrol
+- (https://os2web.atlassian.net/browse/COMPLY-367) (OS2kitos-integration) Aktiv/inaktiv følger livscyklusfasen fra OS2kitos
+- (https://os2web.atlassian.net/browse/COMPLY-368) (Risikovurderinger) Farvefilteret på risikolisten tilbyder kun de farver, den valgte risikomodel bruger
+- (https://os2web.atlassian.net/browse/COMPLY-375) (Aktiver) Notifikation når et system oprettes eller inaktiveres automatisk. Modtager(e) og de to hændelser slås til under Indstillinger, og mailteksten rettes under Mailskabeloner. Inaktivering udløses kun af OS2kitos-synkronisering — API'et kan ikke ændre aktiv/inaktiv.
+- (https://os2web.atlassian.net/browse/COMPLY-376) (Standarder) Pænere Word-eksport af informationssikkerhedshåndbogen, tydeligere klik-for-at-redigere og "Vis HTML" i editoren
+- (https://os2web.atlassian.net/browse/COMPLY-381) (Leverandører) Land som valgfri kolonne
+- (https://os2web.atlassian.net/browse/COMPLY-382) (Leverandører) Aktiver vises også for underleverandører, med rolle og antal pr. rolle
+- (https://os2web.atlassian.net/browse/COMPLY-384) (Hændelser) Gem som kladde uden at obligatoriske felter er udfyldt
+- (https://os2web.atlassian.net/browse/COMPLY-385) (Administration) Handlingslog med hvem der har ændret hvad hvornår, inkl. før/efter-visning
+- (https://os2web.atlassian.net/browse/COMPLY-387) (Konsekvensanalyser) DPIA kan hentes som Word-dokument
+- (https://os2web.atlassian.net/browse/COMPLY-391) (Risikovurdering) Ny type "Leverandør"
+- (https://os2web.atlassian.net/browse/COMPLY-409) (Risikovurderinger) Foranstaltninger vises med navn og link; beskrivelsen styres af en indstilling, og de to rækker er omdøbt til "Eksisterende foranstaltninger" og "Supplerende bemærkninger"
+- (https://os2web.atlassian.net/browse/COMPLY-412) (Trusselskataloger) Filtrering på skjulte og synlige kataloger
+- (https://os2web.atlassian.net/browse/COMPLY-415) (Risikobillede) Ny risikomatrix
+- (https://os2web.atlassian.net/browse/COMPLY-418) (Dokumenter/Opgaver) Afdeling og forvaltning på dokumentet, og afdeling, forvaltning og link overføres til revisionskontrollen
+- (https://os2web.atlassian.net/browse/COMPLY-446) (Risikostyring) Konsekvensanalyser uden aktiv
+- (https://os2web.atlassian.net/browse/COMPLY-447) (Dashboard) Aktiver vises også for driftsansvarlige
+- (Ad-hoc) Hændelsesoverblikket kan filtreres pr. kolonne og på valgt datofelt
+- (Ad-hoc) Til test: e2e-drejebog med isoleret miljø og rapportgenerator
+
+### Changed
+- (Fortegnelser) KL's mappede behandlingsaktiviteter opdateret til version 1.8 af arket (95 pakker, ny aktivitet F, hjemmel rettet fra databeskyttelseslovens §10 til §8 på 56 aktiviteter) og den bundtede KLE-emneplan fornyet til 2026-05-01. **Kun nye tilslutninger får indholdet** — eksisterende installationer beholder deres nuværende fortegnelser, indtil `importRegister` kan matche på andet end titlen.
+- (Ad-hoc) Fjernet Role-entiteten, som var dødt kode fra NIBIS
+
+### Fixed
+- (https://os2web.atlassian.net/browse/COMPLY-432) (Opgaver) Gentagne kontroller inden for samme periode skubbede deadline flere intervaller frem. Næste deadline beregnes nu ud fra udførelsesdatoen og kan rettes i udfør-dialogen
+- (gitlab #57) Tilsyn blev registreret på forkert opgave når et aktiv havde flere linkede tilsynsopgaver
+- (gitlab #58) Kopiering af risikovurdering medtog ikke kommentarfeltet
+- (gitlab #59) Global søgning viste slettede aktiver og førte til "siden blev ikke fundet"
+- (gitlab #61) Forkert antal aktiver i leverandøroversigten
+- (gitlab #64) OS2kitos-synkronisering markerede aktiver som ændrede selvom intet var ændret
+- (gitlab #68) "Ikke relevant" på risikovurdering havde intet synligt klikmål
+- (gitlab #70) Oprettelse af aktiv via API'et fejlede
+- (gitlab #71) Aktiv blev oprettet med tilfældig leverandør når leverandørfeltet stod tomt
+- (gitlab #72) Delte id'er i relatable-hierarkiet opdages nu af et natligt tjek
+- (gitlab #82) Fejl i søjlediagrammet for hændelsesstatistik
+- (gitlab #83) Supplerende bemærkninger på risikovurderinger kunne ikke findes i den globale søgning
+- (gitlab #84) Risikoskemaet slog den samme indstilling op én gang pr. trussel
+- (gitlab #86) Nyt trusselskatalog blev oprettet som skjult og forsvandt fra listen
+- (gitlab #88) DBS-tilsynssiden hentede et javascript der ikke fandtes, og Excel-udtrækket fejlede
+- (gitlab #89) En behandlingsaktivitets titel kunne kun ses afkortet i brødkrummen
+- (gitlab #90) 403-siden kastede en TypeError i browserkonsollen
+- (gitlab #92) "Signatar" på aktivets DPIA-fane hedder nu "Underskriver"
+- (gitlab #93) Databehandleraftale blev sat til "nej" ved oprettelse i stedet for at stå blank
+- (Standarder) Nye krav fik numre med huller (fx 1.5, 1.10, 1.11), fordi kravets viste nummer blev udledt af en primærnøgle der deles på tværs af alle standarder
+- (Standarder) Kravets nummer blev ikke opdateret i relationer, opgaver, rapporter og global søgning når rækkefølgen blev ændret med træk og slip
+- (Standarder) Omsortering var ikke afgrænset til den standard kaldet angav
+- (OS2kitos-integration) Al skrivning til OS2kitos med en dato blev afvist. Datoer blev sendt som epoch-tal i stedet for som tekst, og OS2kitos afviste hele opdateringen — ikke kun datofeltet. Det ramte synkronisering af risikovurdering og DPIA samt forretningskritisk/arkiveringspligt, og fejlede fra opdateringen af Kitos-klienten d. 2. juli 2026. Rettet i kitos-client release-1.3.3
+- (OS2kitos-integration) "Synkroniser til OS2kitos" på risikovurderingen fejlede lydløst ved manuel udfyldning, fordi et tomt dokumentationslink blev sendt med og afvist af OS2kitos
+- (OS2kitos-integration) DPIA-linket blev skrevet i risikovurderingens dokumentationsfelt i OS2kitos og overskrev dermed linket til risikovurderingen
+- (Fortegnelser) Udrulningen af version 1.8 på eksisterende installationer trukket tilbage. Den oprettede dubletter i stedet for at opdatere og overskrev kommunens egne rettelser af hjemmel og KLE. Én kommune nåede at få den og er genoprettet fra backup.
+- (Opgavecenter/Årshjul) Gentagne opgaver vises ikke længere i årene før deres første deadline. En årlig opgave med første deadline 12/08-2027 dukkede op som overskredet d. 12/08-2026, fordi årshjulet regnede baglæns fra næste deadline helt tilbage til opgavens oprettelsesdato. Baglæns fremskrivning stopper nu ved den ældste deadline, opgaven har haft.
+- (Opgavecenter/Årshjul) En enkelt opgave uden deadline fik hele årshjulet til at fejle. Den springes nu over.
+- (Ad-hoc) Hændelser blev oprettet i dublet ved gentagne indsendelser af samme formular
+- (Ad-hoc) Der blev ikke oprettet tilsynsopgave når DBS genudgav en kendt audit
+- (Ad-hoc) Den delte id-generator skrives nu ud, så HHH000398 forsvinder fra opstartsloggen
+- (Ad-hoc) CI: fastsat docker-API-version så Testcontainers kan tale med Docker 29
+
+
 ## [2.7.0] - 2026-06-14
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-41) (Aktiver/Generelt) Visning af resultatet for senest gennemførte kontroller, deadline og opgavetype

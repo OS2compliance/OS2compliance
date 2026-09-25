@@ -1,7 +1,15 @@
 CREATE OR REPLACE VIEW view_gridjs_suppliers AS
 SELECT s.id,
        TRIM(s.name)                                                         AS name,
-       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false)           AS solution_count,
+       (SELECT COUNT(DISTINCT a.id)
+        FROM assets a
+        WHERE a.deleted = false
+          AND (a.supplier_id = s.id
+               OR EXISTS (SELECT 1
+                          FROM relations rel
+                          WHERE (rel.relation_a_id = a.id AND rel.relation_a_type = 'ASSET' AND rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER')
+                             OR (rel.relation_b_id = a.id AND rel.relation_b_type = 'ASSET' AND rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER'))))
+        AS solution_count,
        s.updated_at                                                         AS updated,
        s.status,
        s.localized_enums,
@@ -10,9 +18,14 @@ SELECT s.id,
                  LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
         WHERE a.supplier_id = s.id)                                         AS last_oversight_date,
        prop.prop_value                                                      AS kitos_uuid,
+       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false) AS primary_asset_count,
+       (SELECT COUNT(1) FROM relations rel
+        WHERE (rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET')
+           OR (rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER' AND rel.relation_a_type = 'ASSET')) AS secondary_asset_count,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
-       s.responsible_uuid
+       s.responsible_uuid,
+       s.country
 FROM suppliers s
          LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
          LEFT JOIN supplier_tag rt ON rt.supplier_id = s.id
@@ -30,7 +43,9 @@ SELECT t.id,
        t.next_deadline,
        t.repetition,
        t.include_in_report,
-       t.created_at,
+       t.in_progress,
+       t.start_date,
+       t.in_progress_note,
        (CASE
             WHEN t.repetition = 'NONE' THEN 10
             WHEN t.repetition = 'MONTHLY' THEN 2
@@ -43,6 +58,12 @@ SELECT t.id,
        cv_result.caption                                                               as result,
        cv_result.id                                                                    as task_result_order,
        COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) as `completed`,
+       CASE
+           WHEN COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) = true THEN 'COMPLETED'
+           WHEN t.next_deadline IS NULL THEN NULL
+           WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
+           ELSE 'EXCEEDED'
+       END as task_deadline_status,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
        GROUP_CONCAT(DISTINCT COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
@@ -304,7 +325,61 @@ SELECT a.id,
            WHEN ta_calcs.avg_probability IS NOT NULL AND ta_calcs.avg_consequence_overall IS NOT NULL
            THEN ROUND(ta_calcs.avg_probability * ta_calcs.avg_consequence_overall, 2)
            ELSE NULL
-       END) as risk_score
+       END) as risk_score,
+       departments.department_names,
+       a.description,
+       operation_responsible.operation_responsible_user_names,
+       operation_responsible.operation_responsible_user_uuids,
+       a.criticality,
+       (CASE
+            WHEN a.criticality = 'CRITICAL' THEN 1
+            WHEN a.criticality = 'NON_CRITICAL' THEN 2
+           END
+           )                                                                as criticality_order,
+       a.socially_critical,
+       a.ai_status,
+       a.contract_date,
+       a.contract_termination,
+       a.termination_notice,
+       a.data_processing_agreement_status,
+       a.data_processing_agreement_date,
+       a.archive,
+       a.asset_measure_status,
+       (CASE
+            WHEN a.asset_measure_status = 'GREEN' THEN 1
+            WHEN a.asset_measure_status = 'YELLOW' THEN 2
+            WHEN a.asset_measure_status = 'RED' THEN 3
+           END
+           )                                                                as asset_measure_status_order,
+       a.threat_assessment_opt_out,
+       (CASE
+            WHEN a.threat_assessment_opt_out = true THEN 0
+            WHEN ta.assessment = 'GREEN' THEN 1
+            WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
+            WHEN ta.assessment = 'YELLOW' THEN 3
+            WHEN ta.assessment = 'ORANGE' THEN 4
+            WHEN ta.assessment = 'RED' THEN 5
+           END
+           )                                                                as risk_assessment_opt_out_status_order,
+       a.dpia_opt_out,
+       dpia_latest.dpia_screening_conclusion,
+       (CASE
+            WHEN a.dpia_opt_out = true THEN 0
+            WHEN dpia_latest.dpia_screening_conclusion = 'GREEN' THEN 1
+            WHEN dpia_latest.dpia_screening_conclusion = 'YELLOW' THEN 2
+            WHEN dpia_latest.dpia_screening_conclusion = 'RED' THEN 3
+            WHEN dpia_latest.dpia_screening_conclusion = 'GREY' THEN 4
+           END
+           )                                                                as dpia_status_order,
+       a.tia_opt_out,
+       tia_latest.assessment                                                as tia_assessment,
+       (CASE
+            WHEN a.tia_opt_out = true THEN 0
+            WHEN tia_latest.assessment = 'GREEN' THEN 1
+            WHEN tia_latest.assessment = 'YELLOW' THEN 2
+            WHEN tia_latest.assessment = 'RED' THEN 3
+           END
+           )                                                                as tia_status_order
 FROM assets a
          LEFT JOIN suppliers s on s.id = a.supplier_id
          LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
@@ -392,6 +467,46 @@ FROM assets a
          LEFT JOIN assets_users_mapping aum ON aum.asset_id = a.id
          LEFT JOIN users mu ON aum.user_uuid = mu.uuid
          LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
+         LEFT JOIN (
+             SELECT adm.asset_id,
+                    GROUP_CONCAT(DISTINCT ou.name ORDER BY ou.name SEPARATOR ',') AS department_names
+             FROM assets_departments_mapping adm
+                      JOIN ous ou ON ou.uuid = adm.ou_uuid
+             GROUP BY adm.asset_id
+         ) departments ON departments.asset_id = a.id
+         LEFT JOIN (
+             SELECT orum.asset_id,
+                    GROUP_CONCAT(DISTINCT oru.name ORDER BY oru.name SEPARATOR ',') AS operation_responsible_user_names,
+                    GROUP_CONCAT(DISTINCT oru.uuid SEPARATOR ',')                   AS operation_responsible_user_uuids
+             FROM assets_operation_responsible_users_mapping orum
+                      JOIN users oru ON oru.uuid = orum.user_uuid
+             GROUP BY orum.asset_id
+         ) operation_responsible ON operation_responsible.asset_id = a.id
+         LEFT JOIN (
+             SELECT daa.asset_id,
+                    (SELECT ds2.conclusion FROM dpia_screening ds2 WHERE ds2.dpia_id = d.id LIMIT 1) AS dpia_screening_conclusion
+             FROM dpia_asset daa
+                      JOIN dpia d ON d.id = daa.dpia_id
+             WHERE d.deleted = false
+               AND d.id = (
+                   SELECT db.id
+                   FROM dpia db
+                            JOIN dpia_asset daa2 ON daa2.dpia_id = db.id
+                   WHERE daa2.asset_id = daa.asset_id
+                     AND db.deleted = false
+                   ORDER BY db.created_at DESC
+                   LIMIT 1
+               )
+         ) dpia_latest ON dpia_latest.asset_id = a.id
+         LEFT JOIN (
+             SELECT asset_id, assessment
+             FROM tia t1
+             WHERE t1.id = (
+                 SELECT t2.id FROM tia t2
+                 WHERE t2.asset_id = t1.asset_id
+                 ORDER BY t2.id DESC LIMIT 1
+             )
+         ) tia_latest ON tia_latest.asset_id = a.id
 WHERE a.deleted = false
 GROUP BY a.id;
 
@@ -489,10 +604,14 @@ SELECT d.id,
             WHEN d.status = 'READY' THEN 3
            END)                                                             as status_order,
        d.localized_enums,
+       responsible_ou.name                                                  AS responsible_ou_name,
+       department_ou.name                                                   AS department_name,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
 FROM documents d
          LEFT JOIN choice_values cv_type ON cv_type.id = d.document_type
+         LEFT JOIN ous responsible_ou ON responsible_ou.uuid = d.responsible_ou_uuid
+         LEFT JOIN ous department_ou ON department_ou.uuid = d.department_uuid
          LEFT JOIN document_tag rt on rt.document_id = d.id
          LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE d.deleted = false
@@ -621,7 +740,7 @@ FROM assets a
                              INNER JOIN (SELECT asset_id, MAX(creation_date) as max_date
                                          FROM assets_oversight
                                          GROUP BY asset_id) ao_max ON ao.asset_id = ao_max.asset_id AND ao.creation_date = ao_max.max_date) latest_ao ON latest_ao.asset_id = a.id
-         LEFT JOIN choice_values cv_supervisory ON cv_supervisory.id = latest_ao.supervision_model
+         LEFT JOIN choice_values cv_supervisory ON cv_supervisory.id = a.supervisory_model
          LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
          LEFT JOIN dbs_asset da on r.relation_a_id = da.id OR r.relation_b_id = da.id
          LEFT JOIN relations r1 on ((r1.relation_a_id = da.id OR r1.relation_b_id = da.id) AND (r1.relation_a_type = 'TASK' OR r1.relation_b_type = 'TASK'))
@@ -638,7 +757,8 @@ SELECT d.id,
        (SELECT ou.name FROM ous ou WHERE ou.uuid = d.responsible_ou_uuid)                                                                                            AS responsible_ou_name,
        d.user_updated_date,
        (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = d.id OR r.relation_b_id = d.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS task_count,
-       (SELECT dr.dpia_report_approval_status FROM dpia_report dr WHERE dr.dpia_id = d.id order by dr.id desc limit 1)                                               AS report_approval_status,
+       COALESCE((SELECT dr2.dpia_report_approval_status FROM dpia_report dr2 WHERE dr2.dpia_id = d.id ORDER BY dr2.id DESC LIMIT 1),
+                'NOT_SENT')                                                                                                                                            AS report_approval_status,
        (SELECT sc.conclusion FROM dpia_screening sc WHERE sc.dpia_id = d.id)                                                                                         as screening_conclusion,
        d.from_external_source                                                                                                                                        as is_external,
        dr.report_approver_uuid                                                                                                                                       AS approver_uuid,
@@ -663,3 +783,12 @@ FROM dpia d
 WHERE d.deleted = false
 GROUP BY d.id, d.name, d.responsible_user_uuid, d.responsible_ou_uuid,
          d.user_updated_date, d.from_external_source, dr.report_approver_uuid;
+
+CREATE OR REPLACE VIEW view_gridjs_catalogs AS
+SELECT tc.identifier                                                                                       AS identifier,
+       tc.name                                                                                             AS name,
+       tc.hidden                                                                                           AS hidden,
+       (SELECT COUNT(1) FROM threat_catalog_threats tct WHERE tct.thread_catalog_identifier = tc.identifier) AS threat_count,
+       EXISTS(SELECT 1 FROM threat_assessment_catalogs tac WHERE tac.threat_catalog_identifier = tc.identifier) AS in_use
+FROM threat_catalogs tc
+WHERE tc.deleted = false;

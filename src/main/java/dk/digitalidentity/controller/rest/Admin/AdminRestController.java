@@ -1,7 +1,9 @@
 package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.mapping.RelatableMapper;
 import dk.digitalidentity.model.dto.EmailTemplateDTO;
+import dk.digitalidentity.model.dto.RelatableDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.EmailTemplate;
@@ -34,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,7 +47,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
@@ -57,6 +60,7 @@ public class AdminRestController {
     private final UserService userService;
     private final ResponsibleUserViewService responsibleUserViewService;
     private final RelatableService relatableService;
+    private final RelatableMapper relatableMapper;
     private final AssetService assetService;
     private final DocumentService documentService;
     private final RegisterService registerService;
@@ -104,37 +108,61 @@ public class AdminRestController {
 
             template.setMessage(emailTemplateDTO.getMessage());
             template.setTitle(emailTemplateDTO.getTitle());
+            template.setEnabled(emailTemplateDTO.isEnabled());
             emailTemplateService.save(template);
         }
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    public record TransferResponsibilityDTO(String transferFrom, String transferTo) {}
+    @RequireUpdateAll
+    @GetMapping("responsibilities/{uuid}")
+    public ResponseEntity<List<RelatableDTO>> getResponsibilities(@PathVariable final String uuid) {
+        final User sourceUser = userService.findByUuidIncludingInactive(uuid).orElse(null);
+        if (sourceUser == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        final List<Relatable> relatables = relatableService.findAllNotDeleted().stream()
+                .filter(relatable -> relatableService.findResponsibleUsers(relatable).stream()
+                        .anyMatch(user -> user != null && user.getUuid().equals(uuid)))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(relatableMapper.toDTO(relatables));
+    }
+
+    public record TransferResponsibilityDTO(String transferFrom, String transferTo, List<Long> relatableIds) {}
 	@RequireUpdateAll
     @Transactional
-    @PostMapping("transferresponsibility")
-    public ResponseEntity<?> transferResponsibility(@RequestBody final TransferResponsibilityDTO dto) {
-        User userTo = userService.findByUuid(dto.transferTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        ResponsibleUserView userFrom = responsibleUserViewService.findByUserUuid(dto.transferFrom);
+    @PostMapping("transfer/responsibilities")
+    public ResponseEntity<?> transferResponsibilities(@RequestBody final TransferResponsibilityDTO dto) {
+        User targetUser = userService.findByUuid(dto.transferTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ResponsibleUserView sourceUser = responsibleUserViewService.findByUserUuid(dto.transferFrom);
 
-        // null means the person has no responsibilities
-        if (userFrom == null) {
+        // User has no responsibilities to transfer
+        if (sourceUser == null) {
             return new ResponseEntity<>(HttpStatus.OK);
         }
 
-        List<Long> ids = userFrom.getResponsibleRelatableIds().stream().map(Long::parseLong).collect(Collectors.toList());
+		// Fetch object ids and use them to fetch relatables to transfer
+        List<Long> ids = sourceUser.getResponsibleRelatableIds().stream().map(Long::parseLong).collect(Collectors.toList());
         List<Relatable> relatables = relatableService.findAllById(ids);
 
         for (Relatable responsibleFor : relatables) {
             if (responsibleFor.isDeleted()) {
                 continue;
             }
+
+			// We skip it if it wasn't chosen by the user to be transferred
+            if (!dto.relatableIds().contains(responsibleFor.getId())) {
+                continue;
+            }
+
             switch (responsibleFor.getRelationType()) {
                 case ASSET:
                     Asset asset = (Asset) responsibleFor;
                     asset.getResponsibleUsers().removeIf(u -> u.getUuid().equals(dto.transferFrom));
-                    asset.getResponsibleUsers().add(userTo);
+                    asset.getResponsibleUsers().add(targetUser);
                     assetService.save(asset);
                     break;
                 case DOCUMENT:
@@ -144,36 +172,39 @@ public class AdminRestController {
 							.filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
 									.anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
 							).findFirst().map(Task.class::cast).orElse(null);
-                    document.setResponsibleUser(userTo);
+                    document.setResponsibleUser(targetUser);
                     documentService.update(document, relatedTask != null ? relatedTask.getIncludeInReport() : false);
                     break;
                 case REGISTER:
                     Register register = (Register) responsibleFor;
                     register.getResponsibleUsers().removeIf(u -> u.getUuid().equals(dto.transferFrom));
-                    register.getResponsibleUsers().add(userTo);
+                    register.getResponsibleUsers().add(targetUser);
                     registerService.save(register);
                     break;
                 case STANDARD_SECTION:
                     StandardSection standardSection = (StandardSection) responsibleFor;
-                    standardSection.setResponsibleUser(userTo);
+                    standardSection.setResponsibleUser(targetUser);
                     standardSectionService.save(standardSection);
                     break;
                 case SUPPLIER:
                     Supplier supplier = (Supplier) responsibleFor;
-                    supplier.setResponsibleUser(userTo);
+                    supplier.setResponsibleUser(targetUser);
                     supplierService.save(supplier);
                     break;
                 case TASK:
 					Task task = (Task) responsibleFor;
 					task.getResponsibleUsers().clear();
-					task.getResponsibleUsers().add(userTo);
+					task.getResponsibleUsers().add(targetUser);
 					taskService.saveTask(task);
                     break;
                 case THREAT_ASSESSMENT:
                     ThreatAssessment threatAssessment = (ThreatAssessment) responsibleFor;
-                    threatAssessment.setResponsibleUser(userTo);
+                    threatAssessment.setResponsibleUser(targetUser);
                     threatAssessmentService.save(threatAssessment);
                     break;
+				default:
+					// Nothing happens
+					break;
             }
         }
 

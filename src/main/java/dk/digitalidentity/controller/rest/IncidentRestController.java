@@ -1,11 +1,9 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.controller.mvc.IncidentController;
 import dk.digitalidentity.mapping.IncidentMapper;
-import dk.digitalidentity.model.ExcelColumn;
-import dk.digitalidentity.model.ExcludeFromExport;
 import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.dto.IncidentFieldDTO;
+import dk.digitalidentity.model.dto.IncidentQuery;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.excel.EntityListItemDTO;
 import dk.digitalidentity.model.dto.excel.EntityListRequest;
@@ -13,8 +11,6 @@ import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
 import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
@@ -28,10 +24,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -45,10 +39,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
 
 @Slf4j
 @RestController
@@ -56,6 +50,8 @@ import java.util.Map;
 @RequireConfiguration
 @RequiredArgsConstructor
 public class IncidentRestController {
+    private static final String DEFAULT_SORT_COLUMN = "createdAt";
+
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
 	private final ExcelExportHelperService excelExportHelperService;
@@ -109,35 +105,33 @@ public class IncidentRestController {
     @RequireReadAll
     @PostMapping("list")
     public PageDTO<IncidentDTO> list(
-        @RequestParam(name = "search", required = false) final String search,
-        @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-        @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
+        @RequestParam(name = "page", required = false, defaultValue = "0") final int page,
+        @RequestParam(name = "limit", required = false, defaultValue = "50") final int limit,
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir,
-        @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate fromDateParam,
-        @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam
+        @RequestParam final Map<String, String> filters
 	) {
-        Sort sort;
-        if (StringUtils.isNotEmpty(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
-        } else {
-            sort = Sort.by(Sort.Direction.DESC, "createdAt");
-        }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
-		Page<Incident> incidents = incidentService.getIncidents(search, fromDateParam, toDateParam, sortAndPage);
-
-		assert incidents != null;
-		return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
+        final Page<Incident> incidents = incidentService.findIncidents(
+            IncidentQuery.of(filters), pageable(page, limit, order, dir));
+        return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
     }
 
 	@RequireReadAll
     @GetMapping("columns")
-    public List<String> visibleColumns() {
-        return incidentService.getAllFields().stream()
-            .map(IncidentField::getIndexColumnName)
-            .filter(StringUtils::isNotEmpty)
-            .toList();
+    public List<IncidentFieldDTO> visibleColumns() {
+        return incidentMapper.toFieldDTOs(incidentService.getAllFields().stream()
+            .filter(field -> StringUtils.isNotEmpty(field.getIndexColumnName()))
+            .toList());
+    }
+
+    /**
+     * The date fields the incident log can filter its from/to range on, on top of the built-in
+     * created and updated timestamps.
+     */
+    @RequireReadAll
+    @GetMapping("datefields")
+    public List<IncidentFieldDTO> dateFields() {
+        return incidentMapper.toFieldDTOs(incidentService.getDateFields());
     }
 
 	@GetMapping("export-metadata")
@@ -149,24 +143,10 @@ public class IncidentRestController {
 	@PostMapping("export-entities")
 	@RequireReadOwnerOnly
 	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
-		// Extract date filters from request filters map
-		LocalDate fromDate = extractDateFromFilters(request.getFilters(), "fromDate");
-		LocalDate toDate = extractDateFromFilters(request.getFilters(), "toDate");
-		String search = request.getFilters().getOrDefault("search", null);
-
-		// Build sort
-		Sort sort;
-		if (StringUtils.isNotEmpty(request.getSortColumn())) {
-			Sort.Direction direction = "DESC".equalsIgnoreCase(request.getSortDirection())
-					? Sort.Direction.DESC
-					: Sort.Direction.ASC;
-			sort = Sort.by(direction, request.getSortColumn());
-		} else {
-			sort = Sort.by(Sort.Direction.DESC, "createdAt");
-		}
-
-		Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, sort);
-		Page<Incident> incidents = incidentService.getIncidents(search, fromDate, toDate, pageable);
+		// The filters map is the same one the grid sends, so the export sees exactly the list the user sees
+		final Page<Incident> incidents = incidentService.findIncidents(
+				IncidentQuery.of(request.getFilters()),
+				pageable(0, Integer.MAX_VALUE, request.getSortColumn(), request.getSortDirection()));
 
 		return excelExportHelperService.toEntityListItems(
 				incidents.getContent(),
@@ -205,27 +185,6 @@ public class IncidentRestController {
 				request,
 				response
 		);
-	}
-
-	/**
-	 * Extract date from filters map with format dd/MM-yyyy
-	 */
-	private LocalDate extractDateFromFilters(Map<String, String> filters, String key) {
-		if (filters == null || !filters.containsKey(key)) {
-			return null;
-		}
-
-		String dateStr = filters.get(key);
-		if (dateStr == null || dateStr.isBlank()) {
-			return null;
-		}
-
-		try {
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
-			return LocalDate.parse(dateStr, formatter);
-		} catch (Exception e) {
-			return null;
-		}
 	}
 
 	@GetMapping(value = "fields/export-metadata")
@@ -270,6 +229,18 @@ public class IncidentRestController {
 				request,
 				response
 		);
+	}
+
+	/**
+	 * Sorting is only offered on the built-in columns; custom field columns live in a separate table
+	 * and cannot be reached from a Pageable. An unknown column falls back to newest first rather than
+	 * failing the request.
+	 */
+	private static Pageable pageable(final int page, final int limit, final String order, final String dir) {
+		if (StringUtils.isNotEmpty(order) && IncidentQuery.BUILT_IN_COLUMNS.contains(order)) {
+			return buildPageable(page, limit, order, dir);
+		}
+		return buildPageable(page, limit, DEFAULT_SORT_COLUMN, Sort.Direction.DESC.name());
 	}
 
 }

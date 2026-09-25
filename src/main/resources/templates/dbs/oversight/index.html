@@ -3,7 +3,6 @@
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 <body class="jumping">
 <script type="module" th:src="@{/js/dbs/dbs-oversight-service.js}" defer></script>
-<script th:src="@{/js/export-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/assets.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -44,6 +43,7 @@
                                             th:value="${supervision.caption}"
                                             th:text="${supervision.caption}">
                                     </option>
+                                    <option th:text="'Ingen'" th:value="__EMPTY__"></option>
                                 </select>
 
                                 <!-- Custom search selectors-->
@@ -64,6 +64,7 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='dbs_oversight')}"></nav>
 </div>
+<div th:replace="~{fragments/excel-export-modal :: excelExportModal}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <style>

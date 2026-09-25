@@ -1,5 +1,6 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.grid.SearchRepositoryImpl;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
@@ -9,6 +10,7 @@ import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
+import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -17,7 +19,6 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import org.springframework.web.util.HtmlUtils;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -44,9 +46,10 @@ public class GlobalSearchService {
 
 	private final SearchRepositoryImpl searchRepository;
 	private final UserService userService;
+	private final StandardTemplateDao standardTemplateDao;
 
 	public record SearchResultSection(String key, String displayName, Page<SearchResultDTO> results) {}
-	public record SearchResultDTO(String name, long id, String searchResultFieldName, String searchResultFieldContent, String highlightedContent) {}
+	public record SearchResultDTO(String name, String id, String searchResultFieldName, String searchResultFieldContent, String highlightedContent) {}
 
 	public Map<String, SearchResultSection> search(String query) {
 		Pageable pageable = PageRequest.of(0, 5);
@@ -258,16 +261,41 @@ public class GlobalSearchService {
 		searchableProperties.put("createdAt", query);
 		searchableProperties.put("updatedAt", query);
 
+		// interleave() always orders templates before sections, so the combined page window can be
+		// computed by fetching that same prefix (page 0, sized through the end of the requested page)
+		// from each source and slicing out the requested page's slot.
+		final Pageable prefixPageable = PageRequest.of(0, (pageable.getPageNumber() + 1) * pageable.getPageSize());
 
-		Page<StandardSection> page;
+		Page<StandardSection> sectionPage;
 		if (filterResults) {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, user, true);
+			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, prefixPageable, StandardSection.class, user, true);
 		} else {
-			page = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, pageable, StandardSection.class, null, false);
+			sectionPage = searchRepository.findAllWithGlobalSearchAndUserFilter(searchableProperties, prefixPageable, StandardSection.class, null, false);
 		}
 
-		if (page.hasContent()) {
-			Page<SearchResultDTO> dtoPage = convertToSearchResultDTO(page, query, searchableProperties.keySet());
+		// There is no per-user access control for standards, no need to apply filter results flag
+		Page<StandardTemplate> templatePage = standardTemplateDao.findByNameContainingIgnoreCase(query, prefixPageable);
+
+		final long totalElements = sectionPage.getTotalElements() + templatePage.getTotalElements();
+		if (totalElements > 0) {
+			final List<SearchResultDTO> sectionDtos = sectionPage.hasContent()
+					? convertToSearchResultDTO(sectionPage, query, searchableProperties.keySet()).getContent()
+					: List.of();
+			final List<SearchResultDTO> templateDtos = templatePage.getContent().stream()
+					.map(template -> new SearchResultDTO(
+							template.getName(),
+							template.getIdentifier(),
+							getDisplayFieldName("name"),
+							template.getName(),
+							highlightSearchTerm(template.getName(), query)))
+					.toList();
+
+			final List<SearchResultDTO> combinedPrefix = interleave(templateDtos, sectionDtos, prefixPageable.getPageSize());
+			final int windowStart = Math.min(pageable.getPageNumber() * pageable.getPageSize(), combinedPrefix.size());
+			final int windowEnd = Math.min(windowStart + pageable.getPageSize(), combinedPrefix.size());
+			final List<SearchResultDTO> page = combinedPrefix.subList(windowStart, windowEnd);
+
+			Page<SearchResultDTO> dtoPage = new PageImpl<>(page, pageable, totalElements);
 			results.put(RelationType.STANDARD_SECTION.toString(),
 					new SearchResultSection(RelationType.STANDARD_SECTION.toString(), RelationType.STANDARD_SECTION.getMessage(), dtoPage));
 		}
@@ -304,6 +332,7 @@ public class GlobalSearchService {
 		searchableProperties.put("createdAt", query);
 		searchableProperties.put("updatedAt", query);
 		searchableProperties.put("nextDeadline", query);
+		searchableProperties.put("startDate", query);
 
 		Page<Task> page;
 		if (filterResults) {
@@ -326,6 +355,9 @@ public class GlobalSearchService {
 		searchableProperties.put("createdAt", query);
 		searchableProperties.put("updatedAt", query);
 		searchableProperties.put("nextRevision", query);
+		searchableProperties.put("threatAssessmentResponses.problem", query);
+		searchableProperties.put("threatAssessmentResponses.additionalMeasures", query);
+		searchableProperties.put("threatAssessmentResponses.elaboration", query);
 
 		Page<ThreatAssessment> page;
 		if (filterResults) {
@@ -341,17 +373,37 @@ public class GlobalSearchService {
 		}
 	}
 
+	private List<SearchResultDTO> interleave(List<SearchResultDTO> first, List<SearchResultDTO> second, int limit) {
+		final List<SearchResultDTO> result = new ArrayList<>(Math.min(limit, first.size() + second.size()));
+		int i = 0;
+		int j = 0;
+
+		while (result.size() < limit && (i < first.size() || j < second.size())) {
+			if (i < first.size()) {
+				result.add(first.get(i++));
+				if (result.size() == limit) {
+					break;
+				}
+			}
+			if (j < second.size()) {
+				result.add(second.get(j++));
+			}
+		}
+
+		return result;
+	}
+
 	private <T extends Relatable> Page<SearchResultDTO> convertToSearchResultDTO(Page<T> page, String query, Set<String> searchFields) {
 		List<SearchResultDTO> dtos = page.getContent().stream()
 				.map(entity -> {
-					String matchingFieldPath = findMatchingField(entity, query, searchFields, entity.getName());
-					String matchingFieldDisplayName = getDisplayFieldName(matchingFieldPath);
-					String matchingFieldContent = extractFieldContent(entity, matchingFieldPath, query);
+					FieldMatch match = findMatchingField(entity, query, searchFields, entity.getName());
+					String matchingFieldDisplayName = getDisplayFieldName(match.fieldPath());
+					String matchingFieldContent = extractFieldContent(match.value(), query);
 					String highlightedContent = highlightSearchTerm(matchingFieldContent, query);
 
 					return new SearchResultDTO(
 							entity.getName(),
-							entity.getId(),
+							String.valueOf(entity.getId()),
 							matchingFieldDisplayName,
 							matchingFieldContent,
 							highlightedContent
@@ -362,7 +414,9 @@ public class GlobalSearchService {
 		return new PageImpl<>(dtos, page.getPageable(), page.getTotalElements());
 	}
 
-	private String findMatchingField(Object entity, String query, Set<String> searchFields, String name) {
+	private record FieldMatch(String fieldPath, String value) {}
+
+	private FieldMatch findMatchingField(Object entity, String query, Set<String> searchFields, String name) {
 		String queryLower = query.toLowerCase();
 
 		// Always check date fields first if we have any date fields
@@ -370,22 +424,67 @@ public class GlobalSearchService {
 			if (isDateField(fieldPath)) {
 				String fieldValue = getFormattedDateValue(entity, fieldPath);
 				if (fieldValue != null && fieldValue.toLowerCase().contains(queryLower)) {
-					return fieldPath;
+					return new FieldMatch(fieldPath, fieldValue);
 				}
 			}
 		}
 
-		// Then check regular string fields
+		// Then check regular string fields, including collection-valued ones
 		for (String fieldPath : searchFields) {
 			if (!isDateField(fieldPath)) {
-				String fieldValue = getFieldValue(entity, fieldPath);
-				if (fieldValue != null && fieldValue.toLowerCase().contains(queryLower)) {
-					return fieldPath;
+				String matchingValue = findFieldValueContaining(entity, fieldPath, queryLower);
+				if (matchingValue != null) {
+					return new FieldMatch(fieldPath, matchingValue);
 				}
 			}
 		}
 
-		return "name"; // fallback
+		return new FieldMatch("name", name); // fallback
+	}
+
+	// Unlike getFieldValue, this checks every item in a collection for the actual
+	// match instead of returning the first item's non-null value.
+	private String findFieldValueContaining(Object entity, String fieldPath, String queryLower) {
+		if (entity == null || fieldPath == null) {
+			return null;
+		}
+
+		try {
+			if (!fieldPath.contains(".")) {
+				String value = getFieldValue(entity, fieldPath);
+				return (value != null && value.toLowerCase().contains(queryLower)) ? value : null;
+			}
+
+			String[] parts = fieldPath.split("\\.", 2);
+			String currentFieldName = parts[0];
+			String remainingPath = parts[1];
+
+			Field currentField = findField(entity.getClass(), currentFieldName);
+			if (currentField == null) {
+				return null;
+			}
+
+			currentField.setAccessible(true);
+			Object currentValue = currentField.get(entity);
+
+			if (currentValue == null) {
+				return null;
+			}
+
+			if (currentValue instanceof Collection<?> collection) {
+				for (Object item : collection) {
+					String value = findFieldValueContaining(item, remainingPath, queryLower);
+					if (value != null) {
+						return value;
+					}
+				}
+				return null;
+			}
+
+			return findFieldValueContaining(currentValue, remainingPath, queryLower);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	private String getFormattedDateValue(Object entity, String fieldPath) {
@@ -419,6 +518,7 @@ public class GlobalSearchService {
 				lastPart.equals("contractTermination") ||
 				lastPart.equals("userUpdatedDate") ||
 				lastPart.equals("nextDeadline") ||
+				lastPart.equals("startDate") ||
 				lastPart.equals("lastSync");
 	}
 
@@ -485,16 +585,7 @@ public class GlobalSearchService {
 		return null;
 	}
 
-	private String extractFieldContent(Object entity, String fieldPath, String query) {
-		String fieldValue;
-
-		// Handle date fields specially
-		if (isDateField(fieldPath)) {
-			fieldValue = getFormattedDateValue(entity, fieldPath);
-		} else {
-			fieldValue = getFieldValue(entity, fieldPath);
-		}
-
+	private String extractFieldContent(String fieldValue, String query) {
 		if (fieldValue == null || fieldValue.isEmpty()) {
 			return "";
 		}
@@ -528,8 +619,15 @@ public class GlobalSearchService {
 
 		return excerpt;
 	}
-
 	private String getDisplayFieldName(String fieldPath) {
+		return switch (fieldPath) {
+			case "threatAssessmentResponses.problem" -> "Problemstilling";
+			case "threatAssessmentResponses.elaboration" -> "Uddybning af risikohåndtering";
+			default -> getDisplayFieldNameByLastPart(fieldPath);
+		};
+	}
+
+	private String getDisplayFieldNameByLastPart(String fieldPath) {
 		String[] parts = fieldPath.split("\\.");
 		String lastPart = parts[parts.length - 1];
 
@@ -549,7 +647,7 @@ public class GlobalSearchService {
 			case "nsisSmart" -> "NSIS Smart";
 			case "reason" -> "Begrundelse";
 			case "problem" -> "Problem";
-			case "existingMeasures" -> "Eksisterende Tiltag";
+			case "additionalMeasures" -> "Supplerende bemærkninger";
 			case "elaboration" -> "Uddybning";
 			case "contact" -> "Kontakt";
 			case "email" -> "Email";
@@ -568,6 +666,7 @@ public class GlobalSearchService {
 			case "contractTermination" -> "Kontraktudløb";
 			case "userUpdatedDate" -> "Bruger opdateret dato";
 			case "nextDeadline" -> "Deadline";
+			case "startDate" -> "Startdato";
 			case "lastSync" -> "Sidste synkronisering";
 			default -> lastPart;
 		};

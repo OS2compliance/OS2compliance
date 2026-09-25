@@ -49,7 +49,7 @@ public class ThreatDTO {
 	private final int sa;
 
     private final String problem;
-    private final String existingMeasures;
+    private final String additionalMeasures;
     private final List<Relatable> relatedPrecautions;
     private final ThreatMethod method;
     private final String elaboration;

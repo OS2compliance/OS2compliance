@@ -31,6 +31,9 @@ import lombok.ToString;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -47,6 +50,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Setter
 @SQLDelete(sql = "UPDATE registers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
+@Audited
 public class Register extends Relatable implements HasMultipleResponsibleUsers, HasCustomResponsibleUsers, Tagable {
 
     @ManyToMany
@@ -74,6 +78,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
         inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
     )
     @ToString.Exclude
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private List<OrganisationUnit> responsibleOus;
 
     @ManyToMany
@@ -82,6 +87,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
         joinColumns = { @JoinColumn(name = "register_id") },
         inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
     )
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private List<OrganisationUnit> departments;
 
     @Column
@@ -101,6 +107,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 			joinColumns = @JoinColumn(name = "register_id"),
 			inverseJoinColumns = @JoinColumn(name = "choice_value_id")
 	)
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<ChoiceValue> registerRegarding = new LinkedHashSet<>();
 
 	@Column(name = "register_regarding")
@@ -135,6 +142,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 
 	@ManyToOne
 	@JoinColumn(name = "status")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private ChoiceValue status;
 
     @Column
@@ -146,10 +154,12 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 
 	@OneToOne(mappedBy = "register", cascade = CascadeType.ALL, orphanRemoval = true)
     @PrimaryKeyJoinColumn
+    @NotAudited
     private ConsequenceAssessment consequenceAssessment;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "data_processing_id", referencedColumnName = "id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private DataProcessing dataProcessing;
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
@@ -158,6 +168,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 			joinColumns = @JoinColumn(name = "register_id"),
 			inverseJoinColumns = @JoinColumn(name = "kle_main_group_number")
 	)
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<KLEMainGroup> kleMainGroups = new HashSet<>();
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
@@ -166,6 +177,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 			joinColumns = @JoinColumn(name = "register_id"),
 			inverseJoinColumns = @JoinColumn(name = "kle_group_number")
 	)
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<KLEGroup> kleGroups = new HashSet<>();
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
@@ -174,6 +186,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 			joinColumns = @JoinColumn(name = "register_id"),
 			inverseJoinColumns = @JoinColumn(name = "accession_number")
 	)
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<KLELegalReference> relevantKLELegalReferences = new HashSet<>();
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
@@ -182,10 +195,12 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 			joinColumns = @JoinColumn(name = "register_id"),
 			inverseJoinColumns = @JoinColumn(name = "subject_number")
 	)
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<KLESubject> kleSubjects = new HashSet<>();
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
 	@JoinTable(name = "register_tag", joinColumns = { @JoinColumn(name = "register_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<Tag> tags = new HashSet<>();
 
 	@Override

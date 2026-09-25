@@ -15,7 +15,11 @@
                 <div class="tl-content card shadow-none border-2 w-100">
                     <div class="card-body">
                         <div class="row mb-1">
-                            <div class="col-lg-2 col-sm-4"><h5>Navn:</h5></div><div class="col-lg-10 col-sm-8 fs-6" th:text="${incident.name}"></div>
+                            <div class="col-lg-2 col-sm-4"><h5>Navn:</h5></div>
+                            <div class="col-lg-10 col-sm-8 fs-6">
+                                <span th:text="${incident.name}"></span>
+                                <span th:if="${incident.draft}" class="badge bg-warning">Kladde</span>
+                            </div>
                         </div>
                         <div th:each="response, idx : ${incident.responses}" class="row mb-1">
                             <div class="col-lg-2 col-sm-4"><h5 th:text="${response.question}"></h5></div><div class="col-lg-10 col-sm-8 fs-6" th:text="${response.answerValue}"></div>

@@ -25,6 +25,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -37,6 +40,7 @@ import java.util.Set;
 @Table(name = "dpia")
 @Getter
 @Setter
+@Audited
 public class DPIA extends Relatable implements HasSingleResponsibleUser, StatisticEnabled, Tagable {
 	@ManyToMany
 	@JoinTable(
@@ -73,12 +77,14 @@ public class DPIA extends Relatable implements HasSingleResponsibleUser, Statist
 	@EqualsAndHashCode.Exclude
 	@OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
 	@JsonIgnore
+	@NotAudited
 	private List<DPIAResponseSection> dpiaResponseSections = new ArrayList<>();
 
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
 	@JsonIgnore
+	@NotAudited
 	private List<DPIAReport> dpiaReports = new ArrayList<>();
 
 	@Column
@@ -97,13 +103,16 @@ public class DPIA extends Relatable implements HasSingleResponsibleUser, Statist
 
 	@ManyToOne
 	@JoinColumn(name = "responsible_ou_uuid")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private OrganisationUnit responsibleOu;
 
 	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "dpia")
+	@NotAudited
 	private DataProtectionImpactAssessmentScreening dpiaScreening;
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
 	@JoinTable(name = "dpia_tag", joinColumns = { @JoinColumn(name = "dpia_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<Tag> tags = new HashSet<>();
 
 	@Override

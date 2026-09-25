@@ -41,6 +41,7 @@
                     <td>Er der indgået en databehandleraftale</td>
                     <td>
                         <select class="form-control form-select editField" th:value="${asset?.dataProcessingAgreementStatus}" name="dataProcessingAgreementStatus" tabindex="-1" disabled th:if="${asset != null}">
+                            <option value="" th:selected="${asset.dataProcessingAgreementStatus == null}"></option>
                             <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus).values()}" th:value="${status.name}" th:text="${status.message}" th:selected="${asset.dataProcessingAgreementStatus == status}"></option>
                         </select>
                     </td>

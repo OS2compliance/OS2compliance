@@ -8,6 +8,8 @@ import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.dao.grid.RiskGridDao;
+import dk.digitalidentity.model.dto.StatusCombination;
+import dk.digitalidentity.model.dto.enums.StatusColor;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -145,6 +147,7 @@ public class DocxServiceTest {
         doReturn("scale-1-4").when(settingsServiceMock).getString(eq("scale"), any());
         doReturn(List.of(createDummyTask(), createAsset(0))).when(relationServiceMock).findAllRelatedTo(any());
         doReturn(false).when(taskServiceMock).isTaskDone(any());
+        doReturn(new StatusCombination("Ikke udført", StatusColor.GREY)).when(taskServiceMock).calculateStatus(any());
     }
 
     private void mockStandards() {
