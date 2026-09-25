@@ -27,9 +27,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -49,6 +47,8 @@ public interface DocumentMapper {
 				.nextRevision(nullSafe(() -> documentGrid.getNextRevision().format(DK_DATE_FORMATTER)))
 				.status(nullSafe(() -> documentGrid.getStatus().getMessage()))
 				.statusOrder(documentGrid.getStatusOrder())
+				.responsibleOu(documentGrid.getResponsibleOuName())
+				.department(documentGrid.getDepartmentName())
 				.tags(tags)
 				.build();
 
@@ -70,6 +70,11 @@ public interface DocumentMapper {
 		return documentDTOS;
 	}
 
+	// embedded user references keep the shallow shape, positions/active are only exposed by the users API
+	@Mappings({
+			@Mapping(target = "active", ignore = true),
+			@Mapping(target = "positions", ignore = true)
+	})
 	UserEO toEO(User user);
 
 	@Mappings({
@@ -110,7 +115,9 @@ public interface DocumentMapper {
 			@Mapping(target = "deleted", ignore = true),
 			@Mapping(target = "localizedEnums", ignore = true),
 			@Mapping(target = "documentType", ignore = true),
-			@Mapping(target = "includeInYearWheel", ignore = true)
+			@Mapping(target = "includeInYearWheel", ignore = true),
+			@Mapping(target = "responsibleOu", ignore = true),
+			@Mapping(target = "department", ignore = true)
 	})
 	Document fromEO(DocumentCreateEO documentCreateEO);
 
@@ -145,6 +152,8 @@ public interface DocumentMapper {
 				.responsibleUser(nullSafe(() -> document.getResponsibleUser().getName(), ""))
 				.nextRevision(nullSafe(() -> document.getNextRevision().format(DK_DATE_FORMATTER)))
 				.status(nullSafe(() -> document.getStatus().getMessage()))
+				.responsibleOu(nullSafe(() -> document.getResponsibleOu().getName(), ""))
+				.department(nullSafe(() -> document.getDepartment().getName(), ""))
 				.build();
 	}
 

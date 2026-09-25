@@ -20,6 +20,7 @@ import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.StandardSectionService;
 import dk.digitalidentity.service.StandardsService;
 import dk.digitalidentity.service.SupportingStandardService;
+import dk.digitalidentity.util.StandardSectionNumbering;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -389,15 +390,31 @@ public class StandardController {
 			List<StandardTemplateSection> children = header.getChildren().stream()
 					.sorted(Comparator.comparing(StandardTemplateSection::getSortKey).reversed())
 					.collect(Collectors.toList());
+			List<StandardSection> childStandardSections = new ArrayList<>();
 			for (StandardTemplateSection child : children) {
 				String childSection = child.getSection().trim();
 				String[] split = childSection.split("\\.");
-				child.setSection(newSectionPrefix + split[split.length - 1]);
-				child.setSortKey(Integer.parseInt(child.getSection().replace(".", "").replaceAll("[^0-9]", "")));
+				// Bevar kravets eget nummer (sidste segment) og udled baade section og sortKey af
+				// samme vaerdi, saa de ikke kan divergere.
+				String trailing = split[split.length - 1];
+				String newChildSection = newSectionPrefix + trailing;
+				child.setSection(newChildSection);
+				child.setSortKey(Integer.parseInt(newChildSection.replaceAll("[^0-9]", "")));
+				// Hold StandardSection.name konsistent - det er navnet der bruges i global soegning,
+				// relationer, opgaver og rapporter, ikke templateSection.section.
+				StandardSection childStandardSection = child.getStandardSection();
+				if (childStandardSection != null && childStandardSection.getName() != null) {
+					String title = childStandardSection.getName().replaceFirst("^\\S+\\s*", "");
+					childStandardSection.setName(title.isEmpty() ? newChildSection : newChildSection + " " + title);
+					childStandardSections.add(childStandardSection);
+				}
 			}
 
 			standardTemplateSectionDao.saveAll(children);
 			standardTemplateSectionDao.save(header);
+			if (!childStandardSections.isEmpty()) {
+				standardSectionDao.saveAll(childStandardSections);
+			}
 		}
 
 		if (!Objects.equals(header.getDescription(), standardTemplateSection.getDescription())) {
@@ -416,28 +433,35 @@ public class StandardController {
 		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
 		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
 
-		// Beregn én identifier og udled baade @Id, section, name og sortKey af den, saa de ikke kan
-		// divergere. Bump til naeste ledige nummer hvis den allerede findes - ellers ville save()
-		// merge/overskrive en eksisterende template-sektion og efterlade to StandardSections paa
-		// samme template_section_identifier, hvilket faar /standards til at crashe (@OneToOne).
-		String sectionNumber = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
+		// Vist nummer og identifier har hver sin taeller. Blev de udledt af samme vaerdi, slog en
+		// noeglekollision med en anden standard igennem som huller i nummereringen (fx 1.5, 1.10).
+		String displaySection = StandardSectionNumbering.nextFreeDisplaySection(parentsTemplateSection.getSection(), existingChildren);
+
+		// Praefikset med gruppens identifier ("cis18_1.3") som createHeader og de indlaeste
+		// standarder ("iso27001_4.1"), saa to standarder med en gruppe "1" ikke kappes om noeglerne.
+		String sectionIdentifier = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getIdentifier(), existingChildren);
 		int attempts = 0;
-		while (standardTemplateSectionDao.existsById(sectionNumber)) {
+		while (standardTemplateSectionDao.existsById(sectionIdentifier)) {
 			if (++attempts > MAX_SECTION_NUMBER_ATTEMPTS) {
-				throw new IllegalStateException("Kunne ikke finde et ledigt sektionsnummer under " + parentsTemplateSection.getSection());
+				log.error("Fandt intet ledigt sektionsnummer under {} efter {} forsoeg",
+						parentsTemplateSection.getIdentifier(), MAX_SECTION_NUMBER_ATTEMPTS);
+				redirectAttributes.addFlashAttribute("errorMessage", "Kravet kunne ikke oprettes - kontakt support.");
+				return "redirect:/standards/supporting/" + identifier;
 			}
-			sectionNumber = bumpTrailingNumber(sectionNumber);
+			// save() ville merge/overskrive den eksisterende raekke og efterlade to
+			// StandardSections paa samme identifier, hvilket faar /standards til at crashe.
+			sectionIdentifier = bumpTrailingNumber(sectionIdentifier);
 		}
 
 		standardSection.setSelected(true);
 		standardSection.setStatus(StandardSectionStatus.IN_PROGRESS);
 
 		StandardTemplateSection newSection = new StandardTemplateSection();
-		newSection.setIdentifier(sectionNumber);
-		newSection.setSection(sectionNumber);
+		newSection.setIdentifier(sectionIdentifier);
+		newSection.setSection(displaySection);
 		newSection.setDescription(standardSection.getName());
 		newSection.setParent(parentsTemplateSection);
-		newSection.setSortKey(Integer.parseInt(sectionNumber.replaceAll("[^0-9]", "")));
+		newSection.setSortKey(StandardSectionNumbering.sortKeyOf(parentsTemplateSection.getSection(), StandardSectionNumbering.trailingNumberOf(displaySection)));
 
 		final StandardTemplateSection save;
 		try {
@@ -448,12 +472,12 @@ public class StandardController {
 			// Markér transaktionen til rollback, ellers forsoeger Spring at committe en transaktion
 			// hvis statement allerede fejlede - flash-attributten ligger i sessionen og overlever.
 			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-			log.warn("Kunne ikke oprette sektion {} - findes sandsynligvis allerede (samtidig oprettelse?)", sectionNumber, e);
+			log.warn("Kunne ikke oprette sektion {} - findes sandsynligvis allerede (samtidig oprettelse?)", sectionIdentifier, e);
 			redirectAttributes.addFlashAttribute("errorMessage", "Kravet kunne ikke oprettes - prøv igen.");
 			return "redirect:/standards/supporting/" + identifier;
 		}
 
-		standardSection.setName(sectionNumber + " " + standardSection.getName());
+		standardSection.setName(displaySection + " " + standardSection.getName());
 		standardSection.setTemplateSection(save);
 		standardSectionService.save(standardSection);
 

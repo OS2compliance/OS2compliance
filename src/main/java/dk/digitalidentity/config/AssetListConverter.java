@@ -3,6 +3,7 @@ package dk.digitalidentity.config;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -44,6 +45,8 @@ public class AssetListConverter implements AttributeConverter<List<Asset>, Strin
 		if (joined == null || joined.isEmpty()) {
 			return Collections.emptyList();
 		}
-		return Arrays.asList(joined.split(",")).stream().map(id -> assetDao.get().findById(Long.valueOf(id)).orElse(null)).filter(Objects::nonNull).toList();
+		List<Long> ids = Arrays.stream(joined.split(",")).map(Long::valueOf).toList();
+		Map<Long, Asset> byId = assetDao.get().findAllById(ids).stream().collect(Collectors.toMap(Asset::getId, a -> a));
+		return ids.stream().map(byId::get).filter(Objects::nonNull).toList();
 	}
 }

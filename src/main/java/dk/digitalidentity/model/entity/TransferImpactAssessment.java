@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 @Entity
@@ -85,5 +86,18 @@ public class TransferImpactAssessment {
     @Enumerated(EnumType.STRING)
     private TiaAssessment assessment;
 
+	@Column
+	private boolean accepted;
 
+	@Column
+	private String acceptedComment;
+
+	@Column
+	private String acceptedByName;
+
+	@Column
+	private String acceptedByUuid;
+
+	@Column
+	private LocalDate acceptedDate;
 }

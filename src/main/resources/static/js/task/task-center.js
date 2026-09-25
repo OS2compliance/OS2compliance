@@ -4,6 +4,7 @@ import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 import {BadgeData, createBadges} from "../component/badge.js";
 import { initYearWheel } from "./year-wheel.js";
+import { initTaskDateFilter } from "../component/task-date-filter.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -26,6 +27,15 @@ const DateDiff = {
         return Math.floor((t2 - t1) / (24 * 3600 * 1000));
     }
 };
+
+function escapeAttribute(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -113,16 +123,31 @@ function initGrid() {
                 formatter: (cell, row) => formatTags(cell, row),
             },
             {
-                name: "Deadline",
+                name: "Startdato",
+                searchable: {
+                    searchKey: 'startDate',
+                },
+                width: '90px',
+            },
+            {
+                name: "Slutdato",
                 searchable: {
                     searchKey: 'nextDeadline',
                 },
                 width: '90px',
                 formatter: (cell, row) => {
-                    var completed = row.cells[10]['data'];
+                    if (!cell) {
+                        return gridjs.html(`<span>-</span>`);
+                    }
+
+                    var completed = row.cells[12]['data'];
                     var type = row.cells[2]['data'];
                     if (completed && type === "Opgave") {
                         return gridjs.html(`<span>${cell}</span>`);
+                    }
+
+                    if (!cell) {
+                        return gridjs.html(`<span>-</span>`);
                     }
 
                     var dateString = cell.replace(" ", "/");
@@ -179,38 +204,55 @@ function initGrid() {
             {
                 name: "Status",
                 searchable: {
-                    sortKey: 'completed'
+                    sortKey: 'completed',
+                    searchKey: 'taskDeadlineStatus',
+                    fieldId: "taskStatusSearchSelector"
                 },
-                width: '100px',
                 formatter: (cell, row) => {
-                    let status = "";
+                    let status = '';
                     let type = row.cells[2]['data'];
+                    let deadline = row.cells[8]['data'] || null;
+                    let inProgress = row.cells[14]['data'];
+                    let note = row.cells[15]['data'];
+                    let completed = (cell && type === "Opgave") || row.cells[12]['data'] === true;
 
-                    // if completed and task type opgave
-                    if (cell && type === "Opgave" || row.cells[11]['data'] === true) {
+                    // completed always wins over in progress
+                    if (completed) {
                         status = '<div class="d-block badge bg-success">Udført</div>'
-                    } else {
-                        let deadline = row.cells[7]['data'];
+                    } else if (inProgress === true) {
+                        let noteAttribute = note ? ` title="${escapeAttribute(note)}"` : '';
+                        status = `<div class="d-block badge bg-lightblue"${noteAttribute}>I gang</div>`
+                    } else if (deadline) {
                         let dateString = deadline.replace(" ", "/");
                         dateString = dateString.replace("-", "/");
                         let dateSplit = dateString.split("/");
-                        let deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
-                        let diff = DateDiff.inDays(today, deadlineAsDate);
-                        let statusText = 'Ikke udført';
-                        if(row.cells[9]['data'] === 'NO_ERROR') {
-                            statusText = 'Ingen fejl';
-                        } else if (row.cells[9]['data'] === 'NO_CRITICAL_ERROR') {
-                            statusText = 'Ingen kritiske fejl';
-                        } else if (row.cells[9]['data'] === 'CRITICAL_ERROR') {
-                            statusText = 'Kritiske fejl';
-                        }
 
-                        if (diff < 0) {
-                            status = `<div class="d-block badge bg-danger">${statusText}</div>`;
-                        } else if (diff < 31 && diff >= 0) {
-                            status = `<div class="d-block badge bg-warning">${statusText}</div>`;
-                        } else {
-                            status = `<div class="d-block badge bg-gray-800">${statusText}</div>`;
+                        if (dateSplit.length >= 3) {
+                            let deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                            let today= new Date();
+                            let statusText = 'Ikke udført';
+
+                            if (deadlineAsDate < today) {
+                                statusText = 'Overskredet';
+                            }
+
+                            const taskResult = row.cells[10]['data'];
+                            if(taskResult === 'NO_ERROR') {
+                                statusText = 'Ingen fejl';
+                            } else if (taskResult === 'NO_CRITICAL_ERROR') {
+                                statusText = 'Ingen kritiske fejl';
+                            } else if (taskResult === 'CRITICAL_ERROR') {
+                                statusText = 'Kritiske fejl';
+                            }
+
+                            let diff = DateDiff.inDays(today, deadlineAsDate);
+                            if (diff < 0) {
+                                status = `<div class="d-block badge bg-danger">${statusText}</div>`;
+                            } else if (diff < 31 && diff >= 0) {
+                                status = `<div class="d-block badge bg-warning">${statusText}</div>`;
+                            } else {
+                                status = `<div class="d-block badge bg-gray-800">${statusText}</div>`;
+                            }
                         }
                     }
 
@@ -230,6 +272,14 @@ function initGrid() {
                     attributeMap.set('name', name);
                     return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                 }
+            },
+            {
+                name: "inProgress",
+                hidden: true
+            },
+            {
+                name: "note",
+                hidden: true
             }
         ],
         server: {
@@ -240,8 +290,8 @@ function initGrid() {
             },
             then: data => data.content.map(task =>
                 [ task.id, task.name, task.taskType, task.relatedEntities,
-                    task.responsibleNames, task.responsibleOU, task.tags, task.nextDeadline,
-                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions ]
+                    task.responsibleNames, task.responsibleOU, task.tags, task.startDate, task.nextDeadline,
+                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions, task.inProgress, task.inProgressNote]
             ),
             total: data => data.totalCount
         },
@@ -267,12 +317,23 @@ function initGrid() {
     //Enables custom column search, serverside sorting and pagination
     const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, datatableId);
 
+    const taskDateFieldSelect = document.getElementById('taskDateFieldSelect');
+    if (taskDateFieldSelect) {
+        initTaskDateFilter(customGridFunctions, {
+            fromInput: '#taskFilterFrom',
+            fromBtn: '#taskFilterFromBtn',
+            toInput: '#taskFilterTo',
+            toBtn: '#taskFilterToBtn',
+            dateFieldSelect: taskDateFieldSelect
+        });
+    }
+
     new ColumnOptions(
         datatableId,
         grid,
         ['opgavenavn', 'allowedActions'],
-        ['opgavenavn', 'allowedActions', 'opgaveType', 'ansvarlig', 'deadline', 'status', 'resultat'],
-        ['id'])
+        ['opgavenavn', 'allowedActions', 'opgaveType', 'ansvarlig', 'startdato', 'slutdato', 'status', 'resultat'],
+        ['id', 'inProgress', 'note'])
 
     initGridActions()
 

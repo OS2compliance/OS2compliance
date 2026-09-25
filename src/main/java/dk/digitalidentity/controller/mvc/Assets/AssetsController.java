@@ -36,14 +36,13 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.TransferImpactAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ColorStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
-import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
-import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -84,6 +83,7 @@ import org.htmlcleaner.TagNode;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -95,6 +95,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -148,7 +149,6 @@ public class AssetsController {
 	private final AssetSupplierMappingService assetSupplierMappingService;
 	private final DBSAssetDao dBSAssetDao;
 
-
 	private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
 
 	@RequireReadOwnerOnly
@@ -192,11 +192,10 @@ public class AssetsController {
             assetService.save(existingAsset);
 
             return "redirect:/assets";
-        } else {
-            asset.setAssetStatus(AssetStatus.NOT_STARTED);
+		} else {
+			asset.setAssetStatus(AssetStatus.NOT_STARTED);
 			asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
-            asset.setCriticality(Criticality.NON_CRITICAL);
-            asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
+			asset.setCriticality(Criticality.NON_CRITICAL);
 			asset.setActive(true);
             final Asset newAsset = assetService.create(asset);
             return "redirect:/assets/" + newAsset.getId();
@@ -311,8 +310,9 @@ public class AssetsController {
 					: relatedDbAsset.getRelationBId();
 			dBSAssetDao.findById(dbsAssetId).ifPresent(dbsAsset -> model.addAttribute("dbsAssetLink", "https://www.dbstilsyn.dk/itsystem/" + dbsAsset.getDbsId() + "/view"));
 		}
-        model.addAttribute("isKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY) || p.getKey().equals((KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY))));
-        model.addAttribute("isOldKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY)));
+        model.addAttribute("isKitos", assetService.isKitosLinked(asset));
+        model.addAttribute("isOldKitos", assetService.isOldKitos(asset));
+        model.addAttribute("isKitosUsage", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY)));
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
@@ -596,25 +596,32 @@ public class AssetsController {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
+        // Ownership must be read from the stored asset. The form locks the responsible/manager fields for
+        // managers and for kitos assets, and unsubmitted fields would otherwise look like "no owners".
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(existingAsset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-		existingAsset.setSupplier(asset.getSupplier());
 		existingAsset.setAssetType(asset.getAssetType());
 		existingAsset.setCriticality(asset.getCriticality());
-		existingAsset.setDescription(asset.getDescription());
 		existingAsset.setSociallyCritical(asset.isSociallyCritical());
 		existingAsset.setEmergencyPlanLink(asset.getEmergencyPlanLink());
 		existingAsset.setReEstablishmentPlanLink(asset.getReEstablishmentPlanLink());
 		existingAsset.setContractLink(asset.getContractLink());
 		existingAsset.setAssetStatus(asset.getAssetStatus());
 		existingAsset.setAssetCategory(asset.getAssetCategory());
-		existingAsset.setAiRisk(asset.getAiRisk());
-		existingAsset.setActive(asset.isActive());
 		existingAsset.setDepartments(asset.getDepartments());
+		// Editable for kitos assets as well, the value is pushed back to OS2kitos by AssetUpdatedEvent.
+		existingAsset.setArchive(asset.getArchive());
 
-		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
+		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY))) {
+			assetService.setActive(existingAsset, asset.isActive());
+		}
+
+		// These fields cannot be changed when the asset comes from OS2kitos, and the form locks them, so they are
+		// not submitted at all. The check must match the "isKitos" flag the view is rendered with.
+		if (!assetService.isKitosLinked(existingAsset)) {
+			existingAsset.setSupplier(asset.getSupplier());
 			existingAsset.getProductLinks().clear();
 			for (AssetProductLink link : asset.getProductLinks()) {
 				if (link.getUrl() != null && !link.getUrl().isBlank()) {
@@ -622,16 +629,19 @@ public class AssetsController {
 					existingAsset.getProductLinks().add(link);
 				}
 			}
-			// These fields cannot be changed when the asset is linked to OS2kitos.
 			existingAsset.setOperationResponsibleUsers(asset.getOperationResponsibleUsers());
 			existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 			existingAsset.getManagers().clear();
 			existingAsset.getManagers().addAll(asset.getManagers());
-			existingAsset.setAiStatus(asset.getAiStatus());
+			existingAsset.setDescription(asset.getDescription());
+			existingAsset.setAiRisk(asset.getAiRisk());
+			// ai_status is not nullable, so an empty selection keeps the current value.
+			if (asset.getAiStatus() != null) {
+				existingAsset.setAiStatus(asset.getAiStatus());
+			}
 			existingAsset.setContractDate(asset.getContractDate());
 			existingAsset.setContractTermination(asset.getContractTermination());
 			existingAsset.setTerminationNotice(asset.getTerminationNotice());
-			existingAsset.setArchive(asset.getArchive());
 		}
         eventPublisher.publishEvent(AssetUpdatedEvent.builder()
                 .asset(assetMapper.toEO(existingAsset))
@@ -750,9 +760,8 @@ public class AssetsController {
 				asset.getAdditionalSupervisoryModels().clear();
 			}
 		}
-		if (body.getDataProcessingAgreementStatus() != null) {
-			asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
-		}
+
+		asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
 		asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
 		asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
         asset.setNextInspection(body.getNextInspection());
@@ -900,37 +909,20 @@ public class AssetsController {
     }
 
 	@RequireUpdateOwnerOnly
-    @Transactional
-    @PostMapping("tia")
-    public String tia(@ModelAttribute final Asset asset) {
-        final Asset existingAsset = assetService.get(asset.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+	@Transactional
+	@PostMapping("tia")
+	@ResponseBody
+	public ResponseEntity<Void> tia(@ModelAttribute final Asset asset) {
+		final TransferImpactAssessment existingTia = assetService.getEditableTia(asset.getId());
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isOwning(asset)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+		final TransferImpactAssessment newTia = asset.getTia();
+		if (newTia == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+		}
 
-        existingAsset.getTia().setForwardInformationToOtherSuppliers(asset.getTia().getForwardInformationToOtherSuppliers());
-        existingAsset.getTia().setForwardInformationToOtherSuppliersDetail(asset.getTia().getForwardInformationToOtherSuppliersDetail());
-
-        if (existingAsset.getTia().getForwardInformationToOtherSuppliers() != ForwardInformationToOtherSuppliers.YES) {
-            existingAsset.getTia().setForwardInformationToOtherSuppliersDetail(null);
-        }
-
-        existingAsset.getTia().setAccessType(asset.getTia().getAccessType());
-        existingAsset.getTia().setAssessment(asset.getTia().getAssessment());
-        existingAsset.getTia().setConclusion(asset.getTia().getConclusion());
-		existingAsset.getTia().setLink(asset.getTia().getLink());
-        existingAsset.getTia().setExpectedTransferDuration(asset.getTia().getExpectedTransferDuration());
-        existingAsset.getTia().setContractualSecurityMeasures(asset.getTia().getContractualSecurityMeasures());
-        existingAsset.getTia().setTechnicalSecurityMeasures(asset.getTia().getTechnicalSecurityMeasures());
-        existingAsset.getTia().setOrganizationalSecurityMeasures(asset.getTia().getOrganizationalSecurityMeasures());
-        existingAsset.getTia().setRegisteredCategories(asset.getTia().getRegisteredCategories());
-        existingAsset.getTia().setInformationTypes(asset.getTia().getInformationTypes());
-
-        existingAsset.getTia().setTransferCaseDescription(asset.getTia().getTransferCaseDescription());
-        return "redirect:/assets/" + existingAsset.getId();
-    }
+		assetService.updateTiaContent(existingTia, newTia);
+		return ResponseEntity.ok().build();
+	}
 
 	@RequireReadOwnerOnly
     @GetMapping("dpia/schema")
@@ -951,16 +943,17 @@ public class AssetsController {
         List<TemplateSectionDTO> templateSectionDTOS = new ArrayList<>();
         for (DPIATemplateSection section : templateSections) {
             List<DPIATemplateQuestion> questions = section.getDpiaTemplateQuestions().stream().filter(q -> !q.isDeleted()).sorted(Comparator.comparing(DPIATemplateQuestion::getSortKey)).collect(Collectors.toList());
-            long minSortKey = questions.get(0).getSortKey();
-            long maxSortKey = questions.get(questions.size() - 1).getSortKey();
+            // all questions in a section may have been deleted, the sort keys are then irrelevant as there is nothing to reorder
+            long minSortKey = questions.isEmpty() ? 0 : questions.getFirst().getSortKey();
+            long maxSortKey = questions.isEmpty() ? 0 : questions.getLast().getSortKey();
             TemplateSectionDTO dto = new TemplateSectionDTO(section.getId(), section.getSortKey(), section.getIdentifier(), section.getHeading(),
                 section.getExplainer(), section.isCanOptOut(), section.isHasOptedOut(), questions, minSortKey, maxSortKey);
             templateSectionDTOS.add(dto);
         }
 
         model.addAttribute("templateSections", templateSectionDTOS);
-        model.addAttribute("minSectionSortKey", templateSections.get(0).getSortKey());
-        model.addAttribute("maxSectionSortKey", templateSections.get(templateSections.size() - 1).getSortKey());
+        model.addAttribute("minSectionSortKey", templateSections.isEmpty() ? 0 : templateSections.getFirst().getSortKey());
+        model.addAttribute("maxSectionSortKey", templateSections.isEmpty() ? 0 : templateSections.getLast().getSortKey());
         return "dpia/fragments/dpiaTemplateFragment";
     }
 

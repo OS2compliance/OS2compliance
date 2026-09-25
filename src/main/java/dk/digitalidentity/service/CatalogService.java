@@ -4,17 +4,26 @@ import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.dao.ThreatCatalogDao;
 import dk.digitalidentity.dao.ThreatCatalogThreatDao;
+import dk.digitalidentity.dao.grid.ThreatCatalogGridDao;
+import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
+import dk.digitalidentity.model.entity.grid.ThreatCatalogGrid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +32,23 @@ public class CatalogService {
     private final ThreatCatalogThreatDao threatCatalogThreatDao;
     private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
     private final ThreatAssessmentDao threatAssessmentDao;
+    private final ThreatCatalogGridDao threatCatalogGridDao;
+
+    public Page<ThreatCatalogGrid> getCatalogs(final String sortColumn, final String sortDirection, final Map<String, String> filters, final int page, final int pageLimit) {
+        final String hiddenFilter = filters.get("hidden");
+        if (hiddenFilter == null || hiddenFilter.isEmpty()) {
+            // Default to only showing visible catalogs
+            filters.put("hidden", "false");
+        } else if ("ALL".equals(hiddenFilter)) {
+            filters.remove("hidden");
+        }
+
+        return threatCatalogGridDao.findAllWithColumnSearch(
+            validateSearchFilters(filters, ThreatCatalogGrid.class),
+            buildPageable(page, pageLimit, sortColumn, sortDirection),
+            ThreatCatalogGrid.class
+        );
+    }
 
     public List<ThreatCatalog> findAll() {
         return threatCatalogDao.findAll();
@@ -30,6 +56,18 @@ public class CatalogService {
 
     public List<ThreatCatalog> findAllVisible() {
         return threatCatalogDao.findAllByHiddenFalse();
+    }
+
+    /**
+     * Et skjult katalog skal stadig kunne sendes retur af formularen, ellers fravælger næste gem det - og
+     * fravalg sletter besvarelserne.
+     */
+    public List<ThreatCatalog> findSelectableFor(final ThreatAssessment threatAssessment) {
+        final List<ThreatCatalog> selectable = new ArrayList<>(findAllVisible());
+        threatAssessment.getThreatCatalogs().stream()
+            .filter(attached -> selectable.stream().noneMatch(v -> v.getIdentifier().equals(attached.getIdentifier())))
+            .forEach(selectable::add);
+        return selectable;
     }
 
     public Optional<ThreatCatalog> get(final String identifier) {

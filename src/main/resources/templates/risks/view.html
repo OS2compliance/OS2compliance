@@ -57,6 +57,11 @@
                                         <span th:if="!${iterStat.last}">, </span>
                                     </span>
                                 </p>
+                                <div th:if="${incidentCount != null}">
+                                    <span>Hændelser sidste 12 måneder: </span>
+                                    <i th:if="${incidentCount == 0}" th:text="${incidentCount}" class="mb-0"></i>
+                                    <a th:if="${incidentCount > 0}" th:href="@{/incidents/logs(from=${incidentDateFrom},to=${incidentDateTo},assetIds=${incidentAssetIds})}" th:text="${incidentCount}" class="mb-0"></a>
+                                </div>
                             </div>
                             <div class="col-lg-4 col-md-6">
                                 <div><span>Vurdering for den registrerede: </span><i th:text="(${risk.registered} ? 'ja' : 'nej')" style="margin-bottom: 0px;"></i></div>
@@ -181,11 +186,11 @@
                                         <tr class="threatRow" th:classappend="'categoryRow' + ${stat.index} + ' rowId'+${row.index}" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index},data-index=${stat.index}">
                                             <td class="riskViewTd"  th:text="${row.index} + 1" rowspan="6"></td>
                                             <td class="riskViewTd preserve-linebreaks align-top" th:text="${row.threat}" rowspan="6"></td>
-                                            <td style="height: inherit" class="riskViewTd editCell" rowspan="6" >
-                                                <div>
-                                                    <select style="height: 100%" class="notRelevantSelect setField" th:id="'notRelevant' + ${row.index}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="NOT_RELEVANT" th:value="${row.notRelevant}">
-                                                        <option value="false" th:selected="${row.notRelevant} == false"></option>
-                                                        <option value="true" th:selected="${row.notRelevant} == true">Ikke relevant</option>
+                                            <td style="height: inherit" class="riskViewTd editCell notRelevantCell" rowspan="6" >
+                                                <div class="notRelevantSelectWrapper">
+                                                    <select class="notRelevantSelect setField" th:id="'notRelevant' + ${row.index}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="NOT_RELEVANT" th:value="${row.notRelevant}">
+                                                        <option value="false" th:selected="${!row.notRelevant}"></option>
+                                                        <option value="true" th:selected="${row.notRelevant}">Ikke relevant</option>
                                                     </select>
                                                 </div>
                                             </td>
@@ -335,18 +340,22 @@
                                         <tr th:classappend="'categoryRow' + ${stat.index} + ' rowId' + ${row.index}">
                                             <td class="riskViewTh">Eksisterende foranstaltninger</td>
                                             <td class="riskViewTd editCell" colspan="17">
-                                                <div class="excel-textarea-container">
-                                                    <textarea th:text="${row.existingMeasures}" class="setField excel-textarea" rows="1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="EXISTING_MEASURES"></textarea>
+                                                <div>
+                                                    <select class="choices__input select-precaution" data-type="select-multiple" data-trigger="" name="relations" th:id="${formId + 'RelationsSelect'}" hidden="" tabindex="-1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}, data-show-full-description=${showFullMeasureDescription}" multiple>
+                                                        <option th:each="precaution : ${row.relatedPrecautions}"
+                                                                th:value="${precaution.id}"
+                                                                th:text="${showFullMeasureDescription} ? (${precaution.name} + ': ' + ${precaution.description}) : ${precaution.name}"
+                                                                th:attr="data-label-description=${precaution.description}, data-custom-properties=${precaution.name}"
+                                                                selected></option>
+                                                    </select>
                                                 </div>
                                             </td>
                                         </tr>
                                         <tr th:classappend="'categoryRow' + ${stat.index} + ' rowId' + ${row.index}">
-                                            <td class="riskViewTh">Tilknyttede foranstaltninger</td>
+                                            <td class="riskViewTh">Supplerende bemærkninger<br><small class="text-muted">til foranstaltninger, der ikke er oprettet i løsningen</small></td>
                                             <td class="riskViewTd editCell" colspan="17">
-                                                <div>
-                                                    <select class="choices__input select-precaution" data-type="select-multiple" data-trigger="" name="relations" th:id="${formId + 'RelationsSelect'}" hidden="" tabindex="-1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" multiple>
-                                                        <option th:each="precaution : ${row.relatedPrecautions}" th:value="${precaution.id}" th:text="${precaution.name+ ': ' + precaution.description }" selected></option>
-                                                    </select>
+                                                <div class="excel-textarea-container">
+                                                    <textarea th:text="${row.additionalMeasures}" class="setField excel-textarea" rows="1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="ADDITIONAL_MEASURES"></textarea>
                                                 </div>
                                             </td>
                                         </tr>
@@ -419,21 +428,21 @@
                         </div>
                         <div class="d-flex mb-2">
                             <div class="d-flex flex-fill align-items-start mb-3 p-1">
-                                <button sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')" type="button" class="btn btn-success mb-1 me-1" data-bs-toggle="modal" data-bs-target="#customThreatFormDialog">
+                                <button sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')" type="button" class="btn btn-success btn-lg mb-1 me-1" data-bs-toggle="modal" data-bs-target="#customThreatFormDialog">
                                     <i class="ti-plus"></i> <span class="vr"></span> Tilføj ny trussel
                                 </button>
-                                <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-success me-1" th:onclick="|setRevisionInterval(${risk.id})|">
+                                <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-success btn-lg me-1" th:onclick="|setRevisionInterval(${risk.id})|">
                                     <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
                                 </button>
-                                <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#threatCatalogModal">
+                                <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#threatCatalogModal">
                                     <i class="pli-files"></i> <span class="vr"></span> Vælg trusselskataloger
                                 </button>
                             </div>
                             <div class="d-flex align-items-end flex-row mb-3 p-1">
-                                <a type="button" class="btn btn-success me-1 mb-1" th:href="'/risks/' + ${risk.id} + '/profile'">
+                                <a type="button" class="btn btn-success btn-lg me-1 mb-1" th:href="'/risks/' + ${risk.id} + '/profile'">
                                     <i class="pli-magnifi-glass"></i> <span class="vr"></span> Se risikoprofil
                                 </a>
-                                <a type="button" href="#" class="btn btn-success mb-1" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a type="button" href="#" class="btn btn-success btn-lg mb-1" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
@@ -551,6 +560,7 @@
                                 <option th:each="catalog : ${threatCatalogs}"
                                         th:value="${catalog.identifier}" th:text="${catalog.name}"></option>
                             </select>
+                            <input type="hidden" name="_threatCatalogs" value="on">
                         </div>
                     </div>
                 </div>

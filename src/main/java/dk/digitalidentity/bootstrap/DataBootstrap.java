@@ -154,6 +154,108 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(41, this::seedV41);
 		incrementAndPerformIfVersion(42, this::seedV42);
 		incrementAndPerformIfVersion(43, this::seedV43);
+		incrementAndPerformIfVersion(44, this::seedV44);
+		incrementAndPerformIfVersion(45, this::seedV45);
+		incrementAndPerformIfVersion(46, this::seedV46);
+		incrementAndPerformIfVersion(47, this::seedV47);
+		incrementAndPerformIfVersion(48, this::seedV48);
+		incrementAndPerformIfVersion(49, this::seedV49);
+	}
+
+	/**
+	 * Bevidst tom. Version 1.8 af KL's ark følger med releasen i {@code data/registers/}, så nye
+	 * tilslutninger får den via {@link #addRegistersV0()} - men den bliver ikke rullet ud på
+	 * eksisterende installationer.
+	 * <p>
+	 * Den oprindelige udgave kaldte {@code importRegister} + {@code updateRegisterGdprChoices} +
+	 * {@code enrichWithKLE} for hver pakke, og gav hos den første installation der fik den
+	 * (11-08-2026) 33 dubletter, oven i at de to andre kald overskrev kommunens egne rettelser af
+	 * hjemmel og KLE på 20 og 29 fortegnelser.
+	 * <p>
+	 * <b>Årsagen er ikke v1.8.</b> 32 af de 33 dubletter har byte-identisk titel i v1.7 og v1.8, og
+	 * de eneste titelforskelle mellem de to udgaver er afsluttende blanktegn, som kollationen
+	 * {@code utf8mb4_danish_ci} (PAD SPACE) ignorerer. {@code importRegister} slår op med
+	 * {@code findByNameAndDeletedFalse}, og det opslag fejler af to grunde, som begge er ældre end
+	 * v1.8:
+	 * <ul>
+	 * <li><b>Titlen er ikke en stabil nøgle.</b> 23 af dubletterne havde ingen titel at ramme:
+	 * kommunens fortegnelser hedder noget andet end de pakker vi shipper i dag ({@code 10a.},
+	 * {@code 11b.}, dobbelte mellemrum, {@code \r\n} midt i titlen). Titlerne er drevet fra hinanden
+	 * over flere kvartalsopdateringer, og 22 af v1.7's 94 titler ramte allerede ved siden af samme
+	 * sted. Ingen v1.7→v1.8-mapping retter det - det, der skal bruges, er en identitet pr. aktivitet,
+	 * og den findes ikke: {@code packageName} står på {@code kl_article30} for dem alle.</li>
+	 * <li><b>Slettede fortegnelser er usynlige for opslaget.</b> De resterende 10 dubletter havde
+	 * eksakt titelmatch, men kommunen havde soft-deleted dem. {@code deleted}-filteret skjuler dem,
+	 * så seed'et genoprettede fortegnelser kommunen bevidst havde fjernet.</li>
+	 * </ul>
+	 * Et {@code seedVxx}, der kalder {@code importRegister} på en installation i drift, opretter
+	 * derfor dubletter, indtil begge dele er løst. Se {@code scripts/README.md}.
+	 * <p>
+	 * Slottet står tilbage som no-op med vilje: den ramte installation nåede at få
+	 * {@code seed_version} sat til 47, og fjernes kaldet i {@link #onApplicationEvent}, ville den
+	 * springe det næste seed over, fordi versionerne kun matcher eksakt.
+	 */
+	private void seedV46() {
+		// Med vilje tom - se javadoc.
+	}
+
+	/** Sand som udgangspunkt, så ingen installation mister den fulde beskrivelse den har i dag. */
+	private void seedV49() {
+		settingsService.createSetting(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, "true", "risk", true);
+	}
+
+	/**
+	 * "Hændelser (Cirkeldiagram)" fik ved en fejl {@code groupTimeByField(Period.MONTH)} kopieret med
+	 * fra søjlediagram-konfigurationen. Feltet overskrev cirkeldiagrammets valglistebaserede fordeling
+	 * med en månedsgruppering, uanset hvilket felt brugeren valgte - se {@code generatePieChart}.
+	 */
+	private void seedV48() {
+		chartConfigurationService.findByName("Hændelser (Cirkeldiagram)").ifPresent(chart -> {
+			chart.setGroupTimeByField(null);
+			chartConfigurationService.saveAll(List.of(chart));
+		});
+	}
+
+	private void seedV47() {
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL, "", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_CREATED, "false", "assetsync", true);
+		settingsService.createSetting(Constants.ASSET_SYNC_NOTIFY_ON_DEACTIVATED, "false", "assetsync", true);
+	}
+
+	private void seedV45() {
+		// Same repair as seedV44, re-run because repairMisbookedDbsOversightLogs has since been widened
+		// to also move a log off an older DBS tilsyn task — not just off the generic CHECK task. That is
+		// the far more common case: the old selector consistently picked the oldest tilsyn task, so a
+		// tilsyn registered after a newer task had been imported was booked onto the older one and left
+		// the newer one standing overdue. Environments that already ran seedV44 would otherwise never
+		// get the widened pass. The repair is idempotent, so running it again is harmless.
+		repairMisbookedOversightLogs("seedV45");
+	}
+
+	private void seedV44() {
+		// seedV41 booked oversight completions via the then-buggy task selection, so a "Tilsyn udført"
+		// log could land on an older tilsyn task on the same asset while the real "DBS tilsyn" task
+		// stayed overdue. Move such misbooked logs onto the correct, still-open DBS tilsyn task.
+		repairMisbookedOversightLogs("seedV44");
+	}
+
+	private void repairMisbookedOversightLogs(final String seedName) {
+		final List<Asset> dbsAssets = taskService.findAllTasks().stream()
+				.map(taskService::findOversightAsset)
+				.flatMap(Optional::stream)
+				.filter(Asset.class::isInstance)
+				.map(Asset.class::cast)
+				.filter(a -> a.getSupervisoryModel() != null
+						&& a.getSupervisoryModel().getIdentifier() != null
+						&& a.getSupervisoryModel().getIdentifier().startsWith(Constants.DBS_SUPERVISION_MODEL_IDENTIFIER_PREFIX))
+				.distinct()
+				.toList();
+		int moved = 0;
+		for (final Asset asset : dbsAssets) {
+			moved += assetOversightService.repairMisbookedDbsOversightLogs(asset);
+		}
+		log.info("{}: moved {} misbooked oversight log(s) onto the correct DBS task across {} DBS asset(s)",
+				seedName, moved, dbsAssets.size());
 	}
 
 	private void seedV43() {
@@ -682,7 +784,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.selectablePeriod(SelectablePeriod.NONE)
 						.selectableDateField(false)
 						.allowedDateFieldChoices(List.of("createdAt"))
-						.groupTimeByField(Period.MONTH)
+						.groupTimeByField(null)
 						.defaultStartTime(DateTimePreset.YEAR_START)
 						.defaultEndTime(DateTimePreset.YEAR_END)
 						.build(),

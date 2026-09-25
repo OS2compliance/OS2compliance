@@ -1,18 +1,28 @@
 package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.event.AssetDPIAKitosEvent;
+import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.integration.kitos.exception.KitosSynchronizationException;
 import dk.digitalidentity.integration.kitos.mapper.KitosMapperImpl;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.service.SettingsService;
-import dk.kitos.api.ApiV2DeltaFeedApi;
-import dk.kitos.api.ApiV2ItContractApi;
-import dk.kitos.api.ApiV2ItSystemApi;
-import dk.kitos.api.ApiV2ItSystemUsageApi;
-import dk.kitos.api.ApiV2ItSystemUsageRoleTypeApi;
-import dk.kitos.api.ApiV2OrganizationApi;
+import dk.kitos.api.DeltaFeedV2Api;
+import dk.kitos.api.ItContractV2Api;
+import dk.kitos.api.ItSystemUsageRoleTypeV2Api;
+import dk.kitos.api.ItSystemUsageV2Api;
+import dk.kitos.api.ItSystemV2Api;
+import dk.kitos.api.OrganizationV2Api;
+import dk.digitalidentity.model.api.AssetEO;
+import dk.kitos.api.model.ArchiveDutyChoice;
+import dk.kitos.api.model.ArchivingRegistrationsResponseDTO;
+import dk.kitos.api.model.GeneralDataResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationResponseDTO;
+import dk.kitos.api.model.UpdateItSystemUsageRequestDTO;
+import dk.kitos.api.model.YesNoDontKnowChoice;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -35,6 +45,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 /**
  * Unit tests for {@link KitosClientService}
@@ -44,17 +56,17 @@ import static org.mockito.Mockito.doReturn;
 @ActiveProfiles("test")
 public class KitosClientServiceTest {
     @MockitoBean
-    private ApiV2ItSystemApi itSystemApiMock;
+    private ItSystemV2Api itSystemApiMock;
     @MockitoBean
-    private ApiV2ItSystemUsageApi itSystemUsageApiMock;
+    private ItSystemUsageV2Api itSystemUsageApiMock;
     @MockitoBean
-    private ApiV2OrganizationApi organizationApiMock;
+    private OrganizationV2Api organizationApiMock;
     @MockitoBean
-    private ApiV2ItSystemUsageRoleTypeApi systemUsageRoleTypeApiMock;
+    private ItSystemUsageRoleTypeV2Api systemUsageRoleTypeApiMock;
     @MockitoBean
-    private ApiV2ItContractApi contractApiMock;
+    private ItContractV2Api contractApiMock;
     @MockitoBean
-    private ApiV2DeltaFeedApi deltaFeedApiMock;
+    private DeltaFeedV2Api deltaFeedApiMock;
     @MockitoBean
     private SettingsService settingsServiceMock;
 
@@ -108,6 +120,161 @@ public class KitosClientServiceTest {
 
         // Then
         assertThat(itSystemUsages).hasSize(KitosConstants.PAGE_SIZE+10);
+    }
+
+    @Test
+    public void updateBusinessCriticalAndArchiveDutySkipsPatchWhenNothingChanged() {
+        // Given
+        final UUID usageUuid = UUID.randomUUID();
+        stubUsage(usageUuid, YesNoDontKnowChoice.YES, ArchiveDutyChoice.K);
+
+        // When
+        kitosClientService.updateBusinessCriticalAndArchiveDuty(usageUuid.toString(), true, AssetEO.ArchiveDuty.K);
+
+        // Then
+        verify(itSystemUsageApiMock, never()).patchSingleItSystemUsageV2PatchSystemUsage(any(), any());
+    }
+
+    @Test
+    public void updateBusinessCriticalAndArchiveDutyPatchesOnlyChangedSection() {
+        // Given
+        final UUID usageUuid = UUID.randomUUID();
+        stubUsage(usageUuid, YesNoDontKnowChoice.NO, ArchiveDutyChoice.K);
+
+        // When
+        kitosClientService.updateBusinessCriticalAndArchiveDuty(usageUuid.toString(), true, AssetEO.ArchiveDuty.K);
+
+        // Then
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        final UpdateItSystemUsageRequestDTO update = captor.getValue();
+        assertThat(update.getGeneral()).isNotNull();
+        assertThat(update.getGeneral().getIsBusinessCritical()).isEqualTo(YesNoDontKnowChoice.YES);
+        // Kitos PATCH replaces a provided section wholesale, so the untouched
+        // general fields must round-trip from the fetched usage
+        assertThat(update.getGeneral().getLocalCallName()).isEqualTo("local-name");
+        // unchanged/never-touched sections must be omitted entirely
+        assertThat(update.getArchiving()).isNull();
+        assertThat(update.getGdpr()).isNull();
+        assertThat(update.getRoles()).isNull();
+    }
+
+    @Test
+    public void updateBusinessCriticalAndArchiveDutyPatchesArchivingWhenDutyChanged() {
+        // Given
+        final UUID usageUuid = UUID.randomUUID();
+        stubUsage(usageUuid, YesNoDontKnowChoice.YES, ArchiveDutyChoice.K);
+
+        // When
+        kitosClientService.updateBusinessCriticalAndArchiveDuty(usageUuid.toString(), true, AssetEO.ArchiveDuty.B);
+
+        // Then
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        final UpdateItSystemUsageRequestDTO update = captor.getValue();
+        assertThat(update.getGeneral()).isNull();
+        assertThat(update.getArchiving()).isNotNull();
+        assertThat(update.getArchiving().getArchiveDuty()).isEqualTo(ArchiveDutyChoice.B);
+    }
+
+    @Test
+    public void riskAssessmentSyncStripsEmptyDocumentationLinkInManualMode() {
+        // Given - manual fill-mode: name and url are null (no threat assessment link)
+        final UUID usageUuid = UUID.randomUUID();
+        doReturn(new ItSystemUsageResponseDTO()).when(itSystemUsageApiMock).getSingleItSystemUsageV2GetItSystemUsage(usageUuid);
+        final AssetRiskKitosEvent event = AssetRiskKitosEvent.builder()
+                .riskAssessmentConducted(true)
+                .result(RiskAssessment.GREEN)
+                .riskAssessmentName(null)
+                .riskAssessmentUrl(null)
+                .build();
+
+        // When
+        kitosClientService.updateAssetRiskAssessment(usageUuid.toString(), event);
+
+        // Then - the empty link must be stripped so Kitos does not reject the whole PATCH
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        assertThat(captor.getValue().getGdpr()).isNotNull();
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation()).isNull();
+    }
+
+    @Test
+    public void riskAssessmentSyncKeepsPopulatedDocumentationLink() {
+        // Given - auto fill-mode: name and url are present
+        final UUID usageUuid = UUID.randomUUID();
+        doReturn(new ItSystemUsageResponseDTO()).when(itSystemUsageApiMock).getSingleItSystemUsageV2GetItSystemUsage(usageUuid);
+        final AssetRiskKitosEvent event = AssetRiskKitosEvent.builder()
+                .riskAssessmentConducted(true)
+                .result(RiskAssessment.RED)
+                .riskAssessmentName("Risikovurdering af Addo Sign")
+                .riskAssessmentUrl("https://example.test/risks/1")
+                .build();
+
+        // When
+        kitosClientService.updateAssetRiskAssessment(usageUuid.toString(), event);
+
+        // Then
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation()).isNotNull();
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation().getName()).isEqualTo("Risikovurdering af Addo Sign");
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation().getUrl()).isEqualTo("https://example.test/risks/1");
+    }
+
+    @Test
+    public void dpiaSyncWritesLinkToDpiaDocumentationNotRiskAssessment() {
+        // Given
+        final UUID usageUuid = UUID.randomUUID();
+        doReturn(new ItSystemUsageResponseDTO()).when(itSystemUsageApiMock).getSingleItSystemUsageV2GetItSystemUsage(usageUuid);
+        final AssetDPIAKitosEvent event = AssetDPIAKitosEvent.builder()
+                .dpiaName("DPIA for Addo Sign")
+                .dpiaUrl("https://example.test/dpia/1")
+                .build();
+
+        // When
+        kitosClientService.updateAssetDPIA(usageUuid.toString(), event);
+
+        // Then - the DPIA link belongs in dpiaDocumentation, not riskAssessmentDocumentation
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        assertThat(captor.getValue().getGdpr().getDpiaConducted()).isEqualTo(YesNoDontKnowChoice.YES);
+        assertThat(captor.getValue().getGdpr().getDpiaDocumentation()).isNotNull();
+        assertThat(captor.getValue().getGdpr().getDpiaDocumentation().getName()).isEqualTo("DPIA for Addo Sign");
+        assertThat(captor.getValue().getGdpr().getDpiaDocumentation().getUrl()).isEqualTo("https://example.test/dpia/1");
+        assertThat(captor.getValue().getGdpr().getRiskAssessmentDocumentation()).isNull();
+    }
+
+    @Test
+    public void dpiaSyncStripsEmptyDocumentationLink() {
+        // Given - DPIA event with no name/url
+        final UUID usageUuid = UUID.randomUUID();
+        doReturn(new ItSystemUsageResponseDTO()).when(itSystemUsageApiMock).getSingleItSystemUsageV2GetItSystemUsage(usageUuid);
+        final AssetDPIAKitosEvent event = AssetDPIAKitosEvent.builder()
+                .dpiaName(null)
+                .dpiaUrl(null)
+                .build();
+
+        // When
+        kitosClientService.updateAssetDPIA(usageUuid.toString(), event);
+
+        // Then - empty link is stripped so Kitos does not reject the PATCH
+        final ArgumentCaptor<UpdateItSystemUsageRequestDTO> captor = ArgumentCaptor.forClass(UpdateItSystemUsageRequestDTO.class);
+        verify(itSystemUsageApiMock).patchSingleItSystemUsageV2PatchSystemUsage(eq(usageUuid), captor.capture());
+        assertThat(captor.getValue().getGdpr().getDpiaConducted()).isEqualTo(YesNoDontKnowChoice.YES);
+        assertThat(captor.getValue().getGdpr().getDpiaDocumentation()).isNull();
+    }
+
+    private void stubUsage(final UUID usageUuid, final YesNoDontKnowChoice businessCritical, final ArchiveDutyChoice archiveDuty) {
+        final ItSystemUsageResponseDTO usage = new ItSystemUsageResponseDTO();
+        final GeneralDataResponseDTO general = new GeneralDataResponseDTO();
+        general.setIsBusinessCritical(businessCritical);
+        general.setLocalCallName("local-name");
+        usage.setGeneral(general);
+        final ArchivingRegistrationsResponseDTO archiving = new ArchivingRegistrationsResponseDTO();
+        archiving.setArchiveDuty(archiveDuty);
+        usage.setArchiving(archiving);
+        doReturn(usage).when(itSystemUsageApiMock).getSingleItSystemUsageV2GetItSystemUsage(usageUuid);
     }
 
     List<ItSystemUsageResponseDTO> createItSystemResponseList(final OffsetDateTime startAtOffset, final int count) {

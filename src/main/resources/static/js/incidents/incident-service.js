@@ -1,4 +1,4 @@
-import FormValidationService from "../FormValidationService.js";
+import {validateFormBeforeSubmit} from "./incident-validation-service.js";
 
 export default function IncidentService() {
 
@@ -17,7 +17,7 @@ export default function IncidentService() {
 
                 const modal = document.getElementById(targetId);
                 const form = modal.querySelector("form");
-                form.addEventListener("submit", (event) => self.validateFormBeforeSubmit(event, form));
+                form.addEventListener("submit", (event) => validateFormBeforeSubmit(event, form));
             })
     }
 
@@ -61,8 +61,23 @@ export default function IncidentService() {
         });
     }
 
-    this.fetchColumnName = async () => {
+    /**
+     * The custom fields shown as columns in the grid, in form order.
+     */
+    this.fetchColumns = async () => {
         return jsonCall('GET', restUrl + 'columns', null)
+            .then((response) => {
+                defaultResponseErrorHandler(response);
+                return response.json();
+            })
+            .catch(defaultErrorHandler)
+    }
+
+    /**
+     * The obligatory date fields the from/to range can filter on, on top of created and updated.
+     */
+    this.fetchDateFields = async () => {
+        return jsonCall('GET', restUrl + 'datefields', null)
             .then((response) => {
                 defaultResponseErrorHandler(response);
                 return response.json();
@@ -137,77 +152,4 @@ export default function IncidentService() {
             select.choices = choiceService.initOUSelect(select.getAttribute('id'), false);
         })
     }
-
-    this.setFieldValidity = (field, feedback, isValid) => {
-        if (isValid) {
-            field.classList.remove("is-invalid");
-            if (feedback) feedback.style.display = "none";
-        } else {
-            field.classList.add("is-invalid");
-            if (feedback) feedback.style.display = "block";
-        }
-    };
-
-    this.validateFormBeforeSubmit = (event, form) => {
-        let valid = true;
-        let invalidFields = [];
-
-        // validate name field
-        const nameInput = form.querySelector('input[name="name"]');
-        if (nameInput) {
-            const val = nameInput.value.trim();
-            const feedback = nameInput.parentElement.querySelector('.invalid-feedback');
-            const isValid = val !== "" && val.length <= 768;
-
-            if (!isValid) {
-                valid = false;
-                invalidFields.push(nameInput);
-            }
-            this.setFieldValidity(nameInput, feedback, isValid);
-        }
-
-        // validate textField textarea max length
-        const maxLength = 65000;
-        const textAreas = form.querySelectorAll("textarea.textField");
-        textAreas.forEach(textArea => {
-            const val = textArea.value.trim();
-            const feedback = textArea.parentElement.querySelector('.invalid-feedback');
-            const isValid = val.length <= maxLength;
-
-            if (!isValid) {
-                valid = false;
-                invalidFields.push(textArea);
-            }
-            this.setFieldValidity(textArea, feedback, isValid);
-        });
-
-        // validate date fields
-        const dateFields = form.querySelectorAll(".dateTimePicker");
-        dateFields.forEach(input => {
-            const val = input.value.trim();
-            const feedback = input.parentElement.querySelector('.invalid-feedback');
-            const isValid = val === "" || isValidDateDMY(val);
-
-            if (!isValid) {
-                valid = false;
-                invalidFields.push(input);
-            }
-            this.setFieldValidity(input, feedback, isValid);
-        });
-
-        // Validate obligatory fields
-        const fvs = new FormValidationService(form)
-        fvs.removeValidationMessages()
-        if (!fvs.validate_isNotEmpty()) {
-            valid = false;
-        }
-
-        if (!valid) {
-            event.preventDefault();
-            if (invalidFields.length > 0) {
-                invalidFields[0].scrollIntoView({behavior: 'smooth', block: 'center'});
-                invalidFields[0].focus();
-            }
-        }
-    };
 }

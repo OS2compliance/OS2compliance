@@ -172,13 +172,31 @@ public class AssetsRestController {
     }
 
 	@RequireUpdateOwnerOnly
+	@Transactional
+	@PostMapping("tia/accept")
+	public ResponseEntity<Void> acceptTia(@RequestParam("assetId") final Long assetId,
+										  @RequestParam(value = "comment", required = false) final String comment) {
+		assetService.acceptTia(assetService.getEditableTia(assetId), comment);
+		return ResponseEntity.ok().build();
+	}
+
+	@RequireUpdateOwnerOnly
+	@Transactional
+	@PostMapping("tia/unaccept")
+	public ResponseEntity<Void> unacceptTia(@RequestParam("assetId") final Long assetId) {
+		assetService.removeTiaAcceptance(assetService.getEditableTia(assetId));
+		return ResponseEntity.ok().build();
+	}
+
+	@RequireUpdateOwnerOnly
     @PutMapping("{id}/dpiascreening/setfield")
     public void setDpiaScreeningField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                                       @RequestParam(value = "value", required = false) final String value) {
         canSetFieldDPIAScreeningGuard(fieldName);
 		DPIA dpia = dPIAService.find(id);
 
-        if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets())) {
+        // samme tjek som resten af konsekvensanalysen, så en risikoejer uden aktiver også kan gemme
+        if (!dPIAService.isEditable(dpia)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -491,14 +509,6 @@ public class AssetsRestController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
-
-	private boolean isResponsibleForAsset(List<Asset> assets) {
-		return assets.stream().flatMap(a ->
-						a.getResponsibleUsers().stream()
-								.map(User::getUuid))
-				.toList()
-				.contains(SecurityUtil.getPrincipalUuid());
-	}
 
 	@GetMapping("export-metadata")
 	@RequireReadOwnerOnly

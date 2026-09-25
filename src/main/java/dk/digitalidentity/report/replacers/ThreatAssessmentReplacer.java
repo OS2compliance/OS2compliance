@@ -1,5 +1,6 @@
 package dk.digitalidentity.report.replacers;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.PlaceHolder;
 import dk.digitalidentity.model.entity.Asset;
@@ -229,14 +230,16 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         final XWPFParagraph tableParagraph = document.insertNewParagraph(cursor);
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
-        createTableCells(table, tasks.size()+1, 6);
+        createTableCells(table, tasks.size()+1, 8);
         final XWPFTableRow headerRow = table.getRow(0);
         setCellHeaderTextSmall(headerRow, 0, "Opgave navn");
         setCellHeaderTextSmall(headerRow, 1, "Beskrivelse");
         setCellHeaderTextSmall(headerRow, 2, "Frekvens");
-        setCellHeaderTextSmall(headerRow, 3, "Deadline");
-        setCellHeaderTextSmall(headerRow, 4, "Ansvarlig");
-        setCellHeaderTextSmall(headerRow, 5, "Afdeling");
+        setCellHeaderTextSmall(headerRow, 3, "Startdato");
+        setCellHeaderTextSmall(headerRow, 4, "Deadline");
+        setCellHeaderTextSmall(headerRow, 5, "Ansvarlig");
+        setCellHeaderTextSmall(headerRow, 6, "Afdeling");
+        setCellHeaderTextSmall(headerRow, 7, "Status");
 
         final int[] idx = { 1 };
         tasks.forEach(
@@ -245,9 +248,11 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 setCellTextSmall(row, 0, task.getName());
                 setCellTextSmall(row, 1, task.getDescription());
                 setCellTextSmall(row, 2, task.getTaskType().getMessage());
-                setCellTextSmall(row, 3, DK_DATE_FORMATTER.format(task.getNextDeadline()));
-                setCellTextSmall(row, 4, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))));
-                setCellTextSmall(row, 5, nullSafe(() -> task.getResponsibleOu().getName()));
+                setCellTextSmall(row, 3, nullSafe(() -> DK_DATE_FORMATTER.format(task.getStartDate())));
+                setCellTextSmall(row, 4, DK_DATE_FORMATTER.format(task.getNextDeadline()));
+                setCellTextSmall(row, 5, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))));
+                setCellTextSmall(row, 6, nullSafe(() -> task.getResponsibleOu().getName()));
+                setCellTextSmall(row, 7, taskService.calculateStatus(task).text());
                 idx[0]++;
             }
         );
@@ -296,6 +301,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
 
         final int[] idx = { 1 };
+		final boolean showFullMeasureDescription = settingsService.getBoolean(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, true);
         threatList.forEach((threatType, threats) -> {
             threats.forEach(t -> {
                 final XWPFTableRow row = table.getRow(idx[0]);
@@ -310,7 +316,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                     final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
                     final int score = profile.getProbability() * profile.getConsequence();
                     setCellTextSmallCentered(row, 3, "" + profile.getProbability());
-                    setCellTextSmallCentered(row, 4, "" + profile.getConsequence());
+                    setCellTextSmallCenteredMultiLine(row, 4, profile.getConsequenceBreakdown());
                     setCellTextSmallCentered(row, 5, "" + score);
                     setCellBackgroundColor(row.getCell(5), color);
                     setCellTextSmall(row, 6, t.getProblem());
@@ -326,21 +332,31 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 						setCellTextSmall(row, 13, ""+residualScore);
 					}
 
-					//set first precaution row to Existing
-                    setCellTextSmall(row, 9, "Eksisterende");
-                    setCellTextSmall(row, 10, t.getExistingMeasures());
-
 					//Save index of first row, for future merging
 					int mergeStartIndex = idx[0];
+					XWPFTableRow lastRow = row;
+					boolean firstPrecaution = true;
 					for (var relatable : t.getRelatedPrecautions()) {
-						idx[0]++;
-						//Create a row for each related precaution
+						//Create a row for each related precaution, reusing the first (already existing) row
 						Precaution precaution = (Precaution)relatable;
-						table.createRow();
-						XWPFTableRow precautionRow =  table.getRow(idx[0]);
-						setCellTextSmall(precautionRow, 9, precaution.getName());
-						setCellTextSmall(precautionRow, 10, precaution.getDescription());
+						if (firstPrecaution) {
+							firstPrecaution = false;
+						} else {
+							idx[0]++;
+							table.createRow();
+							lastRow = table.getRow(idx[0]);
+						}
+						setCellTextSmall(lastRow, 9, precaution.getName());
+						setCellTextSmall(lastRow, 10, showFullMeasureDescription ? precaution.getDescription() : "");
 					}
+					//Supplerende bemærkninger goes in the last row of the group
+					if (!t.getRelatedPrecautions().isEmpty()) {
+						idx[0]++;
+						table.createRow();
+						lastRow = table.getRow(idx[0]);
+					}
+					setCellTextSmall(lastRow, 9, "Supplerende bemærkninger");
+					setCellTextSmall(lastRow, 10, t.getAdditionalMeasures());
 					//Merge all other columns than precautions
 					for(int i =0; i < 14; i++) {
 						if (i==9 || i ==10) {
@@ -404,6 +420,20 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         paragraph.setAlignment(ParagraphAlignment.CENTER);
         paragraph.setStyle(SMALL_TEXT);
         addTextRun(text, paragraph);
+    }
+
+    private static void setCellTextSmallCenteredMultiLine(final XWPFTableRow row, final int cellIdx, final String text) {
+        final XWPFTableCell cell = getCell(row, cellIdx);
+        final XWPFParagraph paragraph = cell.getParagraphs().get(0);
+        paragraph.setAlignment(ParagraphAlignment.CENTER);
+        paragraph.setStyle(SMALL_TEXT);
+        final String[] lines = text.split("\n");
+        for (int i = 0; i < lines.length; i++) {
+            final XWPFRun run = addTextRun(lines[i], paragraph);
+            if (i < lines.length - 1) {
+                run.addBreak();
+            }
+        }
     }
 
     private void addRiskExplanations(final XWPFDocument document, final XmlCursor cursor) {

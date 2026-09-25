@@ -80,6 +80,7 @@
                                         <thead>
                                         <tr>
                                             <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty() }">Navn</th>
+                                            <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty()}">Rolle</th>
                                             <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty() }">Ydelse</th>
                                             <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty() }">Tredjelandsoverførsel</th>
                                             <th style="width: 20%" th:if="${!assetRelationListDTOs.isEmpty() }">Acceptgrundlag</th>
@@ -90,6 +91,9 @@
                                         <tr th:each="asset : ${assetRelationListDTOs}">
                                             <td>
                                                 <a th:text="${asset?.assetName}" th:href="@{ '/assets/' + ${asset?.assetId}}"></a>
+                                            </td>
+                                            <td>
+                                                <a th:text="${primaryFor.contains(asset.assetId()) ? 'Primær' : 'Underleverandør'}"></a>
                                             </td>
                                             <td th:text="${asset?.service}"></td>
                                             <td th:text="${asset?.thirdCountryTransfer}"></td>
@@ -104,6 +108,7 @@
                                     </table>
                                 </div>
                             </div>
+                            <div th:replace="~{fragments/risks :: risksfragment(threatAssessments=${threatAssessments})}"></div>
                             <div class="row">
                                 <div class="card shadow-none col-md-4 col-sm-12">
                                     <div class="card-header toolbar">

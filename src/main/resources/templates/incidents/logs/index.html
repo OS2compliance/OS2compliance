@@ -34,33 +34,47 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div class="row mt-1">
-                                    <div class=" d-flex gap-2 col-lg-1 col-md-1 col-sm-2 tableOptionsContainer">
+                                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                                    <div class="d-flex gap-2 tableOptionsContainer">
                                         <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
                                     </div>
-                                    <div class="col-lg-3 col-md-4 col-sm-4">
-                                        <div class="input-group">
-                                            <label for="filterFrom" class="col-form-label" style="width: 40px">Fra</label>
-                                            <input id="filterFrom" type="text" class="form-control" name="filterFrom">
+                                    <div class="d-flex gap-2 flex-column">
+                                        <div class="input-group gap-2">
+                                            <label for="dateFieldSelect" class="col-form-label text-nowrap">Filtrer efter dato</label>
+                                            <select id="dateFieldSelect" class="form-control form-select w-auto">
+                                                <option value="CREATED">Oprettelsesdato</option>
+                                                <option value="UPDATED">Opdateringsdato</option>
+                                            </select>
+                                        </div>
+                                        <div class="input-group gap-2">
+                                            <label for="incidentSearch" class="col-form-label text-nowrap">Søg</label>
+                                            <input id="incidentSearch" type="text" class="form-control"
+                                                   name="incidentSearch" placeholder="Søg i alle felter">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2 flex-column">
+                                        <div class="input-group gap-2">
+                                            <label for="filterFrom" class="col-form-label">Fra</label>
+                                            <input id="filterFrom" type="text" class="form-control"
+                                                   name="filterFrom">
                                             <button id="filterFromBtn" class="btn btn-primary" type="button">
                                                 <i class="pli-calendar-4 fs-5"></i>
                                             </button>
                                         </div>
-                                    </div>
-                                    <div class="col-lg-3 col-md-4 col-sm-4">
-                                        <div class="input-group">
-                                            <label for="filterTo" class="col-form-label col-2" style="width: 40px">Til</label>
-                                            <input id="filterTo" type="text" class="form-control" name="filterTo">
+                                        <div class="input-group gap-2">
+                                            <label for="filterTo" class="col-form-label">Til</label>
+                                            <input id="filterTo" type="text" class="form-control"
+                                                   name="filterTo">
                                             <button id="filterToBtn" class="btn btn-primary" type="button">
                                                 <i class="pli-calendar-4 fs-5"></i>
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="col-lg-2 col-md-2 col-sm-2">
+                                    <div class="d-flex gap-2">
+                                        <button id="clearFiltersBtn" class="btn btn-outline-secondary" type="button">Ryd filtre</button>
                                         <button id="printReportBtn" sec:authorize="hasRole('ROLE_read_all')" class="btn btn-success" type="button" style="z-index: 2; position: relative">Print rapport</button>
                                         <a id="fetchExcelBtn" sec:authorize="hasRole('ROLE_read_all')" class="btn btn-success" type="button" style="z-index: 2; position: relative">Hent excel fil</a>
                                     </div>
-                                    <div class="col-lg-3 col-md-1"></div>
                                 </div>
 
                                 <div class="grid-scroll-wrapper">

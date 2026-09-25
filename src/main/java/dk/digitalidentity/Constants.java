@@ -26,6 +26,10 @@ public interface Constants {
     String ASSOCIATED_THREAT_ASSESSMENT_PROPERTY = "linked_threat";
     String ASSOCIATED_ASSET_DPIA_PROPERTY = "linked_dpia";
     String ASSOCIATED_INSPECTION_PROPERTY = "linked_asset";
+    String DBS_SUPERVISION_MODEL_IDENTIFIER_PREFIX = "supervision-model-dbs-123456";
+    // the scope section is rendered with rows taken from the asset, not from the DPIA template
+    String DPIA_SCOPE_SECTION_IDENTIFIER = "scope";
+    String DBS_TASK_NAME_MARKER = "- DBS tilsyn";
     ZoneId LOCAL_TZ_ID = ZoneId.of("Europe/Copenhagen");
     String SYSTEM_USERID = "System";
     String DATA_MIGRATION_VERSION_SETTING = "seed_version";
@@ -38,6 +42,7 @@ public interface Constants {
 
 	String RISK_ASSESSMENT_USE_RESIDUAL = "riskAssessmentUseResidual";
 	String RISK_MATRIX_USE_RESIDUAL = "riskMatrixUseResidual";
+	String RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION = "riskAssessmentShowFullMeasureDescription";
     String RISK_SCALE_PROPERTY_NAME = "riskScale";
     String LAST_NOTIFY_RUN_DAY_SETTING = "lastNotifyRunDay";
 	String ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS = "allowMultipleResponsibleOnTasks";
@@ -49,6 +54,10 @@ public interface Constants {
 	String CHOICE_MEASURE_VALUE_IDENTIFIERS = "relevance-yes,relevance-no,relevance-needs-clarification,relevance-not-relevant,operation-1,operation-2,operation-3,operation-4,cloud-1,cloud-2,cloud-3,cloud-4,cloud-5,frequency-1,frequency-2,frequency-3,frequency-4,duration-1,duration-2,duration-3,duration-4";
 
 	String DBS_OVERSIGHT_RECIPIENT_SETTING = "dbsOversightRecipient";
+
+	String ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL = "asset_sync_notification_recipient_email";
+	String ASSET_SYNC_NOTIFY_ON_CREATED = "asset_sync_notify_on_created";
+	String ASSET_SYNC_NOTIFY_ON_DEACTIVATED = "asset_sync_notify_on_deactivated";
 
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()

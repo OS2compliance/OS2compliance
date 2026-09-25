@@ -2,7 +2,11 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.IncidentDao;
 import dk.digitalidentity.dao.IncidentFieldDao;
-import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.dao.IncidentPredicates;
+import dk.digitalidentity.dao.grid.PredicateBuilder;
+import dk.digitalidentity.dao.grid.QueryPredicateBuilder;
+import dk.digitalidentity.model.dto.IncidentDateFilter;
+import dk.digitalidentity.model.dto.IncidentQuery;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
@@ -16,13 +20,9 @@ import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -146,12 +146,92 @@ public class IncidentService {
         return incidentDao.findAll(from, to, pageable);
     }
 
-    public Page<Incident> search(final String search, final LocalDateTime from, final LocalDateTime to, final Pageable page) {
-        return incidentDao.searchAll(search, from, to, page);
+    /**
+     * The date fields the incident log can filter on, in the order they appear on the form.
+     */
+    public List<IncidentField> getDateFields() {
+        return incidentFieldDao.findObligatoryFieldsByType(IncidentType.DATE);
+    }
+
+    /**
+     * Single entry point for the incident log: date range on a chosen date field, free text search and
+     * per-column filters, all optional and all AND'ed together.
+     */
+    public Page<Incident> findIncidents(final IncidentQuery query, final Pageable pageable) {
+        final List<PredicateBuilder<Incident>> predicates = new ArrayList<>();
+        predicates.add(IncidentPredicates.notDeleted());
+
+        final List<QueryPredicateBuilder<Incident>> queryPredicates = buildQueryPredicates(query);
+
+        return incidentDao.findAllWithColumnSearch(query.columnFilters(), pageable, Incident.class,
+            predicates, queryPredicates);
+    }
+
+    private List<QueryPredicateBuilder<Incident>> buildQueryPredicates(final IncidentQuery query) {
+        final List<QueryPredicateBuilder<Incident>> queryPredicates = new ArrayList<>();
+        queryPredicates.add(IncidentPredicates.dateWithin(resolveDateFilter(query.dateFilter()), query.from(), query.to()));
+        if (StringUtils.isNotBlank(query.search())) {
+            queryPredicates.add(IncidentPredicates.matchesAnywhere(query.search()));
+        }
+        if (!query.assetIds().isEmpty()) {
+            queryPredicates.add(IncidentPredicates.relatedToAssets(query.assetIds()));
+        }
+        filtersOnVisibleColumns(query.fieldFilters()).forEach((fieldId, value) ->
+            queryPredicates.add(IncidentPredicates.fieldMatches(fieldId, value)));
+        return queryPredicates;
+    }
+
+    /**
+     * Drops column filters naming a field that no longer exists, or that no longer appears as a column
+     * because an administrator cleared its overview name.
+     * <p>
+     * Such a filter matches nothing, and the column it belongs to is no longer on screen — the user
+     * would be left with an empty log and no filter box to clear it from. The filters are remembered in
+     * the browser, so this is reachable by ordinary use. A stale filter has to widen the result set,
+     * never narrow it to nothing.
+     */
+    private Map<Long, String> filtersOnVisibleColumns(final Map<Long, String> fieldFilters) {
+        if (fieldFilters.isEmpty()) {
+            return fieldFilters;
+        }
+        final Set<Long> visible = new HashSet<>();
+        incidentFieldDao.findAllById(fieldFilters.keySet())
+            .forEach(field -> {
+                if (StringUtils.isNotEmpty(field.getIndexColumnName())) {
+                    visible.add(field.getId());
+                }
+            });
+        return fieldFilters.entrySet().stream()
+            .filter(entry -> visible.contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    /**
+     * The chosen date field is remembered in the browser, so it can name a field that has since been
+     * deleted or changed type. Filtering on it would then quietly return nothing, because a field of
+     * another type never has an answer date — fall back to the creation date instead.
+     */
+    private IncidentDateFilter resolveDateFilter(final IncidentDateFilter dateFilter) {
+        if (dateFilter.target() != IncidentDateFilter.Target.FIELD) {
+            return dateFilter;
+        }
+        return incidentFieldDao.findById(dateFilter.fieldId())
+            .filter(field -> field.getIncidentType() == IncidentType.DATE)
+            .map(field -> dateFilter)
+            .orElse(IncidentDateFilter.DEFAULT);
     }
 
     public Incident save(final Incident incident) {
         return incidentDao.save(incident);
+    }
+
+    /** Flusher med det samme, så en samtidig indsendelse med samme form_token fejler her og ikke først ved commit. */
+    public Incident create(final Incident incident) {
+        return incidentDao.saveAndFlush(incident);
+    }
+
+    public Optional<Incident> findByFormToken(final String formToken) {
+        return incidentDao.findByFormToken(formToken);
     }
 
     /**
@@ -226,18 +306,30 @@ public class IncidentService {
             .build();
     }
 
-	// Helper method to get incidents and avoid duplicated code in export and list endpoints
-	public Page<Incident> getIncidents(@RequestParam(name = "search", required = false) String search, @DateTimeFormat(pattern = "dd/MM-yyyy") @RequestParam(name = "fromDate", required = false) LocalDate fromDateParam, @DateTimeFormat(pattern = "dd/MM-yyyy") @RequestParam(name = "toDate", required = false) LocalDate toDateParam, Pageable sortAndPage) {
-		final LocalDateTime fromDate = fromDateParam != null ? fromDateParam.atStartOfDay() : LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
-		final LocalDateTime toDate = toDateParam != null ? toDateParam.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0);
-
-		return StringUtils.isNotEmpty(search)
-				? search(search, fromDate, toDate, sortAndPage)
-				: listIncidents(fromDate, toDate, sortAndPage);
-	}
-
 	public List<Incident> getIncidentsMatching(Long incidentFieldId, LocalDateTime fromDate, LocalDateTime toDate) {
 		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(incidentFieldId, fromDate, toDate);
+	}
+
+	/**
+	 * Counts incidents related to any of the given assets in the last 12 months, built through the same
+	 * {@link IncidentQuery}/predicate path as {@link #findIncidents(IncidentQuery, Pageable)}, so a link
+	 * to the incident log carrying the same {@code from}/{@code to}/{@code assetIds} filters is
+	 * guaranteed to show exactly this many rows.
+	 */
+	public long countIncidentsForAssetsLastYear(final List<Long> assetIds) {
+		if (assetIds.isEmpty()) {
+			return 0;
+		}
+
+		final IncidentQuery query = new IncidentQuery(IncidentDateFilter.DEFAULT,
+			LocalDateTime.now().minusMonths(12).toLocalDate(), null, null, Map.of(), Map.of(), assetIds);
+
+		final List<PredicateBuilder<Incident>> predicates = List.of(
+			IncidentPredicates.notDeleted(),
+			IncidentPredicates.notDraft());
+		final List<QueryPredicateBuilder<Incident>> queryPredicates = buildQueryPredicates(query);
+
+		return incidentDao.countWithColumnSearch(Map.of(), Incident.class, predicates, queryPredicates);
 	}
 
 	public List<Incident> getByIds (List<Long> ids) {
@@ -252,7 +344,10 @@ public class IncidentService {
 		return (List<IncidentField>) incidentFieldDao.findAllById(ids);
 	}
 
+	/**
+	 * Used for statistics; drafts are excluded so they do not skew the numbers before they are finished.
+	 */
 	public List<Incident> findByFieldIdAndDateRange(Long incidentFieldId, LocalDateTime startDate, LocalDateTime endDate) {
-		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(incidentFieldId, startDate, endDate);
+		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBeforeAndDraftFalse(incidentFieldId, startDate, endDate);
 	}
 }

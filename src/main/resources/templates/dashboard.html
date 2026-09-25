@@ -57,8 +57,43 @@
                     </ul>
                     <div class="tab-content">
                         <div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel" aria-labelledby="task-tab">
-                            <div class="taskTableOptionsContainer d-flex gap-2">
-                                <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                <div class="taskTableOptionsContainer d-flex align-items-center gap-2">
+                                    <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                                </div>
+                                <div class="d-flex flex-wrap align-items-start gap-3 ms-auto">
+                                    <div class="d-flex gap-2 flex-column">
+                                        <div class="input-group gap-2">
+                                            <label for="taskDateFieldSelectDashboard" class="col-form-label text-nowrap">Filtrer efter dato</label>
+                                            <select id="taskDateFieldSelectDashboard" class="form-control form-select w-auto">
+                                                <option th:each="dateFilter : ${T(dk.digitalidentity.model.dto.TaskDateFilter).values()}"
+                                                        th:value="${dateFilter}" th:text="${dateFilter.message}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2 flex-column">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <label for="taskFilterFromDashboard" class="col-form-label">Fra</label>
+                                            <div class="input-group">
+                                                <input id="taskFilterFromDashboard" type="text" class="form-control"
+                                                       name="taskFilterFromDashboard">
+                                                <button id="taskFilterFromBtnDashboard" class="btn btn-primary" type="button">
+                                                    <i class="pli-calendar-4 fs-5"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <label for="taskFilterToDashboard" class="col-form-label">Til</label>
+                                            <div class="input-group">
+                                                <input id="taskFilterToDashboard" type="text" class="form-control"
+                                                       name="taskFilterToDashboard">
+                                                <button id="taskFilterToBtnDashboard" class="btn btn-primary" type="button">
+                                                    <i class="pli-calendar-4 fs-5"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div id="tasksDatatable"></div>
 
@@ -75,6 +110,25 @@
                                 <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.TaskRepetition).values()}"
                                         th:value="${option}" th:text="${option.message}"></option>
                             </select>
+
+                            <!-- Custom search selectors-->
+                            <select class="form-control form-select editField" data-trigger="" name="taskStatusSearchSelector" id="taskStatusSearchSelector" tabindex="-1" multiple hidden>
+                                <option th:text="'Alle'" th:value="${''}"></option>
+                                <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.TaskDeadlineStatus).values()}"
+                                        th:value="${option}"
+                                        th:text="${option.name() == 'FUTURE'} ? 'Ikke udført' : ${option.message}"></option>
+                            </select>
+                            <div th:replace="~{fragments/component/customSelector :: multiSelectDropdown('taskStatusSearchSelector', ~{::  #taskStatusDropdownItems})}">
+                                <ul id="taskStatusDropdownItems" class="dropdown-menu">
+                                    <li><label class="dropdown-item d-flex gap-2 align-items-center"><input type="checkbox" th:value="${''}"> Alle</label></li>
+                                    <li th:each="option : ${T(dk.digitalidentity.model.entity.enums.TaskDeadlineStatus).values()}">
+                                        <label class="dropdown-item d-flex gap-2 align-items-center ps-2">
+                                            <input type="checkbox" th:value="${option}">
+                                            <span th:text="${option.name() == 'FUTURE'} ? 'Ikke udført' : ${option.message}"></span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </div>
 
                         </div>
                         <div id="_dm-tabsAssets" class="tab-pane fade" role="tabpanel" aria-labelledby="assets-tab">

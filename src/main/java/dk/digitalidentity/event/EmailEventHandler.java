@@ -60,7 +60,7 @@ public class EmailEventHandler {
             final MimeMessage msg = new MimeMessage(session);
             msg.setFrom(new InternetAddress(configuration.getMail().getFrom(), configuration.getMail().getFromName()));
 
-            for (final String singleEmail : event.getEmail().split(";")) {
+            for (final String singleEmail : event.getEmail().split("[,;]")) {
                 final String trimmedEmail = singleEmail.trim();
                 if (!StringUtils.isEmpty(trimmedEmail)) {
                     msg.addRecipient(Message.RecipientType.TO, new InternetAddress(trimmedEmail));

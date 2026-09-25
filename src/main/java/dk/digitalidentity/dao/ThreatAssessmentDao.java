@@ -2,9 +2,9 @@ package dk.digitalidentity.dao;
 
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatCatalog;
+import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.service.tag.TagableRepository;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -30,6 +30,10 @@ public interface ThreatAssessmentDao extends TagableRepository<ThreatAssessment>
        )
        AND ta.createdAt >= :startDate
        AND ta.createdAt <= :endDate
+       AND (:criticalitiesActive = false OR a.criticality IN :criticalities)
+       AND (:sociallyCriticalOnly = false OR a.sociallyCritical = true)
+       AND (:departmentsActive = false OR EXISTS (
+           SELECT dep FROM a.departments dep WHERE dep.uuid IN :departmentUuids))
        AND ta.createdAt = (
            SELECT MAX(ta2.createdAt)
            FROM Relation r2, ThreatAssessment ta2
@@ -44,7 +48,31 @@ public interface ThreatAssessmentDao extends TagableRepository<ThreatAssessment>
            AND ta2.createdAt <= :endDate
        )
        """)
-	Set<ThreatAssessment> findLatestForAllAssetsBetweenDates(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+	Set<ThreatAssessment> findLatestForAllAssetsBetweenDates(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate,
+			@Param("criticalitiesActive") boolean criticalitiesActive, @Param("criticalities") Collection<Criticality> criticalities,
+			@Param("sociallyCriticalOnly") boolean sociallyCriticalOnly,
+			@Param("departmentsActive") boolean departmentsActive, @Param("departmentUuids") Collection<String> departmentUuids);
+
+	@Query("""
+       SELECT DISTINCT ta FROM Asset a, Relation r, ThreatAssessment ta
+       WHERE (
+           (r.relationAId = a.id AND r.relationAType = 'ASSET' AND
+            r.relationBType = 'THREAT_ASSESSMENT' AND ta.id = r.relationBId)
+           OR
+           (r.relationBId = a.id AND r.relationBType = 'ASSET' AND
+            r.relationAType = 'THREAT_ASSESSMENT' AND ta.id = r.relationAId)
+       )
+       AND ta.createdAt >= :startDate
+       AND ta.createdAt <= :endDate
+       AND (:criticalitiesActive = false OR a.criticality IN :criticalities)
+       AND (:sociallyCriticalOnly = false OR a.sociallyCritical = true)
+       AND (:departmentsActive = false OR EXISTS (
+           SELECT dep FROM a.departments dep WHERE dep.uuid IN :departmentUuids))
+       """)
+	Set<ThreatAssessment> findAllForAssetsBetweenDatesFiltered(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate,
+			@Param("criticalitiesActive") boolean criticalitiesActive, @Param("criticalities") Collection<Criticality> criticalities,
+			@Param("sociallyCriticalOnly") boolean sociallyCriticalOnly,
+			@Param("departmentsActive") boolean departmentsActive, @Param("departmentUuids") Collection<String> departmentUuids);
 
 	@Query("""
        SELECT ta FROM Register r, Relation rel, ThreatAssessment ta

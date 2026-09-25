@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
@@ -44,6 +45,10 @@ public class DocumentEditFormDTO {
 
 	@NotNull
 	private User responsibleUser;
+
+	private OrganisationUnit responsibleOu;
+
+	private OrganisationUnit department;
 
 	@NotNull
 	private boolean includeInYearWheel;

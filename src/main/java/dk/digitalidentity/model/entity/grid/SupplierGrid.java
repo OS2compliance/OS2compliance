@@ -47,11 +47,20 @@ public class SupplierGrid {
 	private String kitosUuid;
 
 	@Column
+	private int primaryAssetCount;
+
+	@Column
+	private int secondaryAssetCount;
+
+	@Column
 	private String tagNames;
 
 	@Column
 	private String tagIds;
 
 	@Column String responsibleUuid;
+
+	@Column
+	private String country;
 
 }

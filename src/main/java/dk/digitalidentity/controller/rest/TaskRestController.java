@@ -1,6 +1,5 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.mapping.TaskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SubTaskDTO;
@@ -60,8 +59,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.service.FilterService.buildPageable;
-import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 import static dk.digitalidentity.util.LinkHelper.linkify;
 
 @Slf4j
@@ -71,7 +68,6 @@ import static dk.digitalidentity.util.LinkHelper.linkify;
 @RequiredArgsConstructor
 public class TaskRestController {
     private final UserService userService;
-    private final TaskGridDao taskGridDao;
     private final TaskMapper mapper;
 	private final SecurityUserService securityUserService;
 	private final TaskService taskService;
@@ -95,7 +91,7 @@ public class TaskRestController {
 	) {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, page, limit, user);
+		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, page, limit, user, false);
 
 		Set<Long> taskIds = tasks.getContent().stream().map(TaskGrid::getId).collect(Collectors.toSet());
 		Map<Long, Tag> tagsById = taskService.findTagsByEntityIds(taskIds).stream()
@@ -119,12 +115,7 @@ public class TaskRestController {
         final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		log.info("Listing tasks for user {} with principal id {}", user.getUuid(), SecurityUtil.getPrincipalUuid());
 
-        Page<TaskGrid> tasks = taskGridDao.findAllWithAssignedUser(
-				validateSearchFilters(filters, TaskGrid.class),
-				user,
-				buildPageable(page, limit, sortColumn, sortDirection),
-				TaskGrid.class
-		);
+        Page<TaskGrid> tasks = taskService.getTasksForUser(sortColumn, sortDirection, filters, page, limit, user);
 
 		Map<Long, Tag> tagsById = tagService.findAll().stream()
 				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
@@ -173,6 +164,11 @@ public class TaskRestController {
 
 		if (task == null) {
 			log.debug("Could not create task");
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		if (taskService.defaultStartDateAndCheckAfterDeadline(task)) {
+			log.debug("Start date is after deadline");
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
@@ -254,14 +250,16 @@ public class TaskRestController {
 	@RequireReadOwnerOnly
 	public List<EntityListItemDTO> getEntitiesForExport(@RequestBody EntityListRequest request) {
 		User user = securityUserService.getCurrentUserOrThrow();
+		final Map<String, String> filters = request.getFilters();
 
 		Page<TaskGrid> tasks = taskService.getTasks(
 				null,
 				"ASC",
-				request.getFilters(),
+				filters,
 				0,
 				Integer.MAX_VALUE,
-				user);
+				user,
+				false);
 
 		return excelExportHelperService.toEntityListItems(
 				tasks.getContent(),

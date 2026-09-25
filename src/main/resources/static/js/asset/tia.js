@@ -1,5 +1,9 @@
+import { debounce } from "../debounce-service.js";
+import { showConfirm } from "../dialog-service.js";
+
 let bsCollapse;
 let tiaChoiceElements = [];
+const SAVE_DEBOUNCE_MS = 800;
 
 function initRegisteredCategoriesChoices(values) {
     const select = document.getElementById('tia.registeredCategories');
@@ -34,61 +38,72 @@ function handleSendDataToOtherSuppliers() {
     }
 }
 
-export function setTIAEditState(enabled) {
-    const rootElement = document.getElementById('tiaTab');
+async function saveTia() {
+    const form = document.getElementById('tiaForm');
+    if (!form) {
+        return;
+    }
 
-    if (enabled) {
-        rootElement.querySelectorAll('.editField').forEach(elem => {
-            elem.disabled = false;
-
-            if (elem.tagName === "A") {
-                elem.hidden = true;
-                if (elem.nextElementSibling) {
-                    elem.nextElementSibling.hidden = false;
-                }
-            }
-
-            if (elem.classList.contains("datepicker")) {
-                elem.parentElement.hidden = false;
-                if (elem.parentElement.nextElementSibling) {
-                    elem.parentElement.nextElementSibling.hidden = true;
-                }
-            }
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form)
         });
-
-        tiaChoiceElements.forEach((e) => e.enable());
-
-        if (changeableAsset) {
-            document.getElementById('saveTIABtn').hidden = false;
-            document.getElementById('editTIABtn').hidden = true;
-            document.getElementById('cancelTIABtn').hidden = false;
+        if (response.ok) {
+            toastService.info('Info', 'Dine ændringer er gemt');
+            return true;
         }
-    } else {
-        rootElement.querySelectorAll('.editField').forEach(elem => {
-            elem.disabled = true;
+        toastService.error('Kunne ikke gemme');
+    } catch {
+        toastService.error('Kunne ikke gemme');
+    }
+    return false;
+}
 
-            if (elem.tagName === "A") {
-                elem.hidden = false;
-                elem.nextElementSibling.hidden = true;
-            }
-
-            if (elem.classList.contains("datepicker")) {
-                if (elem.value == null || elem.value === "") {
-                    elem.parentElement.hidden = true;
-                    elem.parentElement.nextElementSibling.hidden = false;
-                }
-            }
+async function postAcceptance(url, params) {
+    try {
+        const token = document.getElementsByName('_csrf')[0]?.getAttribute('content');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+            },
+            body: new URLSearchParams(params),
         });
+        return response.ok;
+    } catch {
+        return false;
+    }
+}
 
-        tiaChoiceElements.forEach((e) => e.disable());
+function setTiaLocked(locked) {
+    document.getElementById('tiaView').querySelectorAll('select, textarea, input:not([type="hidden"])').forEach(e => {
+        e.disabled = locked;
+    });
+    tiaChoiceElements.forEach(e => locked ? e.disable() : e.enable());
 
-        if (changeableAsset) {
-            document.getElementById('saveTIABtn').hidden = true;
-            document.getElementById('editTIABtn').hidden = false;
-            document.getElementById('cancelTIABtn').hidden = true;
-        }
+    const approvalCard = document.getElementById('tiaApprovalCard');
+    const approvalEdit = document.getElementById('tiaApprovalEdit');
+    const approvalLocked = document.getElementById('tiaApprovalLocked');
+    approvalCard?.classList.toggle('tia-approval-locked', locked);
+    if (approvalEdit) {
+        approvalEdit.hidden = locked;
+    }
+    if (approvalLocked) {
+        approvalLocked.hidden = !locked;
+    }
 
-        document.getElementById("tiaForm").reset();
+    const tiaLinkEditBtn = document.getElementById('tiaLinkEditBtn');
+    if (tiaLinkEditBtn) {
+        tiaLinkEditBtn.disabled = locked;
+    }
+
+    // The opt-out toggle lives outside #tiaView - hide it while locked so an
+    // accepted TIA cannot be deselected.
+    const optOutToggle = document.getElementById('tiaOptOutToggle');
+    if (optOutToggle) {
+        optOutToggle.hidden = locked;
     }
 }
 
@@ -131,7 +146,67 @@ export function initTia() {
     initInformationTypeChoices(informationChoices1.concat(informationChoices2));
 
     handleSendDataToOtherSuppliers();
-    setTIAEditState(false);
+
+    if (!changeableAsset) {
+        document.getElementById('tiaTab').querySelectorAll('select, textarea, input:not([type="hidden"])').forEach(e => { e.disabled = true; });
+        tiaChoiceElements.forEach(e => e.disable());
+        return;
+    }
+
+    const form = document.getElementById('tiaForm');
+    const debouncedSave = debounce(() => saveTia(), SAVE_DEBOUNCE_MS);
+
+    for (const elem of form.elements) {
+        // Elements marked with 'tia-no-autosave' are not part of the debounced TIA save
+        if (elem.classList.contains('tia-no-autosave')) {
+            continue;
+        }
+
+        if (elem.tagName === 'TEXTAREA') {
+            elem.addEventListener('input', debouncedSave);
+        } else {
+            elem.addEventListener('change', () => saveTia());
+        }
+    }
+
+    const assetId = form.querySelector('input[name="id"]').value;
+
+    const acceptBtn = document.getElementById('acceptBtn');
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', async () => {
+            const comment = form.querySelector('[name="tia.acceptedComment"]')?.value ?? '';
+            const ok = await postAcceptance('/rest/assets/tia/accept', { assetId, comment });
+            if (ok) {
+                location.reload();
+            } else {
+                toastService.error('Kunne ikke godkende');
+            }
+        });
+    }
+
+    const removeAcceptanceBtn = document.getElementById('removeAcceptanceBtn');
+    if (removeAcceptanceBtn) {
+        removeAcceptanceBtn.addEventListener('click', async () => {
+            const confirmed = await showConfirm({
+                text: 'Er du sikker på, at du vil fjerne godkendelsen?',
+                icon: 'warning',
+            });
+            if (!confirmed) {
+                return;
+            }
+
+            const ok = await postAcceptance('/rest/assets/tia/unaccept', { assetId });
+            if (ok) {
+                location.reload();
+            } else {
+                toastService.error('Kunne ikke fjerne godkendelsen');
+            }
+        });
+    }
+
+    if (tiaAccepted) {
+        setTiaLocked(true);
+    }
 
     document.getElementById('tia.forwardInformationToOtherSuppliers')
         .addEventListener('change', handleSendDataToOtherSuppliers);
@@ -145,16 +220,6 @@ export function initTia() {
         .addEventListener('change', function () {
             assetDetailsService.updateTiaOptOutReason(this);
         });
-
-    const editTIABtn = document.getElementById('editTIABtn');
-    const cancelTIABtn = document.getElementById('cancelTIABtn');
-
-    if (editTIABtn) {
-        editTIABtn.addEventListener('click', () => setTIAEditState(true));
-    }
-    if (cancelTIABtn) {
-        cancelTIABtn.addEventListener('click', () => setTIAEditState(false));
-    }
 
     const tiaLinkEditBtn = document.getElementById('tiaLinkEditBtn');
     const tiaLinkSaveBtn = document.getElementById('tiaLinkSaveBtn');

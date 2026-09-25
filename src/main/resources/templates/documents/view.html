@@ -50,9 +50,9 @@
                              aria-labelledby="opgave-tab">
                             <form id="editForm" action="#" th:action="@{/documents/edit}" th:object="${documentEditForm}"
                                   method="post" class="needs-validation" novalidate>
-                                <div class="row mb-3">
-                                    <button id="saveEditBtn" th:if="${changeableDocument}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button id="editBtn" th:if="${changeableDocument}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right"  th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger</button>
+                                <div class="mb-3">
+                                    <button id="saveEditBtn" th:if="${changeableDocument}" type="submit" class="btn btn-secondary btn-lg" hidden>Gem</button>
+                                    <button id="editBtn" th:if="${changeableDocument}" type="button" class="btn btn-secondary btn-lg"  th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger</button>
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">
@@ -160,6 +160,32 @@
                                                     selected></option>
                                         </select>
                                         <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="ouSelect" class="col-sm-2 col-form-label">Afdeling</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select choices__input editField"
+                                                th:field="*{responsibleOu}" data-trigger="" name="responsibleOu"
+                                                id="ouSelect" tabindex="-1" hidden>
+                                            <option th:if="*{responsibleOu != null}"
+                                                    th:value="*{responsibleOu?.uuid}"
+                                                    th:text="*{responsibleOu?.name}"
+                                                    selected></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="departmentOuSelect" class="col-sm-2 col-form-label">Forvaltning</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select choices__input editField"
+                                                th:field="*{department}" data-trigger="" name="department"
+                                                id="departmentOuSelect" tabindex="-1" hidden>
+                                            <option th:if="*{department != null}"
+                                                    th:value="*{department?.uuid}"
+                                                    th:text="*{department?.name}"
+                                                    selected></option>
+                                        </select>
                                     </div>
                                 </div>
                             </form>

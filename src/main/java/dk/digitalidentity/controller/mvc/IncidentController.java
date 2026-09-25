@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,6 +25,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Controller
@@ -116,6 +120,7 @@ public class IncidentController {
             model.addAttribute("formTitle", "Ny hændelse");
             model.addAttribute("formId", "createForm");
             model.addAttribute("incident", incident);
+            model.addAttribute("formToken", UUID.randomUUID().toString());
         }
         return "incidents/logs/form";
     }
@@ -139,8 +144,9 @@ public class IncidentController {
 
 	@RequireCreateAll
     @PostMapping("log")
-    public String createOrUpdateIncident(@ModelAttribute final Incident incident) {
-		if (incident.getResponses().stream().anyMatch(r ->
+    public String createOrUpdateIncident(@ModelAttribute final Incident incident,
+                                         @RequestParam(name = "formToken", required = false) final String formToken) {
+		if (!incident.isDraft() && incident.getResponses().stream().anyMatch(r ->
 				r.getIncidentField().isObligatoryAnswer() && (
 						(r.getAnswerText() == null || r.getAnswerText().isEmpty())
 								&& r.getAnswerDate() == null
@@ -152,21 +158,45 @@ public class IncidentController {
 		}
 
         if (incident.getId() != null) {
-            final Incident existingIncident = incidentService.findById(incident.getId()).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            existingIncident.setName(incident.getName());
-            existingIncident.getResponses().clear();
-            existingIncident.getResponses().addAll(incident.getResponses());
-            existingIncident.getResponses()
-                .forEach(r -> r.setIncident(existingIncident));
-            incidentService.ensureRelations(incident);
-            return "redirect:/incidents/logs/" + incident.getId();
-        } else {
-            incident.getResponses()
-                .forEach(r -> r.setIncident(incident));
-            final Incident saved = incidentService.save(incident);
-            incidentService.ensureRelations(saved);
-            return "redirect:/incidents/logs/" + saved.getId();
+            return applyToExisting(incident, loadIncident(incident.getId()));
         }
+        // A token whose incident has since been deleted belongs to a form that may be saved again
+        final Optional<Incident> alreadyCreated = findByFormToken(formToken);
+        if (alreadyCreated.isPresent()) {
+            return applyToExisting(incident, alreadyCreated.get());
+        }
+        incident.setFormToken(formToken);
+        incident.getResponses()
+            .forEach(r -> r.setIncident(incident));
+        final Incident saved;
+        try {
+            saved = incidentService.create(incident);
+        } catch (final DataIntegrityViolationException e) {
+            // A request running at the same time won the race for the token and created the incident
+            return applyToExisting(incident, findByFormToken(formToken).orElseThrow(() -> e));
+        }
+        incidentService.ensureRelations(saved);
+        return "redirect:/incidents/logs/" + saved.getId();
+    }
+
+    /** Writes the posted form onto an incident that already exists. */
+    private String applyToExisting(final Incident posted, final Incident existing) {
+        existing.setName(posted.getName());
+        existing.setDraft(posted.isDraft());
+        existing.getResponses().clear();
+        existing.getResponses().addAll(posted.getResponses());
+        existing.getResponses()
+            .forEach(r -> r.setIncident(existing));
+        incidentService.ensureRelations(existing);
+        return "redirect:/incidents/logs/" + existing.getId();
+    }
+
+    private Incident loadIncident(final Long incidentId) {
+        return incidentService.findById(incidentId).orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    private Optional<Incident> findByFormToken(final String formToken) {
+        return formToken == null ? Optional.empty() : incidentService.findByFormToken(formToken);
     }
 }

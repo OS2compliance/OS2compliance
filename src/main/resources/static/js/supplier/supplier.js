@@ -5,6 +5,12 @@ import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 let editDialog;
 
 document.addEventListener("DOMContentLoaded", async function (event) {
+    initForm();
+    initGrid();
+    initAllowedActions();
+});
+
+async function initForm() {
     const form = document.getElementById('formDialog')
     if (form) {
         await fetch(formUrl).then(response => response.text()
@@ -14,16 +20,7 @@ document.addEventListener("DOMContentLoaded", async function (event) {
             }))
             .catch(error => toastService.error(error));
     }
-
-    initGrid()
-
-    initAllowedActions()
-});
-
-const updateUrl = (prev, query) => {
-    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-};
-
+}
 
 function deleteClicked(supplierId, name) {
     Swal.fire({
@@ -38,7 +35,7 @@ function deleteClicked(supplierId, name) {
         if (result.isConfirmed) {
             fetch(`${deleteUrl}${supplierId}`, {method: 'DELETE', headers: {'X-CSRF-TOKEN': token}})
                 .then(() => {
-                    window.location.reload();
+                    location.reload();
                 });
         }
     })
@@ -157,6 +154,26 @@ function initGrid() {
                 hidden: true
             },
             {
+                id: 'land',
+                name: "Land",
+                searchable: {
+                    searchKey: 'country',
+                    sortKey: 'country'
+                },
+            },
+            {
+                name: "Primære aktiver",
+                searchable: {
+                    sortKey: 'primaryAssetCount'
+                },
+            },
+            {
+                name: "Sekundære aktiver",
+                searchable: {
+                    sortKey: 'secondaryAssetCount'
+                },
+            },
+            {
                 name: "Tags",
                 searchable: {
                     searchKey: 'tagNames',
@@ -186,7 +203,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(supplier =>
-                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.tags, supplier.allowedActions]
+                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.country, supplier.primaryAssetCount, supplier.secondaryAssetCount, supplier.tags, supplier.allowedActions]
             ),
             total: data => data.totalCount
         },
@@ -217,6 +234,6 @@ function initGrid() {
         datatableId,
         grid,
         ['navn', 'allowedActions'],
-        ['navn', 'allowedActions','antalLøsninger', 'opdateret','status' ],
+        ['navn', 'allowedActions', 'antalLøsninger', 'opdateret', 'status'],
         ['id', 'kitosUuid'])
 }

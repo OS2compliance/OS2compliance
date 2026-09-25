@@ -1,0 +1,2 @@
+ALTER TABLE tasks ADD COLUMN in_progress BOOLEAN DEFAULT FALSE;
+ALTER TABLE tasks ADD COLUMN in_progress_note TEXT;

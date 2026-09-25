@@ -52,7 +52,7 @@ public class ThreatAssessmentResponseOld {
     private String problem;
 
     @Column
-    private String existingMeasures;
+    private String additionalMeasures;
 
     @Column
     @Enumerated(EnumType.STRING)

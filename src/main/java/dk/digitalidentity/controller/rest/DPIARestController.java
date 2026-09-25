@@ -1,7 +1,6 @@
 package dk.digitalidentity.controller.rest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import dk.digitalidentity.controller.rest.Admin.MailLogRestController;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.dto.DPIAExportDTO;
@@ -22,7 +21,6 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.EmailTemplate;
-import dk.digitalidentity.model.entity.MailLog;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.Tag;
@@ -33,7 +31,6 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.DPIAGrid;
-import dk.digitalidentity.model.entity.grid.MailLogGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -97,7 +94,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
 @Slf4j
 @RestController
@@ -129,7 +125,7 @@ public class DPIARestController {
 			String responsibleOUName,
 			LocalDate userUpdatedDate,
 			int taskCount,
-			ThreatAssessmentReportApprovalStatus status,
+			String reportApprovalStatus,
 			DPIAScreeningConclusion screeningConclusion,
 			Boolean isExternal,
 			List<TagDTO> tags,
@@ -242,10 +238,10 @@ public class DPIARestController {
     @PostMapping("create")
     public ResponseEntity<CreateDPIAResponse> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
 
-        final List<Asset> assets = assetService.findAllById(createDPIAFormDTO.assetIds);
-		if (assets.isEmpty()) {throw new IllegalArgumentException("Must choose at least one asset");}
+        final List<Asset> assets = createDPIAFormDTO.assetIds == null ? new ArrayList<>() : new ArrayList<>(assetService.findAllById(createDPIAFormDTO.assetIds));
 
-		if (!assetService.isEditable(assets)) {
+		// uden aktiver er der intet aktiv-ejerskab at tjekke, og adgangen styres alene af @RequireCreateAll
+		if (!assets.isEmpty() && !assetService.isEditable(assets)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -259,8 +255,7 @@ public class DPIARestController {
 	@RequireCreateAll
 	@PostMapping("{dpiaId}/edit")
 	public ResponseEntity<HttpStatus> createExternalDpia(@PathVariable Long dpiaId,  @RequestBody final EditDPIADTO editDPIADTO) {
-		List<Asset> assets	= assetService.findAllById(editDPIADTO.assetIds);
-		if (assets.isEmpty()) {throw new IllegalArgumentException("Must choose at least one asset");}
+		List<Asset> assets	= editDPIADTO.assetIds == null ? new ArrayList<>() : new ArrayList<>(assetService.findAllById(editDPIADTO.assetIds));
 
 		DPIA dpia = dpiaService.find(dpiaId);
 
@@ -288,25 +283,18 @@ public class DPIARestController {
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalDPIADTO createExternalDPIADTO) {
 
-        List<Asset> assets;
-        DPIA dpia = null;
-        if (!createExternalDPIADTO.assetIds.isEmpty()) {
-            assets = assetService.findAllById(createExternalDPIADTO.assetIds);
-			if (assets.isEmpty()) {throw new IllegalArgumentException("Must choose at least one asset");}
-        } else {
-            dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
-            assets = dpia.getAssets();
-        }
+        DPIA dpia = createExternalDPIADTO.dpiaId != null ? dpiaService.find(createExternalDPIADTO.dpiaId) : null;
+        final List<Asset> assets = createExternalDPIADTO.assetIds != null
+                ? new ArrayList<>(assetService.findAllById(createExternalDPIADTO.assetIds))
+                : (dpia != null ? dpia.getAssets() : new ArrayList<>());
 
-		if (assetService.isEditable(assets)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
-
-        if (createExternalDPIADTO.dpiaId != null) {
+        if (dpia != null) {
 			//Update
-            if (dpia == null) {
-                dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
-            }
+			// ved opdatering ligger ejerskabet på konsekvensanalysen, ikke på de aktiver der sendes med
+			if (!dpiaService.isEditable(dpia)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+            dpia.setAssets(assets);
             dpia.setExternalLink(createExternalDPIADTO.link);
 			dpia.setUserUpdatedDate(createExternalDPIADTO.userUpdatedDate);
 			if (createExternalDPIADTO.responsibleUserUuid != null) {
@@ -323,6 +311,10 @@ public class DPIARestController {
             dpiaService.save(dpia);
         } else {
 			//Create
+			// uden aktiver er der intet aktiv-ejerskab at tjekke, og adgangen styres alene af @RequireCreateAll
+			if (!assets.isEmpty() && !assetService.isEditable(assets)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
             dpiaService.createExternal(assets,createExternalDPIADTO.link, createExternalDPIADTO.title, createExternalDPIADTO.userUpdatedDate, createExternalDPIADTO.responsibleUserUuid, createExternalDPIADTO.responsibleOuUuid);
         }
 
@@ -551,7 +543,7 @@ public class DPIARestController {
 									dpia.getResponsibleOuName(),
 									dpia.getUserUpdatedDate(),
 									dpia.getTaskCount(),
-									dpia.getReportApprovalStatus(),
+									dpia.getReportApprovalStatus() != null ? dpia.getReportApprovalStatus().getMessage() : "",
 									dpia.getScreeningConclusion(),
 									dpia.isExternal(),
 									TagService.toTagDTO(dpia.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(),
@@ -663,7 +655,7 @@ public class DPIARestController {
 				.max(Comparator.comparingLong(DPIAReport::getId))
 				.map(report -> report.getDpiaReportApprovalStatus() != null
 						? report.getDpiaReportApprovalStatus().getMessage()
-						: "")
-				.orElse("");
+						: ThreatAssessmentReportApprovalStatus.NOT_SENT.getMessage())
+				.orElse(ThreatAssessmentReportApprovalStatus.NOT_SENT.getMessage());
 	}
 }

@@ -59,7 +59,7 @@ public class ThreatAssessmentResponse extends Relatable {
     private String problem;
 
     @Column
-    private String existingMeasures;
+    private String additionalMeasures;
 
     @Column
     @Enumerated(EnumType.STRING)

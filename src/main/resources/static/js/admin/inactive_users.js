@@ -4,32 +4,38 @@ let transferToChoice, transferFromChoice, transferFromSelect, transferToSelect, 
 
 const token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
-document.addEventListener("DOMContentLoaded", function(event) {
-    pageLoaded()
-});
+const defaultClassName = {
+    table: 'table table-striped',
+    search: "form-control",
+    header: "d-flex justify-content-end"
+};
 
-// Exposed for inline onclick handlers in inactive_users.html and the grid action button below.
-// Required because this file is loaded as type="module", so top-level functions are not on window.
-window.transferResponsibility = transferResponsibility;
-window.initModalWithDefaultTransferFrom = initModalWithDefaultTransferFrom;
+document.addEventListener("DOMContentLoaded", function(event) {
+    pageLoaded();
+    buttonHandler();
+});
 
 function transferResponsibility() {
     let transferFrom = transferFromSelect.value;
     let transferTo = transferToSelect.value;
 
-    let data = {
-                 "transferFrom": transferFrom,
-                 "transferTo": transferTo
-               };
+    let relatableIds = Array.from(document.querySelectorAll('#entityTable .entity-checkbox:checked'))
+        .map(checkbox => Number(checkbox.dataset.id));
 
-    postData(`/rest/admin/transferresponsibility`, data).then((response) => {
+    let data = {
+        "transferFrom": transferFrom,
+        "transferTo": transferTo,
+        "relatableIds": relatableIds
+    };
+
+    postData(`/rest/admin/transfer/responsibilities`, data).then((response) => {
         if (!response.ok) {
             throw new Error(`${response.status} ${response.statusText}`);
         }
         toastService.info("Ansvaret er overført");
         document.querySelector('#transferResponsibilityModal .btn-close').click();
         setTimeout(() => {
-            window.location.reload();
+            location.reload();
         }, 1000);
     }).catch(error => {toastService.error(error)});
 }
@@ -45,7 +51,120 @@ function initModalWithDefaultTransferFrom(elem) {
     var transferResponsibilityBootstrapModal = new bootstrap.Modal(transferResponsibilityModal);
     transferFromChoice.disable();
 
+    updateEntityListForTransferFrom(uuid);
+
     transferResponsibilityBootstrapModal.show();
+}
+
+// Fetches everything the chosen transferFrom user is actually responsible for and rebuilds the checkbox list
+function updateEntityListForTransferFrom(uuid) {
+    if (!uuid) {
+        buildEntityList([]);
+        return;
+    }
+
+    fetch(`/rest/admin/responsibilities/${uuid}`)
+        .then(response => response.json())
+        .then(items => buildEntityList(items))
+        .catch(error => toastService.error(error));
+}
+
+// Renders one collapsible group per entity type, with one checkbox per responsibility. All checked by default.
+function buildEntityList(items) {
+    const container = document.getElementById('entityTable');
+    container.replaceChildren();
+
+    if (!items.length) {
+        const empty = document.createElement('p');
+        empty.className = 'text-muted mb-0';
+        empty.textContent = 'Brugeren er ikke ansvarlig for noget';
+        container.appendChild(empty);
+        updateSelectedEntityCount();
+        return;
+    }
+
+    const groups = new Map();
+    items.forEach(item => {
+        if (!groups.has(item.type)) {
+            groups.set(item.type, []);
+        }
+        groups.get(item.type).push(item);
+    });
+
+    let groupIndex = 0;
+    groups.forEach((groupItems) => {
+        groupIndex++;
+        const groupId = `entityGroup${groupIndex}`;
+
+        const groupWrapper = document.createElement('div');
+        groupWrapper.className = 'mb-2';
+
+        const groupToggle = document.createElement('a');
+        groupToggle.className = 'd-block fw-bold text-decoration-none';
+        groupToggle.href = `#${groupId}`;
+        groupToggle.dataset.bsToggle = 'collapse';
+        groupToggle.setAttribute('role', 'button');
+        groupToggle.setAttribute('aria-expanded', 'true');
+        groupToggle.setAttribute('aria-controls', groupId);
+        groupToggle.textContent = `${groupItems[0].typeMessage} (${groupItems.length})`;
+        groupWrapper.appendChild(groupToggle);
+
+        const groupBody = document.createElement('div');
+        groupBody.className = 'collapse show ps-3';
+        groupBody.id = groupId;
+
+        groupItems.forEach(item => {
+            const checkboxId = `entity-${item.type}-${item.id}`;
+
+            const formCheck = document.createElement('div');
+            formCheck.className = 'form-check';
+
+            const checkbox = document.createElement('input');
+            checkbox.className = 'form-check-input entity-checkbox';
+            checkbox.type = 'checkbox';
+            checkbox.id = checkboxId;
+            checkbox.dataset.id = item.id;
+            checkbox.checked = true;
+
+            const label = document.createElement('label');
+            label.className = 'form-check-label';
+            label.htmlFor = checkboxId;
+            label.textContent = item.name;
+
+            formCheck.append(checkbox, label);
+            groupBody.appendChild(formCheck);
+        });
+
+        groupWrapper.appendChild(groupBody);
+        container.appendChild(groupWrapper);
+    });
+
+    updateSelectedEntityCount();
+}
+
+function setAllEntitiesChecked(checked) {
+    document.querySelectorAll('#entityTable .entity-checkbox').forEach(checkbox => checkbox.checked = checked);
+    updateSelectedEntityCount();
+}
+
+function updateSelectedEntityCount() {
+    const total = document.querySelectorAll('#entityTable .entity-checkbox').length;
+    const checked = document.querySelectorAll('#entityTable .entity-checkbox:checked').length;
+
+    const countLabel = document.getElementById('selectedEntityCount');
+    if (countLabel) {
+        countLabel.textContent = `${checked} af ${total} valgt`;
+    }
+
+    const transferButtonCount = document.getElementById('transferButtonCount');
+    if (transferButtonCount) {
+        transferButtonCount.textContent = checked;
+    }
+
+    const toggleAllButton = document.getElementById('toggleAllEntities');
+    if (toggleAllButton) {
+        toggleAllButton.textContent = checked === total && total > 0 ? 'Fravælg alle' : 'Vælg alle';
+    }
 }
 
 function pageLoaded() {
@@ -53,6 +172,7 @@ function pageLoaded() {
     transferFromSelect = document.getElementById('transferFrom');
     if(transferFromSelect !== null) {
         transferFromChoice = choiceService.initUserSelect('transferFrom', false);
+        transferFromSelect.addEventListener('change', (event) => updateEntityListForTransferFrom(event.detail.value));
     }
     transferToSelect = document.getElementById('transferTo');
     if(transferToSelect !== null) {
@@ -65,12 +185,6 @@ function pageLoaded() {
         transferToChoice.removeActiveItems();
         transferFromChoice.enable();
     });
-
-    const defaultClassName = {
-        table: 'table table-striped',
-        search: "form-control",
-        header: "d-flex justify-content-end"
-    };
 
     new gridjs.Grid({
         className: defaultClassName,
@@ -143,7 +257,7 @@ function pageLoaded() {
                 formatter: (cell, row) => {
                     const uuid = row.cells[0]['data'];
                     const name = row.cells[1]['data'];
-                    const transferButton = `<button type="button" title="Overfør ansvar" class="btn btn-icon btn-xs me-1" data-name="${name}" data-uuid="${uuid}" onclick="initModalWithDefaultTransferFrom(this)"><i class="ti-angle-double-right fs-5"></i></button>`;
+                    const transferButton = `<button type="button" title="Overfør ansvar" class="btn btn-icon btn-xs me-1 modalInitButton" data-name="${name}" data-uuid="${uuid}"><i class="ti-angle-double-right fs-5"></i></button>`;
                     return gridjs.html(transferButton);
                 }
             }
@@ -173,5 +287,30 @@ function pageLoaded() {
             id: item.uuid,
             name: item.name
         }));
+    });
+}
+
+function buttonHandler() {
+    document.addEventListener('click', (event) => {
+        if (event.target.closest('.toggleAllEntities')) {
+            const total = document.querySelectorAll('#entityTable .entity-checkbox').length;
+            const checked = document.querySelectorAll('#entityTable .entity-checkbox:checked').length;
+            setAllEntitiesChecked(!(checked === total && total > 0));
+        }
+
+        if (event.target.closest('.transferButton')) {
+            transferResponsibility();
+        }
+
+        const modalInitButton = event.target.closest('.modalInitButton');
+        if (modalInitButton) {
+            initModalWithDefaultTransferFrom(modalInitButton);
+        }
+    });
+
+    document.addEventListener('change', (event) => {
+        if (event.target.classList.contains('entity-checkbox')) {
+            updateSelectedEntityCount();
+        }
     });
 }

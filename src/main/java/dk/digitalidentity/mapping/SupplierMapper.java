@@ -5,6 +5,7 @@ import dk.digitalidentity.model.api.PropertyEO;
 import dk.digitalidentity.model.api.SupplierCreateEO;
 import dk.digitalidentity.model.api.SupplierEO;
 import dk.digitalidentity.model.api.SupplierShallowEO;
+import dk.digitalidentity.model.api.UserEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
@@ -70,6 +71,13 @@ public interface SupplierMapper {
     default User fromEO(final UserWriteEO eo) {
         return User.builder().uuid(eo.getUuid()).build();
     }
+
+    // embedded user references keep the shallow shape, positions/active are only exposed by the users API
+    @Mappings({
+        @Mapping(target = "active", ignore = true),
+        @Mapping(target = "positions", ignore = true)
+    })
+    UserEO toEO(final User user);
 
     @Mappings({
         @Mapping(target = "id", ignore = true),
