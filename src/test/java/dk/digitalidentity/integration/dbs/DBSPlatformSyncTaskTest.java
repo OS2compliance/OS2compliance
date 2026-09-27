@@ -63,6 +63,36 @@ class DBSPlatformSyncTaskTest {
 		lenient().when(configuration.getIntegrations()).thenReturn(integrations);
 	}
 
+	// ========== Kitos-genforsoeg ==========
+
+	@Test
+	void syncTask_retriesKitosMapping_evenWhenBatchIsEmpty() {
+		// Given - genforsoeget maa ikke haenge paa hentevinduet: synchronize() returnerer tidligt
+		// ved tomt batch, og et fejlet kitos-match ville ellers kraeve et vandmaerke-reset
+		dbsConfig.setBackfillFrom(LocalDate.of(2026, 1, 1));
+		when(settingsService.getZonedDateTime(PLATFORM_LAST_SYNC, null)).thenReturn(null);
+		when(syncService.fetchAllAudits(any())).thenReturn(Collections.emptyList());
+		when(syncService.findNewestPublishedDate(any())).thenReturn(Optional.empty());
+
+		// When
+		syncTask.syncTask();
+
+		// Then
+		verify(syncService).retryKitosMapping();
+	}
+
+	@Test
+	void syncTask_doesNotRetryKitosMapping_whenIntegrationIsDisabled() {
+		// Given
+		dbsConfig.setEnabled(false);
+
+		// When
+		syncTask.syncTask();
+
+		// Then
+		verify(syncService, never()).retryKitosMapping();
+	}
+
 	// ========== Backfill flow ==========
 
 	@Test

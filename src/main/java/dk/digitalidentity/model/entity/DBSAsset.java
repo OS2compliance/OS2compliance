@@ -34,6 +34,10 @@ public class DBSAsset extends Relatable {
     @Column
     private String status;
 
+    /** Fra auditens systems[]; noeglen der kobler DBS-aktivet til et IT-aktiv, se V1_133. */
+    @Column(name = "kitos_uuid")
+    private String kitosUuid;
+
     @Column
     private LocalDate nextRevision;
 
