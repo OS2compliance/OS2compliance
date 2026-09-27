@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 import static dk.digitalidentity.Constants.DBS_OVERSIGHT_RECIPIENT_SETTING;
@@ -113,12 +114,15 @@ class DBSServiceBackfillTest {
 		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
 		when(taskService.findOpenDbsTasksWithoutResponsible()).thenReturn(List.of(task));
 		when(assetService.findById(ASSET_ID)).thenReturn(Optional.of(asset));
+		final Set<User> managedCollection = task.getResponsibleUsers();
 
 		// When
 		dbsService.backfillMissingResponsible();
 
 		// Then
 		assertThat(task.getResponsibleUsers()).containsExactly(oversightResponsible);
+		// Samlingen skal stadig vaere entitetens egen: merge kalder clear() paa den
+		assertThat(task.getResponsibleUsers()).isSameAs(managedCollection);
 	}
 
 	@Test
