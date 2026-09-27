@@ -1,16 +1,12 @@
 package dk.digitalidentity.integration.dbs;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
-import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.NotifyService;
-import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,10 +39,6 @@ class DBSServiceBackfillTest {
 	private static final long TASK_ID = 200L;
 
 	@Mock
-	private DBSOversightDao dbsOversightDao;
-	@Mock
-	private RelationService relationService;
-	@Mock
 	private AssetService assetService;
 	@Mock
 	private TaskService taskService;
@@ -54,10 +46,6 @@ class DBSServiceBackfillTest {
 	private SettingsService settingsService;
 	@Mock
 	private NotifyService notifyService;
-	@Mock
-	private AssetOversightService assetOversightService;
-	@Mock
-	private OS2complianceConfiguration configuration;
 
 	@InjectMocks
 	private DBSService dbsService;
@@ -70,7 +58,6 @@ class DBSServiceBackfillTest {
 	void setUp() {
 		asset = new Asset();
 		asset.setId(ASSET_ID);
-		asset.setName("eReolen");
 
 		manager = new User();
 		manager.setUuid("uuid-manager");
@@ -78,29 +65,13 @@ class DBSServiceBackfillTest {
 
 		task = new Task();
 		task.setId(TASK_ID);
-		task.setName("EKSEMPEL ApS - eReolen " + DBS_TASK_NAME_MARKER);
+		task.setName("Tilsyn med leverandør " + DBS_TASK_NAME_MARKER);
 		task.setTaskType(TaskType.TASK);
 		task.getProperties().add(Property.builder()
 				.key(ASSOCIATED_INSPECTION_PROPERTY)
 				.value(String.valueOf(ASSET_ID))
 				.entity(task)
 				.build());
-	}
-
-	@Test
-	void backfill_assignsManagers_whenAssetHasThem() {
-		// Given
-		asset.getManagers().add(manager);
-		when(settingsService.getString(DBS_OVERSIGHT_RECIPIENT_SETTING, "")).thenReturn("");
-		when(taskService.findOpenDbsTasksWithoutResponsible()).thenReturn(List.of(task));
-		when(assetService.findById(ASSET_ID)).thenReturn(Optional.of(asset));
-
-		// When
-		dbsService.backfillMissingResponsible();
-
-		// Then
-		assertThat(task.getResponsibleUsers()).containsExactly(manager);
-		verify(taskService).saveTask(task);
 	}
 
 	@Test
@@ -171,6 +142,7 @@ class DBSServiceBackfillTest {
 		// Then
 		assertThat(task.getResponsibleUsers()).containsExactly(manager);
 		assertThat(task.getNotifyResponsible()).isFalse();
+		verify(taskService).saveTask(task);
 		verify(notifyService, never()).notifyTaskResponsible(any());
 		verify(notifyService, never()).notifyOversightByEmail(any(), any());
 	}
