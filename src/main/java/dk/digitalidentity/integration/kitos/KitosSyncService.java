@@ -23,6 +23,8 @@ import dk.kitos.api.model.IdentityNamePairResponseDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
+import dk.kitos.api.model.ContractValidityResponseDTO;
+import dk.kitos.api.model.ItContractValidationErrorChoice;
 import dk.kitos.api.model.LifeCycleStatusChoice;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
@@ -32,13 +34,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -68,6 +76,8 @@ public class KitosSyncService {
     private final SettingsService settingsService;
     private final KitosRolesDao rolesDao;
     private final ChoiceService choiceService;
+    private final KitosClientService kitosClientService;
+    private final PlatformTransactionManager transactionManager;
 
     @Transactional
     public void syncDeletedItSystems(final List<TrackingEventResponseDTO> deletionEvents) {
@@ -90,9 +100,28 @@ public class KitosSyncService {
         roles.forEach(this::syncSingleRole);
     }
 
-    @Transactional
+    // Not @Transactional: a Kitos lookup per usage would hold a database connection across network
+    // round trips, so the lookups run first and only the writes are wrapped.
     public void syncItContracts(final List<ItContractResponseDTO> itContracts) {
-        itContracts.forEach(this::syncSingleItContract);
+        final Map<UUID, List<ItContractResponseDTO>> contractsByUsage = groupByItSystemUsage(itContracts);
+        final Set<UUID> runningOutsideBatch = usagesWithRunningContractOutsideBatch(contractsByUsage);
+        new TransactionTemplate(transactionManager).executeWithoutResult(status ->
+            contractsByUsage.forEach((usageUuid, contracts) ->
+                syncContractsForSystemUsage(usageUuid, contracts, runningOutsideBatch.contains(usageUuid))));
+    }
+
+    // Only usages where everything in the batch has ended, and only when the asset is known, so an
+    // unknown usage costs no network call.
+    private Set<UUID> usagesWithRunningContractOutsideBatch(final Map<UUID, List<ItContractResponseDTO>> contractsByUsage) {
+        final Set<UUID> runningOutsideBatch = new LinkedHashSet<>();
+        contractsByUsage.forEach((usageUuid, contracts) -> {
+            if (contracts.stream().allMatch(KitosSyncService::hasEnded)
+                && findAssetByUsage(usageUuid).isPresent()
+                && hasRunningContractOutsideBatch(contracts, usageUuid)) {
+                runningOutsideBatch.add(usageUuid);
+            }
+        });
+        return runningOutsideBatch;
     }
 
     @Transactional
@@ -144,13 +173,117 @@ public class KitosSyncService {
         }
     }
 
-    private void syncSingleItContract(final ItContractResponseDTO contractResponseDTO) {
-        contractResponseDTO.getSystemUsages().stream()
-            .map(IdentityNamePairResponseDTO::getUuid)
-            .forEach(itSystemUuid -> {
-                final Optional<Asset> itSystem = findItSystem(itSystemUuid.toString());
-                itSystem.ifPresent(asset -> updateAssetWith(asset, contractResponseDTO));
-            });
+    /** A usage's contracts are judged together: an ended contract only counts if no other one is running. */
+    private Map<UUID, List<ItContractResponseDTO>> groupByItSystemUsage(final List<ItContractResponseDTO> contracts) {
+        final Map<UUID, List<ItContractResponseDTO>> contractsByUsage = new LinkedHashMap<>();
+        for (final ItContractResponseDTO contract : contracts) {
+            for (final IdentityNamePairResponseDTO usage : nullSafe(contract::getSystemUsages, List.<IdentityNamePairResponseDTO>of())) {
+                contractsByUsage.computeIfAbsent(usage.getUuid(), uuid -> new ArrayList<>()).add(contract);
+            }
+        }
+        return contractsByUsage;
+    }
+
+    private Optional<Asset> findAssetByUsage(final UUID systemUsageUuid) {
+        return assetService.findByProperty(KITOS_USAGE_UUID_PROPERTY_KEY, systemUsageUuid.toString());
+    }
+
+    private void syncContractsForSystemUsage(final UUID systemUsageUuid, final List<ItContractResponseDTO> contracts,
+                                             final boolean runningContractOutsideBatch) {
+        final Optional<Asset> asset = findAssetByUsage(systemUsageUuid);
+        if (asset.isEmpty()) {
+            return;
+        }
+
+        final Optional<ItContractResponseDTO> runningContract = contracts.stream()
+            .filter(contract -> !hasEnded(contract))
+            .findFirst();
+        if (runningContract.isPresent()) {
+            setContractEnded(asset.get(), false);
+            mapContractData(asset.get(), runningContract.get());
+            return;
+        }
+
+        if (runningContractOutsideBatch) {
+            // No mapping: the running contract's dates must not be overwritten by an ended one.
+            setContractEnded(asset.get(), false);
+            return;
+        }
+
+        final ItContractResponseDTO lastEnded = latestEnded(contracts);
+        mapContractData(asset.get(), lastEnded);
+        // The Kitos link is deliberately kept: breaking it re-imports the asset as a new one if a contract runs again.
+        final boolean alreadyEnded = hasContractEnded(asset.get());
+        setContractEnded(asset.get(), true);
+        assetService.setActive(asset.get(), false);
+        if (!alreadyEnded) {
+            log.info("All Kitos contracts for asset id={} have ended (last one {}), marking asset inactive",
+                asset.get().getId(), lastEnded.getUuid());
+        }
+    }
+
+    private static boolean hasContractEnded(final Asset asset) {
+        return asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY));
+    }
+
+    /** Marks that every contract has ended, so the lifecycle sync does not raise the asset back to active. */
+    private static void setContractEnded(final Asset asset, final boolean ended) {
+        final Optional<Property> existing = asset.getProperties().stream()
+            .filter(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY))
+            .findFirst();
+        if (ended && existing.isEmpty()) {
+            asset.getProperties().add(Property.builder()
+                .key(KITOS_CONTRACT_ENDED_PROPERTY_KEY)
+                .value("1")
+                .entity(asset)
+                .build());
+        } else if (!ended) {
+            existing.ifPresent(asset.getProperties()::remove);
+        }
+    }
+
+    /** Narrower than Kitos' valid flag, which is also false before a contract starts and when its parent is invalid. */
+    private static boolean hasEnded(final ItContractResponseDTO contract) {
+        final ContractValidityResponseDTO validity = nullSafe(() -> contract.getGeneral().getValidity());
+        if (validity == null || !Boolean.FALSE.equals(validity.getValid())) {
+            return false;
+        }
+        final List<ItContractValidationErrorChoice> validationErrors = validity.getValidationErrors();
+        if (validationErrors != null && !validationErrors.isEmpty()) {
+            return validationErrors.contains(ItContractValidationErrorChoice.END_DATE_PASSED)
+                || validationErrors.contains(ItContractValidationErrorChoice.TERMINATION_PERIOD_EXCEEDED);
+        }
+        // No reason given: fall back to the end date so a contract that has not started is not read as ended.
+        final LocalDate validTo = nullSafe(() -> validity.getValidTo().toLocalDate());
+        return validTo != null && validTo.isBefore(LocalDate.now());
+    }
+
+    /** A failed or capped lookup assumes a running contract, so a Kitos outage never deactivates a system in use. */
+    private boolean hasRunningContractOutsideBatch(final List<ItContractResponseDTO> batch, final UUID systemUsageUuid) {
+        final Set<UUID> batchUuids = batch.stream().map(ItContractResponseDTO::getUuid).collect(Collectors.toSet());
+        try {
+            final List<ItContractResponseDTO> siblings = kitosClientService.fetchContractsForSystemUsage(systemUsageUuid);
+            if (siblings.size() >= KitosConstants.MAX_PAGE_SIZE) {
+                log.warn("Contract list for it-system usage {} was capped at {}, leaving asset active",
+                    systemUsageUuid, KitosConstants.MAX_PAGE_SIZE);
+                return true;
+            }
+            return siblings.stream()
+                .filter(contract -> !batchUuids.contains(contract.getUuid()))
+                .anyMatch(contract -> !hasEnded(contract));
+        } catch (final RuntimeException ex) {
+            // RuntimeException, not RestClientException: KitosAuthException is not one.
+            log.warn("Could not look up contracts for it-system usage {}, leaving asset active", systemUsageUuid, ex);
+            return true;
+        }
+    }
+
+    /** The contract with the latest end date, so the asset shows the agreement that ran last. */
+    private static ItContractResponseDTO latestEnded(final List<ItContractResponseDTO> contracts) {
+        return contracts.stream()
+            .max(Comparator.comparing(contract -> nullSafe(() -> contract.getGeneral().getValidity().getValidTo().toLocalDate()),
+                Comparator.nullsFirst(Comparator.naturalOrder())))
+            .orElseThrow(() -> new IllegalStateException("latestEnded called with an empty contract list"));
     }
 
     private void syncSingleItSystemUsage(final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
@@ -171,11 +304,8 @@ public class KitosSyncService {
         }
     }
 
-    private void updateAssetWith(final Asset asset, final ItContractResponseDTO itContractResponseDTO) {
-        if (!itContractResponseDTO.getGeneral().getValidity().getValid()) {
-            return;
-        }
-
+    /** Also for ended contracts: the data stays available in Kitos after "valid to" has passed. */
+    private void mapContractData(final Asset asset, final ItContractResponseDTO itContractResponseDTO) {
 		asset.setTerminationNotice(
 				nullSafe(() -> itContractResponseDTO.getTermination().getTerms().getNoticePeriodMonths().getName())
 		);
@@ -189,7 +319,7 @@ public class KitosSyncService {
 			// TODO AMALIE Systemer -> Kontrakt -> Indgået
 		}
 
-		String settingContractTerminationDate = settingsService.getString(KitosConstants.KITOS_FIELDS_CONTRACT_DATE, null);
+		String settingContractTerminationDate = settingsService.getString(KitosConstants.KITOS_FIELDS_CONTRACT_END, null);
 		if (settingContractTerminationDate == null || KitosField.SYSTEMS_CONTRACT_FRONTPAGE_TO.equals(KitosField.valueOf(settingContractTerminationDate))) {
 			asset.setContractTermination(
 					nullSafe(() -> itContractResponseDTO.getGeneral().getValidity().getValidTo().toLocalDate())
@@ -206,7 +336,12 @@ public class KitosSyncService {
 
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
 
-        assetService.setActive(asset, valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
+        final boolean activeByLifecycle = valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus);
+        // Kitos still reports the system as operational after the last contract ran out, so the contract
+        // verdict wins here - otherwise the two paths would toggle active and mail on every sync.
+        if (!activeByLifecycle || !hasContractEnded(asset)) {
+            assetService.setActive(asset, activeByLifecycle);
+        }
 
         if (!valid) {
             return;

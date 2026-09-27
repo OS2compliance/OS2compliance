@@ -133,6 +133,16 @@ public class KitosClientService {
     }
 
     /**
+     * Every contract on an it-system usage, not just the changed ones the delta feed carries. Reads a
+     * single page, so a result of exactly {@link KitosConstants#MAX_PAGE_SIZE} is truncated, not complete.
+     */
+    public List<ItContractResponseDTO> fetchContractsForSystemUsage(final UUID systemUsageUuid) {
+        final List<ItContractResponseDTO> contracts = contractApi.getManyItContractV2GetItContracts(null, null,
+            systemUsageUuid, null, null, null, null, null, null, null, 0, KitosConstants.MAX_PAGE_SIZE);
+        return contracts == null ? List.of() : contracts;
+    }
+
+    /**
      * Fetch all it-systems in use by the current municipal
      */
     public List<ItSystemResponseDTO> fetchChangedItSystems(final UUID municipalUuid, final boolean reimport) {

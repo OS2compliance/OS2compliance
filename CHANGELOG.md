@@ -8,6 +8,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Fixed
 - (Ad-hoc) Tilsynsopgaver oprettet uden ansvarlig fik aldrig en, og et fejlet kitos-match kunne kun genforsøges ved manuelt at nulstille vandmærket for DBS-synkroniseringen. Kitos-koblingen genforsøges nu ved hver kørsel, og ansvarlig udfyldes efterfølgende på åbne tilsynsopgaver der mangler en. Ramte installationer hvor DBS-integrationen blev slået til før OS2kitos
+- (OS2kitos-integration) Kontraktfelterne på et aktiv stod tomme, og et system hvis kontrakt var ophørt blev ved med at stå som aktivt. Kontraktdata hentes nu uanset om kontrakten er gyldig, og et aktiv sættes inaktivt når alle kontrakter på dets systemanvendelse er udløbet eller opsagt. En kontrakt der endnu ikke er startet, eller som er spærret af en ugyldig hovedkontrakt, inaktiverer ikke
 
 ## [2.8.0] - 2026-09-25
 ### Added
