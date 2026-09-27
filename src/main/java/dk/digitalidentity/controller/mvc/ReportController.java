@@ -1,6 +1,7 @@
 package dk.digitalidentity.controller.mvc;
 
 import com.lowagie.text.DocumentException;
+
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
@@ -29,11 +30,11 @@ import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
 import dk.digitalidentity.report.ReportThreatAssessmentXlsView;
+import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.riskimage.RiskImageService;
 import dk.digitalidentity.report.riskimage.RiskImageView;
 import dk.digitalidentity.report.riskimage.dto.ThreatRow;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
-import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
@@ -58,6 +59,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -71,6 +74,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -417,6 +421,9 @@ public class ReportController {
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
         DPIA dpia = dpiaService.find(dpiaId);
+
+		final String filename = "konsekvensanalyse vedr " + sanitizeFileName(dpia.getName());
+
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAPdf(dpia);
             response.setHeader("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + sanitizeFileName(dpia.getName()) + ".pdf\"");
@@ -460,7 +467,21 @@ public class ReportController {
                         zipOutputStream.close();
                     }
                 );
-        }
+        } else if (type.equals("DOCX")) {
+			try {
+			ByteArrayOutputStream data = assetService.getDPIADocx(dpia);
+
+			return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + ".docx\"")
+				.contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+				.body(outputStream -> {
+					data.writeTo(outputStream);
+				});
+			} catch(IOException e) {
+				log.error("Failed to convert DPIA to docx", e);
+				return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		}
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }

@@ -45,21 +45,27 @@
                                     <label class="form-label fw-bold mb-3">Vælg typer:</label>
                                     <div class="d-flex gap-3 flex-wrap">
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="filter-aktiv" value="aktiv" checked onchange="riskMatrixService.onRiskMatrixFilterChange()">
+                                            <input class="form-check-input" type="checkbox" id="filter-aktiv" value="aktiv" checked data-risk-filter>
                                             <label class="form-check-label" for="filter-aktiv">
                                                 Aktiv
                                             </label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="filter-behandling" value="behandling" checked onchange="riskMatrixService.onRiskMatrixFilterChange()">
+                                            <input class="form-check-input" type="checkbox" id="filter-behandling" value="behandling" checked data-risk-filter>
                                             <label class="form-check-label" for="filter-behandling">
                                                 Behandlingsaktivitet
                                             </label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="filter-scenarie" value="scenarie" checked onchange="riskMatrixService.onRiskMatrixFilterChange()">
+                                            <input class="form-check-input" type="checkbox" id="filter-scenarie" value="scenarie" checked data-risk-filter>
                                             <label class="form-check-label" for="filter-scenarie">
                                                 Scenarie
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="filter-leverandør" value="leverandør" checked data-risk-filter>
+                                            <label class="form-check-label" for="filter-leverandør">
+                                                Leverandør
                                             </label>
                                         </div>
                                     </div>

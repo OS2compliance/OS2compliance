@@ -225,6 +225,15 @@ public class IncidentService {
         return incidentDao.save(incident);
     }
 
+    /** Flusher med det samme, så en samtidig indsendelse med samme form_token fejler her og ikke først ved commit. */
+    public Incident create(final Incident incident) {
+        return incidentDao.saveAndFlush(incident);
+    }
+
+    public Optional<Incident> findByFormToken(final String formToken) {
+        return incidentDao.findByFormToken(formToken);
+    }
+
     /**
      * Make sure the {@link Incident} have all the required relations.
      */

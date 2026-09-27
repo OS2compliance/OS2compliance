@@ -23,7 +23,7 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/registers}">Fortegnelse</a></li>
-                                <li class="breadcrumb-item active" aria-current="page" id="breadcrump-register-name" th:data-register-id="${register.id}" th:data-register-name="${register.name}" th:text="${#strings.abbreviate(register.name, 25)}"></li>
+                                <li class="breadcrumb-item active" aria-current="page" id="breadcrump-register-name" th:data-register-id="${register.id}" th:data-register-name="${register.name}" th:text="${#strings.abbreviate(register.name, 150)}"></li>
                             </ol>
                         </nav>
                         <div class="row mt-4 mb-3">

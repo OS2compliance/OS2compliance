@@ -22,6 +22,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -80,6 +81,11 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
     @NotNull
     private LocalDate nextDeadline;
 
+	@StatisticLabel("Startdato")
+	@Column
+	@DateTimeFormat(pattern = "dd/MM-yyyy")
+	private LocalDate startDate;
+
     @Column
     @Enumerated(EnumType.STRING)
     private TaskRepetition repetition;
@@ -130,6 +136,13 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	@NotAudited
 	private List<SubTask> subTasks  = new ArrayList<>();
 
+    @PrePersist
+    protected void onTaskCreate() {
+        if (startDate == null) {
+            startDate = LocalDate.now();
+        }
+    }
+
     @Override
     public RelationType getRelationType() {
         return RelationType.TASK;
@@ -173,9 +186,14 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 		return responsibleUsers.stream().map(User::getName).collect(Collectors.joining(","));
 	}
 
-	// No one calls this one for now, its just for convenience
+	// En valgt skabelon vinder over opgavens egen tekst overalt hvor beskrivelsen vises
 	public String getDescription() {
 		return taskDescriptionTemplate != null ? taskDescriptionTemplate.getDescription() : description;
+	}
+
+	// Opgavens egen tekst, som getDescription() maskerer så snart der er valgt en skabelon
+	public String getOwnDescription() {
+		return description;
 	}
 
 }

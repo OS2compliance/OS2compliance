@@ -68,8 +68,34 @@ export function validateFormBeforeSubmit (event, form) {
             invalidFields[0].scrollIntoView({behavior: 'smooth', block: 'center'});
             invalidFields[0].focus();
         }
+    } else {
+        lockSubmitButtons(form);
     }
 };
+
+const lockedButtons = new Set();
+const UNLOCK_AFTER_MS = 15000;
+
+function unlockSubmitButtons () {
+    lockedButtons.forEach(button => button.disabled = false);
+    lockedButtons.clear();
+}
+
+// Covers a page restored from the bfcache, where the buttons come back disabled.
+window.addEventListener('pageshow', unlockSubmitButtons);
+
+/** Clicking Gem again while the post is in flight starts another one, and each creates an incident. */
+export function lockSubmitButtons (form) {
+    new Set([...document.querySelectorAll(`[form="${form.id}"]`), ...form.querySelectorAll('button, input')])
+        .forEach(element => {
+            if (element.type === 'submit') {
+                element.disabled = true;
+                lockedButtons.add(element);
+            }
+        });
+    // When the navigation never happens the form would otherwise sit unusable with the typed data in it.
+    setTimeout(unlockSubmitButtons, UNLOCK_AFTER_MS);
+}
 
 function setFieldValidity (field, feedback, isValid) {
     if (isValid) {

@@ -132,7 +132,7 @@ function PaginationService() {
 
             // Update counters
             const currentShown = resultsList.children.length;
-            const totalResults = data.results.totalElements;
+            const totalResults = data.results.page.totalElements;
             const remaining = totalResults - currentShown;
 
             sectionCount.textContent = `${currentShown} af ${totalResults}`;

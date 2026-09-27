@@ -44,6 +44,7 @@ SELECT t.id,
        t.repetition,
        t.include_in_report,
        t.in_progress,
+       t.start_date,
        t.in_progress_note,
        (CASE
             WHEN t.repetition = 'NONE' THEN 10
@@ -328,6 +329,7 @@ SELECT a.id,
        departments.department_names,
        a.description,
        operation_responsible.operation_responsible_user_names,
+       operation_responsible.operation_responsible_user_uuids,
        a.criticality,
        (CASE
             WHEN a.criticality = 'CRITICAL' THEN 1
@@ -474,7 +476,8 @@ FROM assets a
          ) departments ON departments.asset_id = a.id
          LEFT JOIN (
              SELECT orum.asset_id,
-                    GROUP_CONCAT(DISTINCT oru.name ORDER BY oru.name SEPARATOR ',') AS operation_responsible_user_names
+                    GROUP_CONCAT(DISTINCT oru.name ORDER BY oru.name SEPARATOR ',') AS operation_responsible_user_names,
+                    GROUP_CONCAT(DISTINCT oru.uuid SEPARATOR ',')                   AS operation_responsible_user_uuids
              FROM assets_operation_responsible_users_mapping orum
                       JOIN users oru ON oru.uuid = orum.user_uuid
              GROUP BY orum.asset_id
@@ -601,10 +604,14 @@ SELECT d.id,
             WHEN d.status = 'READY' THEN 3
            END)                                                             as status_order,
        d.localized_enums,
+       responsible_ou.name                                                  AS responsible_ou_name,
+       department_ou.name                                                   AS department_name,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
 FROM documents d
          LEFT JOIN choice_values cv_type ON cv_type.id = d.document_type
+         LEFT JOIN ous responsible_ou ON responsible_ou.uuid = d.responsible_ou_uuid
+         LEFT JOIN ous department_ou ON department_ou.uuid = d.department_uuid
          LEFT JOIN document_tag rt on rt.document_id = d.id
          LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE d.deleted = false
@@ -750,7 +757,8 @@ SELECT d.id,
        (SELECT ou.name FROM ous ou WHERE ou.uuid = d.responsible_ou_uuid)                                                                                            AS responsible_ou_name,
        d.user_updated_date,
        (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = d.id OR r.relation_b_id = d.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS task_count,
-       (SELECT dr.dpia_report_approval_status FROM dpia_report dr WHERE dr.dpia_id = d.id order by dr.id desc limit 1)                                               AS report_approval_status,
+       COALESCE((SELECT dr2.dpia_report_approval_status FROM dpia_report dr2 WHERE dr2.dpia_id = d.id ORDER BY dr2.id DESC LIMIT 1),
+                'NOT_SENT')                                                                                                                                            AS report_approval_status,
        (SELECT sc.conclusion FROM dpia_screening sc WHERE sc.dpia_id = d.id)                                                                                         as screening_conclusion,
        d.from_external_source                                                                                                                                        as is_external,
        dr.report_approver_uuid                                                                                                                                       AS approver_uuid,
@@ -775,3 +783,12 @@ FROM dpia d
 WHERE d.deleted = false
 GROUP BY d.id, d.name, d.responsible_user_uuid, d.responsible_ou_uuid,
          d.user_updated_date, d.from_external_source, dr.report_approver_uuid;
+
+CREATE OR REPLACE VIEW view_gridjs_catalogs AS
+SELECT tc.identifier                                                                                       AS identifier,
+       tc.name                                                                                             AS name,
+       tc.hidden                                                                                           AS hidden,
+       (SELECT COUNT(1) FROM threat_catalog_threats tct WHERE tct.thread_catalog_identifier = tc.identifier) AS threat_count,
+       EXISTS(SELECT 1 FROM threat_assessment_catalogs tac WHERE tac.threat_catalog_identifier = tc.identifier) AS in_use
+FROM threat_catalogs tc
+WHERE tc.deleted = false;

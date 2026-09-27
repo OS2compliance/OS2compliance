@@ -34,6 +34,12 @@ document.addEventListener("DOMContentLoaded", function() {
     // burgerMenu
     const burgerBtn = document.getElementById("burger-menu");
     const nav = document.getElementById("mainnav-container");
+
+    // Error pages (403 etc.) render the header without the sidebar
+    if (!nav || !burgerBtn) {
+        return;
+    }
+
     let links = document.getElementsByClassName("nav-link");
     const hasSubItems = document.querySelectorAll('.nav-item.has-sub');
 
@@ -187,10 +193,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         setupSubMenus();
     }
-
-    window.addEventListener('load', function () {
-        initializeMenuState();
-    });
 
     initializeMenuState();
 });

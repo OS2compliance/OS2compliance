@@ -65,7 +65,7 @@ public class YearWheelService {
 				continue;
 			}
 			LocalDate deadline = task.getNextDeadline().toLocalDate();
-			LocalDate firstDeadline = resolveFirstDeadline(firstDeadlines.get(task.getId()), deadline);
+			LocalDate firstDeadline = resolveFirstDeadline(task.getStartDate(), firstDeadlines.get(task.getId()), deadline);
 			List<Integer> occurrenceMonths = calculateOccurrenceMonths(year, deadline, task.getTaskRepetition(), firstDeadline);
 
 			// Resolve year-wheel tags from tagIds
@@ -157,13 +157,17 @@ public class YearWheelService {
 	}
 
 	/**
-	 * The earliest deadline the task is known to have had. Every completion logs the deadline it closed,
-	 * so the oldest logged deadline is where the series started. Without logs the task has never been
-	 * completed, and nextDeadline is the only deadline it has ever been given - whether that is the
-	 * original one or a rescheduled one, projecting occurrences before it would invent deadlines the task
-	 * never had. A deadline that was moved backwards after a completion falls back to nextDeadline too.
+	 * The earliest deadline the task is known to have had. An explicit task startDate is the user's
+	 * stated intent and takes precedence. Otherwise, every completion logs the deadline it closed, so the
+	 * oldest logged deadline is where the series started. Without logs the task has never been completed,
+	 * and nextDeadline is the only deadline it has ever been given - whether that is the original one or a
+	 * rescheduled one, projecting occurrences before it would invent deadlines the task never had. A
+	 * deadline that was moved backwards after a completion falls back to nextDeadline too.
 	 */
-	private LocalDate resolveFirstDeadline(LocalDate firstLoggedDeadline, LocalDate nextDeadline) {
+	private LocalDate resolveFirstDeadline(LocalDate startDate, LocalDate firstLoggedDeadline, LocalDate nextDeadline) {
+		if (startDate != null) {
+			return startDate;
+		}
 		return firstLoggedDeadline != null && firstLoggedDeadline.isBefore(nextDeadline)
 				? firstLoggedDeadline
 				: nextDeadline;

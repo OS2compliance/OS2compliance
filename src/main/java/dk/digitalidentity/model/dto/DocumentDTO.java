@@ -31,6 +31,10 @@ public class DocumentDTO {
     private String status;
 	@ExcludeFromExport
     private Integer statusOrder;
+	@ExcelColumn(headerName = "Afdeling", order = 6)
+    private String responsibleOu;
+	@ExcelColumn(headerName = "Forvaltning", order = 7)
+    private String department;
 	@ExcludeFromExport
     private List<TagDTO> tags;
 	@ExcludeFromExport

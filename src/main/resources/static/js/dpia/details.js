@@ -425,3 +425,6 @@ function mailReport() {
         toastService.error(error)
     });
 }
+
+// modul-scope: inline onclick i sendReportModal kan ikke se den ellers
+window.mailReport = mailReport;

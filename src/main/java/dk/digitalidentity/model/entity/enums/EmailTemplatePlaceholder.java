@@ -10,7 +10,9 @@ public enum EmailTemplatePlaceholder {
     MESSAGE_FROM_SENDER("{besked}", "Besked fra afsender"),
     DAYS_TILL_DEADLINE("{dage}", "Antal dage til deadline"),
     USER_LIST("{brugere}", "Liste over de brugere, som mailen drejer sig om"),
-    SENDER("{afsender}", "Navnet på brugeren, der sender mailen");
+    SENDER("{afsender}", "Navnet på brugeren, der sender mailen"),
+    SOURCE_ID_PLACEHOLDER("{ekstern_id}", "Ekstern identifikator for systemet, hvis tilgængelig"),
+    EVENT_TIME_PLACEHOLDER("{tidspunkt}", "Tidspunktet hændelsen skete");
 
     private final String placeholder;
     private final String description;

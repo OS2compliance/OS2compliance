@@ -30,6 +30,7 @@
                         <tr class="align-middle">
                             <td>
                                 <select class="form-control form-select editField" th:field="*{dataProcessingAgreementStatus}" tabindex="-1" disabled>
+                                    <option value=""></option>
                                     <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus).values()}" th:value="${status.name}" th:text="${status.message}"></option>
                                 </select>
                             </td>

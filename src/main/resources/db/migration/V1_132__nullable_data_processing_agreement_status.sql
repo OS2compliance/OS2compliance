@@ -1,0 +1,1 @@
+ALTER TABLE assets MODIFY COLUMN data_processing_agreement_status VARCHAR(30) NULL;

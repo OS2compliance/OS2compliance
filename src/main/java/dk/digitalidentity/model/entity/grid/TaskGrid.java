@@ -55,6 +55,9 @@ public class TaskGrid implements HasMultipleResponsibleUsers {
     @Column
     private LocalDateTime nextDeadline;
 
+	@Column
+	private LocalDate startDate;
+
     @Column(name = "repetition")
     @Enumerated(EnumType.STRING)
     private TaskRepetition taskRepetition;

@@ -14,7 +14,6 @@ import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
-import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.SettingsService;
@@ -207,7 +206,7 @@ public class KitosSyncService {
 
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
 
-        asset.setActive(valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
+        assetService.setActive(asset, valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus));
 
         if (!valid) {
             return;
@@ -363,7 +362,6 @@ public class KitosSyncService {
         asset.setAssetStatus(AssetStatus.NOT_STARTED);
         asset.setSupplier(supplier);
         asset.setCriticality(Criticality.NON_CRITICAL);
-        asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
 		setLinksFromKitosSystem(responseDTO, asset);
 
 		assetService.create(asset);
@@ -421,9 +419,9 @@ public class KitosSyncService {
 				copyOfProperty.setValue(property.getValue());
 				copyOfProperty.setEntity(asset);
 				asset.getProperties().add(copyOfProperty);
-				asset.setActive(false);
 				asset.getProperties().remove(property);
 			});
+        assetService.setActive(asset, false);
     }
 
     private Optional<Asset> findItSystem(final String kitosUuid) {

@@ -3,8 +3,11 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
+import dk.digitalidentity.dao.TaskPredicates;
+import dk.digitalidentity.dao.grid.QueryPredicateBuilder;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
+import dk.digitalidentity.model.dto.TaskDateFilter;
 import dk.digitalidentity.model.dto.TaskFirstDeadlineDTO;
 import dk.digitalidentity.model.dto.TaskListDTO;
 import dk.digitalidentity.model.dto.enums.StatusColor;
@@ -31,13 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -81,6 +87,18 @@ public class TaskService implements TagableService<Task> {
 		return task.getResponsibleUsers().stream()
 				.map(User::getUuid)
 				.anyMatch(SecurityUtil.getPrincipalUuid()::equals);
+	}
+
+	/**
+	 * Defaults a null startDate to today, then reports whether the (possibly defaulted) startDate is
+	 * after nextDeadline. Callers are responsible for translating a {@code true} result into their own
+	 * transport-specific error response.
+	 */
+	public boolean defaultStartDateAndCheckAfterDeadline(final Task task) {
+		if (task.getStartDate() == null) {
+			task.setStartDate(LocalDate.now());
+		}
+		return task.getNextDeadline() != null && task.getStartDate().isAfter(task.getNextDeadline());
 	}
 
     public List<Task> findAll() {
@@ -131,7 +149,7 @@ public class TaskService implements TagableService<Task> {
      */
     @Transactional
     public List<Task> getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate deadline) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineAndNotificationRemindersEmpty(deadline);
+        return taskDao.findWithoutReminderConfigDueOn(deadline);
     }
 
     /**
@@ -141,7 +159,7 @@ public class TaskService implements TagableService<Task> {
      */
     @Transactional
     public List<Task> getTasksWithDeadLineInAndTaskNotificationOverrideFalse(List<LocalDate> deadlines) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineInAndNotificationRemindersEmpty(deadlines);
+        return taskDao.findWithoutReminderConfigDueOnAnyOf(deadlines);
     }
 
     public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
@@ -168,6 +186,10 @@ public class TaskService implements TagableService<Task> {
         task.setName(oldTask.getName());
         task.setTaskType(oldTask.getTaskType());
         task.setNextDeadline(oldTask.getNextDeadline());
+        task.setStartDate(oldTask.getStartDate());
+        if (defaultStartDateAndCheckAfterDeadline(task)) {
+            throw new IllegalArgumentException("Startdato kan ikke være efter deadline");
+        }
         task.setResponsibleUsers(oldTask.getResponsibleUsers());
         task.setResponsibleOu(oldTask.getResponsibleOu());
         task.setRepetition(oldTask.getRepetition());
@@ -197,12 +219,14 @@ public class TaskService implements TagableService<Task> {
     }
 
     @Transactional
-    public void completeTask(final Task task, final TaskLog taskLog) {
+    public void completeTask(final Task task, final TaskLog taskLog, final LocalDate overrideNextDeadline) {
         task.getLogs().add(taskLog);
         task.setInProgress(false);
         task.setNote(null);
         if (task.getTaskType() == TaskType.CHECK) {
-            final LocalDate nextDeadline = getNextDeadline(task.getNextDeadline(), task.getRepetition());
+            final LocalDate nextDeadline = overrideNextDeadline != null
+                ? overrideNextDeadline
+                : getNextDeadline(task.getNextDeadline(), taskLog.getCompleted(), task.getRepetition());
             // Check if we need to move date on related assets
             findLinkedDocument(task)
                 .ifPresent(d -> {
@@ -212,6 +236,10 @@ public class TaskService implements TagableService<Task> {
                 });
             task.setNextDeadline(nextDeadline);
         }
+    }
+
+    public LocalDate previewNextDeadline(final Task task, final LocalDate completed) {
+        return getNextDeadline(task.getNextDeadline(), completed, task.getRepetition());
     }
 
     public boolean isTaskDone(final Task task) {
@@ -344,21 +372,41 @@ public class TaskService implements TagableService<Task> {
                 documentDao.findById(Long.parseLong(property.getValue())));
     }
 
-    private LocalDate getNextDeadline(final LocalDate deadline, final TaskRepetition repetition) {
-        if (repetition == null) {
+    private LocalDate getNextDeadline(final LocalDate deadline, final LocalDate completed, final TaskRepetition repetition) {
+        if (repetition == null || repetition == TaskRepetition.NONE || deadline == null) {
             return deadline;
         }
+        final LocalDate effectiveCompleted = completed != null ? completed : LocalDate.now();
+        if (isBeforeCurrentPeriodStart(effectiveCompleted, deadline, repetition)) {
+            return deadline;
+        }
+        long intervals = 0;
+        LocalDate next;
+        do {
+            intervals++;
+            next = addInterval(deadline, repetition, intervals);
+        } while (!next.isAfter(effectiveCompleted));
+        return next;
+    }
+
+    private boolean isBeforeCurrentPeriodStart(final LocalDate completed, final LocalDate deadline, final TaskRepetition repetition) {
+        final LocalDate periodStart = addInterval(deadline, repetition, -1);
+        return !completed.isAfter(periodStart);
+    }
+
+    private LocalDate addInterval(final LocalDate date, final TaskRepetition repetition, final long multiplier) {
         return switch (repetition) {
-			case EVERY_2_MONTHS -> deadline.plusMonths(2);
-			case EVERY_3_MONTHS -> deadline.plusMonths(3);
-			case EVERY_4_MONTHS -> deadline.plusMonths(4);
-            case MONTHLY -> deadline.plusMonths(1);
-            case QUARTERLY -> deadline.plusMonths(3);
-            case HALF_YEARLY -> deadline.plusMonths(6);
-            case YEARLY -> deadline.plusYears(1);
-            case EVERY_SECOND_YEAR -> deadline.plusYears(2);
-            case EVERY_THIRD_YEAR -> deadline.plusYears(3);
-            default -> deadline;
+			case EVERY_2_MONTHS -> date.plusMonths(2L * multiplier);
+			case EVERY_3_MONTHS -> date.plusMonths(3L * multiplier);
+			case EVERY_4_MONTHS -> date.plusMonths(4L * multiplier);
+            case MONTHLY -> date.plusMonths(multiplier);
+            case QUARTERLY -> date.plusMonths(3L * multiplier);
+            case HALF_YEARLY -> date.plusMonths(6L * multiplier);
+            case YEARLY -> date.plusYears(multiplier);
+            case EVERY_SECOND_YEAR -> date.plusYears(2L * multiplier);
+            case EVERY_THIRD_YEAR -> date.plusYears(3L * multiplier);
+            case NONE -> throw new IllegalStateException("addInterval called with NONE repetition");
+            default -> throw new IllegalStateException("addInterval called with unsupported repetition: " + repetition);
         };
     }
 
@@ -394,6 +442,9 @@ public class TaskService implements TagableService<Task> {
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user, boolean onlyMine) {
 		Page<TaskGrid> tasks;
+		filters = new HashMap<>(filters);
+		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(extractDateWithinPredicate(filters));
+		filters.keySet().removeAll(DATE_WITHIN_FILTER_KEYS);
 
 		// if onlyMine is true - only show the tasks assigned to the user, even if read_all
 		if (!onlyMine && SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
@@ -401,7 +452,8 @@ public class TaskService implements TagableService<Task> {
 			tasks = taskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, TaskGrid.class),
 					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					TaskGrid.class
+					TaskGrid.class,
+					queryPredicates
 			);
 		}
 		else {
@@ -410,10 +462,45 @@ public class TaskService implements TagableService<Task> {
 					validateSearchFilters(filters, TaskGrid.class),
 					user,
 					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					TaskGrid.class
+					TaskGrid.class,
+					queryPredicates
 			);
 		}
 		return tasks;
+	}
+
+	@Transactional(readOnly = true)
+	public Page<TaskGrid> getTasksForUser(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		filters = new HashMap<>(filters);
+		final List<QueryPredicateBuilder<TaskGrid>> queryPredicates = List.of(extractDateWithinPredicate(filters));
+		filters.keySet().removeAll(DATE_WITHIN_FILTER_KEYS);
+		return taskGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, TaskGrid.class),
+				user,
+				buildPageable(page, pageLimit, sortColumn, sortDirection),
+				TaskGrid.class,
+				queryPredicates
+		);
+	}
+
+	private static final Set<String> DATE_WITHIN_FILTER_KEYS = Set.of("dateField", "fromDate", "toDate");
+
+	private static QueryPredicateBuilder<TaskGrid> extractDateWithinPredicate(final Map<String, String> filters) {
+		final TaskDateFilter dateFilter = TaskDateFilter.parse(filters.get("dateField"));
+		final LocalDate from = parseDate(filters.get("fromDate"));
+		final LocalDate to = parseDate(filters.get("toDate"));
+		return TaskPredicates.dateWithin(dateFilter, from, to);
+	}
+
+	private static LocalDate parseDate(final String value) {
+		if (!StringUtils.hasText(value)) {
+			return null;
+		}
+		try {
+			return LocalDate.parse(value, DK_DATE_FORMATTER);
+		} catch (final DateTimeParseException e) {
+			return null;
+		}
 	}
 
 	public List<Task> getByIds (List<Long> ids) {
@@ -467,14 +554,14 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public List<Task> getTasksWithDeadlineAtAndNotificationSettingContains(LocalDate deadline, NotificationSetting setting) {
-		return taskDao.findByNextDeadlineAndNotificationRemindersNotEmpty(deadline)
+		return taskDao.findWithReminderConfigDueOn(deadline)
 				.stream()
 				.filter(task -> task.getNotificationReminders().contains(setting))
 				.collect(Collectors.toList());
 	}
 
 	public List<Task> getTasksWithDeadlineInAndNotificationSettingContains(List<LocalDate> deadlines, NotificationSetting setting) {
-		return taskDao.findByNextDeadlineInAndNotificationRemindersNotEmpty(deadlines)
+		return taskDao.findWithReminderConfigDueOnAnyOf(deadlines)
 				.stream()
 				.filter(task -> task.getNotificationReminders().contains(setting))
 				.collect(Collectors.toList());

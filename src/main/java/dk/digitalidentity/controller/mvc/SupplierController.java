@@ -9,6 +9,7 @@ import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -108,6 +109,13 @@ public class SupplierController {
 
 		final List<Long> primaryFor = supplierService.findPrimary(supplier);
 
+		final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(supplier);
+		final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
+				.filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
+				.map(ThreatAssessment.class::cast)
+				.collect(Collectors.toList());
+		threatAssessments.sort(Comparator.comparing(Relatable::getCreatedAt).reversed());
+
 		model.addAttribute("assetRelationListDTOs", mapToSupplierAssetListDTO(supplier, assetsWithMappings, assetRelated));
 
         model.addAttribute("oversights", assetOversights);
@@ -118,6 +126,7 @@ public class SupplierController {
         model.addAttribute("documents", documents);
         model.addAttribute("assetsRelated", assetRelated);
 		model.addAttribute("assetsWithMappings", assetsWithMappings);
+		model.addAttribute("threatAssessments", threatAssessments);
 
         model.addAttribute("incidents", incidents);
 		model.addAttribute("contacts", contacts);

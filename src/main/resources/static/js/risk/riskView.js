@@ -572,16 +572,14 @@ function updateRelatedPrecautions(choices, search, threatType, threatId, threatI
     fetch( `/rest/relatable/autocomplete/relatedprecautions?search=${search}&threatType=${threatType}&threatIdentifier=${threatIdentifier}&threatId=${threatId}&riskId=${riskId}`)
         .then(response => response.json()
             .then(data => {
+                // customProperties bærer det rene navn, som item-templaten både viser og linker
                 choices.setChoices(data.content.map(reg => {
                     return {
                         id: reg.id,
-                        // name: truncateString(reg.name + ": " + reg.description, 60),
                         name: reg.name + ": " + reg.description,
-                        title: reg.description,
-                        customProperties : {
-
-                        }
-                    }
+                        labelDescription: reg.description,
+                        customProperties: reg.name,
+                    };
                 }), 'id', 'name', true);
 
 
@@ -607,6 +605,29 @@ function setPrecautions() {
             defaultResponseErrorHandler(response);
             toastService.info("Info", "Dine ændringer er blevet gemt")
         }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.log(error)});
+}
+
+/** Foranstaltninger har ingen egen side, så chippen peger på oversigten filtreret til den ene. */
+function linkItemLabel(itemEl, precautionId, name) {
+    const textNode = [...itemEl.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+    if (!textNode || !precautionId || !name || !textNode.textContent.startsWith(name)) {
+        return;
+    }
+    const link = document.createElement('a');
+    link.className = 'choices__item-link';
+    link.href = `/precautions?precautionId=${encodeURIComponent(precautionId)}`;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = name;
+    link.addEventListener('click', event => event.stopPropagation());
+    // navn og beskrivelse skal blive ét flex-element, ellers brækker navnet i sin egen kolonne
+    const label = document.createElement('span');
+    label.appendChild(link);
+    const rest = textNode.textContent.slice(name.length);
+    if (rest) {
+        label.appendChild(document.createTextNode(rest));
+    }
+    itemEl.replaceChild(label, textNode);
 }
 
 function pageLoaded() {
@@ -676,6 +697,26 @@ function pageLoaded() {
 
     // precaution choice.js
     const precautionChoiceSelects = document.querySelectorAll('.select-precaution');
+    if (precautionChoiceSelects.length) {
+        // prevent opening of the dropdown when info-icon is pressed
+        document.addEventListener('mousedown', event => {
+            if (event.target.closest && event.target.closest('.choices__info-icon')) {
+                event.stopPropagation();
+            }
+        }, true);
+
+        // close an open description tooltip when clicking anywhere outside its icon
+        document.addEventListener('click', event => {
+            document.querySelectorAll('.choices__info-icon').forEach(icon => {
+                if (!icon.contains(event.target)) {
+                    const tooltip = bootstrap.Tooltip.getInstance(icon);
+                    if (tooltip) {
+                        tooltip.hide();
+                    }
+                }
+            });
+        });
+    }
     for (let i = 0; i < precautionChoiceSelects.length; i++) {
         const relationsSelect = precautionChoiceSelects[i];
 
@@ -683,6 +724,7 @@ function pageLoaded() {
         let dbType = relationsSelect.dataset.dbtype;
         let id = relationsSelect.dataset.id;
         let identifier = relationsSelect.dataset.identifier;
+        let showFullDescription = relationsSelect.dataset.showFullDescription !== 'false';
 
         const initPrecautionSelect = (element, containerInner = 'form-control') => {
             let choices = new Choices(element, {
@@ -700,6 +742,50 @@ function pageLoaded() {
                 },
                 duplicateItemsAllowed: false,
                 shouldSort: false,
+                callbackOnCreateTemplates: function(strToEl, escapeForTemplate, getClassNames) {
+                    const defaultTemplates = Choices.defaults.templates;
+                    return {
+                        // remove labelDescription from the template so we can display "name: description" as one text
+                        choice(classNames, choice, selectText, groupName) {
+                            return defaultTemplates.choice.call(this, classNames, Object.assign({}, choice, {labelDescription: undefined}), selectText, groupName);
+                        },
+                        // add info button when the "showFullDescription" is disabled
+                        item(classNames, choice, removeItemButton) {
+                            const plainName = choice.customProperties ? String(choice.customProperties) : null;
+                            // use the plain name for the chip when the setting is off
+                            const shortName = !showFullDescription && plainName;
+                            const itemChoice = shortName ? Object.assign({}, choice, {label: shortName}) : choice;
+                            const itemEl = defaultTemplates.item.call(this, classNames, itemChoice, removeItemButton);
+                            linkItemLabel(itemEl, choice.value, plainName);
+                            if (!showFullDescription && choice.labelDescription) {
+                                const infoIcon = document.createElement('span');
+                                infoIcon.className = 'choices__info-icon';
+                                infoIcon.textContent = 'ⓘ';
+                                infoIcon.setAttribute('role', 'button');
+                                infoIcon.setAttribute('tabindex', '0');
+                                infoIcon.setAttribute('data-bs-toggle', 'tooltip');
+                                infoIcon.setAttribute('title', choice.labelDescription);
+                                infoIcon.setAttribute('aria-label', choice.labelDescription);
+                                const removeButton = itemEl.querySelector('[data-button]');
+                                itemEl.insertBefore(infoIcon, removeButton);
+                                infoIcon.addEventListener('click', event => event.stopPropagation());
+                                // prevent opening multiple tooltips at the same time
+                                infoIcon.addEventListener('shown.bs.tooltip', () => {
+                                    document.querySelectorAll('.choices__info-icon').forEach(otherIcon => {
+                                        if (otherIcon !== infoIcon) {
+                                            const otherTooltip = bootstrap.Tooltip.getInstance(otherIcon);
+                                            if (otherTooltip) {
+                                                otherTooltip.hide();
+                                            }
+                                        }
+                                    });
+                                });
+                                new bootstrap.Tooltip(infoIcon, {trigger: 'click focus', customClass: 'choices__info-tooltip'});
+                            }
+                            return itemEl;
+                        },
+                    };
+                },
             });
             element.addEventListener("change",
                 function(event) {

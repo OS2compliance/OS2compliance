@@ -110,7 +110,7 @@ public class AssetOversightService {
             taskLog.setResponsibleUserUserId("");
         }
         taskLog.setDeadline(task.getNextDeadline());
-        taskService.completeTask(task, taskLog);
+        taskService.completeTask(task, taskLog, null);
 		if (oversight.getNewInspectionDate() != null) {
 			task.setNextDeadline(oversight.getNewInspectionDate());
 		}

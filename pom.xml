@@ -209,6 +209,11 @@
             <version>5.2.4</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-full</artifactId>
+            <version>5.2.4</version>
+        </dependency>
+        <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.15.3</version>
@@ -266,6 +271,12 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-envers</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>dk.digitalidentity</groupId>
+			<artifactId>reporter</artifactId>
+			<version>1.0.5</version>
+			<optional>true</optional>
 		</dependency>
     </dependencies>
 

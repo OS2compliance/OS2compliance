@@ -48,12 +48,6 @@ class CreateDPIAService {
                     titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "")
                 }
             }
-            if (selected.length > 0) {
-                const errorElement = document.getElementById('assetError')
-                if (errorElement) {
-                    errorElement.style.display = '';
-                }
-            }
         })
 
         return assetChoices;
@@ -89,13 +83,6 @@ class CreateDPIAService {
         const ouSelect = document.getElementById('ouSelect');
 
         const assetIds = assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : [];
-        if (assetIds.length === 0) {
-            const errorElement = document.getElementById('assetError');
-            if (errorElement) {
-                errorElement.style.display = 'block';
-            }
-            return;
-        }
 
         const data = {
             assetIds : assetIds,
@@ -116,7 +103,8 @@ class CreateDPIAService {
         })
 
         if (!response.ok)  {
-            toastService.error(response.statusText)
+            toastService.error('Konsekvensanalysen kunne ikke oprettes')
+            return
         }
 
         const responseJson = await response.json()

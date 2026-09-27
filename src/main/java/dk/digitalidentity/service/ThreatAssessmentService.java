@@ -42,12 +42,15 @@ import dk.digitalidentity.service.model.ThreatDTO;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -79,6 +82,7 @@ import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ThreatAssessmentService implements TagableService<ThreatAssessment> {
@@ -227,7 +231,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         t.setAvailabilityRegistered(sourceResponse.getAvailabilityRegistered());
         t.setAvailabilityOrganisation(sourceResponse.getAvailabilityOrganisation());
         t.setProblem(sourceResponse.getProblem());
-        t.setExistingMeasures(sourceResponse.getExistingMeasures());
+        t.setAdditionalMeasures(sourceResponse.getAdditionalMeasures());
         t.setMethod(sourceResponse.getMethod());
         t.setElaboration(sourceResponse.getElaboration());
         t.setResidualRiskConsequence(sourceResponse.getResidualRiskConsequence());
@@ -509,7 +513,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 				final ThreatDTO dto;
 				if (response != null) {
 					final List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).collect(Collectors.toList());
-					dto = new ThreatDTO(0, response.getId(), threat.getIdentifier(), ThreatDatabaseType.CATALOG, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getConfidentialitySociety() != null ? response.getConfidentialitySociety() : -1, response.getIntegritySociety() != null ? response.getIntegritySociety() : -1, response.getAvailabilitySociety() != null ? response.getAvailabilitySociety() : -1,  response.getAuthenticitySociety() != null ? response.getAuthenticitySociety() : -1, response.getProblem(), response.getExistingMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
+					dto = new ThreatDTO(0, response.getId(), threat.getIdentifier(), ThreatDatabaseType.CATALOG, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getConfidentialitySociety() != null ? response.getConfidentialitySociety() : -1, response.getIntegritySociety() != null ? response.getIntegritySociety() : -1, response.getAvailabilitySociety() != null ? response.getAvailabilitySociety() : -1,  response.getAuthenticitySociety() != null ? response.getAuthenticitySociety() : -1, response.getProblem(), response.getAdditionalMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
 					addRelatedTasks(response, dto);
 				} else {
 					dto = new ThreatDTO(0, 0, threat.getIdentifier(), ThreatDatabaseType.CATALOG, threat.getThreatType(), threat.getDescription(), false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, null, null, new ArrayList<>(), ThreatMethod.NONE, null, -1, -1);
@@ -534,7 +538,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
             final ThreatDTO dto;
             if (response != null) {
                 final List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).toList();
-                dto = new ThreatDTO(threat.getId(), response.getId(), null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getConfidentialitySociety() != null ? response.getConfidentialitySociety() : -1, response.getIntegritySociety() != null ? response.getIntegritySociety() : -1, response.getAvailabilitySociety() != null ? response.getAvailabilitySociety() : -1,  response.getAuthenticitySociety() != null ? response.getAuthenticitySociety() : -1, response.getProblem(), response.getExistingMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
+                dto = new ThreatDTO(threat.getId(), response.getId(), null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getConfidentialitySociety() != null ? response.getConfidentialitySociety() : -1, response.getIntegritySociety() != null ? response.getIntegritySociety() : -1, response.getAvailabilitySociety() != null ? response.getAvailabilitySociety() : -1,  response.getAuthenticitySociety() != null ? response.getAuthenticitySociety() : -1, response.getProblem(), response.getAdditionalMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
                 dto.setIndex(index++);
                 addRelatedTasks(response, dto);
             } else {
@@ -774,6 +778,9 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 
 		// remove catalogs and responses
 		if (!catalogIdsToRemove.isEmpty()) {
+			log.warn("Fravalgte trusselskataloger {} på risikovurdering {} - sletter {} besvarelser",
+					catalogIdsToRemove, assessment.getId(),
+					threatAssessmentResponseDao.countResponsesByAssessmentAndCatalogIdentifiers(assessment.getId(), catalogIdsToRemove));
 			threatAssessmentResponseDao.deleteResponsesByAssessmentAndCatalogIdentifiers(
 					assessment.getId(), catalogIdsToRemove);
 			currentCatalogs.removeIf(catalog -> catalogIdsToRemove.contains(catalog.getIdentifier()));
@@ -863,6 +870,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         // threat list
         Map<String, List<ThreatDTO>> threatList = buildThreatList(threatAssessment);
         context.setVariable("threatsForPDF", buildThreatsForPDF(threatList, riskProfiles, colorMap));
+        context.setVariable("showFullMeasureDescription", settingsService.getBoolean(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, true));
 
         // taskLists
         context.setVariable("tasksForPDF", buildTasks(riskAssessmentTasks));
@@ -1014,7 +1022,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return result;
     }
 
-    record TaskPDFDTO(String name, String description, String taskType, String nextDeadline, String responsible, String department) {}
+    record TaskPDFDTO(String name, String description, String taskType, String startDate, String nextDeadline, String responsible, String department) {}
     private List<TaskPDFDTO> buildTasks(List<Task> riskAssessmentTasks) {
         List<TaskPDFDTO> result = new ArrayList<>();
         riskAssessmentTasks.forEach(
@@ -1023,6 +1031,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                     task.getName(),
                     task.getDescription(),
                     task.getTaskType().getMessage(),
+                    nullSafe(() -> DK_DATE_FORMATTER.format(task.getStartDate())),
                     DK_DATE_FORMATTER.format(task.getNextDeadline()),
                     nullSafe(() -> task.getResponsibleUsers().stream()
 							.map(User::getName)
@@ -1040,7 +1049,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                         String threat,
                         RiskCalculationDTO initialRisk,
                         String problem,
-                        String existingMeasures,
+                        String additionalMeasures,
                         String method,
                         String elaboration,
                         List<PrecautionDTO> linkedPrecautions,
@@ -1070,7 +1079,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
                             score,
                             color),
                         t.getProblem(),
-                        t.getExistingMeasures(),
+                        t.getAdditionalMeasures(),
                         t.getMethod() != null ? t.getMethod().getMessage() : "",
                         t.getElaboration(),
                         buildPrecautions(t.getRelatedPrecautions()
@@ -1303,5 +1312,17 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 	private static boolean uuidListContains(final String commaSeparatedUuids, final String userUuid) {
 		return commaSeparatedUuids != null
 				&& Arrays.stream(commaSeparatedUuids.split(",")).anyMatch(uuid -> uuid.trim().equals(userUuid));
+	}
+
+	public void validateRiskType(ThreatAssessment editedAssessment, Set<Long> selectedAssets, Long selectedRegister, Long selectedSupplier) {
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
+		}
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER) && selectedSupplier == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt.");
+		}
 	}
 }

@@ -160,6 +160,7 @@ function RiskMatrixService() {
                 switch(filter) {
                     case 'aktiv': return 'ASSET';
                     case 'behandling': return 'REGISTER';
+                    case 'leverandør': return 'SUPPLIER';
                     case 'scenarie': return 'SCENARIO';
                     default: return filter;
                 }
@@ -189,6 +190,7 @@ function RiskMatrixService() {
                 switch(filter) {
                     case 'aktiv': return 'ASSET';
                     case 'behandling': return 'REGISTER';
+                    case 'leverandør': return 'SUPPLIER';
                     case 'scenarie': return 'SCENARIO';
                     default: return filter;
                 }
@@ -388,6 +390,15 @@ function RiskChangeOverTimeService() {
     }
 }
 
+function initializeMatrixButtons() {
+    document.addEventListener('change', function (e) {
+        if (e.target.matches('[data-risk-filter]')) {
+            riskMatrixService.onRiskMatrixFilterChange();
+        }
+
+    })
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -403,4 +414,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize development over time section
     riskChangeOverTimeService.initialize();
+
+    initializeMatrixButtons();
 });

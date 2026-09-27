@@ -43,7 +43,6 @@ import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
-import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -193,11 +192,10 @@ public class AssetsController {
             assetService.save(existingAsset);
 
             return "redirect:/assets";
-        } else {
-            asset.setAssetStatus(AssetStatus.NOT_STARTED);
+		} else {
+			asset.setAssetStatus(AssetStatus.NOT_STARTED);
 			asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
-            asset.setCriticality(Criticality.NON_CRITICAL);
-            asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
+			asset.setCriticality(Criticality.NON_CRITICAL);
 			asset.setActive(true);
             final Asset newAsset = assetService.create(asset);
             return "redirect:/assets/" + newAsset.getId();
@@ -617,7 +615,7 @@ public class AssetsController {
 		existingAsset.setArchive(asset.getArchive());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY))) {
-			existingAsset.setActive(asset.isActive());
+			assetService.setActive(existingAsset, asset.isActive());
 		}
 
 		// These fields cannot be changed when the asset comes from OS2kitos, and the form locks them, so they are
@@ -762,9 +760,8 @@ public class AssetsController {
 				asset.getAdditionalSupervisoryModels().clear();
 			}
 		}
-		if (body.getDataProcessingAgreementStatus() != null) {
-			asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
-		}
+
+		asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
 		asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
 		asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
         asset.setNextInspection(body.getNextInspection());

@@ -65,8 +65,13 @@ public class DBSPlatformSyncTask {
 			OffsetDateTime now = OffsetDateTime.now();
 			log.info("Fetching audits from DBS Platform API with publishedAfter={} (our clock: {})", publishedAfter, now);
 			if (publishedAfter != null && publishedAfter.isAfter(now)) {
-				log.warn("publishedAfter {} is {} ahead of our clock - DBS rejects future timestamps with HTTP 400",
+				// Uden klemning låser urskævhed mod DBS (eller fremtidsdateret data) syncen fast i
+				// HTTP 400 indtil vores ur har indhentet vandmærket. Klemningen udvider kun vinduet,
+				// så den fremtidige audit kommer med igen - uændret publishedDate giver ingen ændring.
+				// Minuttets luft dækker den omvendte skævhed, hvor DBS' ur er bagud for vores.
+				log.warn("publishedAfter {} is {} ahead of our clock - clamping to now, DBS rejects future timestamps with HTTP 400",
 						publishedAfter, Duration.between(now, publishedAfter));
+				publishedAfter = now.minusMinutes(1);
 			}
 
 			List<AuditDto> audits = syncService.fetchAllAudits(publishedAfter);

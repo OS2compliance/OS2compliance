@@ -68,6 +68,16 @@ public class Document extends Relatable implements HasSingleResponsibleUser, Tag
 	@Column
 	private boolean includeInYearWheel;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "responsible_ou_uuid")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	private OrganisationUnit responsibleOu;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "department_uuid")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	private OrganisationUnit department;
+
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
 	@JoinTable(name = "document_tag", joinColumns = { @JoinColumn(name = "document_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)

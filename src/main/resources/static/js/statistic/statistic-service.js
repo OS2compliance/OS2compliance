@@ -23,7 +23,6 @@ const defaultConfig = {
     y: 'id',
     aggregation: AGGREGATION_TYPE.COUNT,
     groupTimeBy: 'MONTH',
-    dateField: null,
     startDate: null,
     endDate: null,
     ownerOnly: true,

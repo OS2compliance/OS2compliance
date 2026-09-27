@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum ThreatAssessmentType {
     ASSET("Aktiv"),
     REGISTER("Behandlingsaktivitet"),
-    SCENARIO("Scenarie");
+    SCENARIO("Scenarie"),
+	SUPPLIER("Leverandør");
     private final String message;
 
     ThreatAssessmentType(final String message) {

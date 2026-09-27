@@ -89,6 +89,7 @@ function extractTaskFromFormData(fd, form) {
         id: fd.get('id') || null,
         name: fd.get('name') || '',
         taskType: fd.get('taskType') || null,
+        startDate: fd.get(form.id + 'TaskStartDate') || fd.get('startDate') || '',
         nextDeadline: fd.get(form.id + 'TaskDeadline') || fd.get('nextDeadline') || '',
         responsibleUserUuids: fd.getAll('responsibleUsers') || [],
         responsibleOuUuid: fd.get('responsibleOu') || null,
@@ -99,7 +100,7 @@ function extractTaskFromFormData(fd, form) {
         includeInReport: fd.get('includeInReport') === 'on' || fd.get('includeInReport') === 'true',
         tagIds: (fd.getAll('tags') || []).map(v => parseInt(v)),
         notificationReminders: fd.getAll('notificationReminders') || [],
-        taskDescriptionTemplateId: fd.get('templateDescription') ? parseInt(fd.get('templateDescription')) : null,
+        taskDescriptionTemplateId: fd.get('taskDescriptionTemplate') ? parseInt(fd.get('taskDescriptionTemplate')) : null,
         links: [],
         subTasks: []
     };

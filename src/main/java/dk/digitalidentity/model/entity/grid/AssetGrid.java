@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.TiaAssessment;
 
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
+import dk.digitalidentity.model.entity.interfaces.HasOperationResponsibleUsers;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -30,7 +31,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
+public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers, HasOperationResponsibleUsers {
 	@Id
 	private Long id;
 
@@ -160,6 +161,9 @@ public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
 
 	@Column
 	private String operationResponsibleUserNames;
+
+	@Column
+	private String operationResponsibleUserUuids;
 
 	@Column
 	@Enumerated(EnumType.STRING)

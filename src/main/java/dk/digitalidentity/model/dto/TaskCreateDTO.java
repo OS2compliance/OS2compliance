@@ -27,6 +27,9 @@ public class TaskCreateDTO {
 	@NotNull(message = "Deadline is required")
 	private LocalDate nextDeadline;
 
+	@JsonFormat(pattern = "dd/MM-yyyy")
+	private LocalDate startDate;
+
 	private Set<String> responsibleUserUuids;
 	private String responsibleOuUuid;
 	private String departmentUuid;
