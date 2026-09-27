@@ -156,7 +156,10 @@ public class AssetOversightService {
 
         }
         if (asset.getOversightResponsibleUser() != null) {
-            task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
+            // Managed entitet: erstattes samlingen, kalder merge clear() på en immutable Set.of,
+            // og Hibernate sletter og genindsætter hele join-tabellen ved flush
+            task.getResponsibleUsers().clear();
+            task.getResponsibleUsers().add(asset.getOversightResponsibleUser());
         }
     }
 
