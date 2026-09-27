@@ -31,7 +31,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -156,7 +155,9 @@ public class AssetOversightService {
 
         }
         if (asset.getOversightResponsibleUser() != null) {
-            task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
+            // Samlingen skal blive entitetens egen: ellers skriver Hibernate hele join-tabellen om
+            task.getResponsibleUsers().clear();
+            task.getResponsibleUsers().add(asset.getOversightResponsibleUser());
         }
     }
 
@@ -170,9 +171,9 @@ public class AssetOversightService {
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(asset.getNextInspectionDate());
         task.setNotifyResponsible(false);
-        // Tilsynsansvarlig er et manuelt valg og kan mangle - Set.of(null) ville kaste NPE
+        // Tilsynsansvarlig er et manuelt valg og kan mangle
         if (asset.getOversightResponsibleUser() != null) {
-            task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
+            task.getResponsibleUsers().add(asset.getOversightResponsibleUser());
         }
         task.setDescription("Gå ind på aktivet " + asset.getName() + " og udfør tilsyn.");
         task.getProperties().add(Property.builder()
