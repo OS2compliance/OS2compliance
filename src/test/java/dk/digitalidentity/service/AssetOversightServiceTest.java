@@ -19,6 +19,7 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -350,6 +351,32 @@ class AssetOversightServiceTest {
 
         assertThat(check.getNextDeadline()).isEqualTo(LocalDate.of(2099, 1, 1));
         assertThat(dbsTask.getNextDeadline()).isEqualTo(LocalDate.of(2026, 9, 4));
+    }
+
+    @Test
+    void createOrUpdateAssociatedOversightCheck_canChangeResponsibleOnTheTaskItJustCreated() {
+        // Hibernate wrapper den satte samling frem for at kopiere den, så en immutable Set.of på
+        // den nye kontrol vælter når en senere kørsel skifter ansvarlig
+        final Asset asset = asset(dbsModel());
+        asset.setNextInspection(NextInspection.YEAR);
+        asset.setNextInspectionDate(LocalDate.of(2026, 10, 1));
+        final User first = new User();
+        first.setUuid("uuid-1");
+        final User second = new User();
+        second.setUuid("uuid-2");
+        asset.setOversightResponsibleUser(first);
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.of());
+
+        assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
+
+        final ArgumentCaptor<Task> created = ArgumentCaptor.forClass(Task.class);
+        verify(taskService).saveTask(created.capture());
+        asset.setOversightResponsibleUser(second);
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(created.getValue()));
+
+        assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
+
+        assertThat(created.getValue().getResponsibleUsers()).containsExactly(second);
     }
 
     // ========== setAssetsToDbsOversight ==========

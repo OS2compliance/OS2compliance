@@ -253,7 +253,9 @@ public class DBSService {
 			// notifyResponsible røres ikke: feltet kan være slået bevidst fra, og en backfill må
 			// ikke tænde varsler for mange opgaver på én gang. Deadline-varslerne rammer alligevel
 			// de nye ansvarlige, og tildelingen er synlig i UI'et med det samme.
-			task.setResponsibleUsers(responsible);
+			// Samlingen skal blive entitetens egen: en immutable Set.of vælter i merge
+			task.getResponsibleUsers().clear();
+			task.getResponsibleUsers().addAll(responsible);
 			taskService.saveTask(task);
 			backfilled++;
 			log.info("Backfilled responsible on DBS task id={} for asset id={}: {}",
