@@ -6,7 +6,8 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
-
+### Fixed
+- (Ad-hoc) Tilsynsopgaver oprettet uden ansvarlig fik aldrig en, og et fejlet kitos-match kunne kun genforsøges ved manuelt at nulstille vandmærket for DBS-synkroniseringen. Kitos-koblingen genforsøges nu ved hver kørsel, og ansvarlig udfyldes efterfølgende på åbne tilsynsopgaver der mangler en. Ramte installationer hvor DBS-integrationen blev slået til før OS2kitos
 
 ## [2.8.0] - 2026-09-25
 ### Added
