@@ -27,6 +27,7 @@ public class DBSSyncTask {
 
         log.info("Started: DBS Oversight Responsible Task");
         dbsService.oversightResponsible();
+        dbsService.backfillMissingResponsible();
         log.info("Finished: DBS Oversight Responsible Task");
     }
 

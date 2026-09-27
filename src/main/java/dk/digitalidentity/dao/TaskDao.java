@@ -50,6 +50,10 @@ public interface TaskDao extends TagableRepository<Task> {
 	@Query("select t from Task t where t.deleted=false and t.taskType='TASK'")
 	List<Task> finAllTasks();
 
+	@Query("select t from Task t where t.deleted=false and t.taskType='TASK' and t.logs is empty "
+			+ "and t.responsibleUsers is empty and t.name like concat('%', :marker, '%')")
+	List<Task> findOpenTasksWithoutResponsibleByNameContaining(@Param("marker") final String marker);
+
     List<Task> findByTaskDescriptionTemplate(ChoiceValue taskDescriptionTemplate);
 
     @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.responsibleUsers LEFT JOIN FETCH t.responsibleOu WHERE t.id IN :ids")
