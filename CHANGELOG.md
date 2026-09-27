@@ -6,7 +6,8 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
-
+### Fixed
+- (OS2kitos-integration) Kontraktfelterne på et aktiv stod tomme, og et system hvis kontrakt var ophørt blev ved med at stå som aktivt. Kontraktdata hentes nu uanset om kontrakten er gyldig, og et aktiv sættes inaktivt når alle kontrakter på dets systemanvendelse er udløbet eller opsagt. En kontrakt der endnu ikke er startet, eller som er spærret af en ugyldig hovedkontrakt, inaktiverer ikke
 
 ## [2.8.0] - 2026-09-25
 ### Added
