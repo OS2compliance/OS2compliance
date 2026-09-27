@@ -133,21 +133,12 @@ public class KitosClientService {
     }
 
     /**
-     * Fetch every it-contract associated with the given it-system usage, regardless of when it was last
-     * changed. Used to tell whether an asset is still governed by a valid contract when one of its
-     * contracts has expired — the delta feed only carries the contracts that actually changed.
-     * <p>
-     * Reads a single page, so the result is capped at {@link KitosConstants#MAX_PAGE_SIZE}. A response
-     * of exactly that size means the list is truncated and callers must treat it as incomplete rather
-     * than as "these are all the contracts".
+     * Every contract on an it-system usage, not just the changed ones the delta feed carries. Reads a
+     * single page, so a result of exactly {@link KitosConstants#MAX_PAGE_SIZE} is truncated, not complete.
      */
     public List<ItContractResponseDTO> fetchContractsForSystemUsage(final UUID systemUsageUuid) {
         final List<ItContractResponseDTO> contracts = contractApi.getManyItContractV2GetItContracts(null, null,
             systemUsageUuid, null, null, null, null, null, null, null, 0, KitosConstants.MAX_PAGE_SIZE);
-        if (contracts != null && contracts.size() == KitosConstants.MAX_PAGE_SIZE) {
-            log.warn("It-system usage {} has at least {} contracts, only the first page was read",
-                systemUsageUuid, KitosConstants.MAX_PAGE_SIZE);
-        }
         return contracts == null ? List.of() : contracts;
     }
 

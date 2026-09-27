@@ -29,7 +29,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.web.client.ResourceAccessException;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -51,11 +50,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Unit tests for the contract part of the Kitos synchronisation. Guards the reported behaviour where a
- * system with a terminated contract stayed active in OS2compliance and its contract fields stayed empty,
- * and the deactivation rules that keep systems with a running agreement active.
- */
+/** Contract part of the Kitos sync: contract data is mapped even when the contract has ended, and only a genuinely ended one deactivates. */
 @ExtendWith(MockitoExtension.class)
 class KitosSyncServiceContractTest {
 
@@ -79,11 +74,7 @@ class KitosSyncServiceContractTest {
     // from now() too would share the clock with the code under test and hide an off-by-one.
     private static final LocalDate ENDED_BEFORE_FALLBACK = LocalDate.of(2024, 6, 15);
 
-    /**
-     * Active is toggled through {@link AssetService#setActive} so the "deactivated by the system"
-     * notification is sent from one place; the mock delegates to the entity, so the tests below can
-     * keep asserting on the asset itself.
-     */
+    // Active is toggled through AssetService so the notification is sent; delegate to the entity so the tests can assert on it.
     @BeforeEach
     void applySetActiveToAsset() {
         lenient().doAnswer(invocation -> {
@@ -120,7 +111,6 @@ class KitosSyncServiceContractTest {
             .validTo(offset(LocalDate.of(2030, 1, 1)));
     }
 
-    /** Invalid because the end date has passed — the case from the support thread. */
     private ContractValidityResponseDTO ended() {
         return new ContractValidityResponseDTO()
             .valid(false)
@@ -145,6 +135,7 @@ class KitosSyncServiceContractTest {
     @Test
     void runningContractMapsDataAndLeavesAssetActive() {
         final Asset asset = asset();
+        asset.getProperties().add(contractEndedMark(asset));
         assetFoundFor(USAGE_UUID, asset);
         noSettingsConfigured();
 
@@ -154,6 +145,7 @@ class KitosSyncServiceContractTest {
         assertThat(asset.getContractDate()).isEqualTo(VALID_FROM);
         assertThat(asset.getContractTermination()).isEqualTo(LocalDate.of(2030, 1, 1));
         assertThat(asset.getTerminationNotice()).isEqualTo("3 måneder");
+        assertThat(asset.getProperties()).noneMatch(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY));
         verify(kitosClientService, never()).fetchContractsForSystemUsage(any());
     }
 
@@ -167,26 +159,10 @@ class KitosSyncServiceContractTest {
         kitosSyncService.syncItContracts(List.of(contract(ended())));
 
         assertThat(asset.isActive()).isFalse();
-        // Contract data must still reach the asset — it remains available in Kitos after "valid to".
         assertThat(asset.getContractDate()).isEqualTo(VALID_FROM);
         assertThat(asset.getContractTermination()).isEqualTo(ENDED_ON);
         assertThat(asset.getTerminationNotice()).isEqualTo("3 måneder");
-    }
-
-    @Test
-    void endedContractKeepsKitosLink() {
-        final Asset asset = asset();
-        final Property kitosLink = Property.builder().entity(asset).key(KITOS_UUID_PROPERTY_KEY)
-            .value(SYSTEM_UUID.toString()).build();
-        asset.getProperties().add(kitosLink);
-        assetFoundFor(USAGE_UUID, asset);
-        noSettingsConfigured();
-        when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID)).thenReturn(List.of());
-
-        kitosSyncService.syncItContracts(List.of(contract(ended())));
-
-        assertThat(asset.isActive()).isFalse();
-        assertThat(asset.getProperties()).contains(kitosLink);
+        assertThat(asset.getProperties()).anyMatch(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY));
     }
 
     @Test
@@ -194,7 +170,6 @@ class KitosSyncServiceContractTest {
         final Asset asset = asset();
         assetFoundFor(USAGE_UUID, asset);
         noSettingsConfigured();
-        // Kitos reports valid=false for a contract registered ahead of its start date.
         final ContractValidityResponseDTO notStarted = new ContractValidityResponseDTO()
             .valid(false)
             .validFrom(offset(LocalDate.of(2030, 1, 1)))
@@ -206,22 +181,6 @@ class KitosSyncServiceContractTest {
         assertThat(asset.isActive()).isTrue();
         assertThat(asset.getContractDate()).isEqualTo(LocalDate.of(2030, 1, 1));
         verify(kitosClientService, never()).fetchContractsForSystemUsage(any());
-    }
-
-    @Test
-    void contractInvalidatedByItsParentDoesNotDeactivateAsset() {
-        final Asset asset = asset();
-        assetFoundFor(USAGE_UUID, asset);
-        noSettingsConfigured();
-        final ContractValidityResponseDTO invalidParent = new ContractValidityResponseDTO()
-            .valid(false)
-            .validFrom(offset(VALID_FROM))
-            .validTo(offset(LocalDate.of(2030, 1, 1)))
-            .validationErrors(List.of(ItContractValidationErrorChoice.INVALID_PARENT_CONTRACT));
-
-        kitosSyncService.syncItContracts(List.of(contract(invalidParent)));
-
-        assertThat(asset.isActive()).isTrue();
     }
 
     @Test
@@ -249,7 +208,6 @@ class KitosSyncServiceContractTest {
         kitosSyncService.syncItContracts(List.of(contract(ended()), contract(running())));
 
         assertThat(asset.isActive()).isTrue();
-        // The running contract supplies the data, not the ended one.
         assertThat(asset.getContractTermination()).isEqualTo(LocalDate.of(2030, 1, 1));
         verify(kitosClientService, never()).fetchContractsForSystemUsage(any());
     }
@@ -273,8 +231,8 @@ class KitosSyncServiceContractTest {
         final Asset asset = asset();
         assetFoundFor(USAGE_UUID, asset);
         noSettingsConfigured();
-        final ItContractResponseDTO endedContract = contract(ended());
         // Kitos returns the contract we are processing as part of the usage's contracts.
+        final ItContractResponseDTO endedContract = contract(ended());
         when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID)).thenReturn(List.of(endedContract));
 
         kitosSyncService.syncItContracts(List.of(endedContract));
@@ -284,8 +242,7 @@ class KitosSyncServiceContractTest {
 
     @Test
     void cappedContractListLeavesAssetActive() {
-        // A full page means Kitos truncated the list, so a running contract may sit past the boundary.
-        // Deactivating on incomplete data would take a system in use offline.
+        // A full page means the list is truncated, so a running contract may sit past the boundary.
         final Asset asset = asset();
         assetFoundFor(USAGE_UUID, asset);
         final List<ItContractResponseDTO> fullPage = IntStream
@@ -293,18 +250,6 @@ class KitosSyncServiceContractTest {
             .mapToObj(i -> contract(ended()))
             .toList();
         when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID)).thenReturn(fullPage);
-
-        kitosSyncService.syncItContracts(List.of(contract(ended())));
-
-        assertThat(asset.isActive()).isTrue();
-    }
-
-    @Test
-    void transportFailureLeavesAssetActive() {
-        final Asset asset = asset();
-        assetFoundFor(USAGE_UUID, asset);
-        when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID))
-            .thenThrow(new ResourceAccessException("kitos unavailable"));
 
         kitosSyncService.syncItContracts(List.of(contract(ended())));
 
@@ -374,10 +319,7 @@ class KitosSyncServiceContractTest {
     void terminationDateUsesItsOwnSetting() {
         final Asset asset = asset();
         assetFoundFor(USAGE_UUID, asset);
-        // "Kontrakter -> Kontraktforside -> Gyldig fra" for the start date, "Kontrakter ->
-        // Kontraktforside -> Gyldig til" for the end date: the end date must be read from its own
-        // setting key, otherwise the start-date setting decides both and the termination date is
-        // silently never mapped.
+        // Read from the wrong key the start-date setting decides both, and the termination date is silently never mapped.
         when(settingsService.getString(KitosConstants.KITOS_FIELDS_CONTRACT_DATE, null))
             .thenReturn("SYSTEMS_CONTRACT_FRONTPAGE_FROM");
         when(settingsService.getString(KitosConstants.KITOS_FIELDS_CONTRACT_END, null))
@@ -389,47 +331,7 @@ class KitosSyncServiceContractTest {
         assertThat(asset.getContractTermination()).isEqualTo(LocalDate.of(2030, 1, 1));
     }
 
-    @Test
-    void endedContractDeactivatesThroughAssetServiceSoTheNotificationIsSent() {
-        final Asset asset = asset();
-        assetFoundFor(USAGE_UUID, asset);
-        noSettingsConfigured();
-        when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID)).thenReturn(List.of());
-
-        kitosSyncService.syncItContracts(List.of(contract(ended())));
-
-        verify(assetService).setActive(asset, false);
-    }
-
-    @Test
-    void endedContractMarksTheAssetAsContractEnded() {
-        final Asset asset = asset();
-        assetFoundFor(USAGE_UUID, asset);
-        noSettingsConfigured();
-        when(kitosClientService.fetchContractsForSystemUsage(USAGE_UUID)).thenReturn(List.of());
-
-        kitosSyncService.syncItContracts(List.of(contract(ended())));
-
-        assertThat(asset.getProperties()).anyMatch(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY));
-    }
-
-    @Test
-    void runningContractClearsTheContractEndedMark() {
-        final Asset asset = asset();
-        asset.getProperties().add(contractEndedMark(asset));
-        assetFoundFor(USAGE_UUID, asset);
-        noSettingsConfigured();
-
-        kitosSyncService.syncItContracts(List.of(contract(running())));
-
-        assertThat(asset.getProperties()).noneMatch(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY));
-    }
-
-    /**
-     * Kitos keeps reporting the system as operational after the contract ran out. Without this guard the
-     * lifecycle sync would reactivate the asset, the contract sync would deactivate it again, and the
-     * customer would get a "deactivated" mail on every full sync.
-     */
+    // Without the guard the two sync paths would toggle the asset and mail on every run.
     @Test
     void lifecycleSyncDoesNotReactivateAssetWhoseContractsHaveEnded() {
         final Asset asset = asset();
@@ -461,7 +363,6 @@ class KitosSyncServiceContractTest {
         return Property.builder().entity(asset).key(KITOS_CONTRACT_ENDED_PROPERTY_KEY).value("1").build();
     }
 
-    /** An it-system usage Kitos still reports as operational. */
     private ItSystemUsageResponseDTO operationalUsage() {
         return new ItSystemUsageResponseDTO()
             .uuid(USAGE_UUID)

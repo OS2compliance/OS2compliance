@@ -100,11 +100,8 @@ public class KitosSyncService {
         roles.forEach(this::syncSingleRole);
     }
 
-    /**
-     * Not {@code @Transactional}: telling whether a usage still has a running contract needs a Kitos
-     * lookup per usage, and holding a database connection across those network round trips can exhaust
-     * the pool on a large batch. The lookups therefore run first, and only the writes are wrapped.
-     */
+    // Not @Transactional: a Kitos lookup per usage would hold a database connection across network
+    // round trips, so the lookups run first and only the writes are wrapped.
     public void syncItContracts(final List<ItContractResponseDTO> itContracts) {
         final Map<UUID, List<ItContractResponseDTO>> contractsByUsage = groupByItSystemUsage(itContracts);
         final Set<UUID> runningOutsideBatch = usagesWithRunningContractOutsideBatch(contractsByUsage);
@@ -113,11 +110,8 @@ public class KitosSyncService {
                 syncContractsForSystemUsage(usageUuid, contracts, runningOutsideBatch.contains(usageUuid))));
     }
 
-    /**
-     * The usages whose contracts have all ended in this batch, but that Kitos says still have a running
-     * contract elsewhere. Only those usages need a lookup, and only when we actually know the asset —
-     * so an unknown usage costs no network call, exactly as when the check was done inline.
-     */
+    // Only usages where everything in the batch has ended, and only when the asset is known, so an
+    // unknown usage costs no network call.
     private Set<UUID> usagesWithRunningContractOutsideBatch(final Map<UUID, List<ItContractResponseDTO>> contractsByUsage) {
         final Set<UUID> runningOutsideBatch = new LinkedHashSet<>();
         contractsByUsage.forEach((usageUuid, contracts) -> {
@@ -179,11 +173,7 @@ public class KitosSyncService {
         }
     }
 
-    /**
-     * A contract's {@code systemUsages} holds it-system <em>usage</em> uuids, and one contract can cover
-     * several usages. The contracts of a single usage have to be judged together: an ended contract only
-     * means the system is out of use if no other contract on that usage is still running.
-     */
+    /** A usage's contracts are judged together: an ended contract only counts if no other one is running. */
     private Map<UUID, List<ItContractResponseDTO>> groupByItSystemUsage(final List<ItContractResponseDTO> contracts) {
         final Map<UUID, List<ItContractResponseDTO>> contractsByUsage = new LinkedHashMap<>();
         for (final ItContractResponseDTO contract : contracts) {
@@ -205,7 +195,6 @@ public class KitosSyncService {
             return;
         }
 
-        // A contract that has not ended keeps the system in use and supplies the contract data.
         final Optional<ItContractResponseDTO> runningContract = contracts.stream()
             .filter(contract -> !hasEnded(contract))
             .findFirst();
@@ -216,17 +205,14 @@ public class KitosSyncService {
         }
 
         if (runningContractOutsideBatch) {
-            // Let that contract supply the data — overwriting it with an ended contract's dates would
-            // make the asset look like it has no running agreement.
+            // No mapping: the running contract's dates must not be overwritten by an ended one.
             setContractEnded(asset.get(), false);
             return;
         }
 
         final ItContractResponseDTO lastEnded = latestEnded(contracts);
         mapContractData(asset.get(), lastEnded);
-        // Every contract on the system usage has ended, so the system is no longer in use. The Kitos
-        // link is deliberately kept: breaking it would make Kitos re-import the asset as a brand new
-        // one if a contract is later made valid again.
+        // The Kitos link is deliberately kept: breaking it re-imports the asset as a new one if a contract runs again.
         final boolean alreadyEnded = hasContractEnded(asset.get());
         setContractEnded(asset.get(), true);
         assetService.setActive(asset.get(), false);
@@ -240,10 +226,7 @@ public class KitosSyncService {
         return asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY));
     }
 
-    /**
-     * Records whether every Kitos contract on the asset's it-system usage has ended, so the lifecycle
-     * sync knows not to raise the asset back to active on the next run.
-     */
+    /** Marks that every contract has ended, so the lifecycle sync does not raise the asset back to active. */
     private static void setContractEnded(final Asset asset, final boolean ended) {
         final Optional<Property> existing = asset.getProperties().stream()
             .filter(p -> p.getKey().equals(KITOS_CONTRACT_ENDED_PROPERTY_KEY))
@@ -259,11 +242,7 @@ public class KitosSyncService {
         }
     }
 
-    /**
-     * Whether the contract has run out or been terminated. Deliberately narrower than Kitos'
-     * {@code valid} flag, which is also false for a contract that has not started yet and for one
-     * blocked by an invalid parent contract — neither means the system is out of use.
-     */
+    /** Narrower than Kitos' valid flag, which is also false before a contract starts and when its parent is invalid. */
     private static boolean hasEnded(final ItContractResponseDTO contract) {
         final ContractValidityResponseDTO validity = nullSafe(() -> contract.getGeneral().getValidity());
         if (validity == null || !Boolean.FALSE.equals(validity.getValid())) {
@@ -274,25 +253,17 @@ public class KitosSyncService {
             return validationErrors.contains(ItContractValidationErrorChoice.END_DATE_PASSED)
                 || validationErrors.contains(ItContractValidationErrorChoice.TERMINATION_PERIOD_EXCEEDED);
         }
-        // Kitos did not say why the contract is invalid; fall back to the end date so a contract that
-        // has not started yet is not mistaken for one that has ended.
+        // No reason given: fall back to the end date so a contract that has not started is not read as ended.
         final LocalDate validTo = nullSafe(() -> validity.getValidTo().toLocalDate());
         return validTo != null && validTo.isBefore(LocalDate.now());
     }
 
-    /**
-     * Whether the it-system usage has a contract that is still running but is not part of this batch.
-     * Contracts arrive through a delta feed, so a sibling contract that did not change has to be looked
-     * up. On lookup failure we assume such a contract exists, so a Kitos hiccup never deactivates an
-     * asset that is actually in use.
-     */
+    /** A failed or capped lookup assumes a running contract, so a Kitos outage never deactivates a system in use. */
     private boolean hasRunningContractOutsideBatch(final List<ItContractResponseDTO> batch, final UUID systemUsageUuid) {
         final Set<UUID> batchUuids = batch.stream().map(ItContractResponseDTO::getUuid).collect(Collectors.toSet());
         try {
             final List<ItContractResponseDTO> siblings = kitosClientService.fetchContractsForSystemUsage(systemUsageUuid);
             if (siblings.size() >= KitosConstants.MAX_PAGE_SIZE) {
-                // The response was capped, so a running contract may sit past the page boundary. Treat
-                // it like a failed lookup rather than risk deactivating a system that is still in use.
                 log.warn("Contract list for it-system usage {} was capped at {}, leaving asset active",
                     systemUsageUuid, KitosConstants.MAX_PAGE_SIZE);
                 return true;
@@ -301,16 +272,13 @@ public class KitosSyncService {
                 .filter(contract -> !batchUuids.contains(contract.getUuid()))
                 .anyMatch(contract -> !hasEnded(contract));
         } catch (final RuntimeException ex) {
-            // Includes both RestClientException and the client's KitosAuthException.
+            // RuntimeException, not RestClientException: KitosAuthException is not one.
             log.warn("Could not look up contracts for it-system usage {}, leaving asset active", systemUsageUuid, ex);
             return true;
         }
     }
 
-    /**
-     * The contract with the most recent end date, so the asset shows the agreement that ran last.
-     * Only called once every contract in the list has ended.
-     */
+    /** The contract with the latest end date, so the asset shows the agreement that ran last. */
     private static ItContractResponseDTO latestEnded(final List<ItContractResponseDTO> contracts) {
         return contracts.stream()
             .max(Comparator.comparing(contract -> nullSafe(() -> contract.getGeneral().getValidity().getValidTo().toLocalDate()),
@@ -336,10 +304,7 @@ public class KitosSyncService {
         }
     }
 
-    /**
-     * Maps the contract fields onto the asset. Also done for ended contracts — contract data stays
-     * available in Kitos after "valid to" has passed, and is expected to show on the asset.
-     */
+    /** Also for ended contracts: the data stays available in Kitos after "valid to" has passed. */
     private void mapContractData(final Asset asset, final ItContractResponseDTO itContractResponseDTO) {
 		asset.setTerminationNotice(
 				nullSafe(() -> itContractResponseDTO.getTermination().getTerms().getNoticePeriodMonths().getName())
@@ -372,10 +337,8 @@ public class KitosSyncService {
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
 
         final boolean activeByLifecycle = valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus);
-        // Kitos keeps reporting a system as operational after its last contract ran out, so raising the
-        // asset back to active here would undo the contract sync every night — and each round trip would
-        // send another "deactivated" notification. The contract verdict therefore wins until a contract
-        // runs again.
+        // Kitos still reports the system as operational after the last contract ran out, so the contract
+        // verdict wins here - otherwise the two paths would toggle active and mail on every sync.
         if (!activeByLifecycle || !hasContractEnded(asset)) {
             assetService.setActive(asset, activeByLifecycle);
         }
