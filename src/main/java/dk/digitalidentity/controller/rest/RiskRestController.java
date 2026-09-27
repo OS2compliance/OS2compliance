@@ -344,7 +344,7 @@ public class RiskRestController {
 			case ST -> response.setAvailabilitySociety(Integer.parseInt(dto.value()));
 			case SA -> response.setAuthenticitySociety(Integer.parseInt(dto.value()));
             case PROBLEM -> response.setProblem(dto.value());
-            case EXISTING_MEASURES -> response.setExistingMeasures(dto.value());
+            case ADDITIONAL_MEASURES -> response.setAdditionalMeasures(dto.value());
             case METHOD -> {
 				ThreatMethod threatMethod = ThreatMethod.valueOf(dto.value());
 				response.setMethod(threatMethod);

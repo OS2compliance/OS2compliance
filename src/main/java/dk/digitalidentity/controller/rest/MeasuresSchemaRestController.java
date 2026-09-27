@@ -1,4 +1,4 @@
-package dk.digitalidentity.controller.rest.Assets;
+package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.model.entity.ChoiceMeasure;
 import dk.digitalidentity.model.entity.ChoiceMeasureCategory;

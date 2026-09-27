@@ -158,6 +158,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(45, this::seedV45);
 		incrementAndPerformIfVersion(46, this::seedV46);
 		incrementAndPerformIfVersion(47, this::seedV47);
+		incrementAndPerformIfVersion(48, this::seedV48);
+		incrementAndPerformIfVersion(49, this::seedV49);
 	}
 
 	/**
@@ -195,6 +197,23 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	 */
 	private void seedV46() {
 		// Med vilje tom - se javadoc.
+	}
+
+	/** Sand som udgangspunkt, så ingen installation mister den fulde beskrivelse den har i dag. */
+	private void seedV49() {
+		settingsService.createSetting(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, "true", "risk", true);
+	}
+
+	/**
+	 * "Hændelser (Cirkeldiagram)" fik ved en fejl {@code groupTimeByField(Period.MONTH)} kopieret med
+	 * fra søjlediagram-konfigurationen. Feltet overskrev cirkeldiagrammets valglistebaserede fordeling
+	 * med en månedsgruppering, uanset hvilket felt brugeren valgte - se {@code generatePieChart}.
+	 */
+	private void seedV48() {
+		chartConfigurationService.findByName("Hændelser (Cirkeldiagram)").ifPresent(chart -> {
+			chart.setGroupTimeByField(null);
+			chartConfigurationService.saveAll(List.of(chart));
+		});
 	}
 
 	private void seedV47() {
@@ -765,7 +784,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.selectablePeriod(SelectablePeriod.NONE)
 						.selectableDateField(false)
 						.allowedDateFieldChoices(List.of("createdAt"))
-						.groupTimeByField(Period.MONTH)
+						.groupTimeByField(null)
 						.defaultStartTime(DateTimePreset.YEAR_START)
 						.defaultEndTime(DateTimePreset.YEAR_END)
 						.build(),

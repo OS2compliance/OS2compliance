@@ -42,6 +42,7 @@ public interface Constants {
 
 	String RISK_ASSESSMENT_USE_RESIDUAL = "riskAssessmentUseResidual";
 	String RISK_MATRIX_USE_RESIDUAL = "riskMatrixUseResidual";
+	String RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION = "riskAssessmentShowFullMeasureDescription";
     String RISK_SCALE_PROPERTY_NAME = "riskScale";
     String LAST_NOTIFY_RUN_DAY_SETTING = "lastNotifyRunDay";
 	String ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS = "allowMultipleResponsibleOnTasks";

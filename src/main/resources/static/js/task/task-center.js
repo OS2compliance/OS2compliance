@@ -4,6 +4,7 @@ import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
 import {BadgeData, createBadges} from "../component/badge.js";
 import { initYearWheel } from "./year-wheel.js";
+import { initTaskDateFilter } from "../component/task-date-filter.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -135,10 +136,18 @@ function initGrid() {
                 },
                 width: '90px',
                 formatter: (cell, row) => {
+                    if (!cell) {
+                        return gridjs.html(`<span>-</span>`);
+                    }
+
                     var completed = row.cells[12]['data'];
                     var type = row.cells[2]['data'];
                     if (completed && type === "Opgave") {
                         return gridjs.html(`<span>${cell}</span>`);
+                    }
+
+                    if (!cell) {
+                        return gridjs.html(`<span>-</span>`);
                     }
 
                     var dateString = cell.replace(" ", "/");
@@ -307,6 +316,17 @@ function initGrid() {
 
     //Enables custom column search, serverside sorting and pagination
     const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, datatableId);
+
+    const taskDateFieldSelect = document.getElementById('taskDateFieldSelect');
+    if (taskDateFieldSelect) {
+        initTaskDateFilter(customGridFunctions, {
+            fromInput: '#taskFilterFrom',
+            fromBtn: '#taskFilterFromBtn',
+            toInput: '#taskFilterTo',
+            toBtn: '#taskFilterToBtn',
+            dateFieldSelect: taskDateFieldSelect
+        });
+    }
 
     new ColumnOptions(
         datatableId,

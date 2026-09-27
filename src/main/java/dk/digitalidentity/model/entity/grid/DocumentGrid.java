@@ -53,6 +53,12 @@ public class DocumentGrid implements HasSingleResponsibleUser {
     private String localizedEnums;
 
 	@Column
+	private String responsibleOuName;
+
+	@Column
+	private String departmentName;
+
+	@Column
 	private String tagNames;
 
 	@Column

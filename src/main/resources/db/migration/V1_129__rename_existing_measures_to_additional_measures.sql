@@ -1,0 +1,2 @@
+ALTER TABLE threat_assessment_responses CHANGE existing_measures additional_measures TEXT;
+ALTER TABLE threat_assessment_responses_old CHANGE existing_measures additional_measures TEXT;

@@ -5,7 +5,6 @@ import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
-import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.CatalogService;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -39,11 +35,7 @@ public class CatalogController {
 
 	@RequireReadAll
     @GetMapping
-    public String riskList(final Model model) {
-        final List<ThreatCatalog> catalogList = threatCatalogService.findAll().stream().sorted(Comparator.comparing(ThreatCatalog::getName, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
-        model.addAttribute("threatCatalogs", catalogList);
-        model.addAttribute("inUse", catalogList.stream()
-            .collect(Collectors.toMap(ThreatCatalog::getIdentifier, threatCatalogService::inUse)));
+    public String riskList() {
         return "catalogs/index";
     }
 

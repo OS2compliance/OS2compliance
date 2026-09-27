@@ -94,6 +94,18 @@
               </div>
             </div>
             <div class="row mt-3">
+              <label for="ouSelect" class="col-lg-4 col-form-label">Afdeling</label>
+              <div class="col-lg-8">
+                <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" id="ouSelect" hidden="" tabindex="-1"></select>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="departmentOuSelect" class="col-lg-4 col-form-label">Forvaltning</label>
+              <div class="col-lg-8">
+                <select class="form-control form-select choices__input" th:field="*{department}" data-trigger="" id="departmentOuSelect" hidden="" tabindex="-1"></select>
+              </div>
+            </div>
+            <div class="row mt-3">
               <label for="relationsSelect" class="col-lg-4 col-form-label">Relationer</label>
               <div class="col-lg-8">
                 <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="relations" id="relationsSelect" hidden="" tabindex="-1" multiple></select>

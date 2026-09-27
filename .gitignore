@@ -14,3 +14,8 @@ application-dev.properties
 target/
 .factorypath
 /.claude/
+
+e2e/runs/
+e2e-rapport.html
+e2e-rapport.pdf
+.playwright-mcp/

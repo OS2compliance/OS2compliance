@@ -53,7 +53,9 @@ public interface DocumentV2Mapper {
 			@Mapping(target = "localizedEnums", ignore = true),
 			@Mapping(target = "responsibleUser", ignore = true),
 			@Mapping(target = "includeInYearWheel", ignore = true),
-			@Mapping(target = "documentType", ignore = true)
+			@Mapping(target = "documentType", ignore = true),
+			@Mapping(target = "responsibleOu", ignore = true),
+			@Mapping(target = "department", ignore = true)
 	})
 	Document fromEO(DocumentCreateEOV2 documentCreateV2EO);
 }

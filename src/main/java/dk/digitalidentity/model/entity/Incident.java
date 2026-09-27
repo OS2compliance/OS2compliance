@@ -40,6 +40,11 @@ public class Incident extends Relatable implements StatisticEnabled {
     @Column(name = "draft", nullable = false)
     private boolean draft = false;
 
+    // Unik i basen, så to samtidige indsendelser af den samme formular kun kan blive til én hændelse.
+    @NotAudited
+    @Column(name = "form_token", unique = true)
+    private String formToken;
+
     @Override
     public RelationType getRelationType() {
         return RelationType.INCIDENT;

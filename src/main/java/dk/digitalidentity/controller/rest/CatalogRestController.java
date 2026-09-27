@@ -3,11 +3,14 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.mapping.ThreatMapper;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
+import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.ThreatCatalogThreatDTO;
+import dk.digitalidentity.model.dto.excel.EntityListRequest;
 import dk.digitalidentity.model.dto.excel.ExcelExportRequest;
 import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
+import dk.digitalidentity.model.entity.grid.ThreatCatalogGrid;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
@@ -18,6 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,12 +31,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,6 +51,24 @@ public class CatalogRestController {
     private final CatalogService catalogService;
     private final ThreatMapper threatMapper;
 	private final ExcelExportHelperService excelExportHelperService;
+
+	record CatalogGridDTO(String identifier, String name, int threatCount, boolean hidden, boolean inUse) {}
+
+	@RequireReadAll
+    @PostMapping("list")
+    public PageDTO<CatalogGridDTO> list(
+            @RequestParam(value = "page", defaultValue = "0") final int page,
+            @RequestParam(value = "limit", defaultValue = "50") final int limit,
+            @RequestParam(value = "order", required = false) final String sortColumn,
+            @RequestParam(value = "dir", defaultValue = "ASC") final String sortDirection,
+            @RequestParam final Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        final Page<ThreatCatalogGrid> catalogs = catalogService.getCatalogs(sortColumn, sortDirection, filters, page, limit);
+        final List<CatalogGridDTO> content = catalogs.getContent().stream()
+            .map(c -> new CatalogGridDTO(c.getIdentifier(), c.getName(), c.getThreatCount(), c.isHidden(), c.isInUse()))
+            .collect(Collectors.toList());
+        return new PageDTO<>(catalogs.getTotalElements(), content);
+    }
 
 	@RequireDeleteAll
     @Transactional
@@ -148,6 +173,23 @@ public class CatalogRestController {
 		return excelExportHelperService.getMetadata(CatalogExportDTO.class);
 	}
 
+	record CatalogEntityListItemDTO(String id, String name) {}
+
+	@PostMapping("export-entities")
+	@RequireReadAll
+	public List<CatalogEntityListItemDTO> getEntitiesForExport(@RequestBody final EntityListRequest request) {
+		final Page<ThreatCatalogGrid> catalogs = catalogService.getCatalogs(
+			request.getSortColumn(),
+			request.getSortDirection() != null ? request.getSortDirection() : "ASC",
+			request.getFilters() != null ? new HashMap<>(request.getFilters()) : new HashMap<>(),
+			0,
+			Integer.MAX_VALUE
+		);
+		return catalogs.getContent().stream()
+			.map(c -> new CatalogEntityListItemDTO(c.getIdentifier(), c.getName()))
+			.toList();
+	}
+
 	@PostMapping("export-custom")
 	@RequireReadAll
 	public void exportCustom(
@@ -183,5 +225,3 @@ public class CatalogRestController {
 	}
 
 }
-
-

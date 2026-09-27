@@ -4,6 +4,7 @@ import dk.digitalidentity.BaseIntegrationTest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Table;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.envers.NotAudited;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.type.Type;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -60,7 +61,7 @@ public class AuditedEntitySchemaIntegrationTest extends BaseIntegrationTest {
 		}
 		for (final String propertyName : persister.getPropertyNames()) {
 			final Type type = persister.getPropertyType(propertyName);
-			if (type.isAssociationType() || type.isCollectionType()) {
+			if (type.isAssociationType() || type.isCollectionType() || notAudited(entityClass, propertyName)) {
 				continue;
 			}
 			for (final String column : persister.getPropertyColumnNames(propertyName)) {
@@ -71,6 +72,18 @@ public class AuditedEntitySchemaIntegrationTest extends BaseIntegrationTest {
 			}
 		}
 		return columns;
+	}
+
+	/** Et @NotAudited-felt skrives aldrig til _aud-tabellen, så den har ingen kolonne at matche. */
+	private static boolean notAudited(final Class<?> entityClass, final String propertyName) {
+		for (Class<?> type = entityClass; type != null && type != Object.class; type = type.getSuperclass()) {
+			try {
+				return type.getDeclaredField(propertyName).isAnnotationPresent(NotAudited.class);
+			} catch (final NoSuchFieldException arvetFelt) {
+				// feltet er erklæret længere oppe i hierarkiet
+			}
+		}
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")

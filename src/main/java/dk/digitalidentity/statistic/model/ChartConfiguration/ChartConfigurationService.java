@@ -7,6 +7,8 @@ import dk.digitalidentity.statistic.dto.ChartConfigurationDTO;
 import dk.digitalidentity.statistic.dto.EntityFieldChoiceDTO;
 import dk.digitalidentity.statistic.dto.ErrorDTO;
 import dk.digitalidentity.statistic.enumerable.DateTimePreset;
+import dk.digitalidentity.statistic.enumerable.Period;
+import dk.digitalidentity.statistic.enumerable.SelectablePeriod;
 import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -137,6 +139,41 @@ public class ChartConfigurationService {
 				.xFieldFromYField(xFieldFromYField)
 				.errors(errors)
 				.build();
+	}
+
+	/**
+	 * Resolves the effective time-grouping for a chart. When the config doesn't let the user select
+	 * a period, {@code groupTimeByField} is the only valid source
+	 * @param chartConfig       the chart's configuration
+	 * @param requestedGroupTimeBy grouping requested by the client, if any
+	 * @return the grouping to actually use, or null for none
+	 */
+	public Period resolveGroupTimeBy(ChartConfiguration chartConfig, Period requestedGroupTimeBy) {
+		if (chartConfig.getSelectablePeriod() == SelectablePeriod.NONE) {
+			return chartConfig.getGroupTimeByField();
+		}
+		if (requestedGroupTimeBy == null || chartConfig.getGroupTimeByField() == null || chartConfig.getGroupTimeByField() != requestedGroupTimeBy) {
+			return null;
+		}
+		return requestedGroupTimeBy;
+	}
+
+	/**
+	 * Resolves the effective start date for a chart. When the start date isn't user-selectable per
+	 * {@code selectablePeriod}, the config's own default is used instead of a client-sent value.
+	 */
+	public LocalDate resolveStartDate(ChartConfiguration chartConfig, LocalDate requestedStartDate) {
+		boolean showStartTime = chartConfig.getSelectablePeriod() == SelectablePeriod.BOTH || chartConfig.getSelectablePeriod() == SelectablePeriod.START_ONLY;
+		return showStartTime ? requestedStartDate : toLocalDate(chartConfig.getDefaultStartTime());
+	}
+
+	/**
+	 * Resolves the effective end date for a chart. When the end date isn't user-selectable per
+	 * {@code selectablePeriod}, the config's own default is used instead of a client-sent value.
+	 */
+	public LocalDate resolveEndDate(ChartConfiguration chartConfig, LocalDate requestedEndDate) {
+		boolean showEndTime = chartConfig.getSelectablePeriod() == SelectablePeriod.BOTH || chartConfig.getSelectablePeriod() == SelectablePeriod.END_ONLY;
+		return showEndTime ? requestedEndDate : toLocalDate(chartConfig.getDefaultEndTime());
 	}
 
 	/**
