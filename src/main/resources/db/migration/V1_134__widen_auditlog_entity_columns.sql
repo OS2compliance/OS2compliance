@@ -1,0 +1,1 @@
+ALTER TABLE auditlog MODIFY COLUMN entity_name VARCHAR(768), MODIFY COLUMN entity_id VARCHAR(255);
