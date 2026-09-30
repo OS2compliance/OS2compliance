@@ -13,12 +13,14 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.ColorStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -31,6 +33,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,7 +47,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AssetOversightServiceTest {
 
-    @Mock private SamlModuleConfiguration samlConfiguration;
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS) private SamlModuleConfiguration samlConfiguration;
     @Mock private AssetOversightDao assetOversightDao;
     @Mock private TaskService taskService;
     @Mock private RelationService relationService;
@@ -106,6 +109,26 @@ class AssetOversightServiceTest {
         final Task selected = assetOversightService.findTaskForOversightCompletion(oversight);
 
         assertThat(selected).isSameAs(dbsTask);
+    }
+
+    @Test
+    void newInspectionDateIsPassedOnAsTheNextDeadline() {
+        // Setting it after completion left the start date, moved along with the computed deadline, after it
+        final Task check = oversightTask(1L, TaskType.CHECK,
+            "Udfør tilsyn med leverandøren af Foo", LocalDate.of(2026, 3, 1));
+        final Asset asset = asset(otherModel());
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(check));
+
+        final AssetOversight oversight = new AssetOversight();
+        oversight.setAsset(asset);
+        oversight.setSupervisionModel(otherModel());
+        oversight.setStatus(ColorStatus.GREEN);
+        oversight.setCreationDate(LocalDate.of(2026, 2, 20));
+        oversight.setNewInspectionDate(LocalDate.of(2027, 1, 15));
+
+        assetOversightService.createTaskLogForAssociatedTask(oversight);
+
+        verify(taskService).completeTask(eq(check), any(), eq(LocalDate.of(2027, 1, 15)));
     }
 
     @Test
