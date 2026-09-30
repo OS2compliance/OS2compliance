@@ -23,7 +23,7 @@ public class TaskDaoReminderTest extends BaseIntegrationTest {
 		saveTask("Startet", LocalDate.now(), deadline);
 		saveTask("Ikke startet", LocalDate.now().plusDays(1), deadline);
 
-		assertThat(taskDao.findWithoutReminderConfigDueOn(deadline))
+		assertThat(taskDao.findWithoutReminderConfigDueOn(deadline, LocalDate.now()))
 				.extracting(Task::getName)
 				.containsExactly("Startet");
 	}

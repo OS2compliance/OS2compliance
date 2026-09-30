@@ -150,7 +150,7 @@ public class TaskService implements TagableService<Task> {
      */
     @Transactional
     public List<Task> getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate deadline) {
-        return taskDao.findWithoutReminderConfigDueOn(deadline);
+        return taskDao.findWithoutReminderConfigDueOn(deadline, LocalDate.now());
     }
 
     /**
@@ -160,7 +160,7 @@ public class TaskService implements TagableService<Task> {
      */
     @Transactional
     public List<Task> getTasksWithDeadLineInAndTaskNotificationOverrideFalse(List<LocalDate> deadlines) {
-        return taskDao.findWithoutReminderConfigDueOnAnyOf(deadlines);
+        return taskDao.findWithoutReminderConfigDueOnAnyOf(deadlines, LocalDate.now());
     }
 
     public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
@@ -569,14 +569,14 @@ public class TaskService implements TagableService<Task> {
 	}
 
 	public List<Task> getTasksWithDeadlineAtAndNotificationSettingContains(LocalDate deadline, NotificationSetting setting) {
-		return taskDao.findWithReminderConfigDueOn(deadline)
+		return taskDao.findWithReminderConfigDueOn(deadline, LocalDate.now())
 				.stream()
 				.filter(task -> task.getNotificationReminders().contains(setting))
 				.collect(Collectors.toList());
 	}
 
 	public List<Task> getTasksWithDeadlineInAndNotificationSettingContains(List<LocalDate> deadlines, NotificationSetting setting) {
-		return taskDao.findWithReminderConfigDueOnAnyOf(deadlines)
+		return taskDao.findWithReminderConfigDueOnAnyOf(deadlines, LocalDate.now())
 				.stream()
 				.filter(task -> task.getNotificationReminders().contains(setting))
 				.collect(Collectors.toList());
