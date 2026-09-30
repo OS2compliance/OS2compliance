@@ -12,6 +12,8 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Auditlog) Ændringer på elementer med et navn over 255 tegn, eller standarder med et langt id, blev ikke skrevet i auditloggen. Auditloggens kolonner til navn og id er udvidet til de længder, elementerne selv tillader
 - (Ad-hoc) (Aktiver) Sortering på kolonnerne "Ansvarlige forvaltninger" og "Driftsansvarlig" gav en fejl, og søgning i dem blev ignoreret. Begge dele virker nu, og en gemt sortering på en kolonne der ikke længere findes nulstiller listens gemte søgning og sortering i stedet for at fejle
 - (Ad-hoc) Den natlige oprydning af relationer kørte på alle noder samtidig og kunne fejle. Den kører nu kun hvor scheduling er slået til
+- (Ad-hoc) Oprydningen af auditloggen kørte på alle noder. Den kører nu kun hvor scheduling er slået til
+- (Ad-hoc) (KLE) Alle installationer hentede KLE kl. 02:30. Tidspunktet vælges nu tilfældigt mellem 02:00 og 02:59, medmindre det er sat i konfigurationen
 - (Ad-hoc) (Opgavecenter) Filtrering på status "I gang" gav ingen resultater, og Excel-eksporten fejlede når der var valgt en status i filteret. Eksporten viser nu status som tekst i stedet for true/false
 - (Ad-hoc) (Årshjul) En gentagen opgave kunne vises før sin første deadline, og en kontrol udført før tid stod som overskredet i den periode, den havde lukket. Udførte perioder vises nu ud fra udførelsesloggen
 - (Ad-hoc) (Opgaver) Startdatoen følger nu med, når en gentagen kontrol udføres, og der sendes ikke påmindelser før startdatoen
