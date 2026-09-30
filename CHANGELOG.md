@@ -10,6 +10,8 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Tilsynsopgaver oprettet uden ansvarlig fik aldrig en, og et fejlet kitos-match kunne kun genforsøges ved manuelt at nulstille vandmærket for DBS-synkroniseringen. Kitos-koblingen genforsøges nu ved hver kørsel, og ansvarlig udfyldes efterfølgende på åbne tilsynsopgaver der mangler en. Ramte installationer hvor DBS-integrationen blev slået til før OS2kitos
 - (OS2kitos-integration) Kontraktfelterne på et aktiv stod tomme, og et system hvis kontrakt var ophørt blev ved med at stå som aktivt. Kontraktdata hentes nu uanset om kontrakten er gyldig, og et aktiv sættes inaktivt når alle kontrakter på dets systemanvendelse er udløbet eller opsagt. En kontrakt der endnu ikke er startet, eller som er spærret af en ugyldig hovedkontrakt, inaktiverer ikke
 - (Ad-hoc) (Auditlog) Ændringer på elementer med et navn over 255 tegn, eller standarder med et langt id, blev ikke skrevet i auditloggen. Auditloggens kolonner til navn og id er udvidet til de længder, elementerne selv tillader
+- (Ad-hoc) (Aktiver) Sortering på kolonnen "Ansvarlige forvaltninger" gav en fejl, og søgning i kolonnen blev ignoreret. Begge dele virker nu, og en gemt sortering på en kolonne der ikke længere findes ignoreres i stedet for at fejle
+- (Ad-hoc) Den natlige oprydning af relationer kørte på alle noder samtidig og kunne fejle. Den kører nu kun hvor scheduling er slået til
 
 ## [2.8.0] - 2026-09-25
 ### Added
