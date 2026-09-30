@@ -157,20 +157,18 @@ public class YearWheelService {
 	}
 
 	/**
-	 * The earliest deadline the task is known to have had. An explicit task startDate is the user's
-	 * stated intent and takes precedence. Otherwise, every completion logs the deadline it closed, so the
+	 * The earliest deadline the task is known to have had. Every completion logs the deadline it closed, so the
 	 * oldest logged deadline is where the series started. Without logs the task has never been completed,
 	 * and nextDeadline is the only deadline it has ever been given - whether that is the original one or a
 	 * rescheduled one, projecting occurrences before it would invent deadlines the task never had. A
-	 * deadline that was moved backwards after a completion falls back to nextDeadline too.
+	 * deadline that was moved backwards after a completion falls back to nextDeadline too. A startDate can
+	 * only push the series later, as the first occurrence is the first deadline on or after it.
 	 */
 	private LocalDate resolveFirstDeadline(LocalDate startDate, LocalDate firstLoggedDeadline, LocalDate nextDeadline) {
-		if (startDate != null) {
-			return startDate;
-		}
-		return firstLoggedDeadline != null && firstLoggedDeadline.isBefore(nextDeadline)
+		LocalDate firstDeadline = firstLoggedDeadline != null && firstLoggedDeadline.isBefore(nextDeadline)
 				? firstLoggedDeadline
 				: nextDeadline;
+		return startDate != null && startDate.isAfter(firstDeadline) ? startDate : firstDeadline;
 	}
 
 	/**

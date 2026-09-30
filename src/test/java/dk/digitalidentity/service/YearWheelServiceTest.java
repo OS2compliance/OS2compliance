@@ -160,6 +160,18 @@ public class YearWheelServiceTest {
 	}
 
 	@Test
+	public void startDateBeforeTheFirstDeadlineDoesNotInventEarlierOccurrences() {
+		TaskGrid task = reportableTask(7L, LocalDate.of(2026, 10, 30), TaskRepetition.MONTHLY);
+		task.setStartDate(LocalDate.of(2026, 9, 30));
+		stubTasks(task);
+		doReturn(Map.of()).when(taskService).getFirstDeadlines(List.of(7L));
+
+		assertThat(occurrences(yearWheelService.buildYearWheel(2026, Map.of(), null, false)))
+				.extracting(YearWheelTaskDTO::getDeadline)
+				.containsExactly("30/10-2026", "30/11-2026", "30/12-2026");
+	}
+
+	@Test
 	public void wheelSkipsTasksWithoutADeadline() {
 		TaskGrid task = reportableTask(7L, null, TaskRepetition.YEARLY);
 		stubTasks(task);
