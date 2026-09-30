@@ -60,6 +60,7 @@ SELECT t.id,
        COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) as `completed`,
        CASE
            WHEN COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) = true THEN 'COMPLETED'
+           WHEN t.in_progress = true THEN 'IN_PROGRESS'
            WHEN t.next_deadline IS NULL THEN NULL
            WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
            ELSE 'EXCEEDED'
