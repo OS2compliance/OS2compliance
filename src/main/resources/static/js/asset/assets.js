@@ -350,7 +350,7 @@ function initGrid() {
                 hidden: true,
                 name: "Driftsansvarlig",
                 searchable: {
-                    searchKey: 'operationResponsibleUsers'
+                    searchKey: 'operationResponsibleUserNames'
                 }
             },
             {
