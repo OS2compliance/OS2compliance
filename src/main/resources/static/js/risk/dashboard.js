@@ -8,7 +8,7 @@ function RiskMatrixService() {
     this.onRiskMatrixFilterChange = function() {
         // Get all checked filter values
         const checkedFilters = [];
-        const filterCheckboxes = document.querySelectorAll('.risk-matrix-filters input[type="checkbox"]:checked');
+        const filterCheckboxes = document.querySelectorAll('.risk-matrix-filters input[data-risk-type]:checked');
 
         filterCheckboxes.forEach(checkbox => {
             checkedFilters.push(checkbox.value);
@@ -138,13 +138,31 @@ function RiskMatrixService() {
      */
     this.getCurrentFilters = function() {
         const checkedFilters = [];
-        const filterCheckboxes = document.querySelectorAll('.risk-matrix-filters input[type="checkbox"]:checked');
+        const filterCheckboxes = document.querySelectorAll('.risk-matrix-filters input[data-risk-type]:checked');
 
         filterCheckboxes.forEach(checkbox => {
             checkedFilters.push(checkbox.value);
         });
 
         return checkedFilters;
+    }
+
+    /**
+     * Adds the asset filters (criticality, socially critical, department) to the params
+     * @param {URLSearchParams} params
+     */
+    this.appendAssetFilters = function(params) {
+        const criticalities = [...document.querySelectorAll('.risk-matrix-filters input[data-risk-criticality]:checked')].map(c => c.value);
+        if (criticalities.length > 0) {
+            params.append('criticalities', criticalities.join(','));
+        }
+        if (document.getElementById('filter-socially-critical').checked) {
+            params.append('sociallyCriticalOnly', 'true');
+        }
+        const departments = [...document.getElementById('filter-departments').selectedOptions].map(o => o.value);
+        if (departments.length > 0) {
+            params.append('departments', departments.join(','));
+        }
     }
 
     /**
@@ -168,6 +186,7 @@ function RiskMatrixService() {
             params.append('types', enumFilters.join(','));
         }
 
+        riskMatrixService.appendAssetFilters(params);
         const url = `/rest/risks/dashboard/risk-matrix?${params}`;
         const data = await networkService.Get(url);
 
@@ -198,6 +217,7 @@ function RiskMatrixService() {
             params.append('types', enumFilters.join(','));
         }
 
+        riskMatrixService.appendAssetFilters(params);
         const url = `/rest/risks/dashboard/risk-matrix/${probability}/${consequence}?${params}`;
         const data = await networkService.Get(url);
 
@@ -408,6 +428,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Set colors first
     riskMatrixService.setColors();
+
+    choiceService.initOUSelect('filter-departments');
 
     // Initialize with default filters (all checked)
     riskMatrixService.onRiskMatrixFilterChange();

@@ -801,6 +801,23 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return convertHtmlToPdf(html);
     }
 
+	/** The asset filters only exist on assets, so assessments of other types pass through untouched. */
+	public List<ThreatAssessment> filterByAssetCriteria(List<ThreatAssessment> assessments, List<Criticality> criticalities, boolean sociallyCriticalOnly, List<String> departmentUuids) {
+		final boolean criticalitiesActive = criticalities != null && !criticalities.isEmpty();
+		final boolean departmentsActive = departmentUuids != null && !departmentUuids.isEmpty();
+		if (!criticalitiesActive && !sociallyCriticalOnly && !departmentsActive) {
+			return assessments;
+		}
+		// inactive filters get a placeholder value since empty IN-lists cannot be bound
+		final Set<Long> matching = threatAssessmentDao.findIdsForAssetsFiltered(
+				criticalitiesActive, criticalitiesActive ? criticalities : List.of(Criticality.CRITICAL),
+				sociallyCriticalOnly,
+				departmentsActive, departmentsActive ? departmentUuids : List.of("-"));
+		return assessments.stream()
+				.filter(a -> a.getThreatAssessmentType() != ThreatAssessmentType.ASSET || matching.contains(a.getId()))
+				.toList();
+	}
+
 	public List<ThreatAssessment> findByTypeInAndNotDeleted(List<ThreatAssessmentType> types) {
 		return threatAssessmentDao.findByDeletedFalseAndThreatAssessmentTypeIn(types);
 	}
