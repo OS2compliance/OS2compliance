@@ -1,5 +1,6 @@
 package dk.digitalidentity.task;
 
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.DBSAsset;
@@ -39,10 +40,15 @@ import java.util.stream.Collectors;
 public class RelationCleanupTask {
 	private final RelationService relationService;
 	private final RelationCleanupService relationCleanupService;
+	private final OS2complianceConfiguration configuration;
 
 	@Transactional
 	@Scheduled(cron = "${os2compliance.task.relation.cleanup.cron}")
 	public void cleanupRelations() {
+		if (!configuration.isSchedulingEnabled()) {
+			return;
+		}
+
 		final Map<String, RelationType> CLASS_NAME_TO_TYPE = createClassNameToTypeMap();
 
 		// find all relations that points at an incorrect id
@@ -76,6 +82,10 @@ public class RelationCleanupTask {
 	@Transactional
 	@Scheduled(cron = "${os2compliance.task.relation.duplicate.cron}")
 	public void findDuplicateRelationIds() {
+		if (!configuration.isSchedulingEnabled()) {
+			return;
+		}
+
 		log.info("Searching for ids shared across Relatable tables");
 
 		Map<Long, List<String>> duplicateIds = relationCleanupService.findAllDuplicateIds();
