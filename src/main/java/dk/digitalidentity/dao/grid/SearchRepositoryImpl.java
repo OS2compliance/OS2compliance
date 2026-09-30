@@ -1,5 +1,6 @@
 package dk.digitalidentity.dao.grid;
 
+import dk.digitalidentity.exception.UnknownGridColumnException;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -374,10 +375,10 @@ public class SearchRepositoryImpl implements SearchRepository {
 		final List<Order> orderByList = new ArrayList<>();
 
 		for (final org.springframework.data.domain.Sort.Order order : page.getSort().toList()) {
-			// The sort key comes from the browser's saved grid state, which can outlive a renamed column
 			if (!hasAttribute(root, StringUtils.substringBefore(order.getProperty(), "."))) {
-				log.error("Ignoring sort on unknown property '{}' of {}", order.getProperty(), root.getJavaType().getSimpleName());
-				continue;
+				final UnknownGridColumnException e = new UnknownGridColumnException(order.getProperty(), root.getJavaType());
+				log.error(e.getMessage());
+				throw e;
 			}
 			if (order.getProperty().contains(".")) {
 				final Join<?, ?> join = findOrCreateJoin(root, StringUtils.substringBefore(order.getProperty(), "."));

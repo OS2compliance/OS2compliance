@@ -15,6 +15,7 @@ class CustomGridFunctions {
         searchValues: {}
     }
     #INPUTCLASSNAME
+    #stateResetAfterBadRequest = false
 
     /**
      * @param {Grid} grid GridJS grid element
@@ -53,6 +54,7 @@ class CustomGridFunctions {
             server: {
                 ...this.grid.config.server,
                 url: `${this.dataUrl}?${this.getParamString()}`,
+                handle: (res) => this.#handleResponse(res),
                 then: (data) => {
                     this.initializeInputFields()
                     this.initializeCustomSelects()
@@ -586,6 +588,25 @@ class CustomGridFunctions {
     }
 
     /**
+     * The server answers 400 when the saved state points at a column that no longer exists.
+     * Reset once and refetch; a second 400 means the grid's own config is wrong.
+     */
+    #handleResponse(res) {
+        if (res.status === 400 && !this.#stateResetAfterBadRequest) {
+            this.#stateResetAfterBadRequest = true
+            this.#clearState()
+            const { method, headers, body } = this.grid.config.server
+            return fetch(`${this.dataUrl}?${this.getParamString()}`, { method, headers, body })
+                .then(retry => this.#handleResponse(retry))
+        }
+        if (!res.ok) {
+            console.error(`Could not fetch data: ${res.status} - ${res.statusText}`)
+            return null
+        }
+        return res.json()
+    }
+
+    /**
      * Saves current state to local storage
      */
     saveState() {
@@ -609,6 +630,11 @@ class CustomGridFunctions {
      * resurface fields that no longer apply.
      */
     resetState() {
+        this.#clearState()
+        this.onSearch()
+    }
+
+    #clearState() {
         localStorage.removeItem(`${this.dataUrl}_search`)
         this.state = {
             sortDirection: this.initialSortConfig.sortDirection || 'ASC',
@@ -617,7 +643,6 @@ class CustomGridFunctions {
             limit: this.state.limit,
             searchValues: {}
         }
-        this.onSearch()
     }
 
     /**
