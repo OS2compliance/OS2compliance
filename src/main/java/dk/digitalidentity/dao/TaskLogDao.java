@@ -1,6 +1,6 @@
 package dk.digitalidentity.dao;
 
-import dk.digitalidentity.model.dto.TaskFirstDeadlineDTO;
+import dk.digitalidentity.model.dto.TaskLogDeadlineDTO;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,13 +36,8 @@ public interface TaskLogDao extends JpaRepository<TaskLog, Long> {
      */
     List<TaskLog> findByTaskIdIn(Collection<Long> ids);
 
-	/**
-	 * The oldest deadline logged for each of the given tasks, i.e. the first deadline the task ever had.
-	 * A check's next deadline only moves forward when the check is completed, and the completion records
-	 * the deadline it closed, so the oldest logged deadline is where the series started.
-	 */
-	@Query("select new dk.digitalidentity.model.dto.TaskFirstDeadlineDTO(tl.task.id, min(tl.deadline)) from TaskLog tl where tl.task.id in :ids group by tl.task.id")
-	List<TaskFirstDeadlineDTO> findFirstDeadlineByTaskIdIn(@Param("ids") Collection<Long> ids);
+	@Query("select distinct new dk.digitalidentity.model.dto.TaskLogDeadlineDTO(tl.task.id, tl.deadline) from TaskLog tl where tl.task.id in :ids and tl.deadline is not null")
+	List<TaskLogDeadlineDTO> findLoggedDeadlinesByTaskIdIn(@Param("ids") Collection<Long> ids);
 
 	boolean existsByTaskResultId(Long existingId);
 }

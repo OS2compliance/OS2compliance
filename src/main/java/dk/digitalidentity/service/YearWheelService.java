@@ -46,8 +46,7 @@ public class YearWheelService {
 		Map<Long, Tag> allTagsById = tagService.findAll().stream()
 				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
 
-		// Load the first deadline of every task once, so occurrences are not projected back past it
-		Map<Long, LocalDate> firstDeadlines = taskService.getFirstDeadlines(tasks.stream()
+		Map<Long, Set<LocalDate>> loggedDeadlines = taskService.getLoggedDeadlines(tasks.stream()
 				.map(TaskGrid::getId)
 				.toList());
 
@@ -65,8 +64,8 @@ public class YearWheelService {
 				continue;
 			}
 			LocalDate deadline = task.getNextDeadline().toLocalDate();
-			LocalDate firstDeadline = resolveFirstDeadline(task.getStartDate(), firstDeadlines.get(task.getId()), deadline);
-			List<Integer> occurrenceMonths = calculateOccurrenceMonths(year, deadline, task.getTaskRepetition(), firstDeadline);
+			List<LocalDate> closed = closedDeadlines(year, deadline, loggedDeadlines.getOrDefault(task.getId(), Set.of()));
+			List<LocalDate> open = openDeadlines(year, deadline, task.getTaskRepetition());
 
 			// Resolve year-wheel tags from tagIds
 			List<Tag> yearWheelTags = resolveYearWheelTags(task.getTagIds(), allTagsById);
@@ -83,23 +82,11 @@ public class YearWheelService {
 					? task.getTaskRepetition().getMessage()
 					: "Ingen";
 
-			for (int month : occurrenceMonths) {
-				LocalDate occurrenceDeadline = calculateOccurrenceDeadline(year, month, deadline);
-				String status = calculateOccurrenceStatus(task, occurrenceDeadline);
-
-				YearWheelTaskDTO dto = YearWheelTaskDTO.builder()
-						.id(task.getId())
-						.name(task.getName())
-						.taskType(task.getTaskType().getMessage())
-						.repetition(repetitionLabel)
-						.deadline(occurrenceDeadline.format(DK_FORMAT))
-						.responsibleNames(task.getResponsibleNames() != null ? task.getResponsibleNames() : "")
-						.responsibleOU(responsibleOU)
-						.tags(tagDTOs)
-						.status(status)
-						.build();
-
-				months.get(month).add(dto);
+			for (LocalDate occurrence : closed) {
+				months.get(occurrence.getMonthValue()).add(toOccurrenceDTO(task, occurrence, "completed", repetitionLabel, responsibleOU, tagDTOs));
+			}
+			for (LocalDate occurrence : open) {
+				months.get(occurrence.getMonthValue()).add(toOccurrenceDTO(task, occurrence, calculateOccurrenceStatus(task, occurrence), repetitionLabel, responsibleOU, tagDTOs));
 			}
 		}
 
@@ -117,28 +104,60 @@ public class YearWheelService {
 				.build();
 	}
 
+	private YearWheelTaskDTO toOccurrenceDTO(TaskGrid task, LocalDate occurrence, String status, String repetitionLabel,
+			String responsibleOU, List<YearWheelTagDTO> tagDTOs) {
+		return YearWheelTaskDTO.builder()
+				.id(task.getId())
+				.name(task.getName())
+				.taskType(task.getTaskType().getMessage())
+				.repetition(repetitionLabel)
+				.deadline(occurrence.format(DK_FORMAT))
+				.responsibleNames(task.getResponsibleNames() != null ? task.getResponsibleNames() : "")
+				.responsibleOU(responsibleOU)
+				.tags(tagDTOs)
+				.status(status)
+				.build();
+	}
+
+	/**
+	 * Past occurrences come from the logs: a completion that moved the deadline on closed the deadline it was
+	 * logged against. A completion that left the deadline where it was (a second one in the same period) did not.
+	 */
+	List<LocalDate> closedDeadlines(int targetYear, LocalDate nextDeadline, Set<LocalDate> loggedDeadlines) {
+		return loggedDeadlines.stream()
+				.filter(d -> d.getYear() == targetYear && d.isBefore(nextDeadline))
+				.sorted()
+				.toList();
+	}
+
+	/** Open occurrences start at the next deadline and repeat forward from it. */
+	List<LocalDate> openDeadlines(int targetYear, LocalDate nextDeadline, TaskRepetition repetition) {
+		int intervalMonths = repetition == null ? 0 : getIntervalMonths(repetition);
+		List<LocalDate> deadlines = new ArrayList<>();
+		LocalDate cursor = nextDeadline;
+		for (int i = 1; cursor.getYear() <= targetYear; i++) {
+			if (cursor.getYear() == targetYear) {
+				deadlines.add(cursor);
+			}
+			if (intervalMonths <= 0) {
+				break;
+			}
+			// stepped from nextDeadline each time, so a deadline on the 31st is not dragged to the 28th for good
+			cursor = nextDeadline.plusMonths((long) intervalMonths * i);
+		}
+		return deadlines;
+	}
+
 	private String calculateOccurrenceStatus(TaskGrid task, LocalDate occurrenceDeadline) {
-		// TASK type: completed if any log exists
 		if (task.isCompleted()) {
 			return "completed";
 		}
-
-		// CHECK type: compare occurrence deadline with last completion
-		LocalDate lastCompletion = task.getLastCompletionDate();
-		if (lastCompletion != null && !occurrenceDeadline.isAfter(lastCompletion)) {
-			return "completed";
-		}
-
-		// In progress covers the current occurrence (deadlines up to and including the task's next deadline)
-		if (task.isInProgress() && !occurrenceDeadline.isAfter(task.getNextDeadline().toLocalDate())) {
+		if (task.isInProgress() && occurrenceDeadline.isEqual(task.getNextDeadline().toLocalDate())) {
 			return "inprogress";
 		}
-
-		// Not completed — check if overdue
 		if (occurrenceDeadline.isBefore(LocalDate.now())) {
 			return "overdue";
 		}
-
 		return "upcoming";
 	}
 
@@ -157,86 +176,6 @@ public class YearWheelService {
 	}
 
 	/**
-	 * The earliest deadline the task is known to have had. Every completion logs the deadline it closed, so the
-	 * oldest logged deadline is where the series started. Without logs the task has never been completed,
-	 * and nextDeadline is the only deadline it has ever been given - whether that is the original one or a
-	 * rescheduled one, projecting occurrences before it would invent deadlines the task never had. A
-	 * deadline that was moved backwards after a completion falls back to nextDeadline too. A startDate can
-	 * only push the series later, as the first occurrence is the first deadline on or after it.
-	 */
-	private LocalDate resolveFirstDeadline(LocalDate startDate, LocalDate firstLoggedDeadline, LocalDate nextDeadline) {
-		LocalDate firstDeadline = firstLoggedDeadline != null && firstLoggedDeadline.isBefore(nextDeadline)
-				? firstLoggedDeadline
-				: nextDeadline;
-		return startDate != null && startDate.isAfter(firstDeadline) ? startDate : firstDeadline;
-	}
-
-	/**
-	 * Calculates which months in the target year a task occurs, based on its nextDeadline and repetition
-	 * pattern. No occurrence is placed before firstDeadline, the first deadline the task ever had.
-	 */
-	List<Integer> calculateOccurrenceMonths(int targetYear, LocalDate nextDeadline, TaskRepetition repetition, LocalDate firstDeadline) {
-		List<Integer> months = new ArrayList<>();
-
-		// Earliest month this task can appear in. Snapped to the first of the month because the wheel
-		// places occurrences per month, and stepping by months clamps the day (31 Jan minus a month is
-		// 28 Feb) - comparing exact dates would drop the first occurrence for deadlines late in a month.
-		LocalDate earliestDate = firstDeadline.withDayOfMonth(1);
-
-		// No repetition: only include if deadline falls in target year and at or after the first deadline
-		if (repetition == null || repetition == TaskRepetition.NONE) {
-			if (nextDeadline.getYear() == targetYear && !nextDeadline.isBefore(earliestDate)) {
-				months.add(nextDeadline.getMonthValue());
-			}
-			return months;
-		}
-
-		int intervalMonths = getIntervalMonths(repetition);
-		if (intervalMonths <= 0) {
-			if (nextDeadline.getYear() == targetYear && !nextDeadline.isBefore(earliestDate)) {
-				months.add(nextDeadline.getMonthValue());
-			}
-			return months;
-		}
-
-		LocalDate yearStart = LocalDate.of(targetYear, 1, 1);
-		LocalDate yearEnd = LocalDate.of(targetYear, 12, 31);
-
-		// Effective start: the later of yearStart and earliestDate
-		LocalDate effectiveStart = yearStart.isBefore(earliestDate) ? earliestDate : yearStart;
-
-		// If the effective start is after yearEnd, no occurrences this year
-		if (effectiveStart.isAfter(yearEnd)) {
-			return months;
-		}
-
-		// Step backwards from nextDeadline to find the earliest occurrence at or after effectiveStart
-		LocalDate cursor = nextDeadline;
-		while (cursor.minusMonths(intervalMonths).isAfter(effectiveStart)
-				|| cursor.minusMonths(intervalMonths).isEqual(effectiveStart)) {
-			cursor = cursor.minusMonths(intervalMonths);
-		}
-
-		// If we overshot past effectiveStart, step forward
-		if (cursor.isBefore(effectiveStart)) {
-			cursor = cursor.plusMonths(intervalMonths);
-		}
-
-		// Collect all occurrences within the target year
-		while (!cursor.isAfter(yearEnd)) {
-			if (!cursor.isBefore(effectiveStart)) {
-				int month = cursor.getMonthValue();
-				if (!months.contains(month)) {
-					months.add(month);
-				}
-			}
-			cursor = cursor.plusMonths(intervalMonths);
-		}
-
-		return months;
-	}
-
-	/**
 	 * Returns the interval in months for a given repetition type.
 	 */
 	private int getIntervalMonths(TaskRepetition repetition) {
@@ -251,17 +190,6 @@ public class YearWheelService {
 			case EVERY_THIRD_YEAR -> 36;
 			default -> 0;
 		};
-	}
-
-	/**
-	 * Calculates the specific deadline date for an occurrence in a given month.
-	 * Uses the original day-of-month from nextDeadline, clamped to the month's last day.
-	 */
-	private LocalDate calculateOccurrenceDeadline(int year, int month, LocalDate originalDeadline) {
-		int dayOfMonth = originalDeadline.getDayOfMonth();
-		int maxDay = LocalDate.of(year, month, 1).lengthOfMonth();
-		int actualDay = Math.min(dayOfMonth, maxDay);
-		return LocalDate.of(year, month, actualDay);
 	}
 
 	private YearWheelTagDTO toTagDTO(Tag tag) {
