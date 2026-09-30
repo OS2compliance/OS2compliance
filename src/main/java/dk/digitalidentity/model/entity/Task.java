@@ -172,7 +172,7 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	@Formula("(SELECT CASE " +
 			"WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = id) THEN 'COMPLETED' " +
 			"WHEN t.in_progress THEN 'IN_PROGRESS' " +
-			"WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE' " +
+			"WHEN t.next_deadline >= CURRENT_DATE() THEN 'FUTURE' " +
 			"ELSE 'EXCEEDED' " +
 			"END " +
 			"FROM tasks t " +

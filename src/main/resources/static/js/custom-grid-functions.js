@@ -655,7 +655,11 @@ class CustomGridFunctions {
             if (value === null || value === undefined || value === '') {
                 continue
             }
-            if (Array.isArray(value) && value.length === 0) {
+            if (Array.isArray(value)) {
+                if (value.length > 0) {
+                    // export endpoints take Map<String, String>, same comma format as the grid's query params
+                    filters[key] = value.join(',');
+                }
                 continue
             }
             filters[key] = value;
