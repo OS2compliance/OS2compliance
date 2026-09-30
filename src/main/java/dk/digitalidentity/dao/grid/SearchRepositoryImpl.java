@@ -376,7 +376,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 		for (final org.springframework.data.domain.Sort.Order order : page.getSort().toList()) {
 			// The sort key comes from the browser's saved grid state, which can outlive a renamed column
 			if (!hasAttribute(root, StringUtils.substringBefore(order.getProperty(), "."))) {
-				log.warn("Ignoring sort on unknown property '{}' of {}", order.getProperty(), root.getJavaType().getSimpleName());
+				log.error("Ignoring sort on unknown property '{}' of {}", order.getProperty(), root.getJavaType().getSimpleName());
 				continue;
 			}
 			if (order.getProperty().contains(".")) {
