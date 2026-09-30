@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -234,8 +235,25 @@ public class TaskService implements TagableService<Task> {
                         d.setNextRevision(nextDeadline);
                     }
                 });
+            task.setStartDate(shiftStartDate(task, nextDeadline));
             task.setNextDeadline(nextDeadline);
         }
+    }
+
+    /** The start date keeps its distance to the deadline, but never reaches back past the period the new deadline closes. */
+    private LocalDate shiftStartDate(final Task task, final LocalDate nextDeadline) {
+        final LocalDate startDate = task.getStartDate();
+        final LocalDate deadline = task.getNextDeadline();
+        if (startDate == null || deadline == null || nextDeadline == null || nextDeadline.equals(deadline)
+                || task.getRepetition() == null || task.getRepetition() == TaskRepetition.NONE) {
+            return startDate;
+        }
+        final LocalDate shifted = startDate.plus(Period.between(deadline, nextDeadline));
+        final LocalDate periodStart = addInterval(nextDeadline, task.getRepetition(), -1);
+        if (shifted.isBefore(periodStart)) {
+            return periodStart;
+        }
+        return shifted.isAfter(nextDeadline) ? nextDeadline : shifted;
     }
 
     public LocalDate previewNextDeadline(final Task task, final LocalDate completed) {

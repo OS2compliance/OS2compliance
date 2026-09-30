@@ -182,6 +182,27 @@ class TaskServiceTest {
         assertThat(document.getNextRevision()).isEqualTo(afterFirstCompletion);
     }
 
+    @Test
+    void startDateKeepsItsDistanceToTheDeadline() {
+        final Task task = checkTask(LocalDate.of(2026, 12, 1), TaskRepetition.YEARLY);
+        task.setStartDate(LocalDate.of(2026, 10, 1));
+
+        taskService.completeTask(task, completedOn(LocalDate.of(2026, 11, 20)), null);
+
+        assertThat(task.getStartDate()).isEqualTo(LocalDate.of(2027, 10, 1));
+    }
+
+    @Test
+    void startDateNeverReachesBackPastThePeriodItStarts() {
+        // Migrated tasks got their creation date as start date, often years before the deadline
+        final Task task = checkTask(LocalDate.of(2026, 12, 1), TaskRepetition.YEARLY);
+        task.setStartDate(LocalDate.of(2023, 5, 1));
+
+        taskService.completeTask(task, completedOn(LocalDate.of(2026, 11, 20)), null);
+
+        assertThat(task.getStartDate()).isEqualTo(LocalDate.of(2026, 12, 1));
+    }
+
     private LocalDate intervalDeadline(final TaskRepetition repetition) {
         return LocalDate.of(2026, 12, 1);
     }
