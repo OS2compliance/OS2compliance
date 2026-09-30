@@ -24,6 +24,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 public class SearchRepositoryImpl implements SearchRepository {
 
 	@PersistenceContext
@@ -372,6 +374,11 @@ public class SearchRepositoryImpl implements SearchRepository {
 		final List<Order> orderByList = new ArrayList<>();
 
 		for (final org.springframework.data.domain.Sort.Order order : page.getSort().toList()) {
+			// The sort key comes from the browser's saved grid state, which can outlive a renamed column
+			if (!hasAttribute(root, StringUtils.substringBefore(order.getProperty(), "."))) {
+				log.warn("Ignoring sort on unknown property '{}' of {}", order.getProperty(), root.getJavaType().getSimpleName());
+				continue;
+			}
 			if (order.getProperty().contains(".")) {
 				final Join<?, ?> join = findOrCreateJoin(root, StringUtils.substringBefore(order.getProperty(), "."));
 				Path<Object> path = join.get(StringUtils.substringAfter(order.getProperty(), "."));
@@ -386,6 +393,10 @@ public class SearchRepositoryImpl implements SearchRepository {
 			}
 		}
 		return orderByList;
+	}
+
+	private static boolean hasAttribute(final Root<?> root, final String name) {
+		return root.getModel().getAttributes().stream().anyMatch(a -> a.getName().equals(name));
 	}
 
 	private static Join<?, ?> findOrCreateJoin(final Root<?> root, final String joinColumnName) {

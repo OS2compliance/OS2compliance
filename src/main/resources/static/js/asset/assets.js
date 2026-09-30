@@ -312,7 +312,7 @@ function initGrid() {
                 hidden: true,
                 name: "Ansvarlige forvaltninger",
                 searchable: {
-                    searchKey: 'departments'
+                    searchKey: 'departmentNames'
                 }
             },
             {
