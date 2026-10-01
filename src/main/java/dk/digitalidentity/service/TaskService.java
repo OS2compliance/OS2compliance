@@ -1,9 +1,11 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.dao.DPIADao;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.TaskPredicates;
+import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.grid.QueryPredicateBuilder;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
@@ -56,6 +58,7 @@ import java.util.stream.Collectors;
 import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
+import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY;
 import static dk.digitalidentity.Constants.DBS_TASK_NAME_MARKER;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -78,6 +81,8 @@ public class TaskService implements TagableService<Task> {
             .thenComparing(Task::getId, Comparator.nullsFirst(Comparator.naturalOrder()));
 
     private final DocumentDao documentDao;
+    private final ThreatAssessmentDao threatAssessmentDao;
+    private final DPIADao dpiaDao;
     private final TaskDao taskDao;
     private final TaskLogDao taskLogDao;
 	private final TaskGridDao taskGridDao;
@@ -215,6 +220,7 @@ public class TaskService implements TagableService<Task> {
                     }
 					d.setIncludeInYearWheel(task.getIncludeInReport());
 				});
+            syncLinkedRevisionDates(task, task.getNextDeadline());
         }
         return taskDao.save(task);
     }
@@ -235,6 +241,7 @@ public class TaskService implements TagableService<Task> {
                         d.setNextRevision(nextDeadline);
                     }
                 });
+            syncLinkedRevisionDates(task, nextDeadline);
             task.setStartDate(shiftStartDate(task, nextDeadline));
             task.setNextDeadline(nextDeadline);
         }
@@ -380,6 +387,23 @@ public class TaskService implements TagableService<Task> {
 
     public List<TaskLog> logsBetween(final Task task, final LocalDate from, final LocalDate to) {
         return taskLogDao.findAllByTaskFiltered(task, from, to);
+    }
+
+    /** A risk assessment's or DPIA's revision check is the source of its next revision date. */
+    private void syncLinkedRevisionDates(final Task task, final LocalDate nextDeadline) {
+        findLinkedId(task, ASSOCIATED_THREAT_ASSESSMENT_PROPERTY)
+            .flatMap(threatAssessmentDao::findById)
+            .ifPresent(assessment -> assessment.setNextRevision(nextDeadline));
+        findLinkedId(task, ASSOCIATED_ASSET_DPIA_PROPERTY)
+            .flatMap(dpiaDao::findById)
+            .ifPresent(dpia -> dpia.setNextRevision(nextDeadline));
+    }
+
+    private Optional<Long> findLinkedId(final Task task, final String propertyKey) {
+        return task.getProperties().stream()
+            .filter(p -> p.getKey().equals(propertyKey))
+            .findFirst()
+            .map(property -> Long.parseLong(property.getValue()));
     }
 
     private Optional<Document> findLinkedDocument(final Task task) {
