@@ -686,13 +686,24 @@ public class RiskRestController {
 
 	public record RiskOverTimeData( int[] green, int[] lightGreen, int[] yellow, int[] orange, int[] red) {}
 	@GetMapping("/dashboard/risk-over-time/{year}")
-	public ResponseEntity<RiskOverTimeData> getRiskOverTime(@PathVariable int year) {
+	public ResponseEntity<RiskOverTimeData> getRiskOverTime(@PathVariable int year,
+			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types,
+			@RequestParam(required = false) List<Criticality> criticalities,
+			@RequestParam(required = false, defaultValue = "false") boolean sociallyCriticalOnly,
+			@RequestParam(required = false) List<String> departments) {
+		if (types == null || types.isEmpty()) {
+			return ResponseEntity.ok(new RiskOverTimeData(new int[12], new int[12], new int[12], new int[12], new int[12]));
+		}
 
-		// Get ALL non-deleted threat assessments (not just from selected year)
-		List<ThreatAssessment> allAssessments = threatAssessmentService.findAllNotDeleted()
+		// All non-deleted assessments of the selected types, not just from the selected year
+		List<ThreatAssessment> allAssessments = threatAssessmentService.filterByAssetCriteria(
+						threatAssessmentService.findByTypeInAndNotDeleted(types), criticalities, sociallyCriticalOnly, departments)
 				.stream()
 				.filter(assessment -> assessment.getCreatedAt() != null)
 				.toList();
+		// The key looks up relations, so it is computed once rather than once per month
+		Map<Long, String> keys = allAssessments.stream()
+				.collect(Collectors.toMap(ThreatAssessment::getId, this::getAssessmentKey));
 
 		// Initialize arrays for 12 months (0-indexed)
 		int[] green = new int[12];
@@ -712,7 +723,7 @@ public class RiskRestController {
 					.filter(assessment -> assessment.getCreatedAt().isBefore(cutoffDate) ||
 							assessment.getCreatedAt().isEqual(cutoffDate))
 					.collect(Collectors.toMap(
-							this::getAssessmentKey,
+							assessment -> keys.get(assessment.getId()),
 							assessment -> assessment,
 							(existing, replacement) -> existing.getCreatedAt().isAfter(replacement.getCreatedAt()) ?
 									existing : replacement
