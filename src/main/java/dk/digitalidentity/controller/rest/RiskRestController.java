@@ -31,6 +31,7 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
+import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
@@ -596,13 +597,17 @@ public class RiskRestController {
 	public record RiskMatrixItem(int probability, int consequence, int count) {}
 	@GetMapping("/dashboard/risk-matrix")
 	public ResponseEntity<List<RiskMatrixItem>> getRiskMatrixData(
-			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
+			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types,
+			@RequestParam(required = false) List<Criticality> criticalities,
+			@RequestParam(required = false, defaultValue = "false") boolean sociallyCriticalOnly,
+			@RequestParam(required = false) List<String> departments) {
 
 		if (types == null || types.isEmpty()) {
 			return ResponseEntity.ok(new ArrayList<>());
 		}
 		boolean useResidualRisk = settingsService.getBoolean(Constants.RISK_MATRIX_USE_RESIDUAL, true);
-		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
+		List<ThreatAssessment> threatAssessments = threatAssessmentService.filterByAssetCriteria(
+				threatAssessmentService.findByTypeInAndNotDeleted(types), criticalities, sociallyCriticalOnly, departments);
 
 		return ResponseEntity.ok(calculateRiskMatrix(threatAssessments, useResidualRisk));
 	}
@@ -648,14 +653,17 @@ public class RiskRestController {
 	public ResponseEntity<List<RiskDetailItem>> getRiskDetails(
 			@PathVariable int probability,
 			@PathVariable int consequence,
-			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
+			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types,
+			@RequestParam(required = false) List<Criticality> criticalities,
+			@RequestParam(required = false, defaultValue = "false") boolean sociallyCriticalOnly,
+			@RequestParam(required = false) List<String> departments) {
 
 		if (types == null || types.isEmpty()) {
 			return ResponseEntity.ok(new ArrayList<>());
 		}
 
-		// Fetch threat assessments filtered by types
-		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
+		List<ThreatAssessment> threatAssessments = threatAssessmentService.filterByAssetCriteria(
+				threatAssessmentService.findByTypeInAndNotDeleted(types), criticalities, sociallyCriticalOnly, departments);
 		boolean residualValues = settingsService.getBoolean(Constants.RISK_MATRIX_USE_RESIDUAL, true);
 
 		// Filter assessments that match the requested probability and consequence

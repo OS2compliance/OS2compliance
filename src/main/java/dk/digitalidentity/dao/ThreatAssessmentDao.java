@@ -101,6 +101,24 @@ public interface ThreatAssessmentDao extends TagableRepository<ThreatAssessment>
        """)
 	Set<ThreatAssessment> findLatestForAllRegistersBetweenDates(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
+	@Query("""
+       SELECT DISTINCT ta.id FROM Asset a, Relation r, ThreatAssessment ta
+       WHERE (
+           (r.relationAId = a.id AND r.relationAType = 'ASSET' AND
+            r.relationBType = 'THREAT_ASSESSMENT' AND ta.id = r.relationBId)
+           OR
+           (r.relationBId = a.id AND r.relationBType = 'ASSET' AND
+            r.relationAType = 'THREAT_ASSESSMENT' AND ta.id = r.relationAId)
+       )
+       AND (:criticalitiesActive = false OR a.criticality IN :criticalities)
+       AND (:sociallyCriticalOnly = false OR a.sociallyCritical = true)
+       AND (:departmentsActive = false OR EXISTS (
+           SELECT dep FROM a.departments dep WHERE dep.uuid IN :departmentUuids))
+       """)
+	Set<Long> findIdsForAssetsFiltered(@Param("criticalitiesActive") boolean criticalitiesActive, @Param("criticalities") Collection<Criticality> criticalities,
+			@Param("sociallyCriticalOnly") boolean sociallyCriticalOnly,
+			@Param("departmentsActive") boolean departmentsActive, @Param("departmentUuids") Collection<String> departmentUuids);
+
 	Set<ThreatAssessment> findByThreatAssessmentTypeInAndCreatedAtBetween(
 			Collection<ThreatAssessmentType> threatAssessmentTypes,
 			LocalDateTime startDate,

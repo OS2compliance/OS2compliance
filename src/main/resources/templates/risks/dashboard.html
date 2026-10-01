@@ -45,30 +45,49 @@
                                     <label class="form-label fw-bold mb-3">Vælg typer:</label>
                                     <div class="d-flex gap-3 flex-wrap">
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="filter-aktiv" value="aktiv" checked data-risk-filter>
+                                            <input class="form-check-input" type="checkbox" id="filter-aktiv" value="aktiv" checked data-risk-filter data-risk-type>
                                             <label class="form-check-label" for="filter-aktiv">
                                                 Aktiv
                                             </label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="filter-behandling" value="behandling" checked data-risk-filter>
+                                            <input class="form-check-input" type="checkbox" id="filter-behandling" value="behandling" checked data-risk-filter data-risk-type>
                                             <label class="form-check-label" for="filter-behandling">
                                                 Behandlingsaktivitet
                                             </label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="filter-scenarie" value="scenarie" checked data-risk-filter>
+                                            <input class="form-check-input" type="checkbox" id="filter-scenarie" value="scenarie" checked data-risk-filter data-risk-type>
                                             <label class="form-check-label" for="filter-scenarie">
                                                 Scenarie
                                             </label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" id="filter-leverandør" value="leverandør" checked data-risk-filter>
+                                            <input class="form-check-input" type="checkbox" id="filter-leverandør" value="leverandør" checked data-risk-filter data-risk-type>
                                             <label class="form-check-label" for="filter-leverandør">
                                                 Leverandør
                                             </label>
                                         </div>
                                     </div>
+                                    <label class="form-label fw-bold mt-3 mb-2">Kritikalitet:</label>
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <div class="form-check form-check-inline" th:each="criticality, iter : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}">
+                                            <input class="form-check-input" type="checkbox" th:id="'filter-criticality' + ${iter.index}" th:value="${criticality.name()}" data-risk-filter data-risk-criticality>
+                                            <label class="form-check-label" th:for="'filter-criticality' + ${iter.index}" th:text="${criticality.message}"></label>
+                                        </div>
+                                    </div>
+                                    <label class="form-label fw-bold mt-3 mb-2">Samfundskritisk:</label>
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="filter-socially-critical" data-risk-filter>
+                                            <label class="form-check-label" for="filter-socially-critical">Vis kun samfundskritiske systemer</label>
+                                        </div>
+                                    </div>
+                                    <label class="form-label fw-bold mt-3 mb-2" for="filter-departments">Afdeling:</label>
+                                    <div style="max-width: 600px;">
+                                        <select id="filter-departments" class="form-select" multiple="multiple" data-risk-filter></select>
+                                    </div>
+                                    <small class="text-muted">Kritikalitet, samfundskritisk og afdeling gælder kun aktiver</small>
                                 </div>
                             </div>
 
