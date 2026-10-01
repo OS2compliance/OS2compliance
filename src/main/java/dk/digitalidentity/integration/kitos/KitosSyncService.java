@@ -41,7 +41,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -60,15 +59,6 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Service
 @RequiredArgsConstructor
 public class KitosSyncService {
-
-    // Lifecycle phases that map to active=true; all others (UNDECIDED, NOT_IN_USE) map to inactive.
-    // Systems being phased out or piloted are still in operation and count as active.
-    private static final Set<LifeCycleStatusChoice> ACTIVE_LIFECYCLE_STATUSES = EnumSet.of(
-        LifeCycleStatusChoice.OPERATIONAL,
-        LifeCycleStatusChoice.PHASING_IN,
-        LifeCycleStatusChoice.PHASING_OUT,
-        LifeCycleStatusChoice.PILOT
-    );
 
     private final AssetService assetService;
     private final SupplierService supplierService;
@@ -336,7 +326,8 @@ public class KitosSyncService {
 
         final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
 
-        final boolean activeByLifecycle = valid && ACTIVE_LIFECYCLE_STATUSES.contains(lifeCycleStatus);
+        // Only "not in use" deactivates; undecided or missing phases are common and must not take systems out
+        final boolean activeByLifecycle = valid && lifeCycleStatus != LifeCycleStatusChoice.NOT_IN_USE;
         // Kitos still reports the system as operational after the last contract ran out, so the contract
         // verdict wins here - otherwise the two paths would toggle active and mail on every sync.
         if (!activeByLifecycle || !hasContractEnded(asset)) {
