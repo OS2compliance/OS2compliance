@@ -23,6 +23,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -140,6 +141,15 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
     protected void onTaskCreate() {
         if (startDate == null) {
             startDate = LocalDate.now();
+        }
+        keepStartDateBeforeDeadline();
+    }
+
+    // Revisionsdatoer på risikovurderinger, DPIA'er m.fl. flytter deadline uden om formularens validering
+    @PreUpdate
+    protected void keepStartDateBeforeDeadline() {
+        if (startDate != null && nextDeadline != null && startDate.isAfter(nextDeadline)) {
+            startDate = nextDeadline;
         }
     }
 

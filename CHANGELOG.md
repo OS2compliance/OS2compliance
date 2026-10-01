@@ -10,6 +10,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Risikobillede) Risikomatricen under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter
 
 ### Fixed
+- (Ad-hoc) (Opgaver) En kontrol hvis deadline var flyttet til før startdatoen, fx via revisionsdatoen på en risikovurdering eller DPIA, kunne ikke gemmes efter redigering (400 Bad Request). Startdatoen følger nu med, og eksisterende kontroller er rettet
 - (Ad-hoc) Tilsynsopgaver oprettet uden ansvarlig fik aldrig en, og et fejlet kitos-match kunne kun genforsøges ved manuelt at nulstille vandmærket for DBS-synkroniseringen. Kitos-koblingen genforsøges nu ved hver kørsel, og ansvarlig udfyldes efterfølgende på åbne tilsynsopgaver der mangler en. Ramte installationer hvor DBS-integrationen blev slået til før OS2kitos
 - (OS2kitos-integration) Kontraktfelterne på et aktiv stod tomme, og et system hvis kontrakt var ophørt blev ved med at stå som aktivt. Kontraktdata hentes nu uanset om kontrakten er gyldig, og et aktiv sættes inaktivt når alle kontrakter på dets systemanvendelse er udløbet eller opsagt. En kontrakt der endnu ikke er startet, eller som er spærret af en ugyldig hovedkontrakt, inaktiverer ikke
 - (Ad-hoc) (Auditlog) Ændringer på elementer med et navn over 255 tegn, eller standarder med et langt id, blev ikke skrevet i auditloggen. Auditloggens kolonner til navn og id er udvidet til de længder, elementerne selv tillader
