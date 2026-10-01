@@ -22,6 +22,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Årshjul) En gentagen opgave kunne vises før sin første deadline, og en kontrol udført før tid stod som overskredet i den periode, den havde lukket. Udførte perioder vises nu ud fra udførelsesloggen
 - (Ad-hoc) (Opgaver) Startdatoen følger nu med, når en gentagen kontrol udføres, og der sendes ikke påmindelser før startdatoen
 - (Ad-hoc) (Risikovurderinger) Et skift af risikomodel kunne genberegne risikofarverne med den gamle model
+- (Ad-hoc) (Årshjul) Excel-udtrækket af årshjulet viste en gentagen kontrol som udført for altid efter første udførelse
+- (Ad-hoc) (Risikovurderinger/DPIA) Revideringsdatoen fulgte først kontrollens deadline, når revideringsdialogen blev åbnet, så aktivets "næste risikovurdering" kunne udfyldes med en forældet dato. Den følger nu med, når kontrollen udføres eller redigeres, og eksisterende datoer er rettet
+- (Ad-hoc) (OS2kitos-integration) Systemer hvis livscyklusfase i OS2kitos var "Ubesluttet" eller ikke angivet, blev sat inaktive. Kun "Ikke i brug" inaktiverer nu, og de berørte systemer bliver aktive igen ved den natlige fulde synkronisering
 
 ## [2.8.0] - 2026-09-25
 ### Added

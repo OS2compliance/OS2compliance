@@ -179,8 +179,9 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
         notifyResponsible = bool;
     }
 
+	// a repeating check is never done, a completion only moves it to the next period
 	@Formula("(SELECT CASE " +
-			"WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = id) THEN 'COMPLETED' " +
+			"WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = id) AND (t.task_type = 'TASK' OR t.repetition = 'NONE') THEN 'COMPLETED' " +
 			"WHEN t.in_progress THEN 'IN_PROGRESS' " +
 			"WHEN t.next_deadline >= CURRENT_DATE() THEN 'FUTURE' " +
 			"ELSE 'EXCEEDED' " +

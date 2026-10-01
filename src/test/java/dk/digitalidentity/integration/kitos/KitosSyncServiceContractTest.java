@@ -23,6 +23,9 @@ import dk.kitos.api.model.ItSystemUsageValidityResponseDTO;
 import dk.kitos.api.model.LifeCycleStatusChoice;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -357,6 +360,23 @@ class KitosSyncServiceContractTest {
         kitosSyncService.syncItSystemUsages(List.of(operationalUsage()));
 
         assertThat(asset.isActive()).isTrue();
+    }
+
+    // Undecided or missing phases are common in Kitos; mapping them to inactive took customers' systems out
+    @ParameterizedTest
+    @EnumSource(value = LifeCycleStatusChoice.class, names = {"UNDECIDED", "NOT_IN_USE"})
+    @NullSource
+    void onlyNotInUseDeactivates(final LifeCycleStatusChoice lifeCycleStatus) {
+        final Asset asset = asset();
+        noSettingsConfigured();
+        when(assetService.findByProperty(KITOS_UUID_PROPERTY_KEY, SYSTEM_UUID.toString()))
+            .thenReturn(Optional.of(asset));
+        final ItSystemUsageResponseDTO usage = operationalUsage();
+        usage.getGeneral().getValidity().setLifeCycleStatus(lifeCycleStatus);
+
+        kitosSyncService.syncItSystemUsages(List.of(usage));
+
+        assertThat(asset.isActive()).isEqualTo(lifeCycleStatus != LifeCycleStatusChoice.NOT_IN_USE);
     }
 
     private Property contractEndedMark(final Asset asset) {
