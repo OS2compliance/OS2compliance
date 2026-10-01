@@ -215,6 +215,7 @@ function RiskMatrixService() {
 
 function RiskChangeOverTimeService() {
     let chart = null; // Store chart instance
+    let latestRequest = 0;
 
     /**
      * Initialize the development over time section
@@ -243,8 +244,12 @@ function RiskChangeOverTimeService() {
      * @param {number} year - Selected year
      */
     this.loadChartData = async function(year) {
+        // a filter change can fire several requests; only the newest may draw the chart
+        const request = ++latestRequest;
         const chartData = await riskChangeOverTimeService.fetchChartData(year);
-        riskChangeOverTimeService.renderChart(chartData);
+        if (request === latestRequest) {
+            riskChangeOverTimeService.renderChart(chartData);
+        }
     }
 
     /**
