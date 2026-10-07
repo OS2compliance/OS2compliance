@@ -304,10 +304,16 @@ SELECT a.id,
                           AND third_country_transfer = 'YES') THEN TRUE
            ELSE FALSE
        END                                                                  AS has_third_country_transfer,
+       -- one lookup per side so each uses its index; <> a.id keeps a self-relation counted once
        (SELECT COUNT(rel.id)
         FROM relations rel
-        WHERE (rel.relation_a_id = a.id OR rel.relation_b_id = a.id)
-          AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER')) as registers,
+        WHERE rel.relation_a_id = a.id
+          AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER'))
+       + (SELECT COUNT(rel.id)
+          FROM relations rel
+          WHERE rel.relation_b_id = a.id
+            AND rel.relation_a_id <> a.id
+            AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER')) as registers,
        ta_calcs.avg_probability,
        ta_calcs.avg_consequence_overall,
        ta_calcs.avg_consequence_confidentiality_registered,
@@ -385,18 +391,29 @@ FROM assets a
          LEFT JOIN suppliers s on s.id = a.supplier_id
          LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
          LEFT JOIN properties old_kitos_prop ON old_kitos_prop.entity_id = a.id AND old_kitos_prop.prop_key = 'old_kitos_usage_uuid'
-         LEFT JOIN threat_assessments ta ON ta.id = (
-             SELECT tb.id
-             FROM threat_assessments tb
-             JOIN relations r ON (
-                 r.relation_a_id = a.id AND r.relation_b_id = tb.id AND r.relation_b_type = 'THREAT_ASSESSMENT'
-                 OR r.relation_b_id = a.id AND r.relation_a_id = tb.id AND r.relation_a_type = 'THREAT_ASSESSMENT'
-             )
-             WHERE tb.deleted = false
-               AND tb.hidden = false
-             ORDER BY tb.created_at DESC
-             LIMIT 1
-         )
+         -- ranked in one pass; a correlated newest-row lookup per asset cannot use the relation indexes
+         LEFT JOIN (
+             SELECT ranked.asset_id, ranked.threat_assessment_id
+             FROM (
+                 SELECT links.asset_id,
+                        tb.id AS threat_assessment_id,
+                        ROW_NUMBER() OVER (PARTITION BY links.asset_id ORDER BY tb.created_at DESC, tb.id ASC) AS rn
+                 FROM (
+                     SELECT r.relation_a_id AS asset_id, r.relation_b_id AS threat_assessment_id
+                     FROM relations r
+                     WHERE r.relation_b_type = 'THREAT_ASSESSMENT'
+                     UNION ALL
+                     SELECT r.relation_b_id, r.relation_a_id
+                     FROM relations r
+                     WHERE r.relation_a_type = 'THREAT_ASSESSMENT'
+                 ) links
+                 JOIN threat_assessments tb ON tb.id = links.threat_assessment_id
+                 WHERE tb.deleted = false
+                   AND tb.hidden = false
+             ) ranked
+             WHERE ranked.rn = 1
+         ) latest_ta ON latest_ta.asset_id = a.id
+         LEFT JOIN threat_assessments ta ON ta.id = latest_ta.threat_assessment_id
          LEFT JOIN (
              SELECT
                  tar.threat_assessment_id,

@@ -26,6 +26,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Risikovurderinger/DPIA) Revideringsdatoen fulgte først kontrollens deadline, når revideringsdialogen blev åbnet, så aktivets "næste risikovurdering" kunne udfyldes med en forældet dato. Den følger nu med, når kontrollen udføres eller redigeres, og eksisterende datoer er rettet
 - (Ad-hoc) (OS2kitos-integration) Systemer hvis livscyklusfase i OS2kitos var "Ubesluttet" eller ikke angivet, blev sat inaktive. Kun "Ikke i brug" inaktiverer nu, og de berørte systemer bliver aktive igen ved den natlige fulde synkronisering
 - (Ad-hoc) (Leverandører) Leverandørlisten loadede meget langsomt eller slet ikke ved mange leverandører og aktiver
+- (Ad-hoc) (Aktiver) Aktivlisten loadede meget langsomt eller slet ikke ved mange aktiver, relationer og risikovurderinger
 - (Ad-hoc) (Aktiver) Kolonnen "Samfundskritisk" kunne ikke filtreres. Den har nu et Ja/Nej-filter som de øvrige ja/nej-kolonner
 
 ## [2.8.0] - 2026-09-25
