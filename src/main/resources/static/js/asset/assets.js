@@ -367,7 +367,8 @@ function initGrid() {
                 hidden: true,
                 name: "Samfundskritisk",
                 searchable: {
-                    searchKey: 'sociallyCritical'
+                    searchKey: 'sociallyCritical',
+                    fieldId : 'assetSociallyCriticalSelector'
                 },
                 formatter: (cell, row) => cell ? 'Ja' : 'Nej'
             },
