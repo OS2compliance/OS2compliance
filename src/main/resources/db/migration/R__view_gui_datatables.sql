@@ -397,7 +397,7 @@ FROM assets a
              FROM (
                  SELECT links.asset_id,
                         tb.id AS threat_assessment_id,
-                        ROW_NUMBER() OVER (PARTITION BY links.asset_id ORDER BY tb.created_at DESC, tb.id DESC) AS rn
+                        ROW_NUMBER() OVER (PARTITION BY links.asset_id ORDER BY tb.created_at DESC, tb.id ASC) AS rn
                  FROM (
                      SELECT r.relation_a_id AS asset_id, r.relation_b_id AS threat_assessment_id
                      FROM relations r
