@@ -1,5 +1,7 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.Constants;
+
 import com.lowagie.text.DocumentException;
 
 import dk.digitalidentity.dao.StandardTemplateDao;
@@ -240,6 +242,8 @@ public class ReportController {
 
 		final Map<String, Object> model = new HashMap<>();
 		model.put("threatAssessment", threatAssessment);
+		model.put("threatList", threatAssessmentService.buildThreatList(threatAssessment));
+		model.put("showFullMeasureDescription", settingsService.getBoolean(Constants.RISK_ASSESSMENT_SHOW_FULL_MEASURE_DESCRIPTION, true));
 		List<Relatable> relations = relationService.findAllRelatedTo(threatAssessment);
 		model.put("relations", relations);
 		Setting customOwnerSetting = settingsService.findBySettingKey(KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME);
