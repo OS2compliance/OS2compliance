@@ -1,15 +1,7 @@
 CREATE OR REPLACE VIEW view_gridjs_suppliers AS
 SELECT s.id,
        TRIM(s.name)                                                         AS name,
-       (SELECT COUNT(DISTINCT a.id)
-        FROM assets a
-        WHERE a.deleted = false
-          AND (a.supplier_id = s.id
-               OR EXISTS (SELECT 1
-                          FROM relations rel
-                          WHERE (rel.relation_a_id = a.id AND rel.relation_a_type = 'ASSET' AND rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER')
-                             OR (rel.relation_b_id = a.id AND rel.relation_b_type = 'ASSET' AND rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER'))))
-        AS solution_count,
+       COALESCE(solutions.solution_count, 0)                                AS solution_count,
        s.updated_at                                                         AS updated,
        s.status,
        s.localized_enums,
@@ -19,9 +11,7 @@ SELECT s.id,
         WHERE a.supplier_id = s.id)                                         AS last_oversight_date,
        prop.prop_value                                                      AS kitos_uuid,
        (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false) AS primary_asset_count,
-       (SELECT COUNT(1) FROM relations rel
-        WHERE (rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET')
-           OR (rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER' AND rel.relation_a_type = 'ASSET')) AS secondary_asset_count,
+       COALESCE(secondary.secondary_asset_count, 0)                         AS secondary_asset_count,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
        s.responsible_uuid,
@@ -30,6 +20,30 @@ FROM suppliers s
          LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
          LEFT JOIN supplier_tag rt ON rt.supplier_id = s.id
          LEFT JOIN tags tg ON rt.tag_id = tg.id
+         -- counted once for all suppliers; a per-supplier OR EXISTS over relations got a plan that scanned relations per asset
+         LEFT JOIN (SELECT pairs.supplier_id, COUNT(DISTINCT pairs.asset_id) AS solution_count
+                    FROM (SELECT a.supplier_id, a.id AS asset_id
+                          FROM assets a
+                          WHERE a.supplier_id IS NOT NULL
+                          UNION ALL
+                          SELECT rel.relation_b_id, rel.relation_a_id
+                          FROM relations rel
+                          WHERE rel.relation_a_type = 'ASSET' AND rel.relation_b_type = 'SUPPLIER'
+                          UNION ALL
+                          SELECT rel.relation_a_id, rel.relation_b_id
+                          FROM relations rel
+                          WHERE rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET') pairs
+                             JOIN assets a ON a.id = pairs.asset_id AND a.deleted = false
+                    GROUP BY pairs.supplier_id) solutions ON solutions.supplier_id = s.id
+         LEFT JOIN (SELECT sides.supplier_id, COUNT(1) AS secondary_asset_count
+                    FROM (SELECT rel.relation_b_id AS supplier_id
+                          FROM relations rel
+                          WHERE rel.relation_a_type = 'ASSET' AND rel.relation_b_type = 'SUPPLIER'
+                          UNION ALL
+                          SELECT rel.relation_a_id
+                          FROM relations rel
+                          WHERE rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET') sides
+                    GROUP BY sides.supplier_id) secondary ON secondary.supplier_id = s.id
 WHERE s.deleted = false
 GROUP BY s.id;
 
