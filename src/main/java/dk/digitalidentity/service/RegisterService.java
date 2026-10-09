@@ -1,6 +1,5 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.controller.mvc.RegisterController;
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.grid.RegisterGridDao;
@@ -11,10 +10,8 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.kle.KLELegalReferenceService;
