@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.mapping.KLEMapper;
 import dk.digitalidentity.model.KLELegalReferenceDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
+import dk.digitalidentity.model.dto.PurposeFormDTO;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.dto.SelectionChoiceDTO;
@@ -66,6 +67,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -383,47 +385,12 @@ public class RegisterController {
 	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("{id}/purpose")
-    public String purpose(
-			@PathVariable final Long id,
-			@RequestParam(value = "purpose", required = false) final String purpose,
-			@RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
-			@RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
-			@RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
-			@RequestParam(value = "consent", required = false) final String consent,
-			@RequestParam(value = "purposeNotes", required = false) final String purposeNotes,
-			@RequestParam(value = "relevantLegalReferences", required = false) final Set<String> relevantLegalReferences,
-			@RequestParam(value = "supplementalLegalBasis", required = false) final String supplementalLegalBasis
-	) {
+    public String purpose(@PathVariable final Long id, @ModelAttribute PurposeFormDTO form) {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ensureEditingIsAllowed(register);
-        if (purpose != null) {
-            register.setPurpose(purpose);
-        }
-        if (gdprChoices != null) {
-            register.setGdprChoices(gdprChoices);
-        }
-        if (purposeNotes != null) {
-            register.setPurposeNotes(purposeNotes);
-        }
-        if (consent != null) {
-            register.setConsent(consent);
-        }
-		if (supplementalLegalBasis != null) {
-			register.setSupplementalLegalBasis(supplementalLegalBasis);
-		}
-        if (informationObligationStatus != null) {
-            register.setInformationObligation(informationObligationStatus);
-        }
-        if (informationObligationDesc != null) {
-            register.setInformationObligationDesc(informationObligationDesc);
-        }
-		if(relevantLegalReferences != null && !relevantLegalReferences.isEmpty()) {
-			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(relevantLegalReferences));
-		} else {
-			register.setRelevantKLELegalReferences(new HashSet<>());
-		}
 
+		registerService.setPurposeAttributes(register, form);
 		registerService.save(register);
         return "redirect:/registers/" + id + "?section=purpose";
     }

@@ -1,19 +1,23 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.controller.mvc.RegisterController;
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.grid.RegisterGridDao;
+import dk.digitalidentity.model.dto.PurposeFormDTO;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.kle.KLELegalReferenceService;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +44,7 @@ public class RegisterService implements TagableService<Register> {
 	private final RegisterGridDao registerGridDao;
     private final ConsequenceAssessmentDao consequenceAssessmentDao;
 	private final RelationService relationService;
+	private final KLELegalReferenceService kLELegalReferenceService;
 
 	public boolean isResponsibleFor(Register register) {
 		return register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
@@ -227,6 +233,38 @@ public class RegisterService implements TagableService<Register> {
 								rg.getCustomResponsibleUserUuids().contains(user.getUuid())
 						   )
 					.toList();
+		}
+	}
+
+	public void setPurposeAttributes(Register register, PurposeFormDTO form) {
+		if (form.purpose() != null) {
+			register.setPurpose(form.purpose());
+		}
+		if (form.gdprChoices() != null) {
+			register.setGdprChoices(form.gdprChoices());
+		}
+		if (form.purposeNotes() != null) {
+			register.setPurposeNotes(form.purposeNotes());
+		}
+		if (form.consent() != null) {
+			register.setConsent(form.consent());
+		}
+		if (form.supplementalLegalBasis() != null) {
+			register.setSupplementalLegalBasis(form.supplementalLegalBasis());
+		}
+		if (form.informationObligation() != null) {
+			register.setInformationObligation(form.informationObligation());
+		}
+		if (form.informationObligationDesc() != null) {
+			register.setInformationObligationDesc(form.informationObligationDesc());
+		}
+		if (org.springframework.util.StringUtils.hasText(form.otherLegalReferences())) {
+			register.setOtherLegalReferences(form.otherLegalReferences());
+		}
+		if (form.relevantLegalReferences() != null && !form.relevantLegalReferences().isEmpty()) {
+			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(form.relevantLegalReferences()));
+		} else {
+			register.setRelevantKLELegalReferences(new HashSet<>());
 		}
 	}
 }
