@@ -255,7 +255,7 @@ public class RegisterService implements TagableService<Register> {
 		if (form.informationObligationDesc() != null) {
 			register.setInformationObligationDesc(form.informationObligationDesc());
 		}
-		if (org.springframework.util.StringUtils.hasText(form.otherLegalReferences())) {
+		if (form.otherLegalReferences() != null) {
 			register.setOtherLegalReferences(form.otherLegalReferences());
 		}
 		if (form.relevantLegalReferences() != null && !form.relevantLegalReferences().isEmpty()) {
