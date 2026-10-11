@@ -10,6 +10,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed
+- (Ad-hoc) Tabeller oprettet på databaseservere med utf8mb3 som standard fik utf8mb3 i stedet for utf8mb4/dansk sortering. Alle tabeller konverteres nu til utf8mb4_danish_ci, og databasens standard sættes, så nye tabeller også får det
 - (Ad-hoc) (Risikovurderinger) Excel-udtrækket af en risikovurdering viste truslerne i en anden rækkefølge end skærmen og Word-udtrækket og manglede de eksisterende foranstaltninger. Rækkefølgen følger nu skærmen, og foranstaltningerne har fået deres egen kolonne
 - (Ad-hoc) (Opgaver) En kontrol hvis deadline var flyttet til før startdatoen, fx via revisionsdatoen på en risikovurdering eller DPIA, kunne ikke gemmes efter redigering (400 Bad Request). Startdatoen følger nu med, og eksisterende kontroller er rettet
 - (Ad-hoc) Tilsynsopgaver oprettet uden ansvarlig fik aldrig en, og et fejlet kitos-match kunne kun genforsøges ved manuelt at nulstille vandmærket for DBS-synkroniseringen. Kitos-koblingen genforsøges nu ved hver kørsel, og ansvarlig udfyldes efterfølgende på åbne tilsynsopgaver der mangler en. Ramte installationer hvor DBS-integrationen blev slået til før OS2kitos
