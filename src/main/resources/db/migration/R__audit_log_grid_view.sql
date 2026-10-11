@@ -1,3 +1,6 @@
+-- Views gemmer forbindelsens collation for udtryk som GROUP_CONCAT
+SET NAMES utf8mb4 COLLATE utf8mb4_danish_ci;
+
 CREATE OR REPLACE VIEW view_gridjs_audit_log AS
 SELECT al.id                 AS id,
        al.created_timestamp  AS created_timestamp,
