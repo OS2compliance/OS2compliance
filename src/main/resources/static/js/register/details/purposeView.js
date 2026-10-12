@@ -24,6 +24,7 @@ export default class RegisterPurposeService {
         const cancelBtn = document.querySelector('#cancelPurposeBtn');
         const saveBtn = document.querySelector('#savePurposeBtn');
         const purpose = document.querySelector('#purpose');
+        const otherLegalReferences = document.querySelector('#otherLegalReferencesSelector');
         const purposeNotes = document.querySelector('#purposeNotes');
         const informationObligationDesc = document.querySelector('#informationObligationDesc');
         const informationObligation = document.querySelector('#informationObligation');
@@ -42,6 +43,7 @@ export default class RegisterPurposeService {
         consent.readOnly = !editable;
         informationObligation.disabled = !editable;
         purpose.readOnly = !editable;
+        otherLegalReferences.readOnly = !editable;
         purposeNotes.readOnly = !editable;
         suplementalField.readOnly = !editable;
         if (!editable) {

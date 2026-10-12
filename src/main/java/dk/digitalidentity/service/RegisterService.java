@@ -11,9 +11,9 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.kle.KLELegalReferenceService;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +39,7 @@ public class RegisterService implements TagableService<Register> {
 	private final RegisterGridDao registerGridDao;
     private final ConsequenceAssessmentDao consequenceAssessmentDao;
 	private final RelationService relationService;
+	private final KLELegalReferenceService kLELegalReferenceService;
 
 	public boolean isResponsibleFor(Register register) {
 		return register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
