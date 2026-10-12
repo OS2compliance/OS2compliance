@@ -39,6 +39,12 @@ public class SettingsService {
             .map((v -> Integer.parseInt(v.getSettingValue()))).orElse(defaultVal);
 	}
 
+	public int getIntForUpdate(final String key, final int defaultVal) {
+		return settingDao.findForUpdateBySettingKey(key)
+			.filter(v -> v.getSettingValue() != null)
+			.map(v -> Integer.parseInt(v.getSettingValue())).orElse(defaultVal);
+	}
+
 	public String getString(final String key, final String defaultVal) {
 		String settingString = settingDao.findBySettingKey(key).map(Setting::getSettingValue).orElse(defaultVal);		
 		if (settingString == null || settingString.trim().isEmpty()) {
