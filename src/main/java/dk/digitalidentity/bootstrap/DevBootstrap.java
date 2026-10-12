@@ -397,7 +397,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				dataProcessing.setUserManagementProcedureLink("https://WeManageUsersAllTheTime.nu");
                 dataProcessing.setAccessWhoIdentifiers(Set.of("dp-access-who-leaders", "dp-access-who-ext"));
                 dataProcessing.setAccessCountIdentifier("dp-access-count-1-10");
-                dataProcessing.setStorageTimeIdentifier("dp-storage-duration-1mth");
+				dataProcessing.setStorageTimeIdentifiers(Set.of("dp-storage-duration-1mth"));
 				dataProcessing.setLoggingProcedure(LoggingProcedure.YES);
 				dataProcessing.setLoggingProcedureLink("https://WeLogAllTheTime.nu");
                 dataProcessing.getRegisteredCategories().add(DataProcessingCategoriesRegistered.builder()

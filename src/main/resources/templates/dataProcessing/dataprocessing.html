@@ -116,10 +116,9 @@
                 <tr>
                     <td>Forventede slettefrister</td>
                     <td>
-                        <select class="form-control form-select editField" name="storageTimeIdentifier" tabindex="-1" disabled>
-                            <option value=""></option>
+                        <select class="editField storageTimeSelect" name="storageTimeIdentifiers" multiple tabindex="-1" disabled>
                             <option th:each="choice: ${dbChoices.storageTimeIdentifier.values}" th:value="${choice.identifier}"
-                                    th:selected="${dataProcessing.storageTimeIdentifier == choice.identifier}"
+                                    th:selected="${#sets.contains(dataProcessing.storageTimeIdentifiers, choice.identifier)}"
                                     th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
                         </select>
 

@@ -20,7 +20,7 @@ public class DataProcessingDTO {
     private String accessCountIdentifier;
     private String personCountIdentifier;
     private List<DataProcessingCategoriesRegisteredDTO> personCategoriesRegistered;
-    private String storageTimeIdentifier;
+	private Set<String> storageTimeIdentifiers;
     private DeletionProcedure deletionProcedure;
     private String deletionProcedureLink;
     private String elaboration;

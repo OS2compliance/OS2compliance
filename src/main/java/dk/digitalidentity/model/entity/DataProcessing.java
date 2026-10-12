@@ -53,8 +53,9 @@ public class DataProcessing {
 
     // Storage
 
-    @Column(name = "storage_time_identifier")
-    private String storageTimeIdentifier;
+	@Column(name = "storage_time_identifier", length = 1000)
+	@Convert(converter = StringSetNullSafeConverter.class)
+	private Set<String> storageTimeIdentifiers = new HashSet<>();
 
     @Column
     @Enumerated(EnumType.STRING)
