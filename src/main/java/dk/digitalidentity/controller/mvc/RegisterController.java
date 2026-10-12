@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.mapping.KLEMapper;
 import dk.digitalidentity.model.KLELegalReferenceDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
+import dk.digitalidentity.model.dto.PurposeFormDTO;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.dto.SelectionChoiceDTO;
@@ -24,7 +25,6 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
-import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -383,50 +383,47 @@ public class RegisterController {
 	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("{id}/purpose")
-    public String purpose(
-			@PathVariable final Long id,
-			@RequestParam(value = "purpose", required = false) final String purpose,
-			@RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
-			@RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
-			@RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
-			@RequestParam(value = "consent", required = false) final String consent,
-			@RequestParam(value = "purposeNotes", required = false) final String purposeNotes,
-			@RequestParam(value = "relevantLegalReferences", required = false) final Set<String> relevantLegalReferences,
-			@RequestParam(value = "supplementalLegalBasis", required = false) final String supplementalLegalBasis
-	) {
+    public String purpose(@PathVariable final Long id, @ModelAttribute PurposeFormDTO form) {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ensureEditingIsAllowed(register);
-        if (purpose != null) {
-            register.setPurpose(purpose);
-        }
-        if (gdprChoices != null) {
-            register.setGdprChoices(gdprChoices);
-        }
-        if (purposeNotes != null) {
-            register.setPurposeNotes(purposeNotes);
-        }
-        if (consent != null) {
-            register.setConsent(consent);
-        }
-		if (supplementalLegalBasis != null) {
-			register.setSupplementalLegalBasis(supplementalLegalBasis);
-		}
-        if (informationObligationStatus != null) {
-            register.setInformationObligation(informationObligationStatus);
-        }
-        if (informationObligationDesc != null) {
-            register.setInformationObligationDesc(informationObligationDesc);
-        }
-		if(relevantLegalReferences != null && !relevantLegalReferences.isEmpty()) {
-			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(relevantLegalReferences));
-		} else {
-			register.setRelevantKLELegalReferences(new HashSet<>());
-		}
 
+		setPurposeAttributes(register, form);
 		registerService.save(register);
         return "redirect:/registers/" + id + "?section=purpose";
     }
+
+	private void setPurposeAttributes(Register register, PurposeFormDTO form) {
+		if (form.purpose() != null) {
+			register.setPurpose(form.purpose());
+		}
+		if (form.gdprChoices() != null) {
+			register.setGdprChoices(form.gdprChoices());
+		}
+		if (form.purposeNotes() != null) {
+			register.setPurposeNotes(form.purposeNotes());
+		}
+		if (form.consent() != null) {
+			register.setConsent(form.consent());
+		}
+		if (form.supplementalLegalBasis() != null) {
+			register.setSupplementalLegalBasis(form.supplementalLegalBasis());
+		}
+		if (form.informationObligation() != null) {
+			register.setInformationObligation(form.informationObligation());
+		}
+		if (form.informationObligationDesc() != null) {
+			register.setInformationObligationDesc(form.informationObligationDesc());
+		}
+		if (form.otherLegalReferences() != null) {
+			register.setOtherLegalReferences(form.otherLegalReferences());
+		}
+		if (form.relevantLegalReferences() != null && !form.relevantLegalReferences().isEmpty()) {
+			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(form.relevantLegalReferences()));
+		} else {
+			register.setRelevantKLELegalReferences(new HashSet<>());
+		}
+	}
 
 	@RequireUpdateOwnerOnly
     @Transactional

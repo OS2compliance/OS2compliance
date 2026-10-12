@@ -234,6 +234,7 @@ public class GlobalSearchService {
 		searchableProperties.put("purposeNotes", query);
 		searchableProperties.put("consent", query);
 		searchableProperties.put("supplementalLegalBasis", query);
+		searchableProperties.put("otherLegalReferences", query);
 		searchableProperties.put("createdAt", query);
 		searchableProperties.put("updatedAt", query);
 
@@ -659,6 +660,7 @@ public class GlobalSearchService {
 			case "purposeNotes" -> "Formålsnoter";
 			case "consent" -> "Samtykke";
 			case "supplementalLegalBasis" -> "Supplerende Lovgrundlag";
+			case "otherLegalReferences" -> "Øvrige Lovhenvisninger";
 			case "createdAt" -> "Oprettet";
 			case "updatedAt" -> "Opdateret";
 			case "nextRevision" -> "Næste revision";

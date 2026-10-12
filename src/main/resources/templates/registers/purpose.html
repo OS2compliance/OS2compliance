@@ -33,6 +33,12 @@
                         </div>
                     </div>
                     <div class="row mt-4">
+                        <label for="otherLegalReferencesSelector" class="col-form-label col-lg-3">Øvrige Lovhenvisninger</label>
+                        <div class="col-lg-9">
+                            <textarea name="otherLegalReferences" th:field="*{otherLegalReferences}" id="otherLegalReferencesSelector" class="p-2 form-control" th:text="${register.otherLegalReferences}" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
                         <label class="col-form-label col-lg-3 col-sm-12">GDPR lovhjemmel</label>
                         <div class="col-sm-12 col-lg-9 mt-2">
                             <div class="form-check" th:each="choice: ${gdprChoices}">
@@ -74,7 +80,8 @@
                             <select class="form-control form-select" th:field="*{informationObligation}" id="informationObligation" name="informationObligation" tabindex="-1" disabled>
                                 <option value=""></option>
                                 <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.InformationObligationStatus).values()}"
-                                        th:value="${status.name}" th:text="${status.message}"></option>
+                                        th:value="${status.name}" th:text="${status.message}"
+                                        th:selected="${register.informationObligation == status}"></option>
                             </select>
                         </div>
                     </div>

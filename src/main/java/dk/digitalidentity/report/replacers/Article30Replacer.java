@@ -364,6 +364,8 @@ public class Article30Replacer implements PlaceHolderReplacer {
 				nullSafe(register::getSecurityPrecautions, "Ikke angivet"));
         insertStandard(document, cursor, "Beskriv formålet med behandlingsaktiviteten: ",
             nullSafe(register::getPurpose, "Ikke angivet"));
+        insertStandard(document, cursor, "Øvrige lovhenvisninger: ",
+            nullSafe(register::getOtherLegalReferences, "Ikke angivet"));
         insertBoldParagraph(document, cursor, "GDPR lovhjemmel");
 
         final Set<String> choiceIds = register.getGdprChoices();
