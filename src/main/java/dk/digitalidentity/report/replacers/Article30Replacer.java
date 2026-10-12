@@ -419,7 +419,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
             insertInformationCategoriesTable(table, register.getDataProcessing());
 
             paragraph = insertBoldParagraph(document, cursor, "Hvor længe opbevares personoplysningerne: ");
-            final String storageTimeCaption = getChoiceCaption(register.getDataProcessing().getStorageTimeIdentifier());
+			final String storageTimeCaption = getChoiceCaptions(register.getDataProcessing().getStorageTimeIdentifiers(), "dp-person-storage-duration-list");
             addTextRun(storageTimeCaption, paragraph);
             if (register.getDataProcessing().getElaboration() != null) {
                 addBoldTextRun(register.getDataProcessing().getElaboration() + ": ", paragraph);
@@ -456,6 +456,20 @@ public class Article30Replacer implements PlaceHolderReplacer {
             .map(v -> v.get().getCaption())
             .orElse("Ikke valgt");
     }
+
+	private String getChoiceCaptions(final Set<String> identifiers, final String choiceListIdentifier) {
+		if (identifiers == null || identifiers.isEmpty()) {
+			return "Ikke valgt";
+		}
+
+		// Follow the order of the choice list, since the stored set is unordered
+		return choiceService.findChoiceList(choiceListIdentifier)
+				.map(list -> list.getValues().stream()
+						.filter(value -> identifiers.contains(value.getIdentifier()))
+						.map(ChoiceValue::getCaption)
+						.collect(Collectors.joining(", ")))
+				.orElse("Ikke valgt");
+	}
 
     private void insertAccessWhoList(final XWPFDocument document, final XmlCursor cursor, final Register register) {
         final ChoiceList accessWhoChoices = choiceService.findChoiceList("dp-access-who-list")
