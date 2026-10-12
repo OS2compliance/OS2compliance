@@ -179,6 +179,8 @@ public class RenumberCollidingDpiaIdsMigrationTest extends BaseIntegrationTest {
                 StandardCharsets.UTF_8).replaceAll("--[^\n]*", "");
         jdbcTemplate.execute((ConnectionCallback<Void>) connection -> {
             try (Statement statement = connection.createStatement()) {
+                // The migration's literals take the connection collation, which must match the converted columns
+                statement.execute("SET NAMES utf8mb4 COLLATE utf8mb4_danish_ci");
                 try {
                     for (final String chunk : sql.split(";")) {
                         if (!chunk.isBlank()) {
