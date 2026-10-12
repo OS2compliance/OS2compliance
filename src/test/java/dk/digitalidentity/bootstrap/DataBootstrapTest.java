@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
@@ -38,10 +40,12 @@ class DataBootstrapTest extends BaseIntegrationTest {
 			}
 		};
 
-		CompletableFuture.allOf(
-				CompletableFuture.runAsync(() -> dataBootstrap.incrementAndPerformIfVersion(5, slowSeed)),
-				CompletableFuture.runAsync(() -> dataBootstrap.incrementAndPerformIfVersion(5, slowSeed))
-		).join();
+		try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+			CompletableFuture.allOf(
+					CompletableFuture.runAsync(() -> dataBootstrap.incrementAndPerformIfVersion(5, slowSeed), executor),
+					CompletableFuture.runAsync(() -> dataBootstrap.incrementAndPerformIfVersion(5, slowSeed), executor)
+			).join();
+		}
 
 		assertThat(runs.get()).isEqualTo(1);
 	}
