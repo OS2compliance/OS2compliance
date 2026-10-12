@@ -31,6 +31,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Leverandører) Leverandørlisten loadede meget langsomt eller slet ikke, også ved få leverandører og aktiver
 - (Ad-hoc) (Aktiver) Aktivlisten loadede meget langsomt eller slet ikke ved mange aktiver, relationer og risikovurderinger
 - (Ad-hoc) (Aktiver) Kolonnen "Samfundskritisk" kunne ikke filtreres. Den har nu et Ja/Nej-filter som de øvrige ja/nej-kolonner
+- (Ad-hoc) (Dashboard) Kolonnen "Risikovurdering" under Mine Aktiver viste aktivets kritikalitet. Den viser nu farven fra seneste risikovurdering som på aktivlisten, og kan filtreres på den
 
 ## [2.8.0] - 2026-09-25
 ### Added
