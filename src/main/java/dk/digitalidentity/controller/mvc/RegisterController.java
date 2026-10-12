@@ -388,10 +388,42 @@ public class RegisterController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ensureEditingIsAllowed(register);
 
-		registerService.setPurposeAttributes(register, form);
+		setPurposeAttributes(register, form);
 		registerService.save(register);
         return "redirect:/registers/" + id + "?section=purpose";
     }
+
+	private void setPurposeAttributes(Register register, PurposeFormDTO form) {
+		if (form.purpose() != null) {
+			register.setPurpose(form.purpose());
+		}
+		if (form.gdprChoices() != null) {
+			register.setGdprChoices(form.gdprChoices());
+		}
+		if (form.purposeNotes() != null) {
+			register.setPurposeNotes(form.purposeNotes());
+		}
+		if (form.consent() != null) {
+			register.setConsent(form.consent());
+		}
+		if (form.supplementalLegalBasis() != null) {
+			register.setSupplementalLegalBasis(form.supplementalLegalBasis());
+		}
+		if (form.informationObligation() != null) {
+			register.setInformationObligation(form.informationObligation());
+		}
+		if (form.informationObligationDesc() != null) {
+			register.setInformationObligationDesc(form.informationObligationDesc());
+		}
+		if (form.otherLegalReferences() != null) {
+			register.setOtherLegalReferences(form.otherLegalReferences());
+		}
+		if (form.relevantLegalReferences() != null && !form.relevantLegalReferences().isEmpty()) {
+			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(form.relevantLegalReferences()));
+		} else {
+			register.setRelevantKLELegalReferences(new HashSet<>());
+		}
+	}
 
 	@RequireUpdateOwnerOnly
     @Transactional

@@ -3,7 +3,6 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.grid.RegisterGridDao;
-import dk.digitalidentity.model.dto.PurposeFormDTO;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -230,38 +228,6 @@ public class RegisterService implements TagableService<Register> {
 								rg.getCustomResponsibleUserUuids().contains(user.getUuid())
 						   )
 					.toList();
-		}
-	}
-
-	public void setPurposeAttributes(Register register, PurposeFormDTO form) {
-		if (form.purpose() != null) {
-			register.setPurpose(form.purpose());
-		}
-		if (form.gdprChoices() != null) {
-			register.setGdprChoices(form.gdprChoices());
-		}
-		if (form.purposeNotes() != null) {
-			register.setPurposeNotes(form.purposeNotes());
-		}
-		if (form.consent() != null) {
-			register.setConsent(form.consent());
-		}
-		if (form.supplementalLegalBasis() != null) {
-			register.setSupplementalLegalBasis(form.supplementalLegalBasis());
-		}
-		if (form.informationObligation() != null) {
-			register.setInformationObligation(form.informationObligation());
-		}
-		if (form.informationObligationDesc() != null) {
-			register.setInformationObligationDesc(form.informationObligationDesc());
-		}
-		if (form.otherLegalReferences() != null) {
-			register.setOtherLegalReferences(form.otherLegalReferences());
-		}
-		if (form.relevantLegalReferences() != null && !form.relevantLegalReferences().isEmpty()) {
-			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(form.relevantLegalReferences()));
-		} else {
-			register.setRelevantKLELegalReferences(new HashSet<>());
 		}
 	}
 }
