@@ -262,10 +262,10 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		settingsService.createSetting(Constants.DBS_OVERSIGHT_RECIPIENT_SETTING, "", "dbs", true);
 	}
 
-	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
+	void incrementAndPerformIfVersion(final int version, final Runnable applier) {
 		final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 		transactionTemplate.execute(status -> {
-			final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
+			final int currentVersion = settingsService.getIntForUpdate(DATA_MIGRATION_VERSION_SETTING, 0);
 			if (currentVersion == version) {
 				applier.run();
 				settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
