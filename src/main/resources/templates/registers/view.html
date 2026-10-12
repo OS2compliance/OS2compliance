@@ -33,6 +33,7 @@
                         </div>
                     </div>
                     <div class="align-self-center d-inline-flex gap-2">
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButtonAllUsers(id='printRegisterButton', text='Gem som Word', iconClass='pli-printer')}"></div>
                         <div th:replace="~{fragments/component/pageTopButton :: openModalInfoButton(id='createThreatassessmentButton', text='Ny risikovurdering', iconClass='ti-plus', target='#createModal')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>

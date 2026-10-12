@@ -4,6 +4,7 @@ import RegisterDataprocessingService from "./dataprocessingView.js";
 import RegisterAssessmentService from "./assessmentView.js";
 import KLEView from "./kleView.js";
 import {CreateThreatAssessmentService} from "../../risk/createThreatAssessmentService.js";
+import { printRegister } from "../register-print.js";
 
 
 // Global variable to support onclick functionality. Should be removed when be have moved to addEventListeners
@@ -22,12 +23,22 @@ document.addEventListener("DOMContentLoaded", function () {
     kleView.init()
 
     initCreateThreatAssessmentModal()
+
+    initPrintButton()
 });
 
 
 function initCreateThreatAssessmentModal () {
     const createThreatAssessmentService = new CreateThreatAssessmentService();
     createThreatAssessmentService.init();
+}
+
+function initPrintButton() {
+    const printButton = document.getElementById('printRegisterButton');
+    printButton?.addEventListener('click', () => {
+        const registerId = document.getElementById('breadcrump-register-name').dataset.registerId;
+        printRegister(registerId, printButton);
+    });
 }
 
 

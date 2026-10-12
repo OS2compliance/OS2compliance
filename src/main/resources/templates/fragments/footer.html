@@ -19,6 +19,9 @@
     <template id="showListItemButtonTemplate" th:if="${gridjs == true}">
         <button type="button" class="showBtn btn btn-icon btn-outline-light btn-xs" title="Vis"><i class="pli-eye-visible fs-5"></i></button>
     </template>
+    <template id="printListItemButtonTemplate" th:if="${gridjs == true}">
+        <button type="button" class="printBtn btn btn-icon btn-outline-light btn-xs" title="Gem som Word"><i class="pli-printer fs-5"></i><span class="spinner-border spinner-border-sm" role="status" hidden></span></button>
+    </template>
 
     <!-- Template for grid column options -->
     <template id="columnOptionContainerTemplate" th:if="${gridjs == true}">
