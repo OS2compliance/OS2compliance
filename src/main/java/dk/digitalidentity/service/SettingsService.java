@@ -39,6 +39,7 @@ public class SettingsService {
             .map((v -> Integer.parseInt(v.getSettingValue()))).orElse(defaultVal);
 	}
 
+	@Transactional(Transactional.TxType.MANDATORY)
 	public int getIntForUpdate(final String key, final int defaultVal) {
 		return settingDao.findForUpdateBySettingKey(key)
 			.filter(v -> v.getSettingValue() != null)
