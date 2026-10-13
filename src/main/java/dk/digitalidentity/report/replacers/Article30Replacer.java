@@ -423,10 +423,11 @@ public class Article30Replacer implements PlaceHolderReplacer {
             paragraph = insertBoldParagraph(document, cursor, "Hvor længe opbevares personoplysningerne: ");
 			final String storageTimeCaption = getChoiceCaptions(register.getDataProcessing().getStorageTimeIdentifiers(), "dp-person-storage-duration-list");
             addTextRun(storageTimeCaption, paragraph);
-            if (register.getDataProcessing().getElaboration() != null) {
-                addBoldTextRun(register.getDataProcessing().getElaboration() + ": ", paragraph);
-                addTextRun(register.getDataProcessing().getElaboration(), paragraph);
-            }
+			final String elaboration = register.getDataProcessing().getElaboration();
+			if (elaboration != null && !elaboration.isBlank()) {
+				addBoldTextRun(" Uddybning: ", paragraph);
+				addTextRun(elaboration, paragraph);
+			}
 
             insertStandard(document, cursor,
                 "Er der udarbejdet sletteprocedure: ",
