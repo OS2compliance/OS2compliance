@@ -16,6 +16,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ReportSetting;
+import dk.digitalidentity.report.DocxService;
 import dk.digitalidentity.report.DocxUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -37,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -77,14 +79,14 @@ public class Article30Replacer implements PlaceHolderReplacer {
 		};
     }
 
-    @Override
-    @Transactional
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
-        final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
-        if (paragraph != null) {
-            replaceParagraph(paragraph, placeHolder);
-        }
-    }
+	@Override
+	@Transactional
+	public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
+		final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
+		if (paragraph != null) {
+			replaceParagraph(paragraph, placeHolder, parameters);
+		}
+	}
 
 	private XWPFParagraph findParagraphToReplace(final XWPFDocument document, final String placeholder) {
 		// Only searches paragraphs. For tables or other, extend method
@@ -102,11 +104,11 @@ public class Article30Replacer implements PlaceHolderReplacer {
 		return paragraphText != null && paragraphText.contains(placeholder);
 	}
 
-	private void replaceParagraph(final XWPFParagraph paragraph, final PlaceHolder placeHolder) {
+	private void replaceParagraph(final XWPFParagraph paragraph, final PlaceHolder placeHolder, final Map<String, String> parameters) {
 		clearAllRuns(paragraph);
 
 		switch (placeHolder) {
-			case ACTIVITIES -> insertArticle30(paragraph);
+			case ACTIVITIES -> insertArticle30(paragraph, parameters);
 			case DATARESPONSIBLE_SETTINGS -> insertDataResponsibleSettings(paragraph);
 			default -> throw new IllegalArgumentException("Unsupported placeholder: " + placeHolder);
 		}
@@ -603,5 +605,40 @@ public class Article30Replacer implements PlaceHolderReplacer {
         addTextRun(text, paragraph);
         advanceCursor(cursor);
     }
+
+	private List<Register> findRegistersForReport(final Map<String, String> parameters) {
+		final List<Register> allOrdered = registerService.findAllOrdered();
+		final String ids = parameters != null ? parameters.get(DocxService.PARAM_REGISTER_IDS) : null;
+		if (ids == null || ids.isBlank()) {
+			return allOrdered;
+		}
+
+		final Set<Long> selectedIds = Arrays.stream(ids.split(","))
+				.map(Long::valueOf)
+				.collect(Collectors.toSet());
+
+		// Filtering the full ordered list keeps the sections identical to the full report
+		return allOrdered.stream()
+				.filter(register -> selectedIds.contains(register.getId()))
+				.toList();
+	}
+
+	private void insertArticle30(final XWPFParagraph p, final Map<String, String> parameters) {
+		final List<Register> allArticle30 = findRegistersForReport(parameters);
+
+		XWPFRun newRun = p.createRun();
+		newRun.setText("", 0);
+		try (final XmlCursor cursor = setCursorToNextStartToken(p.getCTP())) {
+			boolean initial = true;
+			for (final Register register : allArticle30) {
+				insertRegister(p.getDocument(), cursor, register, initial);
+				initial = false;
+			}
+		}
+
+		List<Long> relatedAssetIds = relationService.findAllIdsRelatedToWithType(allArticle30.stream().map(r -> r.getId()).toList(), RelationType.ASSET);
+		List<Asset> relatedAssets = assetService.findAllById(relatedAssetIds);
+		insertSupplierAdressSection(p, relatedAssets);
+	}
 
 }

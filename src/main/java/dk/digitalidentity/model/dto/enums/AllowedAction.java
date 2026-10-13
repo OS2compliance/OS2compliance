@@ -11,5 +11,6 @@ public enum AllowedAction {
 	DELETE,
 	COPY,
 	SHOW,
-	HIDE;
+	HIDE,
+	PRINT;
 }
