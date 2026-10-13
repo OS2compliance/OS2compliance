@@ -10,6 +10,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed
+- (Ad-hoc) Efter konverteringen til utf8mb4_danish_ci fejlede visningen af ansvarlige brugere og backup med mysqldump med "Illegal mix of collations" på MariaDB
 - (Ad-hoc) Startede en ny instans mens den forrige stadig kørte opstartens dataopsætning, kunne de begge udføre samme trin, så fx diagramkonfigurationer blev oprettet to gange og opstarten derefter fejlede. Trinene låses nu, så kun én instans udfører dem
 - (Ad-hoc) Tabeller oprettet på databaseservere med utf8mb3 som standard fik utf8mb3 i stedet for utf8mb4/dansk sortering. Alle tabeller konverteres nu til utf8mb4_danish_ci, og databasens standard sættes, så nye tabeller også får det
 - (Ad-hoc) (Risikovurderinger) Excel-udtrækket af en risikovurdering viste truslerne i en anden rækkefølge end skærmen og Word-udtrækket og manglede de eksisterende foranstaltninger. Rækkefølgen følger nu skærmen, og foranstaltningerne har fået deres egen kolonne
