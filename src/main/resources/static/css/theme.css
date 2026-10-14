@@ -1,0 +1,255 @@
+:root {
+    --bs-body-color: #47545b;
+    --bs-body-rgb: 71, 84, 91;
+    --bs-emphasis-color: #212529;
+    --bs-secondary-color: #5a6870;
+    --bs-muted-color: #5a6870;
+    --bs-muted-color-rgb: 90, 104, 112;
+    --bs-link-color: #026a9e;
+    --bs-link-color-rgb: 2, 106, 158;
+    --bs-link-hover-color: #025780;
+    --bs-input-border-color: #84919a;
+
+    --bs-secondary: #1b7a71;
+    --bs-secondary-rgb: 27, 122, 113;
+    --bs-secondary-hover: #166159;
+    --bs-secondary-active: #12524b;
+
+    --bs-success: #59741a;
+    --bs-success-rgb: 89, 116, 26;
+    --bs-success-hover: #4d6416;
+    --bs-success-active: #435716;
+
+    --bs-info: #026a9e;
+    --bs-info-rgb: 2, 106, 158;
+    --bs-info-hover: #025780;
+    --bs-info-active: #024a6d;
+
+    --bs-danger: #c0392b;
+    --bs-danger-rgb: 192, 57, 43;
+    --bs-danger-hover: #a12f23;
+    --bs-danger-active: #8b281e;
+
+    --bs-warning-hover: #e8901a;
+    --bs-warning-active: #d58717;
+    --bs-warning-text-emphasis: #9a5b00;
+
+    --bs-header-success: #8aab45;
+    --bs-header-success-hover: #7f9e3f;
+    --bs-header-success-active: #7a993c;
+    --bs-header-info: #3a9ccf;
+    --bs-header-info-hover: #3896c6;
+    --bs-header-info-active: #3793c3;
+}
+
+/* Nifty's Bootstrap 5.1 build hardcodes component colours; route them through the tokens above */
+
+a {
+    color: var(--bs-link-color);
+}
+
+a:hover,
+.btn-link:hover {
+    color: var(--bs-link-hover-color);
+}
+
+.btn-link {
+    color: var(--bs-link-color);
+}
+
+.front-container,
+.content,
+.mainnav__inner,
+.root .mainnav__inner .nav-link,
+.sidebar,
+.form-control,
+.form-control:focus,
+.form-control-plaintext,
+.form-select,
+.input-group-text,
+.dropdown-menu,
+.dropdown-item,
+.dropdown-item-text,
+.nav-link,
+.page-link,
+.breadcrumb-item.active,
+.breadcrumb-item + .breadcrumb-item::before,
+.accordion-button,
+.list-group-item,
+.list-group-item-action,
+.list-group-item-action:hover,
+.list-group-item-action:focus,
+.popover-body,
+.mc-btn {
+    color: var(--bs-body-color);
+}
+
+.table {
+    --bs-table-color: var(--bs-body-color);
+    --bs-table-striped-color: var(--bs-body-color);
+    --bs-table-active-color: var(--bs-body-color);
+    --bs-table-hover-color: var(--bs-body-color);
+    color: var(--bs-body-color);
+}
+
+.text-muted {
+    color: var(--bs-secondary-color) !important;
+}
+
+.text-warning {
+    color: var(--bs-warning-text-emphasis) !important;
+}
+
+.form-text,
+.dropdown-header,
+caption,
+.figure-caption,
+.form-control::placeholder,
+.choices__input::placeholder {
+    color: var(--bs-secondary-color);
+}
+
+.choices__placeholder {
+    color: var(--bs-secondary-color);
+    opacity: 1;
+}
+
+.form-control,
+.form-select,
+.input-group-text,
+.form-check-input,
+.choices__inner {
+    border-color: var(--bs-input-border-color);
+}
+
+.is-focused .choices__inner,
+.is-open .choices__inner {
+    border-color: var(--bs-primary);
+}
+
+.form-switch .form-check-input:not(:checked) {
+    background-color: var(--bs-input-border-color);
+    border-color: var(--bs-input-border-color);
+}
+
+.badge.bg-warning {
+    color: var(--bs-emphasis-color);
+}
+
+/* Solid buttons */
+
+.btn-secondary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--bs-secondary);
+    --bs-btn-hover-bg: var(--bs-secondary-hover);
+    --bs-btn-active-bg: var(--bs-secondary-active);
+}
+
+.btn-success {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--bs-success);
+    --bs-btn-hover-bg: var(--bs-success-hover);
+    --bs-btn-active-bg: var(--bs-success-active);
+}
+
+.btn-info {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--bs-info);
+    --bs-btn-hover-bg: var(--bs-info-hover);
+    --bs-btn-active-bg: var(--bs-info-active);
+}
+
+.btn-warning {
+    --bs-btn-color: var(--bs-emphasis-color);
+    --bs-btn-bg: var(--bs-warning);
+    --bs-btn-hover-bg: var(--bs-warning-hover);
+    --bs-btn-active-bg: var(--bs-warning-active);
+}
+
+.btn-danger {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--bs-danger);
+    --bs-btn-hover-bg: var(--bs-danger-hover);
+    --bs-btn-active-bg: var(--bs-danger-active);
+}
+
+/* the dark-on-light variants keep these buttons distinct from the navy header band */
+.hd--expanded .content__header .btn-success {
+    --bs-btn-color: var(--bs-emphasis-color);
+    --bs-btn-bg: var(--bs-header-success);
+    --bs-btn-hover-bg: var(--bs-header-success-hover);
+    --bs-btn-active-bg: var(--bs-header-success-active);
+}
+
+.hd--expanded .content__header .btn-info {
+    --bs-btn-color: var(--bs-emphasis-color);
+    --bs-btn-bg: var(--bs-header-info);
+    --bs-btn-hover-bg: var(--bs-header-info-hover);
+    --bs-btn-active-bg: var(--bs-header-info-active);
+}
+
+:is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger),
+:is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger):disabled,
+:is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger).disabled {
+    color: var(--bs-btn-color);
+    background-color: var(--bs-btn-bg);
+    border-color: var(--bs-btn-bg);
+}
+
+:is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger):hover,
+:is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger):focus,
+.btn-check:focus + :is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger) {
+    color: var(--bs-btn-color);
+    background-color: var(--bs-btn-hover-bg);
+    border-color: var(--bs-btn-hover-bg);
+}
+
+:is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger):active,
+:is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger).active,
+.btn-check:checked + :is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger),
+.btn-check:active + :is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger),
+.show > :is(.btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger).dropdown-toggle {
+    color: var(--bs-btn-color);
+    background-color: var(--bs-btn-active-bg);
+    border-color: var(--bs-btn-active-bg);
+}
+
+/* Outline buttons */
+
+.btn-outline-secondary {
+    --bs-btn-tone: var(--bs-secondary);
+}
+
+.btn-outline-success {
+    --bs-btn-tone: var(--bs-success);
+}
+
+.btn-outline-info {
+    --bs-btn-tone: var(--bs-info);
+}
+
+.btn-outline-warning {
+    --bs-btn-tone: var(--bs-warning-text-emphasis);
+}
+
+.btn-outline-danger {
+    --bs-btn-tone: var(--bs-danger);
+}
+
+:is(.btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger),
+:is(.btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger):disabled,
+:is(.btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger).disabled {
+    color: var(--bs-btn-tone);
+    border-color: var(--bs-btn-tone);
+}
+
+:is(.btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger):hover,
+:is(.btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger):active,
+:is(.btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger).active,
+:is(.btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger).dropdown-toggle.show,
+.btn-check:checked + :is(.btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger),
+.btn-check:active + :is(.btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger) {
+    color: #fff;
+    background-color: var(--bs-btn-tone);
+    border-color: var(--bs-btn-tone);
+}

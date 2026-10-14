@@ -46,12 +46,12 @@
 }
 
 .form-control.is-valid, .was-validated .form-control:valid, .form-control.is-valid:focus, .was-validated .form-control:valid:focus {
-    border-color: #edf1f6;
+    border-color: var(--bs-input-border-color);
     background-image: none;
 }
 
 .form-select.is-valid:not([multiple]):not([size]), .form-select.is-valid:not([multiple])[size="1"], .was-validated .form-select:valid:not([multiple]):not([size]), .was-validated .form-select:valid:not([multiple])[size="1"] {
-    border-color: #edf1f6;
+    border-color: var(--bs-input-border-color);
     background-image: none;
 }
 
@@ -68,12 +68,12 @@
 }
 
 .form-check-input.is-valid, .was-validated .form-check-input:valid {
-    border-color: rgba(0,0,0,.2095);
+    border-color: var(--bs-input-border-color);
 }
 
 .form-check-input.is-valid:checked, .was-validated .form-check-input:valid:checked {
-    background-color: #25476a;
-    border-color: #25476a;
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
 
 .invalid-feedback.show {
@@ -165,7 +165,7 @@ html {
   margin: 0 auto;
   width: 15%;
   height: 15%;
-  background-color: #25476a;
+  background-color: var(--bs-primary);
   border-radius: 100%;
   animation: sk-circleFadeDelay 1.2s infinite ease-in-out both;
 }

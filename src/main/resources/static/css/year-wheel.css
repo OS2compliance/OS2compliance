@@ -318,7 +318,7 @@
     padding: 0;
     cursor: pointer;
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--bs-secondary-color);
     line-height: 1;
 }
 .filter-pill .filter-pill-remove:hover {

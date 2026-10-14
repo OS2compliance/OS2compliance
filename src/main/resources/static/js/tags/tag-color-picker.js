@@ -49,7 +49,7 @@ class ColorPickerIndicator {
         } else {
             // remove background styling
             indicator.style.backgroundColor = 'transparent';
-            indicator.style.color = 'grey'
+            indicator.style.color = 'var(--bs-secondary-color)'
         }
     }
 }

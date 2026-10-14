@@ -480,7 +480,7 @@
                                             <div class="row mb-3">
                                                 <label for="archive" class="col-sm-3 col-form-label">
                                                     Systemet skal arkiveres
-                                                    <span th:if="${isKitos}" class="pli-exclamation" style="color: orange; font-weight: bold;" title="Denne værdi synkroniseres til OS2kitos, når den ændres"></span>
+                                                    <span th:if="${isKitos}" class="pli-exclamation text-warning fw-bold" title="Denne værdi synkroniseres til OS2kitos, når den ændres"></span>
                                                     &nbsp;
                                                     <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
