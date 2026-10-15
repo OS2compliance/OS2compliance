@@ -1,5 +1,6 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 import initRelatedTagList from "../tags/related-tag-list.js";
+import { choiceService } from "../choice-service.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let viewTaskService = new ViewTaskService();
@@ -368,6 +369,7 @@ function ViewTaskService() {
         this.userChoicesEditSelect = choiceService.initUserSelect('userSelect');
         this.ouChoicesEditSelect = choiceService.initOUSelect('ouSelect');
         this.ouDepartmentChoicesEditSelect = choiceService.initOUSelect('departmentOuSelect');
+        choiceService.bindOuToUser(this.userChoicesEditSelect, this.ouChoicesEditSelect);
         const currentValue = this.ouDepartmentChoicesEditSelect.getValue(true);
 
         if (!currentValue || currentValue === '' || currentValue === null) {

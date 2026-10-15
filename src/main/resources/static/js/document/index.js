@@ -2,7 +2,7 @@ import ColumnOptions from "../grid-js-extension/column-options.js";
 import initTagSelect from "../tags/tag-selector.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { initSaveAsExcelButton } from "../excel-export/excel-export-init.js";
-import { selectOu } from "./ou-select-helper.js";
+import { choiceService } from "../choice-service.js";
 
 let userChoicesEditSelect
 
@@ -28,25 +28,7 @@ function createDocumentFormLoaded() {
         checkInputField(userChoicesEditSelect);
     });
 
-    userChoicesEditSelect.passedElement.element.addEventListener('addItem', async function() {
-        const userUuid = userChoicesEditSelect.passedElement.element.value;
-        try {
-            const response = await fetch(`/rest/ous/user/${userUuid}/suggestion`);
-            if (response.status === 204) {
-                ouChoicesEditSelect.removeActiveItems();
-                return;
-            }
-            if (!response.ok) {
-                return;
-            }
-            const suggestedOu = await response.json();
-            if (suggestedOu) {
-                selectOu(ouChoicesEditSelect, suggestedOu);
-            }
-        } catch (error) {
-            toastService.error(error);
-        }
-    });
+    choiceService.bindOuToUser(userChoicesEditSelect, ouChoicesEditSelect);
 
     initFormValidationForForm("createDocumentModal", () => validateChoices(userChoicesEditSelect));
 

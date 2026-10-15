@@ -1,6 +1,57 @@
+import { debounce } from "./debounce-service.js";
 
-let choiceService = new ChoiceService();
+const SEARCH_DEBOUNCE_MS = 150;
+
+export const choiceService = new ChoiceService();
+window.choiceService = choiceService;
+
 function ChoiceService() {
+    // Select values function
+    const selectedValues = (choices) => [].concat(choices.getValue(true)).filter(Boolean);
+
+    // Label format extractor
+    this.userLabel = (user) => `(${user.userId}) ${user.name}`;
+
+    this.setSelected = (choices, value, label) => {
+        // Select the option if it is already loaded
+        choices.setChoiceByValue(value);
+        if (selectedValues(choices).includes(value)) {
+            return;
+        }
+        // Otherwise add it as a new option and select it
+        choices.setChoices([{ value, label, selected: true }], 'value', 'label', false);
+    }
+
+    // Suggests the department of the responsible user
+    this.bindOuToUser = (userChoices, ouChoices) => {
+        const isOnlySelectedUser = (userUuid) => {
+            const selected = selectedValues(userChoices);
+            return selected.length === 1 && selected[0] === userUuid;
+        };
+
+        // triggers when a selection is added
+        userChoices.passedElement.element.addEventListener('addItem', async (event) => {
+            const userUuid = event.detail.value;
+            // Additional users never change the department
+            if (!isOnlySelectedUser(userUuid)) {
+                return;
+            }
+            try {
+                const response = await fetch(`/rest/ous/user/${encodeURIComponent(userUuid)}/suggestion`);
+                // 204 means the user has no department, so the current department is left as is
+                if (response.status === 204 || !response.ok) {
+                    return;
+                }
+                const ou = await response.json();
+                // The user selection may have changed while the request was in flight
+                if (isOnlySelectedUser(userUuid)) {
+                    this.setSelected(ouChoices, ou.uuid, ou.name);
+                }
+            } catch (error) {
+                toastService.error(error);
+            }
+        });
+    }
 
     this.updateDocumentRelations = (choices, search) => {
         fetch( `/rest/relatable/autocomplete?types=DOCUMENT&search=${search}`)
@@ -25,7 +76,7 @@ function ChoiceService() {
                     targetChoice.setChoices(data.content.map(e => {
                         return {
                             value: e.uuid,
-                            label: `(${e.userId}) ${e.name}`}
+                            label: this.userLabel(e)}
                         }), 'value', 'label', true);
                 }))
             .catch(error => toastService.error(error));
@@ -85,16 +136,13 @@ function ChoiceService() {
     }
 
     this.initUserSelect = (elementId, prefetch = true) => {
-        let self = this;
         const userSelect = document.getElementById(elementId);
         const userChoices = initSelect(userSelect);
         if (prefetch) {
             this.updateUsers(userChoices, "");
         }
         userSelect.addEventListener("search",
-            function(event) {
-                self.updateUsers(userChoices, event.detail.value);
-            },
+            debounce(event => this.updateUsers(userChoices, event.detail.value), SEARCH_DEBOUNCE_MS),
             false,
         );
         return userChoices;
@@ -104,12 +152,10 @@ function ChoiceService() {
         const ouSelect = document.getElementById(elementId);
         const ouChoices = initSelect(ouSelect);
         if (prefetch) {
-            choiceService.updateOus(ouChoices, "");
+            this.updateOus(ouChoices, "");
         }
         ouSelect.addEventListener("search",
-            function(event) {
-                choiceService.updateOus(ouChoices, event.detail.value);
-            },
+            debounce(event => this.updateOus(ouChoices, event.detail.value), SEARCH_DEBOUNCE_MS),
             false,
         );
         return ouChoices;
@@ -123,48 +169,38 @@ function ChoiceService() {
     this.initDocumentRelationSelect = () => {
         const relationsSelect = document.getElementById('relationsSelect');
         const relationsChoice = initSelect(relationsSelect);
-        choiceService.updateRelationsForDocument(relationsChoice, "");
+        this.updateRelationsForDocument(relationsChoice, "");
         relationsSelect.addEventListener("search",
-            function(event) {
-                choiceService.updateRelationsForDocument(relationsChoice, event.detail.value);
-            },
+            debounce(event => this.updateRelationsForDocument(relationsChoice, event.detail.value), SEARCH_DEBOUNCE_MS),
             false,
         );
         relationsSelect.addEventListener("change",
-            function() {
-                choiceService.updateRelationsForDocument(relationsChoice, "");
-            },
+            () => this.updateRelationsForDocument(relationsChoice, ""),
             false,
         );
     }
 
     this.initAssetSelect = (elementId, prefetch = true) => {
-        let self = this;
         const assetSelect = document.getElementById(elementId);
         const assetChoices = initSelect(assetSelect);
         if (prefetch) {
             this.updateAssets(assetChoices, "");
         }
         assetSelect.addEventListener("search",
-            function(event) {
-                self.updateAssets(assetChoices, event.detail.value);
-            },
+            debounce(event => this.updateAssets(assetChoices, event.detail.value), SEARCH_DEBOUNCE_MS),
             false,
         );
         return assetChoices;
     }
 
     this.initSupplierSelect = (elementId, prefetch = true) => {
-        let self = this;
         const supplierSelect = document.getElementById(elementId);
         const supplierChoices = initSelect(supplierSelect);
         if (prefetch) {
             this.updateSuppliers(supplierChoices, "");
         }
         supplierSelect.addEventListener("search",
-            function(event) {
-                self.updateSuppliers(supplierChoices, event.detail.value);
-            },
+            debounce(event => this.updateSuppliers(supplierChoices, event.detail.value), SEARCH_DEBOUNCE_MS),
             false,
         );
         return supplierChoices;
