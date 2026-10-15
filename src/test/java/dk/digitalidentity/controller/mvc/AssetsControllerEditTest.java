@@ -10,7 +10,6 @@ import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
-import dk.digitalidentity.model.entity.enums.AiRiskFactor;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
@@ -56,7 +55,6 @@ public class AssetsControllerEditTest extends BaseIntegrationTest {
 
         final Asset reloaded = assetDao.findById(assetId).orElseThrow();
         assertThat(reloaded.getAiStatus()).isEqualTo(ContainsAITechnologyEnum.YES);
-        assertThat(reloaded.getAiRisk()).isEqualTo(AiRiskFactor.HIGH);
         assertThat(reloaded.getDescription()).isEqualTo("Beskrivelse fra OS2kitos");
         assertThat(reloaded.getSupplier()).isNotNull();
         assertThat(reloaded.getTerminationNotice()).isEqualTo("3 måneder");
@@ -106,7 +104,6 @@ public class AssetsControllerEditTest extends BaseIntegrationTest {
         form.setDepartments(new ArrayList<>());
         form.setArchive(ArchiveDuty.UNDECIDED);
         form.setAiStatus(null);
-        form.setAiRisk(null);
         form.setDescription(null);
         form.setSupplier(null);
         form.setTerminationNotice(null);
@@ -124,7 +121,6 @@ public class AssetsControllerEditTest extends BaseIntegrationTest {
         asset.setCriticality(Criticality.CRITICAL);
         asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NOT_RELEVANT);
         asset.setAiStatus(ContainsAITechnologyEnum.YES);
-        asset.setAiRisk(AiRiskFactor.HIGH);
         asset.setDescription("Beskrivelse fra OS2kitos");
         asset.setTerminationNotice("3 måneder");
         asset.setArchive(ArchiveDuty.UNDECIDED);

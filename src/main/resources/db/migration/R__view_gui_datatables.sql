@@ -362,6 +362,14 @@ SELECT a.id,
            )                                                                as criticality_order,
        a.socially_critical,
        a.ai_status,
+       ai_assessment.ai_risk_factor,
+       (CASE
+            WHEN ai_assessment.ai_risk_factor = 'MINIMAL' THEN 1
+            WHEN ai_assessment.ai_risk_factor = 'LIMITED' THEN 2
+            WHEN ai_assessment.ai_risk_factor = 'HIGH' THEN 3
+            WHEN ai_assessment.ai_risk_factor = 'PROHIBITED' THEN 4
+           END
+           )                                                                as ai_risk_factor_order,
        a.contract_date,
        a.contract_termination,
        a.termination_notice,
@@ -406,6 +414,7 @@ SELECT a.id,
            )                                                                as tia_status_order
 FROM assets a
          LEFT JOIN suppliers s on s.id = a.supplier_id
+         LEFT JOIN ai_assessment ON ai_assessment.asset_id = a.id
          LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
          LEFT JOIN properties old_kitos_prop ON old_kitos_prop.entity_id = a.id AND old_kitos_prop.prop_key = 'old_kitos_usage_uuid'
          -- ranked in one pass; a correlated newest-row lookup per asset cannot use the relation indexes

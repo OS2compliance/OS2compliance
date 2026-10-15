@@ -1,6 +1,7 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.model.ExcelColumn;
+import dk.digitalidentity.model.dto.BadgeDTO;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -203,6 +204,10 @@ public class ExcelExportService {
 			return result.toString();
 		}
 
+		if (value instanceof BadgeDTO badge) {
+			return badge.label();
+		}
+
 		// Default: use toString()
 		return value.toString();
 	}
@@ -213,7 +218,3 @@ public class ExcelExportService {
 		}
 	}
 }
-
-
-
-

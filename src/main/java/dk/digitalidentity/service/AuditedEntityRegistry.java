@@ -1,5 +1,7 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.model.entity.AiAssessment;
+import dk.digitalidentity.model.entity.AiAssessmentAnswer;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.DPIA;
@@ -41,7 +43,9 @@ public final class AuditedEntityRegistry {
 			Map.entry(Supplier.class.getSimpleName(), Supplier.class),
 			Map.entry(User.class.getSimpleName(), User.class),
 			Map.entry(ChoiceList.class.getSimpleName(), ChoiceList.class),
-			Map.entry(EmailTemplate.class.getSimpleName(), EmailTemplate.class)
+			Map.entry(EmailTemplate.class.getSimpleName(), EmailTemplate.class),
+			Map.entry(AiAssessment.class.getSimpleName(), AiAssessment.class),
+			Map.entry(AiAssessmentAnswer.class.getSimpleName(), AiAssessmentAnswer.class)
 	);
 
 	private static final Set<String> STRING_KEYED_ENTITIES = Set.of(
@@ -89,6 +93,12 @@ public final class AuditedEntityRegistry {
 		}
 		if (entity instanceof EmailTemplate emailTemplate) {
 			return emailTemplate.getTitle();
+		}
+		if (entity instanceof AiAssessment aiAssessment) {
+			return aiAssessment.getAsset().getName();
+		}
+		if (entity instanceof AiAssessmentAnswer aiAssessmentAnswer) {
+			return aiAssessmentAnswer.getAssessment().getAsset().getName();
 		}
 		return null;
 	}

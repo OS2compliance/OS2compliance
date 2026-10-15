@@ -103,32 +103,36 @@ public class AssetDTO {
 	private boolean sociallyCritical;
 	@ExcelColumn(headerName = "Anvender løsningen AI", order = 32)
 	private String aiStatus;
-	@ExcelColumn(headerName = "Kontraktdato", order = 33)
+	@ExcelColumn(headerName = "AI risikokategori", order = 33)
+	private BadgeDTO aiRiskFactor;
+	@ExcludeFromExport
+	private Integer aiRiskFactorOrder;
+	@ExcelColumn(headerName = "Kontraktdato", order = 34)
 	private LocalDate contractDate;
-	@ExcelColumn(headerName = "Kontraktophør", order = 34)
+	@ExcelColumn(headerName = "Kontraktophør", order = 35)
 	private LocalDate contractTermination;
-	@ExcelColumn(headerName = "Opsigelsesvarsel", order = 35)
+	@ExcelColumn(headerName = "Opsigelsesvarsel", order = 36)
 	private String terminationNotice;
-	@ExcelColumn(headerName = "Er der indgået databehandleraftale", order = 36)
+	@ExcelColumn(headerName = "Er der indgået databehandleraftale", order = 37)
 	private String dataProcessingAgreementStatus;
-	@ExcelColumn(headerName = "Databehandleraftale dato", order = 37)
+	@ExcelColumn(headerName = "Databehandleraftale dato", order = 38)
 	private LocalDate dataProcessingAgreementDate;
-	@ExcelColumn(headerName = "Vurdering af foranstaltninger", order = 38)
+	@ExcelColumn(headerName = "Vurdering af foranstaltninger", order = 39)
 	private String securityMeasuresStatus;
 	@ExcludeFromExport
 	private Integer securityMeasuresStatusOrder;
-	@ExcelColumn(headerName = "Risikovurdering fravalgt", order = 39)
+	@ExcelColumn(headerName = "Risikovurdering fravalgt", order = 40)
 	private String riskAssessmentOptOutStatus;
 	@ExcludeFromExport
 	private Integer riskAssessmentOptOutStatusOrder;
-	@ExcelColumn(headerName = "DPIA", order = 40)
+	@ExcelColumn(headerName = "DPIA", order = 41)
 	private String dpiaStatus;
 	@ExcludeFromExport
 	private Integer dpiaStatusOrder;
-	@ExcelColumn(headerName = "TIA vurdering", order = 41)
+	@ExcelColumn(headerName = "TIA vurdering", order = 42)
 	private String tiaStatus;
 	@ExcludeFromExport
 	private Integer tiaStatusOrder;
-	@ExcelColumn(headerName = "Systemet skal arkiveres", order = 42)
+	@ExcelColumn(headerName = "Systemet skal arkiveres", order = 43)
 	private String archive;
 }

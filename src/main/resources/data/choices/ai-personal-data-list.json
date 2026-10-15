@@ -1,0 +1,13 @@
+{
+  "identifier": "ai-personal-data-questions",
+  "name": "AI-løsningens behandling af personoplysninger",
+  "multiSelect": false,
+  "valueIdentifiers": [
+    "ai-personal-data-gate",
+    "ai-personal-data-followup-1",
+    "ai-personal-data-followup-2",
+    "ai-personal-data-followup-3",
+    "ai-personal-data-followup-4",
+    "ai-personal-data-followup-5"
+  ]
+}

@@ -9,6 +9,7 @@ import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
+import dk.digitalidentity.mapping.AiAssessmentMapper;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDPIAPageDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
@@ -55,6 +56,7 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireAsset;
+import dk.digitalidentity.service.AiAssessmentService;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.AssetSupplierMappingService;
@@ -148,6 +150,8 @@ public class AssetsController {
 	private final ChoiceValueService choiceValueService;
 	private final AssetSupplierMappingService assetSupplierMappingService;
 	private final DBSAssetDao dBSAssetDao;
+	private final AiAssessmentService aiAssessmentService;
+	private final AiAssessmentMapper aiAssessmentMapper;
 
 	private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
 
@@ -293,6 +297,10 @@ public class AssetsController {
 
 		model.addAttribute("asset", asset);
         model.addAttribute("changeableAsset", assetService.isEditable(asset));
+		if (asset.getAiStatus() == ContainsAITechnologyEnum.YES) {
+			model.addAttribute("aiAssessment", aiAssessmentMapper.toViewDTO(aiAssessmentService.getAssessment(asset),
+					aiAssessmentService.getRequirementQuestions(), aiAssessmentService.getPersonalDataQuestions()));
+		}
 		model.addAttribute("relatedAssets", relatedAssets);
         model.addAttribute("relatedAssetsRiskMap", assetService.getLatestRiskAssessment(relatedAssets));
 		model.addAttribute("relatedIncidents", relatedIncidents);
@@ -634,7 +642,6 @@ public class AssetsController {
 			existingAsset.getManagers().clear();
 			existingAsset.getManagers().addAll(asset.getManagers());
 			existingAsset.setDescription(asset.getDescription());
-			existingAsset.setAiRisk(asset.getAiRisk());
 			// ai_status is not nullable, so an empty selection keeps the current value.
 			if (asset.getAiStatus() != null) {
 				existingAsset.setAiStatus(asset.getAiStatus());
