@@ -1,6 +1,3 @@
--- Views gemmer forbindelsens collation for udtryk som GROUP_CONCAT
-SET NAMES utf8mb4 COLLATE utf8mb4_danish_ci;
-
 CREATE OR REPLACE VIEW view_gridjs_mail_log AS
 SELECT ml.id            AS id,
        ml.sent_at       AS sent_at,
