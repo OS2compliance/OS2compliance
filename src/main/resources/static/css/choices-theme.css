@@ -1,0 +1,95 @@
+/* Choices.js hardcodes its colours; must load after choices.min.css to win ties with it */
+
+.choices__inner {
+    border-color: var(--bs-input-border-color);
+}
+
+.choices > :is(.choices__inner, .form-control) {
+    background-color: var(--bs-form-control-bg);
+}
+
+.choices.is-focused > :is(.choices__inner, .form-control):not(.is-invalid),
+.choices.is-open > :is(.choices__inner, .form-control):not(.is-invalid) {
+    border-color: var(--bs-primary);
+}
+
+.choices.is-disabled > :is(.choices__inner, .form-control) {
+    background-color: var(--bs-form-control-disabled-bg);
+    border-color: var(--bs-input-disabled-border-color);
+}
+
+.choices.choices-readonly > :is(.choices__inner, .form-control) {
+    border-color: var(--bs-input-disabled-border-color);
+}
+
+.choices__placeholder {
+    color: var(--bs-secondary-color);
+    opacity: 1;
+}
+
+/* Search input */
+
+.choices .choices__input,
+.choices[data-type*=select-one] .choices__input {
+    background-color: var(--bs-form-control-bg);
+}
+
+.choices[data-type*=select-one] .choices__input {
+    border-bottom-color: var(--bs-input-disabled-border-color);
+}
+
+.choices.is-disabled .choices__input {
+    background-color: var(--bs-form-control-disabled-bg);
+    color: var(--bs-secondary-color);
+}
+
+.choices__input::placeholder {
+    color: var(--bs-secondary-color);
+}
+
+/* Selected items in multi-selects */
+
+.choices__list--multiple .choices__item {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.choices__list--multiple .choices__item.is-highlighted {
+    background-color: var(--bs-primary-hover);
+    border-color: var(--bs-primary-hover);
+}
+
+.choices[data-type*=select-multiple] .choices__button,
+.choices[data-type*=text] .choices__button {
+    border-left-color: var(--bs-primary-hover);
+}
+
+.choices.is-disabled .choices__list--multiple .choices__item {
+    background-color: var(--bs-secondary-color);
+    border-color: var(--bs-secondary-color);
+}
+
+.choices[data-type*=select-one] .choices__button:focus {
+    box-shadow: 0 0 0 2px var(--bs-primary);
+}
+
+.choices[data-type*=select-one]::after {
+    border-color: var(--bs-body-color) transparent transparent;
+}
+
+.choices[data-type*=select-one].is-open::after {
+    border-color: transparent transparent var(--bs-body-color);
+}
+
+/* Dropdown */
+
+.choices .choices__list--dropdown,
+.choices .choices__list[aria-expanded] {
+    background-color: var(--bs-form-control-bg);
+    border-color: var(--bs-primary);
+}
+
+.choices__list--dropdown .choices__item--selectable.is-highlighted,
+.choices__list[aria-expanded] .choices__item--selectable.is-highlighted {
+    background-color: var(--bs-tertiary-bg);
+}

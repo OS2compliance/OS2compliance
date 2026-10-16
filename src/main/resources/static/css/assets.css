@@ -43,11 +43,6 @@
     border-width: 1px 0;
 }
 
-.choices.is-disabled .form-control {
-    background-color: #f3f5f9 !important;
-    border-color: #edf1f6;
-    opacity: 1;
-}
 .grayscale {
     filter: grayscale(100%);
 }
