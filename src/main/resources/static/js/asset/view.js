@@ -206,6 +206,7 @@ function rememberSelectedTab() {
         return;
     }
 
+    window.localStorage.setItem('activeTab', tabToShow.dataset.bsTarget);
     makeInactive(tabs);
     makeInactive(document.querySelectorAll(".tab-pane"));
 
