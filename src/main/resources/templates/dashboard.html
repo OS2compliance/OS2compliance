@@ -134,6 +134,12 @@
                         <div id="_dm-tabsAssets" class="tab-pane fade" role="tabpanel" aria-labelledby="assets-tab">
                             <div id="assetsDatatable"></div>
                             <!-- Custom search selectors-->
+                            <select class="form-control form-select editField" data-trigger="" name="assetAssessmentSearchSelector" id="assetAssessmentSearchSelector" tabindex="-1" required >
+                                <option th:text="'Alle'" th:value="null"></option>
+                                <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.RiskAssessment).values()}"
+                                        th:value="${option}" th:text="${option.message}"></option>
+                            </select>
+                            <!-- Custom search selectors-->
                             <select class="form-control form-select editField" data-trigger="" name="assetStatusSearchSelector" id="assetStatusSearchSelector" tabindex="-1" required >
                                 <option th:text="'Alle'" th:value="null"></option>
                                 <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AssetStatus).values()}"
