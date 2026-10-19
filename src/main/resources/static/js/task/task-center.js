@@ -160,7 +160,7 @@ function initGrid() {
                         return gridjs.html(`<span class="text-danger">${cell}</span>`);
                     }
                     else if (diff < 31 && diff >= 0 ) {
-                        return gridjs.html(`<span class="text-warning">${cell}</span>`)
+                        return gridjs.html(`<span class="text-warning-emphasis">${cell}</span>`)
                     }
                     else {
                         return gridjs.html(`<span>${cell}</span>`);

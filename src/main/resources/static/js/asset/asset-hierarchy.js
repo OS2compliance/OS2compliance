@@ -143,7 +143,7 @@ function HierarchyService() {
                 .nodeHeight(d => 80)
                 .nodeContent(d => {
                     const isRoot = d.data.isRoot;
-                    const borderColor = isRoot ? 'var(--bs-secondary)' : '#25476a';
+                    const borderColor = isRoot ? 'var(--bs-secondary)' : 'var(--bs-primary)';
                     const badgeHtml = isRoot ? '<span style="background-color: var(--bs-secondary); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 5px;">Rod</span>' : '';
 
                     return `
