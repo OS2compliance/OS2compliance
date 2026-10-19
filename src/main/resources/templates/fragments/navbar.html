@@ -3,7 +3,7 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 
-<head th:replace="~{fragments/header :: head (burgermenu = true)}"></head>
+<head th:replace="~{fragments/header :: head}"></head>
 <body>
 <nav th:fragment="main" id="mainnav-container" class="mainnav">
     <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isAuthenticated()}" class="mainnav__inner" id="inner">
