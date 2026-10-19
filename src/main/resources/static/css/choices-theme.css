@@ -1,11 +1,11 @@
 /* Choices.js hardcodes its colours; must load after choices.min.css to win ties with it */
 
 .choices__inner {
-    border-color: var(--bs-input-border-color);
+    border-color: var(--app-input-border-color);
 }
 
 .choices > :is(.choices__inner, .form-control) {
-    background-color: var(--bs-form-control-bg);
+    background-color: var(--bs-component-bg);
 }
 
 .choices.is-focused > :is(.choices__inner, .form-control):not(.is-invalid),
@@ -13,13 +13,10 @@
     border-color: var(--bs-primary);
 }
 
-.choices.is-disabled > :is(.choices__inner, .form-control) {
-    background-color: var(--bs-form-control-disabled-bg);
-    border-color: var(--bs-input-disabled-border-color);
-}
-
-.choices.choices-readonly > :is(.choices__inner, .form-control) {
-    border-color: var(--bs-input-disabled-border-color);
+.choices:is(.is-disabled, .choices-readonly) > :is(.choices__inner, .form-control) {
+    background-color: var(--app-input-disabled-bg);
+    border-color: transparent;
+    color: var(--bs-emphasis-color);
 }
 
 .choices__placeholder {
@@ -31,16 +28,16 @@
 
 .choices .choices__input,
 .choices[data-type*=select-one] .choices__input {
-    background-color: var(--bs-form-control-bg);
+    background-color: var(--bs-component-bg);
 }
 
 .choices[data-type*=select-one] .choices__input {
-    border-bottom-color: var(--bs-input-disabled-border-color);
+    border-bottom-color: var(--bs-gray-300);
 }
 
-.choices.is-disabled .choices__input {
-    background-color: var(--bs-form-control-disabled-bg);
-    color: var(--bs-secondary-color);
+.choices:is(.is-disabled, .choices-readonly) .choices__input {
+    background-color: var(--app-input-disabled-bg);
+    color: var(--bs-emphasis-color);
 }
 
 .choices__input::placeholder {
@@ -55,13 +52,13 @@
 }
 
 .choices__list--multiple .choices__item.is-highlighted {
-    background-color: var(--bs-primary-hover);
-    border-color: var(--bs-primary-hover);
+    background-color: var(--app-primary-hover);
+    border-color: var(--app-primary-hover);
 }
 
 .choices[data-type*=select-multiple] .choices__button,
 .choices[data-type*=text] .choices__button {
-    border-left-color: var(--bs-primary-hover);
+    border-left-color: var(--app-primary-hover);
 }
 
 .choices.is-disabled .choices__list--multiple .choices__item {
@@ -85,7 +82,7 @@
 
 .choices .choices__list--dropdown,
 .choices .choices__list[aria-expanded] {
-    background-color: var(--bs-form-control-bg);
+    background-color: var(--bs-component-bg);
     border-color: var(--bs-primary);
 }
 

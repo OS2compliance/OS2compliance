@@ -130,7 +130,7 @@
 		<dependency>
 			<groupId>dk.digitalidentity.webjars</groupId>
 			<artifactId>nifty-webjar-lib</artifactId>
-			<version>3.0.1</version>
+			<version>4.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
