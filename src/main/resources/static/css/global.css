@@ -236,3 +236,13 @@ html {
 .optionItem.disabled {
     pointer-events: auto;
 }
+.app-version {
+	margin-right: 14px;
+	font-size: 0.8rem;
+	cursor: help;
+}
+
+.app-version-tooltip .tooltip-inner {
+	white-space: pre-line;
+	text-align: left;
+}

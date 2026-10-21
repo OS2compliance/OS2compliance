@@ -7,6 +7,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- (Comply-334) Versionsnummeret vises i øverste højre hjørne ved siden af tandhjulet, med byggetidspunkt og commit-id ved mouseover
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed
