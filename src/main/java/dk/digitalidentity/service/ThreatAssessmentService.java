@@ -288,7 +288,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
             task.setNextDeadline(assessment.getNextRevision());
             task.setResponsibleUsers(assessment.getResponsibleUser() != null ? Set.of(assessment.getResponsibleUser()) : Set.of(userService.currentUser()));
             task.setDescription("Revider risikovurdering af " + assessment.getName());
-            setTaskRevisionInterval(assessment, task);
+			task.setRepetition(assessment.getRevisionInterval().toTaskRepetition());
             return task;
         }
         return null;
@@ -1185,15 +1185,6 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         var result = outputStream.toByteArray();
         outputStream.close();
         return result;
-    }
-
-    private static void setTaskRevisionInterval(final ThreatAssessment assessment, final Task task) {
-        switch(assessment.getRevisionInterval()) {
-            case YEARLY -> task.setRepetition(TaskRepetition.YEARLY);
-            case EVERY_SECOND_YEAR -> task.setRepetition(TaskRepetition.EVERY_SECOND_YEAR);
-            case EVERY_THIRD_YEAR -> task.setRepetition(TaskRepetition.EVERY_THIRD_YEAR);
-            case NONE -> task.setRepetition(TaskRepetition.NONE);
-        }
     }
 
 	public List<ThreatAssessment> getByIds (List<Long> ids) {
