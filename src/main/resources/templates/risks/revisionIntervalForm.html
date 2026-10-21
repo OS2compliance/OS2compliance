@@ -21,10 +21,16 @@
                     <label for="revisionInterval" class="col-lg-4 col-form-label">Revideringsfrekvens</label>
                     <div class="col-lg-8">
                         <select class="form-control form-select" th:field="*{revisionInterval}" id="revisionInterval" required>
-                            <option th:each="revisionInterval : ${T(dk.digitalidentity.model.entity.enums.RevisionInterval).values()}"
-                                    th:value="${revisionInterval}" th:text="${revisionInterval.message}"></option>
+                            <option th:each="revisionInterval : ${T(dk.digitalidentity.model.entity.enums.RiskRevisionInterval).values()}"
+                                    th:value="${revisionInterval}" th:text="${revisionInterval.message}"
+                                    th:attr="data-months=${revisionInterval.months}"></option>
                         </select>
                         <div class="invalid-feedback">Der skal vælges en revideringsfrekvens</div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-lg-8 offset-lg-4">
+                        <div id="revisionSummary" class="form-text" hidden></div>
                     </div>
                 </div>
             </form>
