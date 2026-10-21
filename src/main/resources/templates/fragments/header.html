@@ -89,6 +89,10 @@
 
 			<!-- Content Header - Right Side: -->
 			<div class="header__content-end">
+				<span th:if="${appVersion}" class="app-version" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="app-version-tooltip" th:attr="data-bs-title=${appVersionInfo}">
+					<span th:text="${'Version ' + appVersion}"></span>
+					<i class="ti-info-alt"></i>
+				</span>
 				<div sec:authorize="@accessEvaluator.settings()">
 					<a style="margin-bottom: 2px; margin-right: 14px; height: 45px; margin-top: 50px;" onclick="settingsService.show()">
 						<i class="ti-settings fs-4"></i>

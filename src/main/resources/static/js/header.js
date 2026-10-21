@@ -1,5 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
 
+    // version info tooltip
+    document.querySelectorAll('.app-version[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+
     // search
     const searchForm = document.querySelector('.searchbox');
     const searchInput = document.getElementById('header-search-input');
