@@ -70,6 +70,36 @@
                                     <option value="1">Ja</option>
                                     <option value="0">Nej</option>
                                 </select>
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="assetCategorySearchSelector" id="assetCategorySearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AssetCategory).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="assetCriticalitySearchSelector" id="assetCriticalitySearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="assetAiStatusSearchSelector" id="assetAiStatusSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
+                                            th:value="${option}" th:text="${option.danishName}"></option>
+                                </select>
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="assetDataProcessingAgreementSearchSelector" id="assetDataProcessingAgreementSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="assetArchiveSearchSelector" id="assetArchiveSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.ArchiveDuty).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
                             </div>
                         </div>
                     </div>
