@@ -11,6 +11,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed
+- (Ad-hoc) (OS2kitos-integration) Synkroniseringen fejlede ved hver kørsel, efter at KITOS havde tilføjet en ny værdi for opsigelsesvarslets løbetid på kontrakter, så ændringer fra KITOS ikke kom med. Kitos-klienten er opdateret, og nye ukendte værdier får ikke længere synkroniseringen til at fejle
 - (Ad-hoc) Efter konverteringen til utf8mb4_danish_ci fejlede statusfilteret på opgaver og dashboard, siden "Inaktive ansvarlige" og backup med mysqldump med "Illegal mix of collations" på MariaDB
 - (Ad-hoc) Startede en ny instans mens den forrige stadig kørte opstartens dataopsætning, kunne de begge udføre samme trin, så fx diagramkonfigurationer blev oprettet to gange og opstarten derefter fejlede. Trinene låses nu, så kun én instans udfører dem
 - (Ad-hoc) Tabeller oprettet på databaseservere med utf8mb3 som standard fik utf8mb3 i stedet for utf8mb4/dansk sortering. Alle tabeller konverteres nu til utf8mb4_danish_ci, og databasens standard sættes, så nye tabeller også får det
@@ -33,6 +34,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Leverandører) Leverandørlisten loadede meget langsomt eller slet ikke, også ved få leverandører og aktiver
 - (Ad-hoc) (Aktiver) Aktivlisten loadede meget langsomt eller slet ikke ved mange aktiver, relationer og risikovurderinger
 - (Ad-hoc) (Aktiver) Kolonnen "Samfundskritisk" kunne ikke filtreres. Den har nu et Ja/Nej-filter som de øvrige ja/nej-kolonner
+- (Ad-hoc) (Aktiver) Kolonnerne "Er der indgået databehandleraftale", "Anvender løsningen AI", "Systemet skal arkiveres", "Kritikalitet" og "Kategori" kunne ikke filtreres. De har nu en vælger med de mulige værdier, og filtre på en fast værdi rammer kun den værdi, så fx "Kritisk" ikke også viser "Ikke kritisk", og "Grøn" ikke også "Lysgrøn" i risikovurderingsfiltrene
 - (Ad-hoc) (Dashboard) Kolonnen "Risikovurdering" under Mine Aktiver viste aktivets kritikalitet. Den viser nu farven fra seneste risikovurdering som på aktivlisten, og kan filtreres på den
 
 ## [2.8.0] - 2026-09-25

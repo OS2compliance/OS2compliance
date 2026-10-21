@@ -229,6 +229,12 @@ public class SearchRepositoryImpl implements SearchRepository {
 					List<Predicate> valuePredicates = new ArrayList<>();
 					for (String val : values) {
 						String trimmed = val.trim();
+						// Substring match would let e.g. CRITICAL hit NON_CRITICAL
+						Optional<? extends Enum<?>> enumConstant = enumConstant(propertyPath.getJavaType(), trimmed);
+						if (enumConstant.isPresent()) {
+							valuePredicates.add(criteriaBuilder.equal(propertyPath, enumConstant.get()));
+							continue;
+						}
 						valuePredicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath.as(String.class)),
 								"%" + trimmed.toLowerCase() + "%"));
 					}
@@ -277,6 +283,15 @@ public class SearchRepositoryImpl implements SearchRepository {
 	private Predicate handleId(Path<String> propertyPath, Map.Entry<String, String> searchEntry, CriteriaBuilder criteriaBuilder) {
 
 		return criteriaBuilder.like(propertyPath, "%" + NumberUtils.createLong(searchEntry.getValue()) + "%");
+	}
+
+	private static Optional<? extends Enum<?>> enumConstant(final Class<?> type, final String name) {
+		if (!type.isEnum()) {
+			return Optional.empty();
+		}
+		return Arrays.stream((Enum<?>[]) type.getEnumConstants())
+				.filter(c -> c.name().equalsIgnoreCase(name))
+				.findFirst();
 	}
 
 	private Predicate handleBoolean(Path<String> propertyPath, Map.Entry<String, String> searchEntry, CriteriaBuilder criteriaBuilder) {
