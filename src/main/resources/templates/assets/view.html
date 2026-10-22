@@ -78,6 +78,9 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tiaTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span id="tiaBadge" th:data-assessment="${asset.tia?.assessment}" class="badge" th:classappend="${asset.tiaOptOut} ? 'bg-gray-800' : (${asset.tia?.assessment?.name() == 'RED'} ? 'bg-red' : (${asset.tia?.assessment?.name() == 'YELLOW'} ? 'bg-yellow' : (${asset.tia?.assessment?.name() == 'GREEN'} ? 'bg-green' : '')))">&nbsp</span>&nbspTIA</button>
                             </li>
+                            <li th:if="${aiAssessment != null}" class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#aiTab" type="button" role="tab" aria-controls="aiTab" aria-selected="false">AI</button>
+                            </li>
                         </ul>
 
                         <div class="tab-content">
@@ -343,24 +346,6 @@
                                                         <option
                                                                 th:each="status : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
                                                                 th:value="${status}" th:text="${status.danishName}"></option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div class="row mb-3" id="riskFactorContainer">
-                                                <label for="riskFactor" class="col-sm-3 col-form-label">
-                                                    Vurdering af risiko ved AI-brug
-                                                    &nbsp;
-                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
-                                                </label>
-                                                <div class="col-sm-9">
-                                                    <select class="form-control form-select editField"
-                                                            th:field="*{aiRisk}" id="riskFactor"
-                                                            tabindex="-1" disabled>
-                                                        <option value=""></option>
-                                                        <option
-                                                                th:each="risk : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
-                                                                th:value="${risk}" th:text="${risk.message}"></option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -760,6 +745,9 @@
                             <div id="tiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="tia-tab" th:replace="~{assets/fragments/tia :: tia(${asset}, ${dpChoices})}">
                                 Transfer impact assessment
                             </div><!--  Transfer impact assessment tab end -->
+                            <th:block th:if="${aiAssessment != null}">
+                                <div id="aiTab" class="tab-pane fade" role="tabpanel" aria-labelledby="ai-tab" th:replace="~{assets/fragments/ai :: ai(${asset.id}, ${aiAssessment}, ${changeableAsset})}"></div>
+                            </th:block>
                         </div>
                     </div>
                 </div>

@@ -8,6 +8,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - (Comply-334) Versionsnummeret vises i øverste højre hjørne ved siden af tandhjulet, med byggetidspunkt og commit-id ved mouseover
+- (Comply-445) (Aktiver) Aktiver der anvender AI har fået en AI-fane med aktørrolle, risikokategori efter AI-forordningen, krav efter risikoniveau og opfølgende spørgsmål om personoplysninger. Feltet "Vurdering af risiko ved AI-brug" under Generelt er flyttet hertil, og aktivlisten har fået kolonnen "AI risikokategori"
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed

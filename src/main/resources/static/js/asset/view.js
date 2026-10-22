@@ -1,6 +1,7 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 import initRelatedTagList from "../tags/related-tag-list.js";
 import { initTia } from "./tia.js";
+import { initAi } from "./ai.js";
 
 let managersChoicesEditSelect = null;
 let suppliersChoicesEditSelect = null;
@@ -38,23 +39,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
         profilePageLoaded();
     }
 
-    const aiStatusSelect = document.getElementById('aiStatus');
-    const riskFactorContainer = document.getElementById('riskFactorContainer');
-
-    function toggleRiskFactorContainer() {
-        if (aiStatusSelect.value === 'YES') {
-            riskFactorContainer.style.display = '';
-        } else {
-            riskFactorContainer.style.display = 'none';
-        }
-    }
-    toggleRiskFactorContainer();
-    aiStatusSelect.addEventListener('change', toggleRiskFactorContainer);
-
     initEditButtons();
 
     initRelatedTagList('#assetTab');
     initTia();
+    initAi();
 });
 
 function initEditButtons() {
@@ -208,28 +197,21 @@ function initIncidentRelationSelectPrivate() {
     );
 }
 
+/** on load of the page: switch to the currently selected tab, or the first one as fallback*/
 function rememberSelectedTab() {
-    // on load of the page: switch to the currently selected tab
-    //var hash = window.location.hash;
-    var hash = window.localStorage.getItem('activeTab');
-
-    if (hash != null && hash !== "") {
-        //Inactivate all tabs
-        const myTabs = document.querySelectorAll("ul.nav-tabs > li > button");
-        makeInactive(myTabs);
-
-        //Hide all contentTabs
-        const panes = document.querySelectorAll(".tab-pane");
-        makeInactive(panes);
-
-        const activeTab = document.querySelector('button[data-bs-target="' + hash + '"]');
-        activeTab?.classList.add("active");
-
-        const activePane = document.querySelector(hash);
-        activePane?.classList.add("active");
-        activePane?.classList.add("show");
+    const tabs = [...document.querySelectorAll("ul.nav-tabs > li > button")];
+    const savedTarget = window.localStorage.getItem('activeTab');
+    const tabToShow = tabs.find(tab => tab.dataset.bsTarget === savedTarget) ?? tabs[0];
+    if (!tabToShow) {
+        return;
     }
 
+    window.localStorage.setItem('activeTab', tabToShow.dataset.bsTarget);
+    makeInactive(tabs);
+    makeInactive(document.querySelectorAll(".tab-pane"));
+
+    tabToShow.classList.add("active");
+    document.querySelector(tabToShow.dataset.bsTarget)?.classList.add("active", "show");
 }
 
 function initDatePickers() {
@@ -322,7 +304,6 @@ function editMode(enabled, responsibleFieldChangeable) {
     const rootElement = document.getElementById('editForm');
     const aiStatus = document.getElementById('aiStatus');
     const active = document.getElementById('activeAsset');
-    const aiRiskFactor = document.getElementById('riskFactor');
     const responsibleUsers = document.getElementById('responsibleUsers');
     if (enabled) {
         rootElement.querySelectorAll('.editField').forEach(elem => {
@@ -416,7 +397,6 @@ function editMode(enabled, responsibleFieldChangeable) {
     }
     if (isKitos) {
         aiStatus.disabled = true;
-        aiRiskFactor.disabled = true;
         let descriptionInput = document.getElementById("description");
         if (descriptionInput) {
             descriptionInput.disabled = true;

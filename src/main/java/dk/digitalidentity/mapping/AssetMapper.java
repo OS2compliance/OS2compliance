@@ -10,8 +10,10 @@ import dk.digitalidentity.model.api.SupplierWriteEO;
 import dk.digitalidentity.model.api.UserEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.AssetDTO;
+import dk.digitalidentity.model.dto.BadgeDTO;
 import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
+import dk.digitalidentity.model.entity.enums.AiRiskFactor;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -104,6 +106,8 @@ public interface AssetMapper {
 			.criticalityOrder(assetGrid.getCriticalityOrder())
 			.sociallyCritical(assetGrid.isSociallyCritical())
 			.aiStatus(nullSafe(() -> assetGrid.getAiStatus().getDanishName()))
+			.aiRiskFactor(nullSafe(() -> toBadge(assetGrid.getAiRiskFactor())))
+			.aiRiskFactorOrder(assetGrid.getAiRiskFactorOrder())
 			.contractDate(assetGrid.getContractDate())
 			.contractTermination(assetGrid.getContractTermination())
 			.terminationNotice(nullSafe(assetGrid::getTerminationNotice))
@@ -146,6 +150,10 @@ public interface AssetMapper {
         List<AssetDTO> assetDTOS = new ArrayList<>();
         assetGrids.forEach(a -> assetDTOS.add(toDTO(a, tagsById)));
         return assetDTOS;
+    }
+
+    default BadgeDTO toBadge(final AiRiskFactor riskFactor) {
+        return new BadgeDTO(riskFactor.name(), riskFactor.getMessage(), riskFactor.getBadgeClass());
     }
 
     default SupplierShallowEO toShallowEO(final AssetSupplierMapping mapping) {
@@ -262,7 +270,6 @@ public interface AssetMapper {
         @Mapping(target = "assetType", ignore = true),
 		// Not taken from the payload; the asset starts out "uafklaret" like the other create paths.
 		@Mapping(target = "aiStatus", constant = "UNDECIDED"),
-		@Mapping(target = "aiRisk", ignore = true),
 		@Mapping(target = "active", ignore = true),
 		@Mapping(target = "dpiaCompletionStatus", ignore = true),
 		@Mapping(target = "threatAssessmentCompletionStatus", ignore = true),

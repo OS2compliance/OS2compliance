@@ -1,0 +1,18 @@
+{
+  "identifier": "ai-requirement-questions",
+  "name": "AI-krav baseret på risikoniveau",
+  "multiSelect": false,
+  "valueIdentifiers": [
+    "ai-requirement-1",
+    "ai-requirement-2",
+    "ai-requirement-3",
+    "ai-requirement-4",
+    "ai-requirement-5",
+    "ai-requirement-6",
+    "ai-requirement-7",
+    "ai-requirement-8",
+    "ai-requirement-9",
+    "ai-requirement-10",
+    "ai-requirement-11"
+  ]
+}

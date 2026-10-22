@@ -160,6 +160,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(47, this::seedV47);
 		incrementAndPerformIfVersion(48, this::seedV48);
 		incrementAndPerformIfVersion(49, this::seedV49);
+		incrementAndPerformIfVersion(50, this::seedV50);
 	}
 
 	/**
@@ -197,6 +198,18 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	 */
 	private void seedV46() {
 		// Med vilje tom - se javadoc.
+	}
+
+	private void seedV50() {
+		try {
+			choiceImporter.importValues("./data/choices/ai-requirement-values.json");
+			choiceImporter.importList("./data/choices/ai-requirement-list.json");
+			choiceImporter.importValues("./data/choices/ai-personal-data-values.json");
+			choiceImporter.importList("./data/choices/ai-personal-data-list.json");
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/** Sand som udgangspunkt, så ingen installation mister den fulde beskrivelse den har i dag. */

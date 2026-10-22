@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<div th:fragment="ai(assetId, ai, changeable)" id="aiTab" class="tab-pane fade" role="tabpanel" aria-labelledby="ai-tab"
+     th:data-asset-id="${assetId}" th:data-changeable="${changeable}">
+    <div class="row mb-3">
+        <table class="table table-striped overflow-visible">
+            <thead>
+            <tr>
+                <th class="col-lg-6">Aktørrolle</th>
+                <th class="col-lg-6">Valg</th>
+            </tr>
+            </thead>
+            <tbody class="overflow-visible">
+            <tr class="overflow-visible">
+                <td>Vurdering af rollen som AI spiller i denne kontekst</td>
+                <td class="overflow-visible">
+                    <select id="aiActorRole" class="form-control form-select">
+                        <option value="">Vælg rolle</option>
+                        <option th:each="role : ${T(dk.digitalidentity.model.entity.enums.AiActorRole).values()}"
+                                th:value="${role.name()}" th:text="${role.message}"
+                                th:selected="${ai.actorRole() == role}"></option>
+                    </select>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="aiActorRoleInfo" class="row mb-3" hidden>
+        <div class="col">
+            <div class="alert alert-info mb-0">
+                Aktuelt understøtter OS2compliance kun rollen som <strong>Idriftsætter</strong>
+            </div>
+        </div>
+    </div>
+
+    <div id="aiDeployerSection" hidden>
+        <div class="row mb-3">
+            <table id="aiRiskTable" class="table table-striped overflow-visible">
+                <thead>
+                <tr>
+                    <th class="col-lg-4">Indplacering/Valg af model</th>
+                    <th class="col-lg-4">Valg</th>
+                    <th class="col-lg-4">Noter</th>
+                </tr>
+                </thead>
+                <tbody class="overflow-visible">
+                <tr class="overflow-visible">
+                    <td>Vurderingen af AI-forordningens risikokategorier</td>
+                    <td class="overflow-visible">
+                        <select id="aiRiskFactor" class="form-control form-select">
+                            <option value="">Vælg risikokategori</option>
+                            <option th:each="riskFactor : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
+                                    th:value="${riskFactor.name()}" th:text="${riskFactor.message}"
+                                    th:selected="${ai.riskFactor() == riskFactor}"></option>
+                        </select>
+                    </td>
+                    <td><textarea id="aiRiskNote" rows="4" class="form-control" th:text="${ai.riskNote()}"></textarea></td>
+                </tr>
+                <tr th:replace="~{assets/fragments/ai :: answerRow(${ai.personalDataGate()}, ${ai.answers().get(ai.personalDataGate().id())}, false)}"></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="aiRequirements" hidden>
+            <div class="row mb-2">
+                <div class="col">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#aiRequirementsCollapse" aria-expanded="true" aria-controls="aiRequirementsCollapse"
+                            data-ai-collapse-label="kravtabel">
+                        Skjul kravtabel
+                    </button>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="collapse show" id="aiRequirementsCollapse">
+                    <table class="table table-striped overflow-visible">
+                        <thead>
+                        <tr>
+                            <th class="col-lg-4">Krav til AI-systemet baseret på risikoniveau</th>
+                            <th class="col-lg-4">Valg</th>
+                            <th class="col-lg-4">Noter</th>
+                        </tr>
+                        </thead>
+                        <tbody class="overflow-visible">
+                        <th:block th:each="question : ${ai.requirementQuestions()}">
+                            <tr th:replace="~{assets/fragments/ai :: answerRow(${question}, ${ai.answers().get(question.id())}, true)}"></tr>
+                        </th:block>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="aiPersonalData" hidden>
+            <div class="row mb-2 mt-3">
+                <div class="col">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#aiPersonalDataCollapse" aria-expanded="true" aria-controls="aiPersonalDataCollapse"
+                            data-ai-collapse-label="AI-løsningens behandling af personoplysninger">
+                        Skjul AI-løsningens behandling af personoplysninger
+                    </button>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="collapse show" id="aiPersonalDataCollapse">
+                    <table class="table table-striped overflow-visible">
+                        <thead>
+                        <tr>
+                            <th class="col-lg-4">AI-løsningens behandling af personoplysninger</th>
+                            <th class="col-lg-4">Valg</th>
+                            <th class="col-lg-4">Noter</th>
+                        </tr>
+                        </thead>
+                        <tbody class="overflow-visible">
+                        <th:block th:each="question : ${ai.personalDataFollowups()}">
+                            <tr th:replace="~{assets/fragments/ai :: answerRow(${question}, ${ai.answers().get(question.id())}, true)}"></tr>
+                        </th:block>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<tr th:fragment="answerRow(question, answer, allowNotRelevant)" class="ai-answer-row overflow-visible"
+    th:data-question-id="${question.id()}" th:data-risk-level="${question.riskLevel()}">
+    <td th:text="${question.caption()}"></td>
+    <td class="overflow-visible">
+        <select class="form-control form-select ai-answer">
+            <option value="">Vælg svar</option>
+            <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AiAnswer).values()}"
+                    th:if="${allowNotRelevant || option.name() != 'NOT_RELEVANT'}"
+                    th:value="${option.name()}" th:text="${option.message}"
+                    th:selected="${answer != null && answer.answer() == option}"></option>
+        </select>
+    </td>
+    <td><textarea rows="4" class="form-control ai-answer-note" th:text="${answer?.note()}"></textarea></td>
+</tr>
+</body>
+</html>

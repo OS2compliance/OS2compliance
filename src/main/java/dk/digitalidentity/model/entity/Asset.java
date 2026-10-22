@@ -2,7 +2,6 @@ package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.model.dto.tag.Tagable;
-import dk.digitalidentity.model.entity.enums.AiRiskFactor;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
@@ -78,10 +77,6 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private ContainsAITechnologyEnum aiStatus;
-
-	@Column
-	@Enumerated(EnumType.STRING)
-	private AiRiskFactor aiRisk;
 
     @ManyToOne
     @JoinColumn(name = "asset_type", nullable = false)

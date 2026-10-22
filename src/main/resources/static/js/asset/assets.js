@@ -384,6 +384,27 @@ function initGrid() {
                 }
             },
             {
+                id: 'aiRiskFactor',
+                hidden: true,
+                name: "AI risikokategori",
+                searchable: {
+                    searchKey: 'aiRiskFactor',
+                    sortKey: 'aiRiskFactorOrder',
+                    fieldId: 'aiRiskFactorSearchSelector'
+                },
+                formatter: (cell) => {
+                    if (!cell) {
+                        return gridjs.html('');
+                    }
+
+                    const badge = document.createElement('div');
+                    badge.className = `d-block badge ${cell.badgeClass}`;
+                    badge.textContent = cell.label;
+
+                    return gridjs.html(badge.outerHTML, 'div');
+                }
+            },
+            {
                 id: 'contractDate',
                 hidden: true,
                 name: "Kontraktdato",
@@ -541,6 +562,7 @@ function initGrid() {
                     asset.criticality,
                     asset.sociallyCritical,
                     asset.aiStatus,
+                    asset.aiRiskFactor,
                     asset.contractDate,
                     asset.contractTermination,
                     asset.terminationNotice,
