@@ -11,6 +11,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Comply-445) (Aktiver) Aktiver der anvender AI har fået en AI-fane med aktørrolle, risikokategori efter AI-forordningen, krav efter risikoniveau og opfølgende spørgsmål om personoplysninger. Feltet "Vurdering af risiko ved AI-brug" under Generelt er flyttet hertil, og aktivlisten har fået kolonnen "AI risikokategori"
 - (Comply-318) (Generelt) Teksten i skrivefelterne er nu sort i stedet for grå, og kontrasten er øget på knapper, statusmarkeringer og links. Brugerfladen er samtidig opdateret til en nyere version af temaet
 - (Comply-437) (Risikovurderinger) Revideringsfrekvensen har fået de samme valg som opgaver, bl.a. månedligt, kvartalsvis og halvårligt. Revideringsdatoen foreslås ud fra den valgte frekvens, og dialogen viser hvornår næste revision falder
+- (Comply-422) (Fortegnelse) Artikel 30-rapporten kan hentes som Word for en enkelt behandlingsaktivitet, både fra oversigten og fra selve behandlingsaktiviteten, og for de behandlingsaktiviteter der er filtreret frem i oversigten
+- (Comply-430) (Fortegnelse) Fanen Formål & Lovhjemmel har fået fritekstfeltet "Øvrige lovhenvisninger" til lovhenvisninger, der ikke findes i KLE. Feltet kommer med i Artikel 30-rapporten og den globale søgning
+- (Comply-431) (Fortegnelse/Aktiver) "Forventede slettefrister" på fanen Databehandling kan nu indeholde flere slettefrister. Eksisterende værdier bevares, og Artikel 30-rapporten viser alle valgte frister
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed
