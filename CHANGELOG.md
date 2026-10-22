@@ -11,6 +11,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - (Ad-hoc) (OS2kitos-integration) Synkroniseringen fejlede ved hver kørsel, efter at KITOS havde tilføjet en ny værdi for opsigelsesvarslets løbetid på kontrakter, så ændringer fra KITOS ikke kom med. Kitos-klienten er opdateret, og nye ukendte værdier får ikke længere synkroniseringen til at fejle
+- (Ad-hoc) (Behandlingsaktiviteter) En behandlingsaktivitet kunne ikke gemmes, hvis "Hvem er ansvarlig for behandling af personoplysningerne" var over 255 tegn. Feltet er udvidet til lang tekst
 - (Ad-hoc) Efter konverteringen til utf8mb4_danish_ci fejlede statusfilteret på opgaver og dashboard, siden "Inaktive ansvarlige" og backup med mysqldump med "Illegal mix of collations" på MariaDB
 - (Ad-hoc) Startede en ny instans mens den forrige stadig kørte opstartens dataopsætning, kunne de begge udføre samme trin, så fx diagramkonfigurationer blev oprettet to gange og opstarten derefter fejlede. Trinene låses nu, så kun én instans udfører dem
 - (Ad-hoc) Tabeller oprettet på databaseservere med utf8mb3 som standard fik utf8mb3 i stedet for utf8mb4/dansk sortering. Alle tabeller konverteres nu til utf8mb4_danish_ci, og databasens standard sættes, så nye tabeller også får det
