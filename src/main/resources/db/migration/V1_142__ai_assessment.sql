@@ -49,8 +49,9 @@ CREATE TABLE ai_assessment_answer_aud
     CONSTRAINT fk_ai_assessment_answer_aud_rev FOREIGN KEY (rev) REFERENCES revinfo (rev)
 );
 
-INSERT INTO ai_assessment (asset_id, ai_risk_factor)
-SELECT id, ai_risk
+-- The risk category is only shown for deployers, the only role the old field covered
+INSERT INTO ai_assessment (asset_id, ai_actor_role, ai_risk_factor)
+SELECT id, 'DEPLOYER', ai_risk
 FROM assets
 WHERE ai_risk IS NOT NULL;
 
