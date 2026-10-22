@@ -1,4 +1,5 @@
 import initTagSelect from "../tags/tag-selector.js";
+import { choiceService } from "../choice-service.js";
 
 const createTaskService = new CreateTaskService();
 const taskLinkService = new TaskLinkService();
@@ -288,27 +289,10 @@ function CreateTaskService() {
             });
         }
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
-        this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
-             var userUuid = self.createTaskUserChoicesEditSelect.passedElement.element.value;
-             fetch( `/rest/ous/user/` + userUuid).then(response =>  {
-                 if (response.status === 204) {
-                     return;
-                 }
-
-                 if (response.ok) {
-                     response.json().then(orgUnit => {
-                         self.createTaskOuChoicesEditSelect.setChoiceByValue(orgUnit.uuid);
-                     })
-                 }
-             }).catch(error => toastService.error(error));
-        })
+        choiceService.bindOuToUser(this.createTaskUserChoicesEditSelect, this.createTaskOuChoicesEditSelect);
 
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.createTaskUserChoicesEditSelect);
-        });
-
-        this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('removeItem', function() {
-            self.createTaskOuChoicesEditSelect.removeActiveItems();
         });
 
         initFormValidationForForm('taskCreateForm',
