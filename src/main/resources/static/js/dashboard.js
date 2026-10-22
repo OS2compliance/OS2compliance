@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                         const dateSplit = dateString.split("/");
                         const cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
                         if (cellDate < today) {
-                            return gridjs.html(`<span style="color: red;">${cell}</span>`);
+                            return gridjs.html(`<span class="text-danger">${cell}</span>`);
                         } else {
                             return cell;
                         }

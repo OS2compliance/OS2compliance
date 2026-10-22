@@ -1,0 +1,206 @@
+:root {
+    --bs-body-color: #47545b;
+    --bs-body-color-rgb: 71, 84, 91;
+    --bs-secondary-color: #5a6870;
+    --bs-secondary-color-rgb: 90, 104, 112;
+    --bs-link-color: #026a9e;
+    --bs-link-color-rgb: 2, 106, 158;
+    --bs-link-hover-color: #025780;
+    --bs-link-hover-color-rgb: 2, 87, 128;
+
+    --bs-primary: #25476a;
+    --bs-primary-rgb: 37, 71, 106;
+    --bs-primary-text-emphasis: #0f1c2a;
+    --bs-primary-bg-subtle: #d3dae1;
+    --bs-primary-border-subtle: #a8b5c3;
+    --bs-primary-border: #466380;
+
+    --bs-secondary: #1b7a71;
+    --bs-secondary-rgb: 27, 122, 113;
+    --bs-success: #59741a;
+    --bs-success-rgb: 89, 116, 26;
+    --bs-info: #026a9e;
+    --bs-info-rgb: 2, 106, 158;
+    --bs-danger: #c0392b;
+    --bs-danger-rgb: 192, 57, 43;
+
+    --bs-form-invalid-color: var(--bs-danger);
+    --bs-form-invalid-border-color: var(--bs-danger);
+
+    --nf-brand-font-family: var(--bs-body-font-family);
+
+    --app-input-border-color: #84919a;
+    --app-placeholder-color: #6c757d;
+    --app-input-disabled-bg: var(--bs-gray-200);
+    --app-primary-hover: #1f3c5a;
+    --app-primary-active: #1a324a;
+}
+
+/* Nifty sets headings to "Ubuntu", which is not loaded */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--bs-body-font-family);
+}
+
+.form-control,
+.form-select,
+.form-check-input,
+.input-group-text {
+    --bs-border-color: var(--app-input-border-color);
+}
+
+.form-control::placeholder {
+    color: var(--app-placeholder-color);
+}
+
+/* choices-theme.css mirrors this for Choices fields */
+.form-control:disabled,
+.form-control[readonly],
+.form-select:disabled,
+.form-select[aria-readonly="true"] {
+    --bs-border-color: transparent;
+    background-color: var(--app-input-disabled-bg);
+    color: var(--bs-emphasis-color);
+    opacity: 1;
+}
+
+.form-switch .form-check-input:not(:checked) {
+    background-color: var(--app-input-border-color);
+    border-color: var(--app-input-border-color);
+}
+
+/* data URIs cannot read CSS variables; the icon colour must match --bs-danger */
+.form-control.is-invalid,
+.was-validated .form-control:invalid {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23c0392b'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23c0392b' stroke='none'/%3e%3c/svg%3e");
+}
+
+.form-select.is-invalid:not([multiple]):not([size]),
+.form-select.is-invalid:not([multiple])[size="1"],
+.was-validated .form-select:invalid:not([multiple]):not([size]),
+.was-validated .form-select:invalid:not([multiple])[size="1"] {
+    --bs-form-select-bg-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23c0392b'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23c0392b' stroke='none'/%3e%3c/svg%3e");
+}
+
+.badge.bg-warning {
+    color: var(--bs-emphasis-color);
+}
+
+/* Nifty's translucent inactive tabs turn dark and unreadable on the blue band */
+.nav-tabs {
+    --bs-nav-tabs-link-active-color: var(--bs-primary);
+}
+
+.nav-tabs .nav-link {
+    background-color: #f7f9fb;
+}
+
+.nav-tabs .nav-link:hover:not(.disabled):not(.active) {
+    background-color: #e6ecf3;
+}
+
+/* Bootstrap compiles button colours to hex, so each variant maps its tones onto --bs-btn-* */
+
+.btn-primary {
+    --app-btn-bg: var(--bs-primary);
+    --app-btn-hover-bg: var(--app-primary-hover);
+    --app-btn-active-bg: var(--app-primary-active);
+}
+
+.btn-secondary {
+    --app-btn-bg: var(--bs-secondary);
+    --app-btn-hover-bg: #166159;
+    --app-btn-active-bg: #12524b;
+}
+
+.btn-success {
+    --app-btn-bg: var(--bs-success);
+    --app-btn-hover-bg: #4d6416;
+    --app-btn-active-bg: #435716;
+}
+
+.btn-info {
+    --app-btn-bg: var(--bs-info);
+    --app-btn-hover-bg: #025780;
+    --app-btn-active-bg: #024a6d;
+}
+
+.btn-warning {
+    --app-btn-color: var(--bs-emphasis-color);
+    --app-btn-bg: var(--bs-warning);
+    --app-btn-hover-bg: #e8901a;
+    --app-btn-active-bg: #d58717;
+}
+
+.btn-danger {
+    --app-btn-bg: var(--bs-danger);
+    --app-btn-hover-bg: #a12f23;
+    --app-btn-active-bg: #8b281e;
+}
+
+/* the dark-on-light variants keep these buttons distinct from the navy header band */
+.tm--expanded-hd .content__header .btn-success {
+    --app-btn-color: var(--bs-primary-text-emphasis);
+    --app-btn-bg: #9ccc65;
+    --app-btn-hover-bg: #8fc153;
+    --app-btn-active-bg: #86b84a;
+}
+
+.tm--expanded-hd .content__header .btn-info {
+    --app-btn-color: var(--bs-primary-text-emphasis);
+    --app-btn-bg: #63b4e0;
+    --app-btn-hover-bg: #52aad8;
+    --app-btn-active-bg: #47a1d0;
+}
+
+:is(.btn-primary, .btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger) {
+    --bs-btn-color: var(--app-btn-color, #fff);
+    --bs-btn-bg: var(--app-btn-bg);
+    --bs-btn-border-color: var(--app-btn-bg);
+    --bs-btn-hover-color: var(--app-btn-color, #fff);
+    --bs-btn-hover-bg: var(--app-btn-hover-bg);
+    --bs-btn-hover-border-color: var(--app-btn-hover-bg);
+    --bs-btn-active-color: var(--app-btn-color, #fff);
+    --bs-btn-active-bg: var(--app-btn-active-bg);
+    --bs-btn-active-border-color: var(--app-btn-active-bg);
+    --bs-btn-disabled-color: var(--app-btn-color, #fff);
+    --bs-btn-disabled-bg: var(--app-btn-bg);
+    --bs-btn-disabled-border-color: var(--app-btn-bg);
+}
+
+.btn-outline-primary {
+    --app-btn-tone: var(--bs-primary);
+}
+
+.btn-outline-secondary {
+    --app-btn-tone: var(--bs-secondary);
+}
+
+.btn-outline-success {
+    --app-btn-tone: var(--bs-success);
+}
+
+.btn-outline-info {
+    --app-btn-tone: var(--bs-info);
+}
+
+.btn-outline-warning {
+    --app-btn-tone: var(--bs-warning-text-emphasis);
+}
+
+.btn-outline-danger {
+    --app-btn-tone: var(--bs-danger);
+}
+
+:is(.btn-outline-primary, .btn-outline-secondary, .btn-outline-success, .btn-outline-info, .btn-outline-warning, .btn-outline-danger) {
+    --bs-btn-color: var(--app-btn-tone);
+    --bs-btn-border-color: var(--app-btn-tone);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--app-btn-tone);
+    --bs-btn-hover-border-color: var(--app-btn-tone);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--app-btn-tone);
+    --bs-btn-active-border-color: var(--app-btn-tone);
+    --bs-btn-disabled-color: var(--app-btn-tone);
+    --bs-btn-disabled-border-color: var(--app-btn-tone);
+}

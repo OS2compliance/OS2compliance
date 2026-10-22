@@ -371,7 +371,7 @@ function ViewTaskService() {
         const currentValue = this.ouDepartmentChoicesEditSelect.getValue(true);
 
         if (!currentValue || currentValue === '' || currentValue === null) {
-            this.ouDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
+            this.ouDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true, placeholder: true }], 'value', 'label', false);
         }
         this.nameField = document.getElementById("taskNameField")
         this.userChoicesEditSelect.passedElement.element.addEventListener('change', function() {

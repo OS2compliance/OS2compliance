@@ -9,19 +9,21 @@
 <title>OS2compliance</title>
 
 <link th:href="@{/webjars/nifty/3.0.1/css/fonts.css}" rel="stylesheet">
-<link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/css/bootstrap.min.css}">
-<link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/css/nifty.min.css}">
-<link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/premium/icon-sets/icons/line-icons/premium-line-icons.min.css}">
-<link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/premium/icon-sets/icons/solid-icons/premium-solid-icons.min.css}">
+<link rel="stylesheet" th:href="@{/webjars/nifty/4.2.0/css/bootstrap.css}">
+<link rel="stylesheet" th:href="@{/webjars/nifty/4.2.0/css/nifty.css}">
+<link rel="stylesheet" th:href="@{/css/theme.css}">
+<link rel="stylesheet" th:href="@{/webjars/nifty/4.2.0/premium/icon-sets/line-icons/premium-line-icons.min.css}">
+<link rel="stylesheet" th:href="@{/webjars/nifty/4.2.0/premium/icon-sets/solid-icons/premium-solid-icons.min.css}">
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/themify-icons/themify-icons.min.css}">
 <link th:if="${gridjs == true}" rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/gridjs/gridjs.min.css}">
+<link th:if="${gridjs == true}" rel="stylesheet" th:href="@{/css/gridjs-theme.css}">
 <link th:if="${gridjs == true}" rel="stylesheet" th:href="@{/css/component/custom-selector.css}" />
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.css}" />
 <link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}" />
+<link rel="stylesheet" th:href="@{/css/choices-theme.css}" />
 <link th:if="${sweetalerts == true}" rel="stylesheet" th:href="@{/vendor/sweetalert2/sweetalert2.min.css}" />
 <link th:if="${textEditor == true}" rel="stylesheet" th:href="@{/vendor/ckeditor5/ckeditor5.css}" />
 
-<link th:if="${burgermenu == true}" rel="stylesheet" th:href="@{/css/navbar.css}" />
 <link rel="stylesheet" th:href="@{/css/global.css}" />
 <link rel="stylesheet" th:href="@{/css/dialog-service.css}" />
 <link rel="stylesheet" th:href="@{/css/component/badge.css}">
@@ -59,8 +61,8 @@
 		<div class="header__content">
             <ul class="nav navbar-top-links">
                 <li class="tgl-menu-btn">
-                    <a class="mainnav-toggle" id="burger-menu">
-                        <i class="pli-list-view"></i>
+                    <a class="mainnav-toggle nav-toggler" id="burger-menu">
+                        <i class="pli-view-list"></i>
                     </a>
                 </li>
             </ul>

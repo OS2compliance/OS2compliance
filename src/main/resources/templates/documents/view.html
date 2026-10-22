@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head (sweetalerts = true, burgermenu = true)}"></head>
+<head th:replace="~{fragments/header :: head (sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
 <script th:src="@{/js/form-validation.js}" defer></script>
@@ -9,10 +9,9 @@
 <link rel="stylesheet" th:href="@{/css/tasks.css}"/>
 <link rel="stylesheet" th:href="@{/css/documents.css}"/>
 
-<link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}"/>
 <script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
 
-<div id="root" class="root mn--max hd--expanded">
+<div id="root" class="root mn--max tm--expanded-hd">
     <section id="content" class="content">
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">

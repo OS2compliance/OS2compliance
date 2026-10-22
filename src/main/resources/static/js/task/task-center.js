@@ -157,10 +157,10 @@ function initGrid() {
                     var diff = DateDiff.inDays(today, cellDate);
 
                     if (diff < 0) {
-                        return gridjs.html(`<span style="color: red;">${cell}</span>`);
+                        return gridjs.html(`<span class="text-danger">${cell}</span>`);
                     }
                     else if (diff < 31 && diff >= 0 ) {
-                        return gridjs.html(`<span style="color: orange;">${cell}</span>`)
+                        return gridjs.html(`<span class="text-warning-emphasis">${cell}</span>`)
                     }
                     else {
                         return gridjs.html(`<span>${cell}</span>`);
