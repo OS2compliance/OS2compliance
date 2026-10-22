@@ -13,6 +13,10 @@ RUN ./mvnw dependency:go-offline -B
 
 # copy source (this layer is rebuild everytime there are changes to code)
 COPY src/ src/
+COPY CHANGELOG.md CHANGELOG.md
+
+# git history is used at build time to generate the version number shown in the UI
+COPY .git/ .git/
 
 # actually compile
 RUN ./mvnw clean package -DskipTests

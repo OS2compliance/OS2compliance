@@ -1,3 +1,5 @@
+import { choiceService } from "../choice-service.js";
+
 export class CreateThreatAssessmentService {
 
     init() {
@@ -6,8 +8,7 @@ export class CreateThreatAssessmentService {
         this.initRegisterSelect()
         this.initAssetSelect()
         this.initSupplierSelect();
-        this.initUserSelect()
-        this.initOuSelect()
+        this.initResponsibleSelects()
 
         this.initTypeSelect()
         this.initRegisterResponsible()
@@ -77,16 +78,10 @@ export class CreateThreatAssessmentService {
         });
     }
 
-    initUserSelect() {
+    initResponsibleSelects() {
         this.userChoicesSelect = choiceService.initUserSelect("createRiskUserSelect");
-        this.userChoicesSelect.passedElement.element.addEventListener('change', () => {
-            const userUuid = this.userChoicesSelect.passedElement.element.value;
-            userChanged(userUuid);
-        });
-    }
-
-    initOuSelect() {
         this.ouChoicesSelect = choiceService.initOUSelect("createRiskOuSelect");
+        choiceService.bindOuToUser(this.userChoicesSelect, this.ouChoicesSelect);
     }
 
     initSendEmail() {
@@ -200,7 +195,7 @@ export class CreateThreatAssessmentService {
                 .then(data => {
                     let user = data.users?.users[0];
                     if (user) {
-                        this.userChoicesSelect.setChoiceByValue(user.uuid);
+                        choiceService.setSelected(this.userChoicesSelect, user.uuid, choiceService.userLabel(user));
                     } else {
                         this.userChoicesSelect.removeActiveItems();
                     }
@@ -235,22 +230,6 @@ export class CreateThreatAssessmentService {
     getScopedElementById(id) {
         return this.modalContainer.querySelector(`#${id}`);
     }
-}
-
-export function userChanged(userUuid) {
-    fetch(`/rest/ous/user/` + userUuid)
-        .then(response => {
-            if (response.status === 204) {
-                return;
-            }
-
-            if (response.ok) {
-                response.json().then(data => {
-                    this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
-                    this.ouChoicesSelect.setChoiceByValue(data.uuid);
-                });
-            }
-        }).catch(error => toastService.error(error));
 }
 
 export function initRegisterSelect(registerSelectElement) {
@@ -301,7 +280,7 @@ function loadResponsible(url, userChoicesSelect) {
         .then(data => {
             const user = data.users[0];
             if (user) {
-                userChoicesSelect.setChoiceByValue(user.uuid);
+                choiceService.setSelected(userChoicesSelect, user.uuid, choiceService.userLabel(user));
             } else {
                 userChoicesSelect.removeActiveItems();
             }

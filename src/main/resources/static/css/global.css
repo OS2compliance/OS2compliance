@@ -18,6 +18,42 @@
     }
 }
 
+/* Nifty widens the side gutters at 768px and 1400px; keep one 1.25rem gutter throughout */
+@media (min-width: 768px) {
+    .content__wrap,
+    .header__inner {
+        padding-inline: 1.25rem;
+    }
+}
+
+@media (min-width: 1400px) {
+    .mn--max .header__content,
+    .mn--min .header__content {
+        padding-inline-start: 1.25rem;
+    }
+}
+
+/* Nifty 3's band size; the extra 1rem replaces bottom padding Nifty 4 removes from the band */
+.tm--expanded-hd {
+    --nf-header-expand-height: calc(12.5vw + 1rem);
+    --nf-header-expand-border-radius: 0% 0% 100% 100% / 0% 0% 3vw 3vw;
+}
+
+/* the blue band is positioned, so unpositioned content pulled up over it would render beneath it */
+.tm--expanded-hd .content__header.overlapping + .content__boxed {
+    position: relative;
+}
+
+/* the logo is wider than the icon-only menu, so the brand keeps its full-menu size */
+@media (min-width: 992px) {
+    .mn--min .header__brand {
+        justify-content: flex-start;
+        padding-inline-start: calc(0.625rem + var(--nf-mainnav-link-padding-x));
+        max-width: var(--nf-mainnav-max-width);
+        width: var(--nf-mainnav-max-width);
+    }
+}
+
 .mc-calendar {
     z-index: 1060 !important;
 }
@@ -46,12 +82,12 @@
 }
 
 .form-control.is-valid, .was-validated .form-control:valid, .form-control.is-valid:focus, .was-validated .form-control:valid:focus {
-    border-color: #edf1f6;
+    border-color: var(--app-input-border-color);
     background-image: none;
 }
 
 .form-select.is-valid:not([multiple]):not([size]), .form-select.is-valid:not([multiple])[size="1"], .was-validated .form-select:valid:not([multiple]):not([size]), .was-validated .form-select:valid:not([multiple])[size="1"] {
-    border-color: #edf1f6;
+    border-color: var(--app-input-border-color);
     background-image: none;
 }
 
@@ -68,12 +104,12 @@
 }
 
 .form-check-input.is-valid, .was-validated .form-check-input:valid {
-    border-color: rgba(0,0,0,.2095);
+    border-color: var(--app-input-border-color);
 }
 
 .form-check-input.is-valid:checked, .was-validated .form-check-input:valid:checked {
-    background-color: #25476a;
-    border-color: #25476a;
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
 
 .invalid-feedback.show {
@@ -102,23 +138,6 @@ input[type=number]{
 
 .choices__list--dropdown, .choices__list[aria-expanded] {
     z-index: 2 !important;
-}
-
-/* Remove gray background from choices.js search input */
-.choices:not(.is-disabled) > div > input[name="search_terms"] {
-    background-color: white !important;
-}
-/* Remove gray background from choices.js search input */
-.choices:not(.is-disabled) > .choices__inner {
-    background-color: white !important;
-}
-/* Remove gray background from choices.js search input */
-.choices.is-disabled .choices__input {
-    background-color: #f3f5f9 !important;
-}
-/* Remove gray background from choices.js search input */
-.choices.is-disabled .form-control {
-    background-color: #f3f5f9 !important;
 }
 
 .choices-readonly {
@@ -165,7 +184,7 @@ html {
   margin: 0 auto;
   width: 15%;
   height: 15%;
-  background-color: #25476a;
+  background-color: var(--bs-primary);
   border-radius: 100%;
   animation: sk-circleFadeDelay 1.2s infinite ease-in-out both;
 }
@@ -235,4 +254,14 @@ html {
    dropdown outside-click handling and closing the menu. */
 .optionItem.disabled {
     pointer-events: auto;
+}
+.app-version {
+	margin-right: 14px;
+	font-size: 0.8rem;
+	cursor: help;
+}
+
+.app-version-tooltip .tooltip-inner {
+	white-space: pre-line;
+	text-align: left;
 }

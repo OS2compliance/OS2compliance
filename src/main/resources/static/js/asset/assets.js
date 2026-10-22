@@ -320,7 +320,8 @@ function initGrid() {
                 hidden: true,
                 name: "Kategori",
                 searchable: {
-                    searchKey: 'assetCategory'
+                    searchKey: 'assetCategory',
+                    fieldId: 'assetCategorySearchSelector'
                 },
                 formatter: (cell, row) => formatColorStatus(cell)
             },
@@ -359,6 +360,7 @@ function initGrid() {
                 name: "Kritikalitet",
                 searchable: {
                     searchKey: 'criticality',
+                    fieldId: 'assetCriticalitySearchSelector',
                     sortKey: 'criticalityOrder'
                 }
             },
@@ -377,7 +379,8 @@ function initGrid() {
                 hidden: true,
                 name: "Anvender løsningen AI",
                 searchable: {
-                    searchKey: 'aiStatus'
+                    searchKey: 'aiStatus',
+                    fieldId: 'assetAiStatusSearchSelector'
                 }
             },
             {
@@ -432,7 +435,8 @@ function initGrid() {
                 hidden: true,
                 name: "Er der indgået databehandleraftale",
                 searchable: {
-                    searchKey: 'dataProcessingAgreementStatus'
+                    searchKey: 'dataProcessingAgreementStatus',
+                    fieldId: 'assetDataProcessingAgreementSearchSelector'
                 }
             },
             {
@@ -485,7 +489,8 @@ function initGrid() {
                 hidden: true,
                 name: "Systemet skal arkiveres",
                 searchable: {
-                    searchKey: 'archive'
+                    searchKey: 'archive',
+                    fieldId: 'assetArchiveSearchSelector'
                 }
             },
             {

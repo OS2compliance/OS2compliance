@@ -25,7 +25,7 @@
                     </td>
                     <td th:text="${task.taskType.getMessage()}" class="col-lg-2"></td>
                     <td th:text="${task.responsibleUser}" class="col-lg-3"></td>
-                    <td th:text="${task.deadline}" th:style="${task.passedDeadline} ? 'color: red;' : ''" class="col-lg-3"></td>
+                    <td th:text="${task.deadline}" class="col-lg-3" th:classappend="${task.passedDeadline} ? 'text-danger'"></td>
                     <td>
                         <div th:utext="${task.statusBadgeHtml}"></div>
                     </td>

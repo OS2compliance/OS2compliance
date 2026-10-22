@@ -1,6 +1,3 @@
--- Views gemmer forbindelsens collation for udtryk som GROUP_CONCAT
-SET NAMES utf8mb4 COLLATE utf8mb4_danish_ci;
-
 CREATE OR REPLACE VIEW view_gridjs_suppliers AS
 SELECT s.id,
        TRIM(s.name)                                                         AS name,
@@ -746,8 +743,7 @@ FROM (SELECT u.uuid,
                LEFT JOIN assets_responsible_users_mapping ar ON u.uuid = ar.user_uuid
                LEFT JOIN assets a ON ar.asset_id = a.id and deleted = 0) AS combined_ids
 GROUP BY uuid, name, user_id, email, active
-HAVING responsible_relatable_ids IS NOT NULL
-   AND responsible_relatable_ids <> '';
+HAVING responsible_relatable_ids IS NOT NULL;
 
 CREATE OR REPLACE VIEW view_gridjs_dbs_assets AS
 SELECT a.id,

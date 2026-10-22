@@ -37,17 +37,12 @@
     padding: 0.55rem 0;
     margin-bottom: 0;
     line-height: 1.5;
-    color: #75868f;
+    color: var(--bs-body-color);
     background-color: transparent;
     border: solid transparent;
     border-width: 1px 0;
 }
 
-.choices.is-disabled .form-control {
-    background-color: #f3f5f9 !important;
-    border-color: #edf1f6;
-    opacity: 1;
-}
 .grayscale {
     filter: grayscale(100%);
 }

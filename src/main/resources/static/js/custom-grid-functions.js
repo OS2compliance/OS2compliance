@@ -367,10 +367,11 @@ class CustomGridFunctions {
             column.sort = !!column.searchable && column.searchable.sortKey !== null;
 
             if (column.searchable && column.searchable.searchKey) {
+                const filterLabel = this.#filterLabel(column)
                 if (column.searchable.fieldId) {
-                    searchFieldHTML = this.findPredefinedInputFieldHTML(column.searchable.fieldId, column.searchable.searchKey, column.hidden)
+                    searchFieldHTML = this.findPredefinedInputFieldHTML(column.searchable.fieldId, column.searchable.searchKey, column.hidden, filterLabel)
                 } else {
-                    searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey)
+                    searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey, filterLabel)
                 }
 
                 column.columns = [{
@@ -416,15 +417,18 @@ class CustomGridFunctions {
      * For single selects: the original element is removed to prevent duplicate IDs
      * after GridJS injects the captured outerHTML into the header.
      */
-    findPredefinedInputFieldHTML(fieldId, searchKey, isHidden) {
+    findPredefinedInputFieldHTML(fieldId, searchKey, isHidden, filterLabel) {
         const foundElement = document.getElementById(fieldId)
 
         if (!foundElement) {
-            return this.generateTextInputFieldHTML(searchKey);
+            return this.generateTextInputFieldHTML(searchKey, filterLabel);
         }
 
         foundElement.classList.add(this.#INPUTCLASSNAME)
         foundElement.setAttribute('data-search-key', searchKey)
+        if (!foundElement.hasAttribute('aria-label') && !foundElement.labels?.length) {
+            foundElement.setAttribute('aria-label', filterLabel)
+        }
 
         if (foundElement.hasAttribute('multiple')) {
             foundElement.style.display = 'none';
@@ -455,15 +459,21 @@ class CustomGridFunctions {
 
     /**
      * @param {string} searchKey name of search parameter for this field
+     * @param {string} filterLabel accessible name for the field
      * @returns Text input field as HTML
      */
-    generateTextInputFieldHTML(searchKey) {
+    generateTextInputFieldHTML(searchKey, filterLabel) {
         const inputElement = document.createElement('input')
         inputElement.type = 'text'
         inputElement.classList.add(this.#INPUTCLASSNAME)
         inputElement.classList.add('form-control')
         inputElement.setAttribute('data-search-key', searchKey)
+        inputElement.setAttribute('aria-label', filterLabel)
         return inputElement.outerHTML
+    }
+
+    #filterLabel(column) {
+        return typeof column.name === 'string' && column.name.trim() ? `Filter: ${column.name.trim()}` : 'Filter'
     }
 
     /**

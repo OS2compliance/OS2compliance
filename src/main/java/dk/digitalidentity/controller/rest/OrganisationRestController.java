@@ -4,7 +4,6 @@ import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.mapping.OrganisationUnitMapper;
 import dk.digitalidentity.model.dto.OrganisationUnitDTO;
 import dk.digitalidentity.model.dto.PageDTO;
-import dk.digitalidentity.model.entity.Position;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.annotations.RequireAuthenticated;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
@@ -45,24 +44,6 @@ public class OrganisationRestController {
         } else {
             return mapper.toDTO(organisationUnitDao.searchForOU("%" + search + "%", page));
         }
-    }
-
-	@RequireReadOwnerOnly
-    @GetMapping("/user/{id}")
-    public ResponseEntity<OrganisationUnitDTO> getOrgUuidByUser(@PathVariable final String id) {
-        final User user = userService.findByUuid(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        final Position position = user.getPositions().stream()
-            .filter(p -> p.getOuUuid() != null)
-            .findFirst()
-			.orElse(null);
-
-		// If the user does not have a position we return no content and handle in frontend
-		if (position == null) {
-			return ResponseEntity.noContent().build();
-		}
-
-		// If a user has a position we return the OrgUnit that it's mapped to
-        return ResponseEntity.ok(mapper.toDTO(organisationUnitDao.findByUuid(position.getOuUuid())));
     }
 
 	@RequireReadOwnerOnly

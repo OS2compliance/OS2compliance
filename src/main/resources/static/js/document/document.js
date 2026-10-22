@@ -1,6 +1,6 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 import initRelatedTagList from "../tags/related-tag-list.js";
-import { selectOu } from "./ou-select-helper.js";
+import { choiceService } from "../choice-service.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let userChoicesEditSelect = null;
@@ -45,25 +45,7 @@ function loadViewAndEditForm() {
         checkInputField(userChoicesEditSelect);
     });
 
-    userChoicesEditSelect.passedElement.element.addEventListener('addItem', async function() {
-        const userUuid = userChoicesEditSelect.passedElement.element.value;
-        try {
-            const response = await fetch(`/rest/ous/user/${userUuid}/suggestion`);
-            if (response.status === 204) {
-                ouChoicesEditSelect.removeActiveItems();
-                return;
-            }
-            if (!response.ok) {
-                return;
-            }
-            const suggestedOu = await response.json();
-            if (suggestedOu) {
-                selectOu(ouChoicesEditSelect, suggestedOu);
-            }
-        } catch (error) {
-            toastService.error(error);
-        }
-    });
+    choiceService.bindOuToUser(userChoicesEditSelect, ouChoicesEditSelect);
 
     document.querySelectorAll('.editField').forEach(elem => {
         elem.disabled = true;
