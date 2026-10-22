@@ -20,7 +20,7 @@
 }
 
 .choices__placeholder {
-    color: var(--bs-secondary-color);
+    color: var(--app-placeholder-color);
     opacity: 1;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .choices__input::placeholder {
-    color: var(--bs-secondary-color);
+    color: var(--app-placeholder-color);
 }
 
 /* Selected items in multi-selects */

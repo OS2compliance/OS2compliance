@@ -30,6 +30,7 @@
     --nf-brand-font-family: var(--bs-body-font-family);
 
     --app-input-border-color: #84919a;
+    --app-placeholder-color: #6c757d;
     --app-input-disabled-bg: var(--bs-gray-200);
     --app-primary-hover: #1f3c5a;
     --app-primary-active: #1a324a;
@@ -46,6 +47,10 @@ h1, h2, h3, h4, h5, h6,
 .form-check-input,
 .input-group-text {
     --bs-border-color: var(--app-input-border-color);
+}
+
+.form-control::placeholder {
+    color: var(--app-placeholder-color);
 }
 
 /* choices-theme.css mirrors this for Choices fields */
@@ -135,17 +140,17 @@ h1, h2, h3, h4, h5, h6,
 
 /* the dark-on-light variants keep these buttons distinct from the navy header band */
 .tm--expanded-hd .content__header .btn-success {
-    --app-btn-color: var(--bs-emphasis-color);
-    --app-btn-bg: #8aab45;
-    --app-btn-hover-bg: #7f9e3f;
-    --app-btn-active-bg: #7a993c;
+    --app-btn-color: var(--bs-primary-text-emphasis);
+    --app-btn-bg: #9ccc65;
+    --app-btn-hover-bg: #8fc153;
+    --app-btn-active-bg: #86b84a;
 }
 
 .tm--expanded-hd .content__header .btn-info {
-    --app-btn-color: var(--bs-emphasis-color);
-    --app-btn-bg: #3a9ccf;
-    --app-btn-hover-bg: #3896c6;
-    --app-btn-active-bg: #3793c3;
+    --app-btn-color: var(--bs-primary-text-emphasis);
+    --app-btn-bg: #63b4e0;
+    --app-btn-hover-bg: #52aad8;
+    --app-btn-active-bg: #47a1d0;
 }
 
 :is(.btn-primary, .btn-secondary, .btn-success, .btn-info, .btn-warning, .btn-danger) {

@@ -257,7 +257,7 @@ function CreateTaskService() {
             'taskNotificationSelectDiv',
             'taskNotificationSelectInput'
         );
-        this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
+        this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true, placeholder: true }], 'value', 'label', false);
         let templateDescriptionSelect = document.getElementById('taskCreateFormTemplateDescriptionSelect');
 
         let addSubTaskBtn = document.getElementById('addSubTaskBtn');
