@@ -9,9 +9,12 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ### Added
 - (Comply-334) Versionsnummeret vises i øverste højre hjørne ved siden af tandhjulet, med byggetidspunkt og commit-id ved mouseover
 - (Comply-445) (Aktiver) Aktiver der anvender AI har fået en AI-fane med aktørrolle, risikokategori efter AI-forordningen, krav efter risikoniveau og opfølgende spørgsmål om personoplysninger. Feltet "Vurdering af risiko ved AI-brug" under Generelt er flyttet hertil, og aktivlisten har fået kolonnen "AI risikokategori"
+- (Comply-318) (Generelt) Teksten i skrivefelterne er nu sort i stedet for grå, og kontrasten er øget på knapper, statusmarkeringer og links. Brugerfladen er samtidig opdateret til en nyere version af temaet
+- (Comply-437) (Risikovurderinger) Revideringsfrekvensen har fået de samme valg som opgaver, bl.a. månedligt, kvartalsvis og halvårligt. Revideringsdatoen foreslås ud fra den valgte frekvens, og dialogen viser hvornår næste revision falder
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed
+- (gitlab #103) (Opgaver/Risikovurderinger) Afdelingen blev ikke udfyldt, når man valgte en ansvarlig på opgaver og risikovurderinger. Den udfyldes nu med den ansvarliges afdeling, som på dokumenter
 - (Ad-hoc) (OS2kitos-integration) Synkroniseringen fejlede ved hver kørsel, efter at KITOS havde tilføjet en ny værdi for opsigelsesvarslets løbetid på kontrakter, så ændringer fra KITOS ikke kom med. Kitos-klienten er opdateret, og nye ukendte værdier får ikke længere synkroniseringen til at fejle
 - (Ad-hoc) (Behandlingsaktiviteter) En behandlingsaktivitet kunne ikke gemmes, hvis "Hvem er ansvarlig for behandling af personoplysningerne" var over 255 tegn. Feltet er udvidet til lang tekst
 - (Ad-hoc) (Databehandling) Databehandlingen på fortegnelser og aktiver kunne ikke gemmes, når linket til brugerstyring eller logningsprocedure var over 255 tegn. Felterne tillader nu samme længde som linket til sletteprocedure
