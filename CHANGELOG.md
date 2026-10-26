@@ -14,6 +14,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Comply-422) (Fortegnelse) Artikel 30-rapporten kan hentes som Word for en enkelt behandlingsaktivitet, både fra oversigten og fra selve behandlingsaktiviteten, og for de behandlingsaktiviteter der er filtreret frem i oversigten
 - (Comply-430) (Fortegnelse) Fanen Formål & Lovhjemmel har fået fritekstfeltet "Øvrige lovhenvisninger" til lovhenvisninger, der ikke findes i KLE. Feltet kommer med i Artikel 30-rapporten og den globale søgning
 - (Comply-431) (Fortegnelse/Aktiver) "Forventede slettefrister" på fanen Databehandling kan nu indeholde flere slettefrister. Eksisterende værdier bevares, og Artikel 30-rapporten viser alle valgte frister
+- (Comply-478) (Risikovurderinger) Ny risikomodel "4x4 Køge" kan vælges under indstillinger. Matricen har fem farvetrin fra grøn til rød, og den højeste risiko (16) vises mørkerød
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed
