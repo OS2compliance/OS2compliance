@@ -51,8 +51,11 @@ public class VersionService {
 
 		Instant instant = git.getInstant("build.time");
 		String buildTime = instant != null ? BUILD_TIME_FORMAT.format(instant.atZone(ZoneId.systemDefault())) : "ukendt";
+		String commit = git.getShortCommitId(); // null when built without .git, which still yields a git.properties with build.time
 
-		return "Bygget: " + buildTime + "\nCommit: " + git.getShortCommitId();
+		String info = "Bygget: " + buildTime;
+
+		return commit != null ? info + "\nCommit: " + commit : info;
 	}
 
 	private static String readLatestChangelogVersion() {
