@@ -18,6 +18,7 @@ public interface Constants {
     String SCALE_COLOR_YELLOW = "#FDFF3C";
     String SCALE_COLOR_ORANGE = "#FCC231";
     String SCALE_COLOR_RED = "#FA0020";
+	String SCALE_COLOR_DARK_RED = "#AF0016";
 
     String ASSET_ASSESSMENT_PROPERTY = "asset_assessment";
     String NEEDS_CVR_UPDATE_PROPERTY = "cvr_update";
