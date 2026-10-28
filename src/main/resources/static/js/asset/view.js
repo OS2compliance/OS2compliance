@@ -2,6 +2,7 @@ import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 import initRelatedTagList from "../tags/related-tag-list.js";
 import { initTia } from "./tia.js";
 import { initAi } from "./ai.js";
+import { CreateThreatAssessmentService } from "../risk/createThreatAssessmentService.js";
 
 let managersChoicesEditSelect = null;
 let suppliersChoicesEditSelect = null;
@@ -44,7 +45,16 @@ document.addEventListener("DOMContentLoaded", function (event) {
     initRelatedTagList('#assetTab');
     initTia();
     initAi();
+    initCreateThreatAssessmentModal();
 });
+
+function initCreateThreatAssessmentModal() {
+    if (document.getElementById('createModal') === null) {
+        return;
+    }
+
+    new CreateThreatAssessmentService().init();
+}
 
 function initEditButtons() {
     const editButton = document.getElementById('editAssetBtn');

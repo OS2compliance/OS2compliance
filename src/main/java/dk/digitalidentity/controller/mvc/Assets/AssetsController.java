@@ -48,6 +48,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -63,6 +64,7 @@ import dk.digitalidentity.service.AssetSupplierMappingService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
+import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.RelationService;
@@ -152,6 +154,7 @@ public class AssetsController {
 	private final DBSAssetDao dBSAssetDao;
 	private final AiAssessmentService aiAssessmentService;
 	private final AiAssessmentMapper aiAssessmentMapper;
+	private final CatalogService catalogService;
 
 	private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
 
@@ -357,12 +360,22 @@ public class AssetsController {
         model.addAttribute("threatExists", threatExists);
         if (threatExists) {
             final ThreatAssessment newestThreatAssessment = threatAssessments.get(0);
-            model.addAttribute("risk", newestThreatAssessment);
+            model.addAttribute("newestRisk", newestThreatAssessment);
             model.addAttribute("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("riskProfiles", threatAssessmentService.buildRiskProfileDTOs(newestThreatAssessment));
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
+
+		final boolean canCreateThreatAssessment = SecurityUtil.isOperationAllowed(Roles.CREATE_ALL)
+				|| (SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && assetService.isOwning(asset));
+		model.addAttribute("canCreateThreatAssessment", canCreateThreatAssessment);
+		if (canCreateThreatAssessment) {
+			final ThreatAssessment newRisk = new ThreatAssessment();
+			newRisk.setThreatAssessmentType(ThreatAssessmentType.ASSET);
+			model.addAttribute("risk", newRisk);
+			model.addAttribute("threatCatalogs", catalogService.findAllVisible());
+		}
 
 		model.addAttribute("customSystemOwnerInput", settingsService.findBySettingKey(KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME));
 		model.addAttribute("customSystemResponsibleInput", settingsService.findBySettingKey(KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));

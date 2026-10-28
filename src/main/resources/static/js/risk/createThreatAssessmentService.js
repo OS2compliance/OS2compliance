@@ -4,6 +4,7 @@ export class CreateThreatAssessmentService {
 
     init() {
         this.modalContainer = document.getElementById('createModal');
+        this.lockedToAsset = this.modalContainer.dataset.preselectedAsset !== undefined;
 
         this.initRegisterSelect()
         this.initAssetSelect()
@@ -32,6 +33,11 @@ export class CreateThreatAssessmentService {
     }
 
     initTypeSelect() {
+        if (this.lockedToAsset) {
+            this.lockToAsset();
+            return;
+        }
+
         this.typeChanged(this.getScopedElementById("threatAssessmentType").value);
         const element = this.getScopedElementById('threatAssessmentType')
         element.addEventListener('change', () => {
@@ -62,6 +68,11 @@ export class CreateThreatAssessmentService {
 
     initAssetSelect() {
         const assetSelect = this.getScopedElementById('assetSelect');
+        if (this.lockedToAsset) {
+            this.assetChoicesSelect = initSelect(assetSelect, 'form-control', { readOnly: true });
+            return;
+        }
+
         this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         this.assetChoicesSelect.passedElement.element.addEventListener('change', () => {
             this.clearAssetValidationError();
@@ -105,7 +116,20 @@ export class CreateThreatAssessmentService {
         }
     }
 
+    lockToAsset() {
+        this.getScopedElementById("threatAssessmentTypeRow").hidden = true;
+        this.showRowsForType("ASSET");
+        this.modalContainer.addEventListener('show.bs.modal', () => this.loadAssetSection());
+    }
+
     typeChanged(selectedType) {
+        this.showRowsForType(selectedType);
+        this.registerChoicesSelect.removeActiveItems();
+        this.assetChoicesSelect.removeActiveItems();
+        this.supplierChoicesSelect.removeActiveItems();
+    }
+
+    showRowsForType(selectedType) {
         const rows = {
             ASSET: "assetSelectRow",
             REGISTER: "registerSelectRow",
@@ -117,9 +141,6 @@ export class CreateThreatAssessmentService {
         }
 
         this.getScopedElementById("inheritRow").style.display = 'none';
-        this.registerChoicesSelect.removeActiveItems();
-        this.assetChoicesSelect.removeActiveItems();
-        this.supplierChoicesSelect.removeActiveItems();
         this.selectedType = selectedType;
     }
 

@@ -126,6 +126,7 @@ public class RiskController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de tre vurderinger.");
         }
         threatAssessmentService.validateRiskType(threatAssessment, selectedAsset, selectedRegister, selectedSupplier);
+        threatAssessmentService.validateCreateAccess(threatAssessment.getThreatAssessmentType(), selectedAsset);
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
