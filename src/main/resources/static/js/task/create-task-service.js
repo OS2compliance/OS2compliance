@@ -302,8 +302,12 @@ function CreateTaskService() {
                     this.createTaskOuChoicesEditSelect
                 );
                 const subTasksValid = subTaskLinkService.validateAllSubTasks();
+                const datesValid = validateDeadlineNotBeforeStartDate(
+                    document.getElementById('taskCreateFormTaskStartDate'),
+                    document.getElementById('taskCreateFormTaskDeadline')
+                );
 
-                return choicesValid && subTasksValid;
+                return choicesValid && subTasksValid && datesValid;
             }
         );
     }
