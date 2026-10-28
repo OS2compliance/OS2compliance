@@ -32,10 +32,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Ansvarlig og leder på et aktiv kan oprette risikovurderinger for aktivet uden superbrugerrollen,
- * men kun for aktiver de selv er tilknyttet.
- */
 @Transactional
 @AutoConfigureMockMvc
 public class RiskCreateFromAssetTest extends BaseIntegrationTest {
