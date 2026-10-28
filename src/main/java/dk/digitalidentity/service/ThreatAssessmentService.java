@@ -1333,4 +1333,23 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt.");
 		}
 	}
+
+	public void validateCreateAccess(final ThreatAssessmentType type, final Set<Long> selectedAssets) {
+		if (SecurityUtil.isOperationAllowed(Roles.CREATE_ALL)) {
+			return;
+		}
+		if (type != ThreatAssessmentType.ASSET || selectedAssets == null || selectedAssets.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		final String userUuid = SecurityUtil.getPrincipalUuid();
+		final List<Asset> assets = assetDao.findAllByIdInAndDeletedFalse(selectedAssets);
+		final boolean ownsAll = assets.size() == selectedAssets.size() && assets.stream()
+				.allMatch(asset ->
+						asset.getResponsibleUsers().stream().anyMatch(u -> userUuid.equals(u.getUuid()))
+						|| asset.getManagers().stream().anyMatch(u -> userUuid.equals(u.getUuid())));
+		if (!ownsAll) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+	}
 }
