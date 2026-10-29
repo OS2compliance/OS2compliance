@@ -89,8 +89,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
-
 @Slf4j
 @Controller
 @RequireRegister
@@ -455,7 +453,9 @@ public class RegisterController {
         final List<ChoiceValue> gdprP7Choices = sortChoicesAlpha(gdprP7ChoiceList);
         final ChoiceList gdprChoiceList = choiceService.findChoiceList("register-gdpr")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find GDPR Choices"));
-        final List<ChoiceValue> gdprChoices = sortChoicesNumeric(gdprChoiceList);
+        final List<ChoiceValue> gdprChoices = gdprChoiceList.getValues().stream()
+                .sorted(ChoiceService.GDPR_ORDER)
+                .toList();
 
         final List<RelationDTO<Register, Relatable>> relatedAssets = relationService.findRelations(register, RelationType.ASSET);
         final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = registerAssetAssessmentService.assetSupplierMappingList(relatedAssets);
@@ -657,12 +657,6 @@ public class RegisterController {
 		if (!isResponsible && !SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-    }
-
-    private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {
-        return gdprChoiceList.getValues().stream()
-                .sorted(Comparator.comparingInt(a -> asNumber(a.getIdentifier())))
-				.toList();
     }
 
     private static List<ChoiceValue> sortChoicesAlpha(final ChoiceList gdprChoiceList) {

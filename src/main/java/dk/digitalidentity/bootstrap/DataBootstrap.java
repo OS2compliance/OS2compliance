@@ -161,6 +161,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(48, this::seedV48);
 		incrementAndPerformIfVersion(49, this::seedV49);
 		incrementAndPerformIfVersion(50, this::seedV50);
+		incrementAndPerformIfVersion(51, this::seedV51);
 	}
 
 	/**
@@ -198,6 +199,16 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	 */
 	private void seedV46() {
 		// Med vilje tom - se javadoc.
+	}
+
+	private void seedV51() {
+		try {
+			choiceImporter.importValues("./data/choices/register-values.json");
+			choiceImporter.importList("./data/choices/register-gdpr.json");
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void seedV50() {

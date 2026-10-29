@@ -378,6 +378,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
         XWPFParagraph gdprParagraph = insertNormalParagraph(document, cursor);
         final List<ChoiceValue> selectedChoices = gdprChoices.getValues().stream()
             .filter(c -> choiceIds.contains(c.getIdentifier()))
+            .sorted(ChoiceService.GDPR_ORDER)
             .toList();
         for (final ChoiceValue selectedChoice : selectedChoices) {
             final XWPFRun run = addTextRun(selectedChoice.getCaption() + " " + selectedChoice.getDescription(), gdprParagraph);
