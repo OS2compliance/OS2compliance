@@ -17,6 +17,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed
+- (Ad-hoc) (Fortegnelse) GDPR-forordningens artikel 10 (oplysninger om straffedomme og lovovertrædelser) manglede under GDPR lovhjemmel, så den ikke kunne skelnes fra databeskyttelseslovens §10 om statistiske og videnskabelige undersøgelser. Artikel 10 kan nu vælges efter artikel 9, også i Artikel 30-rapporten
 - (gitlab #103) (Opgaver/Risikovurderinger) Afdelingen blev ikke udfyldt, når man valgte en ansvarlig på opgaver og risikovurderinger. Den udfyldes nu med den ansvarliges afdeling, som på dokumenter
 - (Ad-hoc) (OS2kitos-integration) Synkroniseringen fejlede ved hver kørsel, efter at KITOS havde tilføjet en ny værdi for opsigelsesvarslets løbetid på kontrakter, så ændringer fra KITOS ikke kom med. Kitos-klienten er opdateret, og nye ukendte værdier får ikke længere synkroniseringen til at fejle
 - (Ad-hoc) (Behandlingsaktiviteter) En behandlingsaktivitet kunne ikke gemmes, hvis "Hvem er ansvarlig for behandling af personoplysningerne" var over 255 tegn. Feltet er udvidet til lang tekst
