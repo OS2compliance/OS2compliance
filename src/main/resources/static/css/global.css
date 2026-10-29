@@ -56,6 +56,13 @@
 
 .mc-calendar {
     z-index: 1060 !important;
+    --bs-card-bg: var(--bs-component-bg);
+    --bs-dropdown-bg: var(--bs-component-bg);
+    --bs-comp-active-bg: var(--bs-primary);
+    --bs-comp-active-bg-rgb: var(--bs-primary-rgb);
+    --bs-comp-active-color: #fff;
+    --bs-headings-color: var(--bs-heading-color);
+    --bs-muted-color: var(--bs-secondary-color);
 }
 
 #manualIcon {
