@@ -50,8 +50,12 @@ function EditTaskService() {
                     this.editTaskOuChoicesSelect
                 );
                 const subTasksValid = subTaskLinkService.validateAllSubTasks();
+                const datesValid = validateDeadlineNotBeforeStartDate(
+                    document.getElementById('taskEditFormTaskStartDate'),
+                    document.getElementById('taskEditFormTaskDeadline')
+                );
 
-                return choicesValid && subTasksValid;
+                return choicesValid && subTasksValid && datesValid;
             }
         );
 
@@ -166,7 +170,15 @@ function CopyTaskService() {
            //initTagSelect('copyTaskTagsSelect');
        }
 
-        initFormValidationForForm("copyTaskModalForm", () => subTaskLinkService.validateAllSubTasks());
+        initFormValidationForForm("copyTaskModalForm", () => {
+            const subTasksValid = subTaskLinkService.validateAllSubTasks();
+            const datesValid = validateDeadlineNotBeforeStartDate(
+                this.getScopedElementById('copyTaskStartDate'),
+                this.getScopedElementById('copyTaskDeadline')
+            );
+
+            return subTasksValid && datesValid;
+        });
         this.notificationSelectHandler = initNotificationSelect(
             'copyTaskNotificationSetting',
             'copyTaskNotificationSelectDiv',

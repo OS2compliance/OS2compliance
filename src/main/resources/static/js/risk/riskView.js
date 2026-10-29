@@ -597,14 +597,6 @@ function formatDateDMY(date) {
     return `${day}/${month}-${date.getFullYear()}`;
 }
 
-function parseDateDMY(value) {
-    if (!isValidDateDMY(value)) {
-        return null;
-    }
-    const [, day, month, year] = value.match(/^(\d{1,2})\/(\d{2})-(\d{4})$/);
-    return new Date(Number(year), Number(month) - 1, Number(day));
-}
-
 function initRevisionIntervalForm(datePicker) {
     const intervalSelect = document.getElementById('revisionInterval');
     const dateInput = document.getElementById('nextRevision');
