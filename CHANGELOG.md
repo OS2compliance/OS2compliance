@@ -6,20 +6,27 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+
+## [2.9.0] - 2026-10-30
 ### Added
-- (Comply-334) Versionsnummeret vises i øverste højre hjørne ved siden af tandhjulet, med byggetidspunkt og commit-id ved mouseover
-- (Comply-445) (Aktiver) Aktiver der anvender AI har fået en AI-fane med aktørrolle, risikokategori efter AI-forordningen, krav efter risikoniveau og opfølgende spørgsmål om personoplysninger. Feltet "Vurdering af risiko ved AI-brug" under Generelt er flyttet hertil, og aktivlisten har fået kolonnen "AI risikokategori"
-- (Comply-318) (Generelt) Teksten i skrivefelterne er nu sort i stedet for grå, og kontrasten er øget på knapper, statusmarkeringer og links. Brugerfladen er samtidig opdateret til en nyere version af temaet
-- (Comply-437) (Risikovurderinger) Revideringsfrekvensen har fået de samme valg som opgaver, bl.a. månedligt, kvartalsvis og halvårligt. Revideringsdatoen foreslås ud fra den valgte frekvens, og dialogen viser hvornår næste revision falder
-- (Comply-422) (Fortegnelse) Artikel 30-rapporten kan hentes som Word for en enkelt behandlingsaktivitet, både fra oversigten og fra selve behandlingsaktiviteten, og for de behandlingsaktiviteter der er filtreret frem i oversigten
-- (Comply-430) (Fortegnelse) Fanen Formål & Lovhjemmel har fået fritekstfeltet "Øvrige lovhenvisninger" til lovhenvisninger, der ikke findes i KLE. Feltet kommer med i Artikel 30-rapporten og den globale søgning
-- (Comply-431) (Fortegnelse/Aktiver) "Forventede slettefrister" på fanen Databehandling kan nu indeholde flere slettefrister. Eksisterende værdier bevares, og Artikel 30-rapporten viser alle valgte frister
-- (Comply-478) (Risikovurderinger) Ny risikomodel "4x4 Køge" kan vælges under indstillinger. Matricen har fem farvetrin fra grøn til rød, og den højeste risiko (16) vises mørkerød
+- (https://os2web.atlassian.net/browse/COMPLY-318) (Generelt) Teksten i skrivefelterne er nu sort i stedet for grå, og kontrasten er øget på knapper, statusmarkeringer og links. Brugerfladen er samtidig opdateret til en nyere version af temaet
+- (https://os2web.atlassian.net/browse/COMPLY-334) Versionsnummeret vises i øverste højre hjørne ved siden af tandhjulet, med byggetidspunkt og commit-id ved mouseover
+- (https://os2web.atlassian.net/browse/COMPLY-422) (Fortegnelse) Artikel 30-rapporten kan hentes som Word for en enkelt behandlingsaktivitet, både fra oversigten og fra selve behandlingsaktiviteten, og for de behandlingsaktiviteter der er filtreret frem i oversigten
+- (https://os2web.atlassian.net/browse/COMPLY-430) (Fortegnelse) Fanen Formål & Lovhjemmel har fået fritekstfeltet "Øvrige lovhenvisninger" til lovhenvisninger, der ikke findes i KLE. Feltet kommer med i Artikel 30-rapporten og den globale søgning
+- (https://os2web.atlassian.net/browse/COMPLY-431) (Fortegnelse/Aktiver) "Forventede slettefrister" på fanen Databehandling kan nu indeholde flere slettefrister. Eksisterende værdier bevares, og Artikel 30-rapporten viser alle valgte frister
+- (https://os2web.atlassian.net/browse/COMPLY-437) (Risikovurderinger) Revideringsfrekvensen har fået de samme valg som opgaver, bl.a. månedligt, kvartalsvis og halvårligt. Revideringsdatoen foreslås ud fra den valgte frekvens, og dialogen viser hvornår næste revision falder
+- (https://os2web.atlassian.net/browse/COMPLY-441) (Aktiver) Aktivets risikofane har fået knappen "Ny risikovurdering" med aktivet forudvalgt. Den vises for ansvarlig, leder og superbrugere, så systemejer og systemkoordinator kan oprette risikovurderinger for deres egne aktiver uden superbrugerrollen
+- (https://os2web.atlassian.net/browse/COMPLY-445) (Aktiver) Aktiver der anvender AI har fået en AI-fane med aktørrolle, risikokategori efter AI-forordningen, krav efter risikoniveau og opfølgende spørgsmål om personoplysninger. Feltet "Vurdering af risiko ved AI-brug" under Generelt er flyttet hertil, og aktivlisten har fået kolonnen "AI risikokategori"
+- (https://os2web.atlassian.net/browse/COMPLY-478) (Risikovurderinger) Ny risikomodel "4x4 Køge" kan vælges under indstillinger. Matricen har fem farvetrin fra grøn til rød, og den højeste risiko (16) vises mørkerød
 - (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
 
 ### Fixed
-- (Ad-hoc) (Fortegnelse) GDPR-forordningens artikel 10 (oplysninger om straffedomme og lovovertrædelser) manglede under GDPR lovhjemmel, så den ikke kunne skelnes fra databeskyttelseslovens §10 om statistiske og videnskabelige undersøgelser. Artikel 10 kan nu vælges efter artikel 9, også i Artikel 30-rapporten
 - (gitlab #103) (Opgaver/Risikovurderinger) Afdelingen blev ikke udfyldt, når man valgte en ansvarlig på opgaver og risikovurderinger. Den udfyldes nu med den ansvarliges afdeling, som på dokumenter
+- (gitlab #107) (Fortegnelse/Aktiver) Artikel 30-rapporten viste uddybningen af opbevaringsperioden to gange, den ene som fed overskrift, og et løst kolon når uddybningen var tom. Den vises nu én gang under overskriften "Uddybning"
+- (gitlab #113) (Opgaver) En opgave med slutdato før startdato førte til en fejlside ved oprettelse, redigering og kopiering. Fejlen vises nu i formularen
+- (gitlab #114) (Standarder) Fejlbeskeden blev vist forkert, når man oprettede en gruppe med et sektionsnummer der allerede fandtes
+- (Ad-hoc) (Fortegnelse) GDPR-forordningens artikel 10 (oplysninger om straffedomme og lovovertrædelser) manglede under GDPR lovhjemmel, så den ikke kunne skelnes fra databeskyttelseslovens §10 om statistiske og videnskabelige undersøgelser. Artikel 10 kan nu vælges efter artikel 9, også i Artikel 30-rapporten
 - (Ad-hoc) (OS2kitos-integration) Synkroniseringen fejlede ved hver kørsel, efter at KITOS havde tilføjet en ny værdi for opsigelsesvarslets løbetid på kontrakter, så ændringer fra KITOS ikke kom med. Kitos-klienten er opdateret, og nye ukendte værdier får ikke længere synkroniseringen til at fejle
 - (Ad-hoc) (Behandlingsaktiviteter) En behandlingsaktivitet kunne ikke gemmes, hvis "Hvem er ansvarlig for behandling af personoplysningerne" var over 255 tegn. Feltet er udvidet til lang tekst
 - (Ad-hoc) (Databehandling) Databehandlingen på fortegnelser og aktiver kunne ikke gemmes, når linket til brugerstyring eller logningsprocedure var over 255 tegn. Felterne tillader nu samme længde som linket til sletteprocedure
@@ -47,6 +54,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) (Aktiver) Kolonnen "Samfundskritisk" kunne ikke filtreres. Den har nu et Ja/Nej-filter som de øvrige ja/nej-kolonner
 - (Ad-hoc) (Aktiver) Kolonnerne "Er der indgået databehandleraftale", "Anvender løsningen AI", "Systemet skal arkiveres", "Kritikalitet" og "Kategori" kunne ikke filtreres. De har nu en vælger med de mulige værdier, og filtre på en fast værdi rammer kun den værdi, så fx "Kritisk" ikke også viser "Ikke kritisk", og "Grøn" ikke også "Lysgrøn" i risikovurderingsfiltrene
 - (Ad-hoc) (Dashboard) Kolonnen "Risikovurdering" under Mine Aktiver viste aktivets kritikalitet. Den viser nu farven fra seneste risikovurdering som på aktivlisten, og kan filtreres på den
+
 
 ## [2.8.0] - 2026-09-25
 ### Added
