@@ -195,6 +195,7 @@ public class DBSPlatformSyncService {
 				asset.setName(entry.system().getName());
 				asset.setSupplier(supplier.get());
 				asset.setLastSync(today);
+				setKitosUuidIfPresent(asset, entry.kitosUuid());
 
 				// TODO: do we have a status field? Can't find it. Set status to published manually or syncs won't work
 				asset.setStatus("published");
@@ -213,6 +214,7 @@ public class DBSPlatformSyncService {
 				newAsset.setName(entry.system().getName());
 				newAsset.setSupplier(supplier.get());
 				newAsset.setLastSync(today);
+				setKitosUuidIfPresent(newAsset, entry.kitosUuid());
 
 				// TODO: do we have a status field? Can't find it. Set status to published manually or syncs won't work
 				newAsset.setStatus("published");
@@ -373,6 +375,43 @@ public class DBSPlatformSyncService {
 		}
 		log.debug("Oversights: {} created, {} updated, {} republished", created, updated, republished);
 		return new OversightSyncResult(created, updated, republished);
+	}
+
+	/**
+	 * Genforsøger kitos-koblingen for alle DBS-aktiver der endnu ikke har relationer.
+	 * <p>
+	 * Kaldes uden for {@link #synchronize(List)}, så den også kører når hentevinduet er tomt:
+	 * mapningen i synchronizeSystems ser kun systemer i det aktuelle audit-batch, og et system
+	 * hvis kitos-match fejlede (fx fordi Kitos-aktiverne endnu ikke fandtes) ville ellers først
+	 * blive forsøgt igen ved en manuel nulstilling af vandmærket.
+	 */
+	@Transactional
+	public void retryKitosMapping() {
+		// Samme gate som i synchronizeSystems: kun aktiver uden relationer. Et manuelt koblet
+		// aktiv bliver dermed aldrig kandidat, så setRelationsAbsolute har intet at overskrive.
+		List<DBSAsset> candidates = dbsAssetDao.findByKitosUuidIsNotNull().stream()
+				.filter(a -> !a.getKitosUuid().isBlank())
+				.filter(a -> relationService.findAllRelatedTo(a).isEmpty())
+				.toList();
+		if (candidates.isEmpty()) {
+			return;
+		}
+
+		int matched = 0;
+		for (DBSAsset asset : candidates) {
+			if (mapKitosAssetsToDBS(asset.getKitosUuid(), asset)) {
+				matched++;
+			}
+		}
+		log.info("Kitos mapping retry: {} unmapped DBS assets retried, {} matched", candidates.size(), matched);
+	}
+
+	// Kun non-blank: et manglende felt i payloaden må ikke slette uuid'et og dermed muligheden
+	// for at genforsøge koblingen senere.
+	private void setKitosUuidIfPresent(final DBSAsset asset, final String kitosUuid) {
+		if (kitosUuid != null && !kitosUuid.isBlank()) {
+			asset.setKitosUuid(kitosUuid);
+		}
 	}
 
 	/**

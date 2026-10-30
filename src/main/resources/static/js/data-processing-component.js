@@ -30,6 +30,7 @@ let DataProcessingComponent = function () {
         this.initInfoPassedOnFunctionality()
 
         this.initDateSelection();
+        this.initStorageTimeSelect();
     }
 
     this.initDateSelection = function() {
@@ -51,6 +52,33 @@ let DataProcessingComponent = function () {
                 dataProcessingAgreementDatePicker.open();
             });
         }
+    }
+
+    this.initStorageTimeSelect = function () {
+        const select = this.container.querySelector('.storageTimeSelect');
+        if (!select) {
+            return;
+        }
+
+        this.storageTimeInitialValues = [...select.selectedOptions].map(option => option.value);
+        this.storageTimeChoices = initSelect(select);
+        this.storageTimeChoices.disable();
+    }
+
+    this.setStorageTimeEditMode = function (enabled) {
+        if (!this.storageTimeChoices) {
+            return;
+        }
+
+        if (enabled) {
+            this.storageTimeChoices.enable();
+            return;
+        }
+
+        // Restore explicitly, since form.reset() does not update the Choices UI
+        this.storageTimeChoices.removeActiveItems();
+        this.storageTimeChoices.setChoiceByValue(this.storageTimeInitialValues);
+        this.storageTimeChoices.disable();
     }
 
     this.addModalListeners = function (modalContainer) {
@@ -382,6 +410,8 @@ let DataProcessingComponent = function () {
             this.removeEmptyInformationCategories();
             this.resetCategorySelection();
         }
+
+        this.setStorageTimeEditMode(enabled);
     }
 
     this.initInfoPassedOnFunctionality = function () {

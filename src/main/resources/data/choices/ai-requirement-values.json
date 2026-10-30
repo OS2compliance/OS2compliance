@@ -1,0 +1,57 @@
+[
+  {
+    "identifier": "ai-requirement-1",
+    "caption": "Understøtter løsningen, at brugerne oplyses klart om, at de interagerer med et AI-system, og kan leverandøren beskrive, hvordan denne information vises i selve interaktionen og ikke kun i generelle vilkår eller bagvedliggende dokumentation?",
+    "description": "LIMITED"
+  },
+  {
+    "identifier": "ai-requirement-2",
+    "caption": "Understøtter løsningen, at det kan angives klart, når indhold er AI-genereret eller AI-ændret, hvis indholdet kan opfattes som menneskeskabt eller autentisk, og kan leverandøren beskrive, hvordan denne information vises eller knyttes til det relevante indhold?",
+    "description": "LIMITED"
+  },
+  {
+    "identifier": "ai-requirement-3",
+    "caption": "Kan leverandøren dokumentere, at der er etableret en systematisk risikostyring for AI-systemet, herunder hvordan risici ved systemets funktion, output, begrænsninger og anvendelse identificeres, vurderes, håndteres og løbende opdateres?",
+    "description": "HIGH"
+  },
+  {
+    "identifier": "ai-requirement-4",
+    "caption": "Kan leverandøren beskrive, hvilke data systemet er udviklet til at anvende, hvilke krav der gælder til datakvalitet, og hvordan risikoen for skæve eller misvisende resultater håndteres?",
+    "description": "HIGH"
+  },
+  {
+    "identifier": "ai-requirement-5",
+    "caption": "Kan leverandøren levere teknisk dokumentation, der beskriver systemets formål, funktion, begrænsninger og kendte risici?",
+    "description": "HIGH"
+  },
+  {
+    "identifier": "ai-requirement-6",
+    "caption": "Understøtter løsningen registrering og logning af brug, så anvendelse og output kan følges og efterprøves?",
+    "description": "HIGH"
+  },
+  {
+    "identifier": "ai-requirement-7",
+    "caption": "Kan leverandøren beskrive korrekt brug af løsningen, herunder hvilke begrænsninger der gælder, og hvornår output ikke må anvendes uden nærmere kontrol?",
+    "description": "HIGH"
+  },
+  {
+    "identifier": "ai-requirement-8",
+    "caption": "Kan løsningen anvendes på en måde, så der kan føres menneskeligt tilsyn med output, og kan leverandøren beskrive, hvordan medarbejderen kan gennemgå output, reagere på fejl og tilsidesætte resultatet, når det er nødvendigt?",
+    "description": "HIGH"
+  },
+  {
+    "identifier": "ai-requirement-9",
+    "caption": "Kan leverandøren dokumentere, at AI-systemet er udformet og udviklet på en måde, så det opnår et passende niveau af nøjagtighed og robusthed i den konkrete anvendelse?",
+    "description": "HIGH"
+  },
+  {
+    "identifier": "ai-requirement-10",
+    "caption": "Kan leverandøren dokumentere, at de formelle krav, der gælder for højrisiko-AI-systemet, er opfyldt, herunder at systemet er CE-mærket, og at den nødvendige dokumentation foreligger?",
+    "description": "HIGH"
+  },
+  {
+    "identifier": "ai-requirement-11",
+    "caption": "Kan leverandøren levere skriftlige instruktioner til brug af løsningen, herunder om formål, anvendelsesområde, begrænsninger, forudsætninger for korrekt brug og behov for menneskelig kontrol?",
+    "description": "HIGH"
+  }
+]

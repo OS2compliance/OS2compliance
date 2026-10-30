@@ -563,9 +563,68 @@ function setRevisionInterval(assessmentId) {
                 dialog.innerHTML = data;
                 revisionDialog = new bootstrap.Modal(document.getElementById('revisionIntervalDialog'));
                 revisionDialog.show();
-                initDatepicker("#nextRevisionBtn", "#nextRevision");
+                const datePicker = initDatepicker("#nextRevisionBtn", "#nextRevision");
+                initRevisionIntervalForm(datePicker);
             }))
         .catch(error => toastService.error(error));
+}
+
+const REVISION_INTERVAL_TEXTS = {
+    MONTHLY: 'hver måned',
+    EVERY_2_MONTHS: 'hver 2. måned',
+    EVERY_3_MONTHS: 'hver 3. måned',
+    QUARTERLY: 'hvert kvartal',
+    EVERY_4_MONTHS: 'hver 4. måned',
+    HALF_YEARLY: 'hvert halve år',
+    YEARLY: 'hvert år',
+    EVERY_SECOND_YEAR: 'hvert 2. år',
+    EVERY_THIRD_YEAR: 'hvert 3. år'
+};
+
+const DANISH_MONTH_NAMES = ['januar', 'februar', 'marts', 'april', 'maj', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'december'];
+
+// Unlike Date.setMonth, this clamps to the last day of the month, like LocalDate.plusMonths
+function addMonthsClamped(date, months) {
+    const result = new Date(date.getFullYear(), date.getMonth() + months, 1);
+    const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+    result.setDate(Math.min(date.getDate(), lastDay));
+    return result;
+}
+
+function formatDateDMY(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${day}/${month}-${date.getFullYear()}`;
+}
+
+function initRevisionIntervalForm(datePicker) {
+    const intervalSelect = document.getElementById('revisionInterval');
+    const dateInput = document.getElementById('nextRevision');
+    const summary = document.getElementById('revisionSummary');
+
+    const updateSummary = () => {
+        const date = parseDateDMY(dateInput.value);
+        const text = REVISION_INTERVAL_TEXTS[intervalSelect.value];
+        if (date === null || !text) {
+            summary.hidden = true;
+            summary.textContent = '';
+            return;
+        }
+        summary.textContent = `Næste revision: ${date.getDate()}. ${DANISH_MONTH_NAMES[date.getMonth()]} ${date.getFullYear()} - herefter ${text}`;
+        summary.hidden = false;
+    };
+
+    intervalSelect.addEventListener('change', () => {
+        const months = Number(intervalSelect.selectedOptions[0].dataset.months);
+        if (months > 0) {
+            datePicker.setFullDate(addMonthsClamped(new Date(), months));
+        }
+        updateSummary();
+    });
+
+    datePicker.onSelect(updateSummary);
+    dateInput.addEventListener('change', updateSummary);
+    updateSummary();
 }
 
 function updateRelatedPrecautions(choices, search, threatType, threatId, threatIdentifier) {

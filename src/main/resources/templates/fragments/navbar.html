@@ -3,7 +3,7 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 
-<head th:replace="~{fragments/header :: head (burgermenu = true)}"></head>
+<head th:replace="~{fragments/header :: head}"></head>
 <body>
 <nav th:fragment="main" id="mainnav-container" class="mainnav">
     <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isAuthenticated()}" class="mainnav__inner" id="inner">
@@ -170,15 +170,12 @@
 
             <div class="mainnav__bottom-content border-top">
                 <ul id="mainnav" class="mainnav__menu nav flex-column">
-                    <li>
-                        <span
-                              class="nav-link pe-auto" onclick="document.getElementById('logoutform').submit()"
-                              style="cursor:pointer">
-                            <form id="logoutform" role="form" th:action="@{/logout}" method="POST">
-                                <i class="pli-unlock fs-5 me-2 nav-icons"></i>
-                                <span class="nav-label ms-1">Log ud</span>
-                            </form>
-                        </span>
+                    <li class="nav-item">
+                        <form id="logoutform" th:action="@{/logout}" method="POST" hidden></form>
+                        <button type="submit" form="logoutform" class="nav-link mininav-toggle collapsed w-100">
+                            <i class="pli-unlock fs-5 me-2 nav-icons"></i> <span
+                            class="nav-label mininav-content ms-1">Log ud</span>
+                        </button>
                     </li>
                 </ul>
             </div>

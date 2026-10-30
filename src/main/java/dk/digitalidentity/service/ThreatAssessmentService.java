@@ -288,7 +288,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
             task.setNextDeadline(assessment.getNextRevision());
             task.setResponsibleUsers(assessment.getResponsibleUser() != null ? Set.of(assessment.getResponsibleUser()) : Set.of(userService.currentUser()));
             task.setDescription("Revider risikovurdering af " + assessment.getName());
-            setTaskRevisionInterval(assessment, task);
+			task.setRepetition(assessment.getRevisionInterval().toTaskRepetition());
             return task;
         }
         return null;
@@ -801,6 +801,23 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return convertHtmlToPdf(html);
     }
 
+	/** The asset filters only exist on assets, so assessments of other types pass through untouched. */
+	public List<ThreatAssessment> filterByAssetCriteria(List<ThreatAssessment> assessments, List<Criticality> criticalities, boolean sociallyCriticalOnly, List<String> departmentUuids) {
+		final boolean criticalitiesActive = criticalities != null && !criticalities.isEmpty();
+		final boolean departmentsActive = departmentUuids != null && !departmentUuids.isEmpty();
+		if (!criticalitiesActive && !sociallyCriticalOnly && !departmentsActive) {
+			return assessments;
+		}
+		// inactive filters get a placeholder value since empty IN-lists cannot be bound
+		final Set<Long> matching = threatAssessmentDao.findIdsForAssetsFiltered(
+				criticalitiesActive, criticalitiesActive ? criticalities : List.of(Criticality.CRITICAL),
+				sociallyCriticalOnly,
+				departmentsActive, departmentsActive ? departmentUuids : List.of("-"));
+		return assessments.stream()
+				.filter(a -> a.getThreatAssessmentType() != ThreatAssessmentType.ASSET || matching.contains(a.getId()))
+				.toList();
+	}
+
 	public List<ThreatAssessment> findByTypeInAndNotDeleted(List<ThreatAssessmentType> types) {
 		return threatAssessmentDao.findByDeletedFalseAndThreatAssessmentTypeIn(types);
 	}
@@ -1170,15 +1187,6 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
         return result;
     }
 
-    private static void setTaskRevisionInterval(final ThreatAssessment assessment, final Task task) {
-        switch(assessment.getRevisionInterval()) {
-            case YEARLY -> task.setRepetition(TaskRepetition.YEARLY);
-            case EVERY_SECOND_YEAR -> task.setRepetition(TaskRepetition.EVERY_SECOND_YEAR);
-            case EVERY_THIRD_YEAR -> task.setRepetition(TaskRepetition.EVERY_THIRD_YEAR);
-            case NONE -> task.setRepetition(TaskRepetition.NONE);
-        }
-    }
-
 	public List<ThreatAssessment> getByIds (List<Long> ids) {
 		return threatAssessmentDao.findAllById(ids);
 	}
@@ -1323,6 +1331,25 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		}
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.SUPPLIER) && selectedSupplier == null) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en leverandør, når typen leverandør er valgt.");
+		}
+	}
+
+	public void validateCreateAccess(final ThreatAssessmentType type, final Set<Long> selectedAssets) {
+		if (SecurityUtil.isOperationAllowed(Roles.CREATE_ALL)) {
+			return;
+		}
+		if (type != ThreatAssessmentType.ASSET || selectedAssets == null || selectedAssets.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		final String userUuid = SecurityUtil.getPrincipalUuid();
+		final List<Asset> assets = assetDao.findAllByIdInAndDeletedFalse(selectedAssets);
+		final boolean ownsAll = assets.size() == selectedAssets.size() && assets.stream()
+				.allMatch(asset ->
+						asset.getResponsibleUsers().stream().anyMatch(u -> userUuid.equals(u.getUuid()))
+						|| asset.getManagers().stream().anyMatch(u -> userUuid.equals(u.getUuid())));
+		if (!ownsAll) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}
 }

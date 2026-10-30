@@ -1,4 +1,4 @@
-let editTemplate, deleteTemplate, copyTemplate, hideTemplate, showTemplate;
+let editTemplate, deleteTemplate, copyTemplate, hideTemplate, showTemplate, printTemplate;
 
 /**
  * Used to format the "Actions" column of a grid. Assumes there are editbutton and deletebutton templates in the HTML
@@ -26,6 +26,15 @@ function formatAllowedActions(cell, row, additionalDataAttributeMap = new Map())
         const button = buttonFragment.firstElementChild;
 
         for (const [key, value] of  additionalDataAttributeMap.entries()) {
+            button.dataset[key] = value;
+        }
+        container.appendChild(button);
+    }
+    if (cell?.includes("PRINT")) {
+        const buttonFragment = getPrintTemplate()?.content.cloneNode(true);
+        const button = buttonFragment.firstElementChild;
+
+        for (const [key, value] of additionalDataAttributeMap.entries()) {
             button.dataset[key] = value;
         }
         container.appendChild(button);
@@ -102,6 +111,13 @@ function getShowTemplate() {
     return showTemplate;
 }
 
+function getPrintTemplate() {
+    if (!printTemplate) {
+        printTemplate = document.getElementById('printListItemButtonTemplate')
+    }
+    return printTemplate;
+}
+
 /**
  * Initializes event delegation for the table with the given ID. Assigns the provided functions to the edit and delete button on click.
  * @param tableId Id of the parent table element
@@ -110,7 +126,7 @@ function getShowTemplate() {
  * @param copyAction Function to run when copy button is clicked, Is passed the ID of the row as parameter, and the button element itself for data-attribute extraction purposes
  * @param toggleHiddenAction Function to run when hide/show button is clicked, Is passed the ID of the row as parameter, and the button element itself for data-attribute extraction purposes
  */
-function delegateListItemActions(tableId, editAction = (id, element) => {}, deleteAction = (id, name, element) => {}, copyAction = (id, element) => {}, toggleHiddenAction = (id, element) => {}) {
+function delegateListItemActions(tableId, editAction = (id, element) => {}, deleteAction = (id, name, element) => {}, copyAction = (id, element) => {}, toggleHiddenAction = (id, element) => {}, printAction = (id, element) => {}) {
     const table = document.getElementById(tableId);
 
     table.addEventListener("click", (e) => {
@@ -128,6 +144,9 @@ function delegateListItemActions(tableId, editAction = (id, element) => {}, dele
         } else if (target?.classList.contains('hideBtn') || target?.classList.contains('showBtn')) {
             const id = target.dataset.identifier;
             toggleHiddenAction(id, target)
+        } else if (target?.classList.contains('printBtn')) {
+            const id = target.dataset.identifier;
+            printAction(id, target)
         }
     })
 }

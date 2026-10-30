@@ -31,7 +31,7 @@ public class DataProcessingService {
         dataProcessing.setAccessWhoIdentifiers(body.getAccessWhoIdentifiers());
         dataProcessing.setAccessCountIdentifier(body.getAccessCountIdentifier());
         dataProcessing.setPersonCountIdentifier(body.getPersonCountIdentifier());
-        dataProcessing.setStorageTimeIdentifier(body.getStorageTimeIdentifier());
+		dataProcessing.setStorageTimeIdentifiers(body.getStorageTimeIdentifiers());
         dataProcessing.setDeletionProcedure(body.getDeletionProcedure());
         dataProcessing.setDeletionProcedureLink(body.getDeletionProcedureLink());
         dataProcessing.setElaboration(body.getElaboration());

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/header :: head (gridjs = true, burgermenu = true)}"></head>
+<head th:replace="~{fragments/header :: head (gridjs = true)}"></head>
 <body>
 <script type="module" th:src="@{/js/admin/auditlog.js}" defer></script>
-<div id="root" class="root mn--max hd--expanded">
+<div id="root" class="root mn--max tm--expanded-hd">
     <section id="content" class="content">
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">

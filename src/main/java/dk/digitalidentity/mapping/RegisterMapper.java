@@ -44,6 +44,10 @@ public interface RegisterMapper {
 		if (deleteAllowed) {
 			allowedActions.add(AllowedAction.DELETE);
 		}
+		boolean printAllowed = SecurityUtil.isOperationAllowed(Roles.READ_ALL) || isResponsible;
+		if (printAllowed) {
+			allowedActions.add(AllowedAction.PRINT);
+		}
 
         //noinspection Convert2MethodRef
         RegisterDTO registerDTO = RegisterDTO.builder()

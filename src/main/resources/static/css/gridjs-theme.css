@@ -1,0 +1,7 @@
+/* Nifty 3's Grid.js styles read these variables, which Nifty 4 no longer defines */
+.gridjs-container {
+    --bs-comp-active-bg: var(--bs-primary);
+    --bs-comp-active-bg-rgb: var(--bs-primary-rgb);
+    --bs-comp-active-color: #fff;
+    --bs-muted-color: var(--bs-secondary-color);
+}

@@ -33,8 +33,10 @@ public class TaskDTO {
     private String taskRepetition;
 	@ExcludeFromExport
     private Integer taskRepetitionOrder;
-	@ExcelColumn(headerName = "Status", order = 9)
+	@ExcludeFromExport
     private boolean completed;
+	@ExcelColumn(headerName = "Status", order = 9)
+	private String status;
 	@ExcludeFromExport
 	private boolean inProgress;
 	@ExcludeFromExport

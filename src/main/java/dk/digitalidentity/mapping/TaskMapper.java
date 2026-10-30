@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
+import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
@@ -23,6 +24,7 @@ import org.mapstruct.ReportingPolicy;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -172,8 +174,9 @@ public interface TaskMapper {
 				.map(User::getName)
 				.collect(Collectors.joining(", "));
 
-		// Check if task is completed
-		boolean completed = task.getTaskType() == TaskType.TASK && !task.getLogs().isEmpty();
+		// Matches the view: repeating checks are never done
+		boolean completed = !task.getLogs().isEmpty()
+				&& (task.getTaskType() == TaskType.TASK || task.getRepetition() == null || task.getRepetition() == TaskRepetition.NONE);
 
 		return TaskDTO.builder()
 				.id(task.getId())
@@ -185,8 +188,24 @@ public interface TaskMapper {
 				.startDate(nullSafe(() -> task.getStartDate().format(DK_DATE_FORMATTER)))
 				.taskRepetition(nullSafe(() -> task.getRepetition().getMessage()))
 				.completed(completed)
+				.status(exportStatus(task, completed))
 				.tags(tags)
 				.build();
+	}
+
+	/** Same wording as the status filter on the task lists. */
+	default String exportStatus(final Task task, final boolean completed) {
+		final TaskDeadlineStatus status;
+		if (completed) {
+			status = TaskDeadlineStatus.COMPLETED;
+		} else if (Boolean.TRUE.equals(task.getInProgress())) {
+			status = TaskDeadlineStatus.IN_PROGRESS;
+		} else if (task.getNextDeadline() == null) {
+			return null;
+		} else {
+			status = task.getNextDeadline().isBefore(LocalDate.now()) ? TaskDeadlineStatus.EXCEEDED : TaskDeadlineStatus.FUTURE;
+		}
+		return status.getMessage();
 	}
 
 	default List<TaskDTO> toDTOForExportFromTasks(List<Task> tasks, Map<Long, Tag> tagsById) {

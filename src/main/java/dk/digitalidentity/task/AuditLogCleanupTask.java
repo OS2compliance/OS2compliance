@@ -1,5 +1,6 @@
 package dk.digitalidentity.task;
 
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.service.AuditLogService;
 import dk.digitalidentity.service.AuditRevisionCleanupService;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,14 @@ public class AuditLogCleanupTask {
 
 	private final AuditLogService auditLogService;
 	private final AuditRevisionCleanupService auditRevisionCleanupService;
+	private final OS2complianceConfiguration configuration;
 
 	@Scheduled(cron = "${os2compliance.task.auditlog.cleanup.cron:0 #{new java.util.Random().nextInt(60)} 2 * * ?}")
 	public void cleanupAuditLog() {
+		if (!configuration.isSchedulingEnabled()) {
+			return;
+		}
+
 		final LocalDateTime cutoff = LocalDateTime.now().minusMonths(RETENTION_MONTHS);
 		final int deleted = auditLogService.deleteOlderThan(cutoff);
 		if (deleted > 0) {

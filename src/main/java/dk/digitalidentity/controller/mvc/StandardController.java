@@ -377,8 +377,7 @@ public class StandardController {
 					.anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
 
 			if (existsAlready) {
-				result.rejectValue("section", "section.duplicate", "Du skal angive et unikt sektionsnummer");
-				redirectAttributes.addFlashAttribute("headerModalError", result.getFieldErrors("section"));
+				redirectAttributes.addFlashAttribute("headerModalError", "Du skal angive et unikt sektionsnummer");
 				return "redirect:/standards/supporting/" + id;
 			}
 
@@ -495,8 +494,7 @@ public class StandardController {
 		boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
 
 		if (existsAlready) {
-			result.rejectValue("section", "section.duplicate", "Du skal angive et unikt sektionsnummer");
-			redirectAttributes.addFlashAttribute("headerModalError", result.getFieldErrors("section"));
+			redirectAttributes.addFlashAttribute("headerModalError", "Du skal angive et unikt sektionsnummer");
 			return "redirect:/standards/supporting/" + id;
 		}
 		String identifier = id.toLowerCase() + "_" + standardTemplateSection.getSection();

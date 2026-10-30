@@ -18,6 +18,7 @@ public interface Constants {
     String SCALE_COLOR_YELLOW = "#FDFF3C";
     String SCALE_COLOR_ORANGE = "#FCC231";
     String SCALE_COLOR_RED = "#FA0020";
+	String SCALE_COLOR_DARK_RED = "#AF0016";
 
     String ASSET_ASSESSMENT_PROPERTY = "asset_assessment";
     String NEEDS_CVR_UPDATE_PROPERTY = "cvr_update";
@@ -50,6 +51,9 @@ public interface Constants {
     String CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID = "asset-type-it-system-123456";
     String CHOICE_LIST_TASK_RESULT_NO_ERROR_ID = "control-result-no-error-123456";
     String CHOICE_LIST_REGISTER_STATUS_NOT_STARTED_ID = "register-status-not-started-123456";
+	String CHOICE_LIST_AI_REQUIREMENT_QUESTIONS = "ai-requirement-questions";
+	String CHOICE_LIST_AI_PERSONAL_DATA_QUESTIONS = "ai-personal-data-questions";
+	String CHOICE_VALUE_AI_PERSONAL_DATA_GATE = "ai-personal-data-gate";
 
 	String CHOICE_MEASURE_VALUE_IDENTIFIERS = "relevance-yes,relevance-no,relevance-needs-clarification,relevance-not-relevant,operation-1,operation-2,operation-3,operation-4,cloud-1,cloud-2,cloud-3,cloud-4,cloud-5,frequency-1,frequency-2,frequency-3,frequency-4,duration-1,duration-2,duration-3,duration-4";
 

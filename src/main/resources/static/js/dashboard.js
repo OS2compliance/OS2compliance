@@ -2,6 +2,7 @@ import {initStatisticView} from "./statistic/statisticView.js";
 import ColumnOptions from "./grid-js-extension/column-options.js";
 import formatTags from "./tags/tag-grid-formatter.js";
 import { initTaskDateFilter } from "./component/task-date-filter.js";
+import { formatColorStatus } from "./asset/asset-color-status-formatter.js";
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -82,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                         const dateSplit = dateString.split("/");
                         const cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
                         if (cellDate < today) {
-                            return gridjs.html(`<span style="color: red;">${cell}</span>`);
+                            return gridjs.html(`<span class="text-danger">${cell}</span>`);
                         } else {
                             return cell;
                         }
@@ -261,7 +262,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 },
                 {
                     name: "Risikovurdering",
-                    searchable: {searchKey: 'assessment'},
+                    searchable: {searchKey: 'assessment', sortKey: 'assessmentOrder', fieldId: 'assetAssessmentSearchSelector'},
+                    formatter: (cell) => formatColorStatus(cell)
                 },
                 {
                     name: "Status",
@@ -297,7 +299,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [asset.id, asset.name, asset.supplier, asset.assetType, asset.responsibleUser, asset.updatedAt, asset.criticality, asset.assetStatus, asset.tags]
+                    [asset.id, asset.name, asset.supplier, asset.assetType, asset.responsibleUser, asset.updatedAt, asset.assessment, asset.assetStatus, asset.tags]
                 ),
                 total: data => data.totalCount
             },

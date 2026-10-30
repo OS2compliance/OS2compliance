@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head (sweetalerts = true, burgermenu = true)}"></head>
+<head th:replace="~{fragments/header :: head (sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
 <script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
@@ -14,10 +14,9 @@
 <link rel="stylesheet" th:href="@{/css/risks/risks.css}" />
 <link rel="stylesheet" th:href="@{/css/risks/risk_view.css}" />
 
-<link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}" />
 <script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
 
-<div id="root" class="root mn--max hd--expanded">
+<div id="root" class="root mn--max tm--expanded-hd">
     <section id="content" class="content">
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
@@ -30,7 +29,7 @@
                             </ol>
                         </nav>
                         <h1 class="page-title mb-0 mt-2" th:text="${risk.name}"></h1>
-                        <p class="lead showIfReadOnly" style="color: red; display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten enten er sendt til signering eller allerede er signeret.</p>
+                        <p class="lead showIfReadOnly text-danger" style="display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten enten er sendt til signering eller allerede er signeret.</p>
                     </div>
                     <div class="align-self-center d-inline-flex gap-2 justify-content-end">
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>

@@ -3,8 +3,8 @@ package dk.digitalidentity.model.entity;
 import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
+import dk.digitalidentity.model.entity.enums.RiskRevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
-import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
@@ -79,9 +79,9 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     private LocalDate nextRevision;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private RevisionInterval revisionInterval;
+	@Column
+	@Enumerated(EnumType.STRING)
+	private RiskRevisionInterval revisionInterval;
 
     @Column
     private boolean registered;

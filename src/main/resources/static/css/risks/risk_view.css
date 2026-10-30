@@ -43,7 +43,7 @@ select, textarea {
 }
 
 textarea {
-    color: #75868f;
+    color: var(--bs-body-color);
 }
 
 .preserve-linebreaks {
@@ -53,7 +53,7 @@ textarea {
 }
 
 select {
-  color: #75868f;
+  color: var(--bs-body-color);
   background-color: transparent;
   cursor: pointer;
   /* for Firefox */

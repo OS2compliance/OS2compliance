@@ -1,19 +1,17 @@
 package dk.digitalidentity.report;
 
 import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.DataProcessing;
+import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
-import dk.digitalidentity.model.entity.ThreatCatalog;
-import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.enums.DeletionProcedure;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.service.model.ThreatDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -30,7 +28,6 @@ import org.springframework.web.servlet.view.document.AbstractXlsxView;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,8 +64,9 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsxView {
 		// Create "Stamdata" sheet
 		createStamDataSheet(workbook, threatAssessment, modelData, relations, riskAsset, riskRegister, styles);
 
-		// Create "Trussler" sheet for CustomThreats
-		createThreatsSheet(workbook, threatAssessment, styles);
+		final Map<String, List<ThreatDTO>> threatList = (Map<String, List<ThreatDTO>>) model.get("threatList");
+		final boolean showFullMeasureDescription = (boolean) model.get("showFullMeasureDescription");
+		createThreatsSheet(workbook, threatList, showFullMeasureDescription, styles);
 	}
 
 	private void createStamDataSheet(Workbook workbook, ThreatAssessment threatAssessment,
@@ -149,14 +147,14 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsxView {
 		createCell(row, cellNum, getTasksString(tasks), cellStyle);
 	}
 
-	private void createThreatsSheet(Workbook workbook, ThreatAssessment threatAssessment, ExcelStyles styles) {
+	private void createThreatsSheet(Workbook workbook, Map<String, List<ThreatDTO>> threatList, boolean showFullMeasureDescription, ExcelStyles styles) {
 		Sheet sheet = workbook.createSheet("Trussler");
 
 		// Create header for threats sheet
 		int columnCount = createThreatsHeader(sheet, styles);
 
 		// Create data rows
-		createThreatsDataRow(sheet, threatAssessment, styles, columnCount);
+		createThreatsDataRow(sheet, threatList, showFullMeasureDescription, styles, columnCount);
 
 		// Auto-size all columns
 		autoSizeColumns(sheet, columnCount);
@@ -170,7 +168,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsxView {
 				"Konf. Registrerede", "Konf. Organisation", "Konf. Samfund",
 				"Integr. Registrerede", "Integr. Organisation", "Integr. Samfund",
 				"Tilg. Registrerede", "Tilg. Organisation", "Tilg. Samfund", "Autent. Samfund",
-				"Problem", "Supplerende Bemærkninger", "Metode", "Uddybning",
+				"Problem", "Eksisterende foranstaltninger", "Supplerende Bemærkninger", "Metode", "Uddybning",
 				"Restrisiko Sandsynlighed", "Restrisiko Konsekvens"
 		};
 		int columnCount = headers.length;
@@ -182,143 +180,68 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsxView {
 		return columnCount;
 	}
 
-	private void createThreatsDataRow(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles, int columnCount) {
-		// Header is already created, so current row is 1
+	private void createThreatsDataRow(Sheet sheet, Map<String, List<ThreatDTO>> threatList, boolean showFullMeasureDescription, ExcelStyles styles, int columnCount) {
 		int currentRow = 1;
+		for (List<ThreatDTO> threats : threatList.values()) {
+			for (ThreatDTO threat : threats) {
+				Row row = sheet.createRow(currentRow++);
+				if (threat.getResponseId() == 0) {
+					fillBasicThreatRow(row, threat, styles, columnCount);
+				} else {
+					fillCombinedThreatRow(row, threat, showFullMeasureDescription, styles);
+				}
+			}
+		}
 
-		// Collect processed threat identifiers safely
-		Set<String> processedCatalogThreatIds = getProcessedCatalogThreatIds(threatAssessment);
-		Set<Long> processedCustomThreatIds = getProcessedCustomThreatIds(threatAssessment);
-
-		// 1. Add ThreatAssessmentResponses (contain the most data)
-		currentRow = addThreatAssessmentResponses(sheet, threatAssessment, styles, currentRow);
-
-		// 2. Add ThreatCatalogThreats (those that don't have a response)
-		currentRow = addThreatCatalogThreats(sheet, threatAssessment, styles, processedCatalogThreatIds, currentRow, columnCount);
-
-		// 3. Add CustomThreats (also those that don't have a response)
-		currentRow = addCustomThreats(sheet, threatAssessment, styles, processedCustomThreatIds, currentRow, columnCount);
-
-		// Empty state
 		if (currentRow == 1) {
 			Row emptyRow = sheet.createRow(1);
 			createCell(emptyRow, 0, "Ingen trusselsvurderinger fundet", styles.normalStyle);
 		}
 	}
 
-	private int addCustomThreats(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles, Set<Long> processedCustomThreatIds, int currentRow, int columnCount) {
-		if (threatAssessment.getCustomThreats() != null) {
-			for (CustomThreat customThreat : threatAssessment.getCustomThreats()) {
-				if (!processedCustomThreatIds.contains(customThreat.getId())) {
-					Row row = sheet.createRow(currentRow++);
-					fillBasicThreatRow(row, customThreat.getThreatType(), customThreat.getDescription(), styles, columnCount);
-				}
-			}
-		}
-		return currentRow;
-	}
-
-	private int addThreatCatalogThreats(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles, Set<String> processedCatalogThreatIds, int currentRow, int columnCount) {
-		if (threatAssessment.getThreatCatalogs() != null) {
-			for (ThreatCatalog threatCatalog : threatAssessment.getThreatCatalogs()) {
-				if (threatCatalog.getThreats() != null) {
-					for (ThreatCatalogThreat threat : threatCatalog.getThreats()) {
-						if (!processedCatalogThreatIds.contains(threat.getIdentifier())) {
-							Row row = sheet.createRow(currentRow++);
-							fillBasicThreatRow(row, threat.getThreatType(), threat.getDescription(), styles, columnCount);
-						}
-					}
-				}
-			}
-		}
-		return currentRow;
-	}
-
-	private int addThreatAssessmentResponses(Sheet sheet, ThreatAssessment threatAssessment, ExcelStyles styles, int currentRow) {
-		if (threatAssessment.getThreatAssessmentResponses() != null && !threatAssessment.getThreatAssessmentResponses().isEmpty()) {
-			for (ThreatAssessmentResponse response : threatAssessment.getThreatAssessmentResponses()) {
-				Row row = sheet.createRow(currentRow++);
-				fillCombinedThreatRow(row, response, styles);
-			}
-		}
-		return currentRow;
-	}
-
-	private Set<String> getProcessedCatalogThreatIds(ThreatAssessment threatAssessment) {
-		if (threatAssessment.getThreatAssessmentResponses() == null) {
-			return new HashSet<>();
-		}
-
-		return threatAssessment.getThreatAssessmentResponses().stream()
-				.map(ThreatAssessmentResponse::getThreatCatalogThreat)
-				.filter(Objects::nonNull)
-				.map(ThreatCatalogThreat::getIdentifier)
-				.collect(Collectors.toSet());
-	}
-
-	private Set<Long> getProcessedCustomThreatIds(ThreatAssessment threatAssessment) {
-		if (threatAssessment.getThreatAssessmentResponses() == null) {
-			return new HashSet<>();
-		}
-
-		return threatAssessment.getThreatAssessmentResponses().stream()
-				.map(ThreatAssessmentResponse::getCustomThreat)
-				.filter(Objects::nonNull)
-				.map(CustomThreat::getId)
-				.collect(Collectors.toSet());
-	}
-
-	private void fillBasicThreatRow(Row row, String threatType, String threatDescription, ExcelStyles styles, int columnCount) {
-		createCell(row, 0, safeString(threatType), styles.normalStyle);
-		createCell(row, 1, safeString(threatDescription), styles.normalStyle);
+	private void fillBasicThreatRow(Row row, ThreatDTO threat, ExcelStyles styles, int columnCount) {
+		createCell(row, 0, safeString(threat.getType()), styles.normalStyle);
+		createCell(row, 1, safeString(threat.getThreat()), styles.normalStyle);
 
 		for (int i = 2; i < columnCount; i++) {
 			createCell(row, i, "", styles.normalStyle);
 		}
 	}
 
-	private void fillCombinedThreatRow(Row row, ThreatAssessmentResponse response, ExcelStyles styles) {
+	private void fillCombinedThreatRow(Row row, ThreatDTO threat, boolean showFullMeasureDescription, ExcelStyles styles) {
 		int cellNum = 0;
+		createCell(row, cellNum++, safeString(threat.getType()), styles.normalStyle);
+		createCell(row, cellNum++, safeString(threat.getThreat()), styles.normalStyle);
+		createCell(row, cellNum++, threat.isNotRelevant() ? "Ja" : "Nej", styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getProbability()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getRf()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getOf()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getSf()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getRi()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getOi()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getSi()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getRt()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getOt()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getSt()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getSa()), styles.normalStyle);
+		createCell(row, cellNum++, safeString(threat.getProblem()), styles.normalStyle);
+		createCell(row, cellNum++, getPrecautionsString(threat.getRelatedPrecautions(), showFullMeasureDescription), styles.normalStyle);
+		createCell(row, cellNum++, safeString(threat.getAdditionalMeasures()), styles.normalStyle);
+		createCell(row, cellNum++, threat.getMethod().getMessage(), styles.normalStyle);
+		createCell(row, cellNum++, safeString(threat.getElaboration()), styles.normalStyle);
+		createCell(row, cellNum++, score(threat.getResidualRiskProbability()), styles.normalStyle);
+		createCell(row, cellNum, score(threat.getResidualRiskConsequence()), styles.normalStyle);
+	}
 
-		// Determine threat type and get threat info
-		String threatType = "";
-		String threatDescription = "";
+	private String getPrecautionsString(List<Relatable> precautions, boolean showFullMeasureDescription) {
+		return precautions.stream()
+				.map(Precaution.class::cast)
+				.map(p -> showFullMeasureDescription && p.getDescription() != null ? p.getName() + ": " + p.getDescription() : p.getName())
+				.collect(Collectors.joining("\n"));
+	}
 
-		if (response.getThreatCatalogThreat() != null) {
-			threatType = safeString(response.getThreatCatalogThreat().getThreatType());
-			threatDescription = safeString(response.getThreatCatalogThreat().getDescription());
-		} else if (response.getCustomThreat() != null) {
-			threatType = safeString(response.getCustomThreat().getThreatType());
-			threatDescription = safeString(response.getCustomThreat().getDescription());
-		}
-
-		// Fill threat info (columns 0-3)
-		createCell(row, cellNum++, threatType, styles.normalStyle);
-		createCell(row, cellNum++, threatDescription, styles.normalStyle);
-
-		// Fill assessment info (columns 4-22)
-		createCell(row, cellNum++, response.isNotRelevant() ? "Ja" : "Nej", styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getProbability())), styles.normalStyle);
-
-		// Risk scores (columns 7-16)
-		createCell(row, cellNum++, safeString(String.valueOf(response.getConfidentialityRegistered())), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getConfidentialityOrganisation())), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getConfidentialitySociety())), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getIntegrityRegistered())), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getIntegrityOrganisation())), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getIntegritySociety())), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getAvailabilityRegistered())), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getAvailabilityOrganisation())), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getAvailabilitySociety())), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getAuthenticitySociety())), styles.normalStyle);
-
-		// Assessment details (columns 17-22)
-		createCell(row, cellNum++, safeString(response.getProblem()), styles.normalStyle);
-		createCell(row, cellNum++, safeString(response.getAdditionalMeasures()), styles.normalStyle);
-		createCell(row, cellNum++, response.getMethod() != null ? response.getMethod().getMessage() : "", styles.normalStyle);
-		createCell(row, cellNum++, safeString(response.getElaboration()), styles.normalStyle);
-		createCell(row, cellNum++, safeString(String.valueOf(response.getResidualRiskProbability())), styles.normalStyle);
-		createCell(row, cellNum, safeString(String.valueOf(response.getResidualRiskConsequence())), styles.normalStyle);
+	private String score(int value) {
+		return value < 0 ? "" : String.valueOf(value);
 	}
 
 	private int fillAssetData(Row row, int startCell, Asset riskAsset, ThreatAssessment threatAssessment, ModelData modelData, CellStyle cellStyle) {

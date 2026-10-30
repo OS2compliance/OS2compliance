@@ -199,6 +199,26 @@ function isValidDateDMY(dateStr) {
     return true;
 }
 
+function parseDateDMY(value) {
+    if (!isValidDateDMY(value)) {
+        return null;
+    }
+    const [, day, month, year] = value.match(/^(\d{1,2})\/(\d{2})-(\d{4})$/);
+    return new Date(Number(year), Number(month) - 1, Number(day));
+}
+
+function validateDeadlineNotBeforeStartDate(startDateInput, deadlineInput) {
+    const feedback = deadlineInput.parentElement.querySelector('.invalid-feedback');
+    const startDate = parseDateDMY(startDateInput.value);
+    const deadline = parseDateDMY(deadlineInput.value);
+    const deadlineBeforeStart = startDate !== null && deadline !== null && deadline < startDate;
+
+    deadlineInput.setCustomValidity(deadlineBeforeStart ? feedback.dataset.orderMessage : '');
+    feedback.textContent = deadlineBeforeStart ? feedback.dataset.orderMessage : feedback.dataset.requiredMessage;
+
+    return !deadlineBeforeStart;
+}
+
 function checkInputField(my_choices, atleastOne = false) {
     const inner_element = my_choices.containerInner.element;
     const value = my_choices.getValue(true);

@@ -15,6 +15,12 @@ document.addEventListener('click', async function(e) {
 
         const fd = new FormData(form);
 
+        const formId = form.getAttribute('id');
+        validateDeadlineNotBeforeStartDate(
+            form.querySelector(`#${formId}TaskStartDate`),
+            form.querySelector(`#${formId}TaskDeadline`)
+        );
+
         // Validate form first
         if (!form.checkValidity()) {
             form.classList.add('was-validated');

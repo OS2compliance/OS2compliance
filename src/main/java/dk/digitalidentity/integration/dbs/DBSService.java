@@ -96,29 +96,9 @@ public class DBSService {
 							.toList();
 
 					for (Asset asset : assets) {
-						// Prioritet 1: manuelt sat tilsynsansvarlig - vinder altid (jf. hjælpeteksten)
-						Set<User> responsibleUsers = asset.getOversightResponsibleUser() != null
-								? Set.of(asset.getOversightResponsibleUser())
-								: Set.of();
-						String notificationEmail = null;
+						final OversightResponsible resolved = resolveResponsible(asset, recipientSetting);
 
-						// Prioritet 2: global indstilling - rolleopslag eller direkte mail
-						if (responsibleUsers.isEmpty() && !recipientSetting.isEmpty()) {
-							if (recipientSetting.startsWith("ROLE:")) {
-								User fromRole = resolveUserFromRole(asset, recipientSetting);
-								responsibleUsers = fromRole != null ? Set.of(fromRole) : Set.of();
-							} else {
-								notificationEmail = recipientSetting;
-							}
-						}
-
-						// Prioritet 3: systemansvarlige for aktivet - alle, ikke en vilkårlig første
-						if (responsibleUsers.isEmpty() && notificationEmail == null
-								&& asset.getManagers() != null && !asset.getManagers().isEmpty()) {
-							responsibleUsers = new LinkedHashSet<>(asset.getManagers());
-						}
-
-						if (responsibleUsers.isEmpty() && notificationEmail == null) {
+						if (resolved.isEmpty()) {
 							// Ingen i ansvarskæden: opret opgaven alligevel - uden ansvarlig og uden
 							// notifikation. Før blev aktivet sprunget over, men fandt kæden ansvar for
 							// et ANDET aktiv på samme oversight, blev taskCreated=true og tilsynet her
@@ -128,8 +108,8 @@ public class DBSService {
 									asset.getId(), dbsOversight.getId());
 						}
 
-						final Set<User> taskResponsibles = responsibleUsers;
-						final String taskEmail = notificationEmail;
+						final Set<User> taskResponsibles = resolved.users();
+						final String taskEmail = resolved.email();
 
 						// Alle DBS-tilsynsopgaver på dbs-aktivet: åbne genbruges, udførte indgår i dækning
 						List<Task> dbsTasks = relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
@@ -237,6 +217,106 @@ public class DBSService {
 				dbsOversight.setTaskCreated(true);
 				dbsOversightDao.save(dbsOversight);
 			}
+		}
+	}
+
+	/**
+	 * Udfylder ansvarlig på åbne DBS-tilsynsopgaver der blev oprettet uden.
+	 * <p>
+	 * Opgaven oprettes bevidst uden ansvarlig når kæden er tom (se {@link #oversightResponsible()}),
+	 * men blev indtil nu aldrig samlet op igen: oversighten står med taskCreated=true, og
+	 * genbrugs-grenen rører ikke responsibleUsers. Slås DBS til før Kitos har leveret
+	 * systemansvarlige, var resultatet derfor permanent ansvarsløse opgaver.
+	 */
+	@Transactional
+	public void backfillMissingResponsible() {
+		final String recipientSetting = settingsService.getString(
+				Constants.DBS_OVERSIGHT_RECIPIENT_SETTING, "");
+		final List<Task> tasks = taskService.findOpenDbsTasksWithoutResponsible();
+		if (tasks.isEmpty()) {
+			return;
+		}
+
+		int backfilled = 0;
+		for (Task task : tasks) {
+			final Optional<Asset> asset = findLinkedAsset(task);
+			if (asset.isEmpty()) {
+				continue;
+			}
+			// Kun brugere: mail-varianten af indstillingen sætter ingen ansvarlig, og en mail pr.
+			// timekørsel ville spamme. Opgaven forbliver kandidat til en senere kørsel.
+			final Set<User> responsible = resolveResponsible(asset.get(), recipientSetting).users();
+			if (responsible.isEmpty()) {
+				continue;
+			}
+
+			// notifyResponsible røres ikke: feltet kan være slået bevidst fra, og en backfill må
+			// ikke tænde varsler for mange opgaver på én gang. Deadline-varslerne rammer alligevel
+			// de nye ansvarlige, og tildelingen er synlig i UI'et med det samme.
+			// Samlingen skal blive entitetens egen: en immutable Set.of vælter i merge
+			task.getResponsibleUsers().clear();
+			task.getResponsibleUsers().addAll(responsible);
+			taskService.saveTask(task);
+			backfilled++;
+			log.info("Backfilled responsible on DBS task id={} for asset id={}: {}",
+					task.getId(), asset.get().getId(),
+					responsible.stream().map(User::getName).collect(Collectors.joining(", ")));
+		}
+		if (backfilled > 0) {
+			log.info("Backfilled responsible on {} of {} DBS tasks without one", backfilled, tasks.size());
+		}
+	}
+
+	/**
+	 * Ansvarskæden for et aktiv. Genbruges af oprettelsen og af backfill'en, så prioriteringen
+	 * ikke kan divergere mellem de to.
+	 */
+	private OversightResponsible resolveResponsible(final Asset asset, final String recipientSetting) {
+		// Prioritet 1: manuelt sat tilsynsansvarlig - vinder altid (jf. hjælpeteksten)
+		if (asset.getOversightResponsibleUser() != null) {
+			return new OversightResponsible(Set.of(asset.getOversightResponsibleUser()), null);
+		}
+
+		// Prioritet 2: global indstilling - rolleopslag eller direkte mail
+		if (!recipientSetting.isEmpty()) {
+			if (recipientSetting.startsWith("ROLE:")) {
+				final User fromRole = resolveUserFromRole(asset, recipientSetting);
+				if (fromRole != null) {
+					return new OversightResponsible(Set.of(fromRole), null);
+				}
+			} else {
+				return new OversightResponsible(Set.of(), recipientSetting);
+			}
+		}
+
+		// Prioritet 3: systemansvarlige for aktivet - alle, ikke en vilkårlig første
+		if (asset.getManagers() != null && !asset.getManagers().isEmpty()) {
+			return new OversightResponsible(new LinkedHashSet<>(asset.getManagers()), null);
+		}
+
+		return new OversightResponsible(Set.of(), null);
+	}
+
+	private record OversightResponsible(Set<User> users, String email) {
+		boolean isEmpty() {
+			return users.isEmpty() && email == null;
+		}
+	}
+
+	private Optional<Asset> findLinkedAsset(final Task task) {
+		return task.getProperties().stream()
+				.filter(p -> ASSOCIATED_INSPECTION_PROPERTY.equals(p.getKey()))
+				.map(Property::getValue)
+				.findFirst()
+				.flatMap(this::findAssetById);
+	}
+
+	private Optional<Asset> findAssetById(final String assetId) {
+		try {
+			return assetService.findById(Long.parseLong(assetId));
+		} catch (NumberFormatException e) {
+			log.warn("DBS task carries a non-numeric {} value: {}", ASSOCIATED_INSPECTION_PROPERTY, assetId);
+			return Optional.empty();
 		}
 	}
 
