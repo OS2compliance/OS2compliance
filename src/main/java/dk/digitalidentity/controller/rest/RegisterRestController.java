@@ -11,16 +11,21 @@ import dk.digitalidentity.model.dto.excel.ExportMetadataDTO;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
+import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.ExcelExportHelperService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.util.FileNameUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,11 +37,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.ARTICLE_30_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.report.DocxService.PARAM_REGISTER_IDS;
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
@@ -52,6 +60,7 @@ public class RegisterRestController {
 	private final RegisterService registerService;
 	private final SecurityUserService securityUserService;
 	private final ExcelExportHelperService excelExportHelperService;
+	private final DocsReportGeneratorComponent docsReportGeneratorComponent;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -153,5 +162,60 @@ public class RegisterRestController {
 				request,
 				response
 		);
+	}
+
+	@PostMapping("print")
+	@RequireReadOwnerOnly
+	public void printFiltered(@RequestBody EntityListRequest request, HttpServletResponse response) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+		List<RegisterGrid> registers = registerService.getRegisters(
+				null,
+				"ASC",
+				request.getFilters(),
+				0,
+				Integer.MAX_VALUE,
+				user
+		).getContent();
+
+		if (registers.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
+		writeArticle30Report(registers, response);
+	}
+
+	@GetMapping("{id}/print")
+	@RequireReadOwnerOnly
+	public void printSingle(@PathVariable Long id, HttpServletResponse response) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		// Applies the same access restriction as the list
+		List<RegisterGrid> registers = registerService.findByIds(List.of(id), user);
+		if (registers.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		}
+
+		writeArticle30Report(registers, response);
+	}
+
+	private void writeArticle30Report(final List<RegisterGrid> registers, final HttpServletResponse response) throws IOException {
+		final String registerIds = registers.stream()
+				.map(register -> String.valueOf(register.getId()))
+				.collect(Collectors.joining(","));
+		final String fileName = registers.size() == 1
+				? "Artikel 30 - " + FileNameUtil.sanitize(registers.getFirst().getName())
+				: "artikel30";
+
+		try (XWPFDocument document = docsReportGeneratorComponent.generateDocument(
+				ARTICLE_30_REPORT_TEMPLATE_DOC, Map.of(PARAM_REGISTER_IDS, registerIds), null)) {
+			response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+			response.setHeader(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+					.filename(fileName + ".docx", StandardCharsets.UTF_8)
+					.build()
+					.toString());
+			document.write(response.getOutputStream());
+			response.flushBuffer();
+		}
 	}
 }

@@ -2,8 +2,10 @@ import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 import { formatThreatTypes, formatThreatCatalogs, formatRiskAssessment } from "../risk-assessment-formatter.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
+import { printRegister, printFilteredRegisters } from "./register-print.js";
 
 let grid = null;
+let customGridFunctions = null;
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -26,13 +28,19 @@ document.addEventListener("DOMContentLoaded", function (event) {
 function initPageTopButtons() {
     const createRegisterButton = document.getElementById("createRegisterButton");
     createRegisterButton?.addEventListener("click",  () => createRegisterService.show())
+
+    const printRegistersButton = document.getElementById("printRegistersButton");
+    printRegistersButton?.addEventListener("click", () => printFilteredRegisters(customGridFunctions, printRegistersButton));
 }
 
 function initGridActionButtons() {
     delegateListItemActions(
         "registersDatatable",
         (id) => editRegisterService.show(id),
-        (id, name)=> deleteClicked(id, name)
+        (id, name)=> deleteClicked(id, name),
+        undefined,
+        undefined,
+        (id, button) => printRegister(id, button)
     )
 }
 
@@ -242,7 +250,7 @@ function initGrid() {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
-                width: '90px',
+                width: '120px',
                 formatter: (cell, row) => {
                     const identifier = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
@@ -321,7 +329,7 @@ function initGrid() {
     const registerDatatableId = 'registersDatatable';
     grid = new gridjs.Grid(gridConfig).render(document.getElementById(registerDatatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, registerDatatableId);
+    customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, registerDatatableId);
 
     new ColumnOptions(
         registerDatatableId,

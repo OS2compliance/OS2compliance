@@ -1,5 +1,6 @@
 package dk.digitalidentity.dao.grid;
 
+import dk.digitalidentity.exception.UnknownGridColumnException;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -24,6 +25,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -40,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 public class SearchRepositoryImpl implements SearchRepository {
 
 	@PersistenceContext
@@ -226,6 +229,12 @@ public class SearchRepositoryImpl implements SearchRepository {
 					List<Predicate> valuePredicates = new ArrayList<>();
 					for (String val : values) {
 						String trimmed = val.trim();
+						// Substring match would let e.g. CRITICAL hit NON_CRITICAL
+						Optional<? extends Enum<?>> enumConstant = enumConstant(propertyPath.getJavaType(), trimmed);
+						if (enumConstant.isPresent()) {
+							valuePredicates.add(criteriaBuilder.equal(propertyPath, enumConstant.get()));
+							continue;
+						}
 						valuePredicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath.as(String.class)),
 								"%" + trimmed.toLowerCase() + "%"));
 					}
@@ -274,6 +283,15 @@ public class SearchRepositoryImpl implements SearchRepository {
 	private Predicate handleId(Path<String> propertyPath, Map.Entry<String, String> searchEntry, CriteriaBuilder criteriaBuilder) {
 
 		return criteriaBuilder.like(propertyPath, "%" + NumberUtils.createLong(searchEntry.getValue()) + "%");
+	}
+
+	private static Optional<? extends Enum<?>> enumConstant(final Class<?> type, final String name) {
+		if (!type.isEnum()) {
+			return Optional.empty();
+		}
+		return Arrays.stream((Enum<?>[]) type.getEnumConstants())
+				.filter(c -> c.name().equalsIgnoreCase(name))
+				.findFirst();
 	}
 
 	private Predicate handleBoolean(Path<String> propertyPath, Map.Entry<String, String> searchEntry, CriteriaBuilder criteriaBuilder) {
@@ -372,6 +390,11 @@ public class SearchRepositoryImpl implements SearchRepository {
 		final List<Order> orderByList = new ArrayList<>();
 
 		for (final org.springframework.data.domain.Sort.Order order : page.getSort().toList()) {
+			if (!hasAttribute(root, StringUtils.substringBefore(order.getProperty(), "."))) {
+				final UnknownGridColumnException e = new UnknownGridColumnException(order.getProperty(), root.getJavaType());
+				log.error(e.getMessage());
+				throw e;
+			}
 			if (order.getProperty().contains(".")) {
 				final Join<?, ?> join = findOrCreateJoin(root, StringUtils.substringBefore(order.getProperty(), "."));
 				Path<Object> path = join.get(StringUtils.substringAfter(order.getProperty(), "."));
@@ -386,6 +409,10 @@ public class SearchRepositoryImpl implements SearchRepository {
 			}
 		}
 		return orderByList;
+	}
+
+	private static boolean hasAttribute(final Root<?> root, final String name) {
+		return root.getModel().getAttributes().stream().anyMatch(a -> a.getName().equals(name));
 	}
 
 	private static Join<?, ?> findOrCreateJoin(final Root<?> root, final String joinColumnName) {

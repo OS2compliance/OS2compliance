@@ -19,8 +19,7 @@
                             <div th:each="setting, itemStat :  *{settingsList}">
                                 <div th:if="${setting.association} == 'general'" class="row mt-3">
                                     <div th:if="${setting.settingKey} == 'inactiveResponsibleEmail'">
-                                        <label for="inactiveResponsibleEmailInput" class="col-sm-12 col-form-label"
-                                               style="color: black;">Email til notifikation om inaktive ansvarlige</label>
+                                        <label for="inactiveResponsibleEmailInput" class="col-sm-12 col-form-label">Email til notifikation om inaktive ansvarlige</label>
                                         <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
                                         <input type="hidden"
                                                th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
@@ -30,15 +29,14 @@
                                                th:field="*{settingsList[__${itemStat.index}__].association}"/>
                                         <input type="hidden"
                                                th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
-                                        <input style="color:black;" class="form-control" name="inactiveResponsibleEmail"
+                                        <input class="form-control" name="inactiveResponsibleEmail"
                                                id="inactiveResponsibleEmailInput"
                                                th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                     </div>
                                 </div>
                                 <div th:if="${setting.association} == 'general'" class="row mt-3">
                                     <div th:if="${setting.settingKey} == 'allowMultipleResponsibleOnTasks'">
-                                        <label for="allowMultipleResponsibleInput" class="col-sm-12 col-form-label"
-                                               style="color: black;">Tillad flere ansvarlige brugere pr. opgave</label>
+                                        <label for="allowMultipleResponsibleInput" class="col-sm-12 col-form-label">Tillad flere ansvarlige brugere pr. opgave</label>
                                         <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
                                         <input type="hidden"
                                                th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
@@ -48,7 +46,7 @@
                                                th:field="*{settingsList[__${itemStat.index}__].association}"/>
                                         <input type="hidden"
                                                th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
-                                        <select style="color:black;" class="form-control"
+                                        <select class="form-control"
                                                 id="allowMultipleResponsibleInput"
                                                 th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                             <option value="true">Ja - tillad flere ansvarlige</option>
@@ -62,8 +60,7 @@
                                 </div>
                                 <div th:if="${setting.association} == 'assetsync'" class="row mt-3">
                                     <div th:if="${setting.settingKey == T(dk.digitalidentity.Constants).ASSET_SYNC_NOTIFICATION_RECIPIENT_EMAIL}">
-                                        <label for="assetSyncNotificationRecipientEmailInput" class="col-sm-12 col-form-label"
-                                               style="color: black;">Notifikationer om automatisk oprettede/inaktiverede systemer: modtager(e) (adskil flere med komma eller semikolon)</label>
+                                        <label for="assetSyncNotificationRecipientEmailInput" class="col-sm-12 col-form-label">Notifikationer om automatisk oprettede/inaktiverede systemer: modtager(e) (adskil flere med komma eller semikolon)</label>
                                         <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
                                         <input type="hidden"
                                                th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
@@ -73,7 +70,7 @@
                                                th:field="*{settingsList[__${itemStat.index}__].association}"/>
                                         <input type="hidden"
                                                th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
-                                        <input style="color:black;" class="form-control"
+                                        <input class="form-control"
                                                id="assetSyncNotificationRecipientEmailInput"
                                                th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                     </div>
@@ -86,13 +83,11 @@
                                         <span class="col-1">
                                             <input type="checkbox" th:value="true"
                                                    th:name="${'settingsList['+__${itemStat.index}__+'].settingKey'}"
-                                                   th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'"
-                                                   style="color:black;" class="form-check-input"
+                                                   th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'" class="form-check-input"
                                                    th:id="${setting.settingKey + '_input'}"
                                                    th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                         </span>
-                                        <label th:for="${setting.settingKey + '_input'}" class="col form-check-label"
-                                               style="color: black;">Send notifikation når et nyt system oprettes automatisk (fx via API eller KITOS-synkronisering)</label>
+                                        <label th:for="${setting.settingKey + '_input'}" class="col form-check-label">Send notifikation når et nyt system oprettes automatisk (fx via API eller KITOS-synkronisering)</label>
                                     </div>
                                     <div th:if="${setting.settingKey == T(dk.digitalidentity.Constants).ASSET_SYNC_NOTIFY_ON_DEACTIVATED}" class="mt-2">
                                         <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
@@ -103,13 +98,11 @@
                                         <span class="col-1">
                                             <input type="checkbox" th:value="true"
                                                    th:name="${'settingsList['+__${itemStat.index}__+'].settingKey'}"
-                                                   th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'"
-                                                   style="color:black;" class="form-check-input"
+                                                   th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'" class="form-check-input"
                                                    th:id="${setting.settingKey + '_input'}"
                                                    th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                         </span>
-                                        <label th:for="${setting.settingKey + '_input'}" class="col form-check-label"
-                                               style="color: black;">Send notifikation når et system inaktiveres automatisk (fx via API eller KITOS-synkronisering)</label>
+                                        <label th:for="${setting.settingKey + '_input'}" class="col form-check-label">Send notifikation når et system inaktiveres automatisk (fx via API eller KITOS-synkronisering)</label>
                                     </div>
                                 </div>
                             </div>
@@ -133,34 +126,27 @@
                                 <th:block th:switch="${setting.settingKey}">
                                     <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).DATARESPONSIBLE.key}"
                                            th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).DATARESPONSIBLE.label}"
-                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
-                                           style="color: black;"></label>
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"></label>
                                     <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATARESPONSIBLE.key}"
                                            th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATARESPONSIBLE.label}"
-                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
-                                           style="color: black;"></label>
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"></label>
                                     <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_COMMON_DATARESPONSIBLE.key}"
                                            th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_COMMON_DATARESPONSIBLE.label}"
-                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
-                                           style="color: black;"></label>
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"></label>
                                     <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATARESPONSIBLE_REPRESENTATIVE.key}"
                                            th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATARESPONSIBLE_REPRESENTATIVE.label}"
-                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
-                                           style="color: black;"></label>
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"></label>
                                     <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATA_PROTECTION_ADVISOR.key}"
                                            th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATA_PROTECTION_ADVISOR.label}"
-                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
-                                           style="color: black;"></label>
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"></label>
                                     <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).SECURITY_PRECAUTIONS.key}"
                                            th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).SECURITY_PRECAUTIONS.label}"
-                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
-                                           style="color: black;"></label>
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"></label>
                                     <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).PERSONAL_DATA_RECEIVERS.key}"
                                            th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).PERSONAL_DATA_RECEIVERS.label}"
-                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
-                                           style="color: black;"></label>
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"></label>
                                 </th:block>
-                                <input style="color:black;" class="form-control"
+                                <input class="form-control"
                                        th:id="*{settingsList[__${itemStat.index}__].settingKey + '-id'}"
                                        th:field="*{settingsList[__${itemStat.index}__].settingValue}">
 
@@ -186,23 +172,18 @@
                                         <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
                                         <input type="checkbox" th:value="true"
                                                th:name="${'settingsList['+__${itemStat.index}__+'].settingKey'}"
-                                               th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'"
-                                               style="color:black;" class="form-check-input "
+                                               th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'" class="form-check-input "
                                                th:id="${setting.settingKey + '_input'}"
                                                th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                     </span>
                                     <label th:if="${setting.settingKey} == 'notification_interval_7before'"
-                                           th:for="${setting.settingKey + '_input'}" class="col form-check-label"
-                                           style="color: black;">7 dage før deadline</label>
+                                           th:for="${setting.settingKey + '_input'}" class="col form-check-label">7 dage før deadline</label>
                                     <label th:if="${setting.settingKey} == 'notification_interval_1before'"
-                                           th:for="${setting.settingKey + '_input'}" class="col form-check-label"
-                                           style="color: black;">1 dag før deadline</label>
+                                           th:for="${setting.settingKey + '_input'}" class="col form-check-label">1 dag før deadline</label>
                                     <label th:if="${setting.settingKey} == 'notification_interval_onday'"
-                                           th:for="${setting.settingKey + '_input'}" class="col form-check-label"
-                                           style="color: black;">På dagen for deadline</label>
+                                           th:for="${setting.settingKey + '_input'}" class="col form-check-label">På dagen for deadline</label>
                                     <label th:if="${setting.settingKey} == 'notification_interval_every7after'"
-                                           th:for="${setting.settingKey + '_input'}" class="col form-check-label"
-                                           style="color: black;">Hver 7 dage efter deadline, indtil udført</label>
+                                           th:for="${setting.settingKey + '_input'}" class="col form-check-label">Hver 7 dage efter deadline, indtil udført</label>
 
                             </div>
                         </div>
@@ -211,7 +192,7 @@
                     <!--                    Register Settings-->
                     <a class="btn btn-primary" data-bs-toggle="collapse" href="#registerPart" role="button"
                        aria-expanded="false" aria-controls="registerPart">
-                        Fotegnelser
+                        Fortegnelser
                     </a>
                     <div class="collapse" id="registerPart"
                          th:classappend="${page} == 'registers' ? 'show' : ''">
@@ -222,9 +203,8 @@
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}"/>
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}"/>
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
-                                <label th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
-                                       style="color: black;" th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.model.entity.enums.RegisterSetting).CUSTOMRESPONSIBLEUSERFIELDNAME.value ? 'Navn for redigerbart brugerfelt' : 'Ukendt indstilling'}"></label>
-                                <input style="color:black;" class="form-control"
+                                <label th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label" th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.model.entity.enums.RegisterSetting).CUSTOMRESPONSIBLEUSERFIELDNAME.value ? 'Navn for redigerbart brugerfelt' : 'Ukendt indstilling'}"></label>
+                                <input class="form-control"
                                        th:id="*{settingsList[__${itemStat.index}__].settingKey + '-id'}"
                                        th:field="*{settingsList[__${itemStat.index}__].settingValue}">
 
@@ -246,14 +226,13 @@
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
 
                                 <div th:if="${setting.settingKey} == 'scale'" class="row">
-                                    <label for="riskScaleSelect" class="col-sm-4 col-form-label" th:text="Skala"
-                                           style="color: black;"></label>
+                                    <label for="riskScaleSelect" class="col-sm-4 col-form-label" th:text="Skala"></label>
                                     <div th:if="${setting.settingKey} == 'scale'">
-                                        <select style="color:black;" class="form-control form-select" data-trigger=""
+                                        <select class="form-control form-select" data-trigger=""
                                                 name="riskScale" id="riskScaleSelect"
                                                 tabindex="-1"
                                                 th:field="*{settingsList[__${itemStat.index}__].settingValue}">
-                                            <option style="color: black;"
+                                            <option
                                                     th:each="scale : ${T(dk.digitalidentity.model.entity.enums.RiskScaleType).values()}"
                                                     th:value="${scale.name()}" th:text="${scale.getName()}"
                                                     th:selected="${scale.name() == @scaleService.getCurrentScaleType(setting.settingValue).name()}"></option>
@@ -263,20 +242,16 @@
                                 <span class="col-1" th:if="${setting.settingKey} != 'scale'" th:class="mt-2">
                                         <input type="checkbox" th:value="true"
                                                th:name="${'settingsList['+__${itemStat.index}__+'].settingKey'}"
-                                               th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'"
-                                               style="color:black;" class="form-check-input "
+                                               th:checked="*{settingsList[__${itemStat.index}__].settingValue} == 'true'" class="form-check-input "
                                                th:id="${setting.settingKey + '_input'}"
                                                th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                 </span>
                                 <label th:if="${setting.settingKey} == 'riskAssessmentUseResidual'"
-                                       th:for="${setting.settingKey + '_input'}" class="col form-check-label"
-                                       style="color: black;">Beregn risikofarve ud fra residual risiko</label>
+                                       th:for="${setting.settingKey + '_input'}" class="col form-check-label">Beregn risikofarve ud fra residual risiko</label>
                                 <label th:if="${setting.settingKey} == 'riskMatrixUseResidual'"
-                                       th:for="${setting.settingKey + '_input'}" class="col form-check-label"
-                                       style="color: black;">Vis residuale værdier i risikobilledet</label>
+                                       th:for="${setting.settingKey + '_input'}" class="col form-check-label">Vis residuale værdier i risikobilledet</label>
                                 <label th:if="${setting.settingKey} == 'riskAssessmentShowFullMeasureDescription'"
-                                       th:for="${setting.settingKey + '_input'}" class="col form-check-label"
-                                       style="color: black;">Vis fuld beskrivelse for tilknyttede foranstaltninger</label>
+                                       th:for="${setting.settingKey + '_input'}" class="col form-check-label">Vis fuld beskrivelse for tilknyttede foranstaltninger</label>
                             </div>
                         </div>
                     </div>
@@ -296,30 +271,27 @@
                                 <th:block th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME}">
                                     <label th:for="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
                                            class="col-sm-12 col-form-label"
-                                           style="color: black;"
                                            th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME ? 'Navn for redigerbart brugerfelt systemejer': 'Ukendt indstilling'}">
                                     </label>
-                                    <input style="color:black;" class="form-control"
+                                    <input class="form-control"
                                            th:id="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
                                            th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                 </th:block>
                                 <th:block th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME}">
                                     <label th:for="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
                                            class="col-sm-12 col-form-label"
-                                           style="color: black;"
                                            th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME ? 'Navn for redigerbart brugerfelt systemansvarlig': 'Ukendt indstilling'}">
                                     </label>
-                                    <input style="color:black;" class="form-control"
+                                    <input class="form-control"
                                            th:id="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
                                            th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                 </th:block>
                                 <th:block th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME}">
                                     <label th:for="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
                                            class="col-sm-12 col-form-label"
-                                           style="color: black;"
                                            th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME ? 'Navn for redigerbart brugerfelt driftsansvarlig': 'Ukendt indstilling'}">
                                     </label>
-                                    <input style="color:black;" class="form-control"
+                                    <input class="form-control"
                                            th:id="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
                                            th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                 </th:block>
@@ -345,8 +317,7 @@
                                     <div
                                         th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OWNER_ROLE_SETTING_KEY}">
                                         <div class="row mt-1">
-                                            <label for="ownerSelect" class="col-sm-10 col-form-label"
-                                                   style="color: black;" th:text="${'Vælg ' + customSystemOwnerInput.settingValue + ' rolle i Kitos'}"></label>
+                                            <label for="ownerSelect" class="col-sm-10 col-form-label" th:text="${'Vælg ' + customSystemOwnerInput.settingValue + ' rolle i Kitos'}"></label>
                                             <select class="form-control form-select choices__input col-sm-8"
                                                     id="ownerSelect"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
@@ -361,8 +332,7 @@
                                     </div>
                                     <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_KEY}">
                                         <div class="row mt-1">
-                                            <label for="responsibleSelect" class="col-sm-10 col-form-label"
-                                                   style="color: black;" th:text="${'Vælg ' + customSystemResponsibleInput.settingValue + ' rolle i Kitos'}"></label>
+                                            <label for="responsibleSelect" class="col-sm-10 col-form-label" th:text="${'Vælg ' + customSystemResponsibleInput.settingValue + ' rolle i Kitos'}"></label>
                                             <select class="form-control form-select choices__input"
                                                     id="responsibleSelect"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
@@ -378,8 +348,7 @@
                                     <div
                                             th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY}">
                                         <div class="row mt-1">
-                                            <label for="otherSelect" class="col-sm-10 col-form-label"
-                                                   style="color: black;" th:text="${'Vælg ' + customSystemOperationResponsibleInput.settingValue + ' rolle i Kitos'}"></label>
+                                            <label for="otherSelect" class="col-sm-10 col-form-label" th:text="${'Vælg ' + customSystemOperationResponsibleInput.settingValue + ' rolle i Kitos'}"></label>
                                             <select class="form-control form-select choices__input col-sm-8"
                                                     id="otherSelect"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
@@ -396,7 +365,7 @@
                                         th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_FIELDS_ASSET_LINK_SOURCE}">
                                         <div class="row mt-1" style="padding: 0px 8px;">
                                             <label for="assetLinkSourceField" class="col-sm-10 col-form-label"
-                                                   style="color: black;padding: 10px 0px;">Aktiver -> kilde til links</label>
+                                                   style="padding: 10px 0px;">Aktiver -> kilde til links</label>
                                             <select class="form-control form-select"
                                                     id="assetLinkSourceField"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
@@ -410,7 +379,7 @@
                                             th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_FIELDS_CONTRACT_DATE}">
                                         <div class="row mt-1" style="padding: 0px 8px;">
                                             <label for="contractDateSourceField" class="col-sm-10 col-form-label"
-                                                   style="color: black;padding: 10px 0px;">Kilde til kontraktdato</label>
+                                                   style="padding: 10px 0px;">Kilde til kontraktdato</label>
                                             <select class="form-control form-select"
                                                     id="contractDateSourceField"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
@@ -423,7 +392,7 @@
                                     <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_FIELDS_CONTRACT_END}">
                                         <div class="row mt-1" style="padding: 0px 8px;">
                                             <label for="contractEndSourceField" class="col-sm-10 col-form-label"
-                                                   style="color: black;padding: 10px 0px;">Kilde til kontraktophør</label>
+                                                   style="padding: 10px 0px;">Kilde til kontraktophør</label>
                                             <select class="form-control form-select"
                                                     id="contractEndSourceField"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
@@ -436,7 +405,7 @@
                                     <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_ENABLE_SYNC_ITSYSTEMS}">
                                         <div class="row mt-1" style="padding: 0px 8px;">
                                             <label for="stopSyncItSystems" class="col-sm-10 col-form-label"
-                                                   style="color: black;padding: 10px 0px;">Skal OS2compliance synkronisere med KITOS?</label>
+                                                   style="padding: 10px 0px;">Skal OS2compliance synkronisere med KITOS?</label>
                                             <select class="form-control form-select" id="stopSyncItSystems" th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                                 <option value="true" th:selected="${setting.settingValue == 'true'}">Ja</option>
                                                 <option value="false" th:selected="${setting.settingValue == 'false'}">Nej</option>
@@ -446,7 +415,7 @@
                                 </div>
                             </div>
 
-                            <div class="text-black-50 mt-2">Bemærk, at det kan tage op til et døgn, før
+                            <div class="text-muted mt-2">Bemærk, at det kan tage op til et døgn, før
                                 opdateringen af Kitos' opsætning er fuldt gennemført på alle steder.
                             </div>
 
@@ -468,7 +437,7 @@
                                     <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}"/>
                                     <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
 
-                                    <label class="col-sm-12 col-form-label" style="color: black;">
+                                    <label class="col-sm-12 col-form-label">
                                         Modtager af tilsynsnotifikationer
                                     </label>
 
@@ -478,16 +447,14 @@
                                            data-ref="dbsRecipientValue"/>
 
                                     <!-- Type selector -->
-                                    <select data-ref="dbsRecipientType" class="form-control form-select mb-2"
-                                            style="color: black;">
+                                    <select data-ref="dbsRecipientType" class="form-control form-select mb-2">
                                         <option value="">Vælg type...</option>
                                         <option value="role">Rolle på aktivet</option>
                                         <option value="email">Email-adresse</option>
                                     </select>
 
                                     <!-- Role dropdown (hidden by default) -->
-                                    <select data-ref="dbsRecipientRole" class="form-control form-select d-none"
-                                            style="color: black;">
+                                    <select data-ref="dbsRecipientRole" class="form-control form-select d-none">
                                         <option value="ROLE:SYSTEM_OWNER"
                                                 th:text="${customSystemOwnerInput != null ? customSystemOwnerInput.settingValue : 'Systemejer'}">
                                             Systemejer
@@ -505,7 +472,6 @@
                                     <!-- Email input (hidden by default) -->
                                     <input type="email" data-ref="dbsRecipientEmail"
                                            class="form-control d-none"
-                                           style="color: black;"
                                            placeholder="Indtast email-adresse"/>
 
                                     <small class="form-text text-muted d-block mt-2">

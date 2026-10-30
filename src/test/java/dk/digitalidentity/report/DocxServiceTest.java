@@ -316,7 +316,7 @@ public class DocxServiceTest {
         dataProcessing.setAccessWhoIdentifiers(Set.of("dp-access-who-empl","dp-access-who-ext","dp-access-who-citizens"));
         dataProcessing.setAccessCountIdentifier("dp-access-count-10-100");
         dataProcessing.setPersonCountIdentifier("dp-person-cnt-100-1000");
-        dataProcessing.setStorageTimeIdentifier("dp-storage-duration-12mth");
+		dataProcessing.setStorageTimeIdentifiers(Set.of("dp-storage-duration-12mth"));
         dataProcessing.setElaboration("En uddybning her");
         dataProcessing.setRegisteredCategories(createRegisteredCategories());
         register.setDataProcessing(dataProcessing);

@@ -9,6 +9,7 @@ import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
+import dk.digitalidentity.mapping.AiAssessmentMapper;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDPIAPageDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
@@ -47,6 +48,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -55,12 +57,14 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireAsset;
+import dk.digitalidentity.service.AiAssessmentService;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.AssetSupplierMappingService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
+import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.RelationService;
@@ -148,6 +152,9 @@ public class AssetsController {
 	private final ChoiceValueService choiceValueService;
 	private final AssetSupplierMappingService assetSupplierMappingService;
 	private final DBSAssetDao dBSAssetDao;
+	private final AiAssessmentService aiAssessmentService;
+	private final AiAssessmentMapper aiAssessmentMapper;
+	private final CatalogService catalogService;
 
 	private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(DateTimeFormatter.ofPattern("dd/MM-yyyy"), DateTimeFormatter.ofPattern("d/MM-yyyy"), DateTimeFormatter.ofPattern("dd/M-yyyy"), DateTimeFormatter.ofPattern("d/M-yyyy"));
 
@@ -293,6 +300,10 @@ public class AssetsController {
 
 		model.addAttribute("asset", asset);
         model.addAttribute("changeableAsset", assetService.isEditable(asset));
+		if (asset.getAiStatus() == ContainsAITechnologyEnum.YES) {
+			model.addAttribute("aiAssessment", aiAssessmentMapper.toViewDTO(aiAssessmentService.getAssessment(asset),
+					aiAssessmentService.getRequirementQuestions(), aiAssessmentService.getPersonalDataQuestions()));
+		}
 		model.addAttribute("relatedAssets", relatedAssets);
         model.addAttribute("relatedAssetsRiskMap", assetService.getLatestRiskAssessment(relatedAssets));
 		model.addAttribute("relatedIncidents", relatedIncidents);
@@ -349,12 +360,22 @@ public class AssetsController {
         model.addAttribute("threatExists", threatExists);
         if (threatExists) {
             final ThreatAssessment newestThreatAssessment = threatAssessments.get(0);
-            model.addAttribute("risk", newestThreatAssessment);
+            model.addAttribute("newestRisk", newestThreatAssessment);
             model.addAttribute("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("riskProfiles", threatAssessmentService.buildRiskProfileDTOs(newestThreatAssessment));
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
+
+		final boolean canCreateThreatAssessment = SecurityUtil.isOperationAllowed(Roles.CREATE_ALL)
+				|| (SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && assetService.isOwning(asset));
+		model.addAttribute("canCreateThreatAssessment", canCreateThreatAssessment);
+		if (canCreateThreatAssessment) {
+			final ThreatAssessment newRisk = new ThreatAssessment();
+			newRisk.setThreatAssessmentType(ThreatAssessmentType.ASSET);
+			model.addAttribute("risk", newRisk);
+			model.addAttribute("threatCatalogs", catalogService.findAllVisible());
+		}
 
 		model.addAttribute("customSystemOwnerInput", settingsService.findBySettingKey(KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME));
 		model.addAttribute("customSystemResponsibleInput", settingsService.findBySettingKey(KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));
@@ -634,7 +655,6 @@ public class AssetsController {
 			existingAsset.getManagers().clear();
 			existingAsset.getManagers().addAll(asset.getManagers());
 			existingAsset.setDescription(asset.getDescription());
-			existingAsset.setAiRisk(asset.getAiRisk());
 			// ai_status is not nullable, so an empty selection keeps the current value.
 			if (asset.getAiStatus() != null) {
 				existingAsset.setAiStatus(asset.getAiStatus());

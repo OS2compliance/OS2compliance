@@ -16,6 +16,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ReportSetting;
+import dk.digitalidentity.report.DocxService;
 import dk.digitalidentity.report.DocxUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -37,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -77,14 +79,14 @@ public class Article30Replacer implements PlaceHolderReplacer {
 		};
     }
 
-    @Override
-    @Transactional
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
-        final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
-        if (paragraph != null) {
-            replaceParagraph(paragraph, placeHolder);
-        }
-    }
+	@Override
+	@Transactional
+	public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
+		final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
+		if (paragraph != null) {
+			replaceParagraph(paragraph, placeHolder, parameters);
+		}
+	}
 
 	private XWPFParagraph findParagraphToReplace(final XWPFDocument document, final String placeholder) {
 		// Only searches paragraphs. For tables or other, extend method
@@ -102,11 +104,11 @@ public class Article30Replacer implements PlaceHolderReplacer {
 		return paragraphText != null && paragraphText.contains(placeholder);
 	}
 
-	private void replaceParagraph(final XWPFParagraph paragraph, final PlaceHolder placeHolder) {
+	private void replaceParagraph(final XWPFParagraph paragraph, final PlaceHolder placeHolder, final Map<String, String> parameters) {
 		clearAllRuns(paragraph);
 
 		switch (placeHolder) {
-			case ACTIVITIES -> insertArticle30(paragraph);
+			case ACTIVITIES -> insertArticle30(paragraph, parameters);
 			case DATARESPONSIBLE_SETTINGS -> insertDataResponsibleSettings(paragraph);
 			default -> throw new IllegalArgumentException("Unsupported placeholder: " + placeHolder);
 		}
@@ -364,6 +366,8 @@ public class Article30Replacer implements PlaceHolderReplacer {
 				nullSafe(register::getSecurityPrecautions, "Ikke angivet"));
         insertStandard(document, cursor, "Beskriv formålet med behandlingsaktiviteten: ",
             nullSafe(register::getPurpose, "Ikke angivet"));
+        insertStandard(document, cursor, "Øvrige lovhenvisninger: ",
+            nullSafe(register::getOtherLegalReferences, "Ikke angivet"));
         insertBoldParagraph(document, cursor, "GDPR lovhjemmel");
 
         final Set<String> choiceIds = register.getGdprChoices();
@@ -374,6 +378,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
         XWPFParagraph gdprParagraph = insertNormalParagraph(document, cursor);
         final List<ChoiceValue> selectedChoices = gdprChoices.getValues().stream()
             .filter(c -> choiceIds.contains(c.getIdentifier()))
+            .sorted(ChoiceService.GDPR_ORDER)
             .toList();
         for (final ChoiceValue selectedChoice : selectedChoices) {
             final XWPFRun run = addTextRun(selectedChoice.getCaption() + " " + selectedChoice.getDescription(), gdprParagraph);
@@ -417,12 +422,13 @@ public class Article30Replacer implements PlaceHolderReplacer {
             insertInformationCategoriesTable(table, register.getDataProcessing());
 
             paragraph = insertBoldParagraph(document, cursor, "Hvor længe opbevares personoplysningerne: ");
-            final String storageTimeCaption = getChoiceCaption(register.getDataProcessing().getStorageTimeIdentifier());
+			final String storageTimeCaption = getChoiceCaptions(register.getDataProcessing().getStorageTimeIdentifiers(), "dp-person-storage-duration-list");
             addTextRun(storageTimeCaption, paragraph);
-            if (register.getDataProcessing().getElaboration() != null) {
-                addBoldTextRun(register.getDataProcessing().getElaboration() + ": ", paragraph);
-                addTextRun(register.getDataProcessing().getElaboration(), paragraph);
-            }
+			final String elaboration = register.getDataProcessing().getElaboration();
+			if (elaboration != null && !elaboration.isBlank()) {
+				addBoldTextRun(" Uddybning: ", paragraph);
+				addTextRun(elaboration, paragraph);
+			}
 
             insertStandard(document, cursor,
                 "Er der udarbejdet sletteprocedure: ",
@@ -454,6 +460,20 @@ public class Article30Replacer implements PlaceHolderReplacer {
             .map(v -> v.get().getCaption())
             .orElse("Ikke valgt");
     }
+
+	private String getChoiceCaptions(final Set<String> identifiers, final String choiceListIdentifier) {
+		if (identifiers == null || identifiers.isEmpty()) {
+			return "Ikke valgt";
+		}
+
+		// Follow the order of the choice list, since the stored set is unordered
+		return choiceService.findChoiceList(choiceListIdentifier)
+				.map(list -> list.getValues().stream()
+						.filter(value -> identifiers.contains(value.getIdentifier()))
+						.map(ChoiceValue::getCaption)
+						.collect(Collectors.joining(", ")))
+				.orElse("Ikke valgt");
+	}
 
     private void insertAccessWhoList(final XWPFDocument document, final XmlCursor cursor, final Register register) {
         final ChoiceList accessWhoChoices = choiceService.findChoiceList("dp-access-who-list")
@@ -587,5 +607,40 @@ public class Article30Replacer implements PlaceHolderReplacer {
         addTextRun(text, paragraph);
         advanceCursor(cursor);
     }
+
+	private List<Register> findRegistersForReport(final Map<String, String> parameters) {
+		final List<Register> allOrdered = registerService.findAllOrdered();
+		final String ids = parameters != null ? parameters.get(DocxService.PARAM_REGISTER_IDS) : null;
+		if (ids == null || ids.isBlank()) {
+			return allOrdered;
+		}
+
+		final Set<Long> selectedIds = Arrays.stream(ids.split(","))
+				.map(Long::valueOf)
+				.collect(Collectors.toSet());
+
+		// Filtering the full ordered list keeps the sections identical to the full report
+		return allOrdered.stream()
+				.filter(register -> selectedIds.contains(register.getId()))
+				.toList();
+	}
+
+	private void insertArticle30(final XWPFParagraph p, final Map<String, String> parameters) {
+		final List<Register> allArticle30 = findRegistersForReport(parameters);
+
+		XWPFRun newRun = p.createRun();
+		newRun.setText("", 0);
+		try (final XmlCursor cursor = setCursorToNextStartToken(p.getCTP())) {
+			boolean initial = true;
+			for (final Register register : allArticle30) {
+				insertRegister(p.getDocument(), cursor, register, initial);
+				initial = false;
+			}
+		}
+
+		List<Long> relatedAssetIds = relationService.findAllIdsRelatedToWithType(allArticle30.stream().map(r -> r.getId()).toList(), RelationType.ASSET);
+		List<Asset> relatedAssets = assetService.findAllById(relatedAssetIds);
+		insertSupplierAdressSection(p, relatedAssets);
+	}
 
 }

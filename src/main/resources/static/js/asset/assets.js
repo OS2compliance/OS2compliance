@@ -312,7 +312,7 @@ function initGrid() {
                 hidden: true,
                 name: "Ansvarlige forvaltninger",
                 searchable: {
-                    searchKey: 'departments'
+                    searchKey: 'departmentNames'
                 }
             },
             {
@@ -320,7 +320,8 @@ function initGrid() {
                 hidden: true,
                 name: "Kategori",
                 searchable: {
-                    searchKey: 'assetCategory'
+                    searchKey: 'assetCategory',
+                    fieldId: 'assetCategorySearchSelector'
                 },
                 formatter: (cell, row) => formatColorStatus(cell)
             },
@@ -350,7 +351,7 @@ function initGrid() {
                 hidden: true,
                 name: "Driftsansvarlig",
                 searchable: {
-                    searchKey: 'operationResponsibleUsers'
+                    searchKey: 'operationResponsibleUserNames'
                 }
             },
             {
@@ -359,6 +360,7 @@ function initGrid() {
                 name: "Kritikalitet",
                 searchable: {
                     searchKey: 'criticality',
+                    fieldId: 'assetCriticalitySearchSelector',
                     sortKey: 'criticalityOrder'
                 }
             },
@@ -367,7 +369,8 @@ function initGrid() {
                 hidden: true,
                 name: "Samfundskritisk",
                 searchable: {
-                    searchKey: 'sociallyCritical'
+                    searchKey: 'sociallyCritical',
+                    fieldId : 'assetSociallyCriticalSelector'
                 },
                 formatter: (cell, row) => cell ? 'Ja' : 'Nej'
             },
@@ -376,7 +379,29 @@ function initGrid() {
                 hidden: true,
                 name: "Anvender løsningen AI",
                 searchable: {
-                    searchKey: 'aiStatus'
+                    searchKey: 'aiStatus',
+                    fieldId: 'assetAiStatusSearchSelector'
+                }
+            },
+            {
+                id: 'aiRiskFactor',
+                hidden: true,
+                name: "AI risikokategori",
+                searchable: {
+                    searchKey: 'aiRiskFactor',
+                    sortKey: 'aiRiskFactorOrder',
+                    fieldId: 'aiRiskFactorSearchSelector'
+                },
+                formatter: (cell) => {
+                    if (!cell) {
+                        return gridjs.html('');
+                    }
+
+                    const badge = document.createElement('div');
+                    badge.className = `d-block badge ${cell.badgeClass}`;
+                    badge.textContent = cell.label;
+
+                    return gridjs.html(badge.outerHTML, 'div');
                 }
             },
             {
@@ -410,7 +435,8 @@ function initGrid() {
                 hidden: true,
                 name: "Er der indgået databehandleraftale",
                 searchable: {
-                    searchKey: 'dataProcessingAgreementStatus'
+                    searchKey: 'dataProcessingAgreementStatus',
+                    fieldId: 'assetDataProcessingAgreementSearchSelector'
                 }
             },
             {
@@ -463,7 +489,8 @@ function initGrid() {
                 hidden: true,
                 name: "Systemet skal arkiveres",
                 searchable: {
-                    searchKey: 'archive'
+                    searchKey: 'archive',
+                    fieldId: 'assetArchiveSearchSelector'
                 }
             },
             {
@@ -535,6 +562,7 @@ function initGrid() {
                     asset.criticality,
                     asset.sociallyCritical,
                     asset.aiStatus,
+                    asset.aiRiskFactor,
                     asset.contractDate,
                     asset.contractTermination,
                     asset.terminationNotice,

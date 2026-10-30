@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{fragments/header :: head (textEditor = true, burgermenu = true)}"></head>
+<head th:replace="~{fragments/header :: head (textEditor = true)}"></head>
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
 <script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
 <script th:src="@{/js/data-processing-component.js}" defer></script>
@@ -19,7 +19,7 @@
     <link rel="stylesheet" th:href="@{/css/risks/risk_profile.css}" />
     <script th:src="@{/js/risk/riskProfile.js}" defer></script>
 
-    <div id="root" class="root mn--max hd--expanded">
+    <div id="root" class="root mn--max tm--expanded-hd">
         <section id="content" class="content">
             <div class="content__header content__boxed overlapping">
                 <div class="content__wrap">
@@ -77,6 +77,9 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tiaTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span id="tiaBadge" th:data-assessment="${asset.tia?.assessment}" class="badge" th:classappend="${asset.tiaOptOut} ? 'bg-gray-800' : (${asset.tia?.assessment?.name() == 'RED'} ? 'bg-red' : (${asset.tia?.assessment?.name() == 'YELLOW'} ? 'bg-yellow' : (${asset.tia?.assessment?.name() == 'GREEN'} ? 'bg-green' : '')))">&nbsp</span>&nbspTIA</button>
+                            </li>
+                            <li th:if="${aiAssessment != null}" class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#aiTab" type="button" role="tab" aria-controls="aiTab" aria-selected="false">AI</button>
                             </li>
                         </ul>
 
@@ -347,24 +350,6 @@
                                                 </div>
                                             </div>
 
-                                            <div class="row mb-3" id="riskFactorContainer">
-                                                <label for="riskFactor" class="col-sm-3 col-form-label">
-                                                    Vurdering af risiko ved AI-brug
-                                                    &nbsp;
-                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
-                                                </label>
-                                                <div class="col-sm-9">
-                                                    <select class="form-control form-select editField"
-                                                            th:field="*{aiRisk}" id="riskFactor"
-                                                            tabindex="-1" disabled>
-                                                        <option value=""></option>
-                                                        <option
-                                                                th:each="risk : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
-                                                                th:value="${risk}" th:text="${risk.message}"></option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
                                             <div class="row mb-3">
                                                 <label for="emergencyPlanLink"
                                                     class="col-sm-3 col-form-label">Nødplan</label>
@@ -480,7 +465,7 @@
                                             <div class="row mb-3">
                                                 <label for="archive" class="col-sm-3 col-form-label">
                                                     Systemet skal arkiveres
-                                                    <span th:if="${isKitos}" class="pli-exclamation" style="color: orange; font-weight: bold;" title="Denne værdi synkroniseres til OS2kitos, når den ændres"></span>
+                                                    <span th:if="${isKitos}" class="pli-exclamation text-warning-emphasis fw-bold" title="Denne værdi synkroniseres til OS2kitos, når den ændres"></span>
                                                     &nbsp;
                                                     <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
@@ -737,12 +722,19 @@
                                     <textarea id="threatAssessmentOptOutText" class="form-control" onchange="assetDetailsService.updateThreatAssessmentOptOutReason(this)" th:text="${asset.threatAssessmentOptOutReason}"></textarea>
                                 </div>
                                 <div id="threatAssessmentView">
+                                    <div th:if="${canCreateThreatAssessment}" class="d-flex justify-content-end mb-3">
+                                        <button id="createThreatassessmentButton" type="button" class="btn btn-info btn-lg hstack gap-2" data-bs-toggle="modal" data-bs-target="#createModal">
+                                            <i class="ti-plus fs-4"></i>
+                                            <span class="vr"></span>
+                                            Ny risikovurdering
+                                        </button>
+                                    </div>
                                     <div th:if="${threatExists}">
                                         <div class="mb-3 col-lg-12" style="position: relative;">
                                             <div th:replace="~{risks/riskProfileTablesFragment :: riskProfileTablesFragment}"></div>
                                         </div>
                                         <div class="mb-3 col-lg-12">
-                                            <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${unfinishedTasks}, relatableId=${risk.id}, hideRemove=true, customTitle='Udestående opgaver')}"></div>
+                                            <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${unfinishedTasks}, relatableId=${newestRisk.id}, hideRemove=true, customTitle='Udestående opgaver')}"></div>
                                         </div>
                                         <div th:replace="~{fragments/risks :: risksfragment(threatAssessments=${threatAssessments})}"></div>
                                     </div>
@@ -760,6 +752,9 @@
                             <div id="tiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="tia-tab" th:replace="~{assets/fragments/tia :: tia(${asset}, ${dpChoices})}">
                                 Transfer impact assessment
                             </div><!--  Transfer impact assessment tab end -->
+                            <th:block th:if="${aiAssessment != null}">
+                                <div id="aiTab" class="tab-pane fade" role="tabpanel" aria-labelledby="ai-tab" th:replace="~{assets/fragments/ai :: ai(${asset.id}, ${aiAssessment}, ${changeableAsset})}"></div>
+                            </th:block>
                         </div>
                     </div>
                 </div>
@@ -840,6 +835,9 @@
     <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
     <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
     <div th:replace="~{assets/fragments/riskAssessmentKitosModal :: riskAssessmentKitosModalFragment}"></div>
+    <th:block th:if="${canCreateThreatAssessment}" th:with="supplier=${null}, preselectedAsset=${asset}">
+        <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
+    </th:block>
     <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor = true, hierarchy = true)}"></div>
     <div th:replace="~{tags/fragment/related_tag_list :: add_tag_modal (targetId=${asset.id}, targetType='asset')}"></div>
 
@@ -856,8 +854,8 @@
             var threatExists = [[${threatExists}]];
             var supplierId = [[${asset.supplier?.id}]];
             let assetId = [[${asset.id}]];
-            let assessment = [[${risk?.assessment}]];
-            let newestRiskAssessmentDate = [[${risk?.createdAt}]];
+            let assessment = [[${newestRisk?.assessment}]];
+            let newestRiskAssessmentDate = [[${newestRisk?.createdAt}]];
             let asset = [[${asset}]];
         +]*/
         /*]]>*/

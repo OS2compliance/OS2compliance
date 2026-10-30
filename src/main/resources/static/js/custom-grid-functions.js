@@ -15,6 +15,7 @@ class CustomGridFunctions {
         searchValues: {}
     }
     #INPUTCLASSNAME
+    #stateResetAfterBadRequest = false
 
     /**
      * @param {Grid} grid GridJS grid element
@@ -53,6 +54,7 @@ class CustomGridFunctions {
             server: {
                 ...this.grid.config.server,
                 url: `${this.dataUrl}?${this.getParamString()}`,
+                handle: (res) => this.#handleResponse(res),
                 then: (data) => {
                     this.initializeInputFields()
                     this.initializeCustomSelects()
@@ -365,10 +367,11 @@ class CustomGridFunctions {
             column.sort = !!column.searchable && column.searchable.sortKey !== null;
 
             if (column.searchable && column.searchable.searchKey) {
+                const filterLabel = this.#filterLabel(column)
                 if (column.searchable.fieldId) {
-                    searchFieldHTML = this.findPredefinedInputFieldHTML(column.searchable.fieldId, column.searchable.searchKey, column.hidden)
+                    searchFieldHTML = this.findPredefinedInputFieldHTML(column.searchable.fieldId, column.searchable.searchKey, column.hidden, filterLabel)
                 } else {
-                    searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey)
+                    searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey, filterLabel)
                 }
 
                 column.columns = [{
@@ -414,15 +417,18 @@ class CustomGridFunctions {
      * For single selects: the original element is removed to prevent duplicate IDs
      * after GridJS injects the captured outerHTML into the header.
      */
-    findPredefinedInputFieldHTML(fieldId, searchKey, isHidden) {
+    findPredefinedInputFieldHTML(fieldId, searchKey, isHidden, filterLabel) {
         const foundElement = document.getElementById(fieldId)
 
         if (!foundElement) {
-            return this.generateTextInputFieldHTML(searchKey);
+            return this.generateTextInputFieldHTML(searchKey, filterLabel);
         }
 
         foundElement.classList.add(this.#INPUTCLASSNAME)
         foundElement.setAttribute('data-search-key', searchKey)
+        if (!foundElement.hasAttribute('aria-label') && !foundElement.labels?.length) {
+            foundElement.setAttribute('aria-label', filterLabel)
+        }
 
         if (foundElement.hasAttribute('multiple')) {
             foundElement.style.display = 'none';
@@ -453,15 +459,21 @@ class CustomGridFunctions {
 
     /**
      * @param {string} searchKey name of search parameter for this field
+     * @param {string} filterLabel accessible name for the field
      * @returns Text input field as HTML
      */
-    generateTextInputFieldHTML(searchKey) {
+    generateTextInputFieldHTML(searchKey, filterLabel) {
         const inputElement = document.createElement('input')
         inputElement.type = 'text'
         inputElement.classList.add(this.#INPUTCLASSNAME)
         inputElement.classList.add('form-control')
         inputElement.setAttribute('data-search-key', searchKey)
+        inputElement.setAttribute('aria-label', filterLabel)
         return inputElement.outerHTML
+    }
+
+    #filterLabel(column) {
+        return typeof column.name === 'string' && column.name.trim() ? `Filter: ${column.name.trim()}` : 'Filter'
     }
 
     /**
@@ -586,6 +598,25 @@ class CustomGridFunctions {
     }
 
     /**
+     * The server answers 400 when the saved state points at a column that no longer exists.
+     * Reset once and refetch; a second 400 means the grid's own config is wrong.
+     */
+    #handleResponse(res) {
+        if (res.status === 400 && !this.#stateResetAfterBadRequest) {
+            this.#stateResetAfterBadRequest = true
+            this.#clearState()
+            const { method, headers, body } = this.grid.config.server
+            return fetch(`${this.dataUrl}?${this.getParamString()}`, { method, headers, body })
+                .then(retry => this.#handleResponse(retry))
+        }
+        if (!res.ok) {
+            console.error(`Could not fetch data: ${res.status} - ${res.statusText}`)
+            return null
+        }
+        return res.json()
+    }
+
+    /**
      * Saves current state to local storage
      */
     saveState() {
@@ -609,6 +640,11 @@ class CustomGridFunctions {
      * resurface fields that no longer apply.
      */
     resetState() {
+        this.#clearState()
+        this.onSearch()
+    }
+
+    #clearState() {
         localStorage.removeItem(`${this.dataUrl}_search`)
         this.state = {
             sortDirection: this.initialSortConfig.sortDirection || 'ASC',
@@ -617,7 +653,6 @@ class CustomGridFunctions {
             limit: this.state.limit,
             searchValues: {}
         }
-        this.onSearch()
     }
 
     /**
@@ -630,7 +665,11 @@ class CustomGridFunctions {
             if (value === null || value === undefined || value === '') {
                 continue
             }
-            if (Array.isArray(value) && value.length === 0) {
+            if (Array.isArray(value)) {
+                if (value.length > 0) {
+                    // export endpoints take Map<String, String>, same comma format as the grid's query params
+                    filters[key] = value.join(',');
+                }
                 continue
             }
             filters[key] = value;

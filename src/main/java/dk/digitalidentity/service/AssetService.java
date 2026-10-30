@@ -400,7 +400,11 @@ public class AssetService implements TagableService<Asset> {
 						"Could not find personCategoriesRegisteredIdentifiers Choices"));
 		final String selectedAccessWhoTitles = accessWhoChoices.getValues().stream().filter(c -> dataProcessing.getAccessWhoIdentifiers().contains(c.getIdentifier())).map(ChoiceValue::getCaption).collect(Collectors.joining(", "));
 		final String selectedAccessCountTitle = !StringUtils.hasLength(dataProcessing.getAccessCountIdentifier()) ? "" : accessCountChoices.getValues().stream().filter(c -> Objects.equals(dataProcessing.getAccessCountIdentifier(), c.getIdentifier())).findAny().get().getCaption();
-		final String howLongTitle = !StringUtils.hasLength(dataProcessing.getStorageTimeIdentifier()) ? "" : storageDurationChoices.getValues().stream().filter(c -> Objects.equals(dataProcessing.getStorageTimeIdentifier(), c.getIdentifier())).findAny().get().getCaption();
+		final Set<String> selectedStorageTimeIdentifiers = dataProcessing.getStorageTimeIdentifiers();
+		final String howLongTitle = selectedStorageTimeIdentifiers == null ? "" : storageDurationChoices.getValues().stream()
+				.filter(c -> selectedStorageTimeIdentifiers.contains(c.getIdentifier()))
+				.map(ChoiceValue::getCaption)
+				.collect(Collectors.joining(", "));
 		final Set<String> personalDataTypesTitles = new HashSet<>();
 		final Set<String> categoriesOfRegisteredTitles = new HashSet<>();
 		for (DataProcessingCategoriesRegistered registeredCategory : dataProcessing.getRegisteredCategories()) {

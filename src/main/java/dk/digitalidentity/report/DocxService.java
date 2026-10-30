@@ -17,6 +17,7 @@ import java.util.Objects;
 @Service
 public class DocxService {
     public static final  String PARAM_RISK_ASSESSMENT_ID = "RISK_ASSESSMENT_ID";
+	public static final String PARAM_REGISTER_IDS = "REGISTER_IDS";
     private final List<PlaceHolderReplacer> replacers;
 
     public DocxService(final List<PlaceHolderReplacer> replacers) {

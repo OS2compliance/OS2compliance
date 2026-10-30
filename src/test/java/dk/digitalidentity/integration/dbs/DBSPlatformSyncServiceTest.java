@@ -737,6 +737,105 @@ class DBSPlatformSyncServiceTest {
 		verify(assetService, never()).findByProperty(anyString(), anyString());
 	}
 
+	// ========== Kitos-uuid: persistering og genforsoeg ==========
+
+	@Test
+	void synchronize_persistsKitosUuid_forNewSystem() {
+		// Given
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Audit", 100, "Supplier", 200, "System", "kitos-abc-123");
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.empty());
+		when(dbsOversightDao.findAll()).thenReturn(Collections.emptyList());
+		when(assetService.findByProperty("kitos_uuid", "kitos-abc-123")).thenReturn(Optional.empty());
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then
+		ArgumentCaptor<DBSAsset> captor = ArgumentCaptor.forClass(DBSAsset.class);
+		verify(dbsAssetDao).save(captor.capture());
+		assertThat(captor.getValue().getKitosUuid()).isEqualTo("kitos-abc-123");
+	}
+
+	@Test
+	void synchronize_keepsStoredKitosUuid_whenPayloadHasNone() {
+		// Given - et manglende felt i payloaden maa ikke slette uuid'et, ellers mister vi
+		// muligheden for at genforsoege koblingen
+		DBSSupplier supplier = createDbsSupplier(100L, "Supplier");
+		DBSAsset existingAsset = new DBSAsset();
+		existingAsset.setDbsId("200");
+		existingAsset.setKitosUuid("kitos-abc-123");
+
+		AuditDto audit = createAuditWithSupplierAndSystem(1, "Audit", 100, "Supplier", 200, "System", null);
+		when(dbsSupplierDao.findByDbsId(100L)).thenReturn(Optional.of(supplier));
+		when(dbsAssetDao.findByDbsId("200")).thenReturn(Optional.of(existingAsset));
+		when(dbsOversightDao.findAll()).thenReturn(Collections.emptyList());
+
+		// When
+		syncService.synchronize(List.of(audit));
+
+		// Then
+		assertThat(existingAsset.getKitosUuid()).isEqualTo("kitos-abc-123");
+	}
+
+	@Test
+	void retryKitosMapping_mapsAsset_whenKitosAssetHasAppeared() {
+		// Given - aktivet blev importeret foer Kitos leverede IT-aktiverne, saa mapningen fejlede
+		DBSAsset unmapped = new DBSAsset();
+		unmapped.setDbsId("200");
+		unmapped.setKitosUuid("kitos-abc-123");
+		Asset matchedAsset = new Asset();
+		matchedAsset.setId(500L);
+
+		when(dbsAssetDao.findByKitosUuidIsNotNull()).thenReturn(List.of(unmapped));
+		when(relationService.findAllRelatedTo(unmapped)).thenReturn(Collections.emptyList());
+		when(assetService.findByProperty("kitos_uuid", "kitos-abc-123")).thenReturn(Optional.of(matchedAsset));
+		when(assetService.findAllById(any())).thenReturn(List.of(matchedAsset));
+
+		// When
+		syncService.retryKitosMapping();
+
+		// Then
+		verify(relationService).setRelationsAbsolute(eq(unmapped), eq(java.util.Set.of(500L)));
+		verify(assetOversightService).setAssetsToDbsOversight(List.of(matchedAsset));
+	}
+
+	@Test
+	void retryKitosMapping_skipsAsset_whenRelationsAlreadyExist() {
+		// Given - en manuelt koblet raekke maa ikke faa sine relationer overskrevet
+		DBSAsset mapped = new DBSAsset();
+		mapped.setDbsId("200");
+		mapped.setKitosUuid("kitos-abc-123");
+
+		when(dbsAssetDao.findByKitosUuidIsNotNull()).thenReturn(List.of(mapped));
+		when(relationService.findAllRelatedTo(mapped)).thenReturn(List.of(new Asset()));
+
+		// When
+		syncService.retryKitosMapping();
+
+		// Then
+		verify(relationService, never()).setRelationsAbsolute(any(), any());
+		verify(assetService, never()).findByProperty(anyString(), anyString());
+	}
+
+	@Test
+	void retryKitosMapping_ignoresBlankUuid() {
+		// Given
+		DBSAsset blank = new DBSAsset();
+		blank.setDbsId("200");
+		blank.setKitosUuid("   ");
+
+		when(dbsAssetDao.findByKitosUuidIsNotNull()).thenReturn(List.of(blank));
+
+		// When
+		syncService.retryKitosMapping();
+
+		// Then
+		verify(relationService, never()).findAllRelatedTo(any());
+		verify(relationService, never()).setRelationsAbsolute(any(), any());
+	}
+
 	// ========== findNewestPublishedDate ==========
 
 	@Test

@@ -2,6 +2,7 @@ package dk.digitalidentity.model.entity.grid;
 
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.enums.AiRiskFactor;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
@@ -178,6 +179,13 @@ public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers, HasO
 	@Column
 	@Enumerated(EnumType.STRING)
 	private ContainsAITechnologyEnum aiStatus;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private AiRiskFactor aiRiskFactor;
+
+	@Column
+	private Integer aiRiskFactorOrder;
 
 	@Column
 	private LocalDate contractDate;

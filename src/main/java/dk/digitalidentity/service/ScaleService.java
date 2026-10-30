@@ -20,6 +20,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static dk.digitalidentity.Constants.SCALE_COLOR_DARK_RED;
 import static dk.digitalidentity.Constants.SCALE_COLOR_GREEN;
 import static dk.digitalidentity.Constants.SCALE_COLOR_LIGHT_GREEN;
 import static dk.digitalidentity.Constants.SCALE_COLOR_ORANGE;
@@ -344,7 +345,69 @@ public class ScaleService {
                 "5 = Ekstrem høj (Katastrofal)"
             ))
             .consequenceScale(Map.of(1, "LYSEGRØN", 2, "GRØN", 3, "GUL", 4, "ORANGE", 5, "RØD"))
-            .build()
+            .build(),
+			ScaleSetting.builder()
+					.type(RiskScaleType.SCALE_1_4_KOEGE)
+					.colorsMatrix(
+							new HashMap<>() {{
+								// consequence, probability
+								put("1,1", SCALE_COLOR_GREEN);
+								put("1,2", SCALE_COLOR_GREEN);
+								put("1,3", SCALE_COLOR_LIGHT_GREEN);
+								put("1,4", SCALE_COLOR_LIGHT_GREEN);
+								put("2,1", SCALE_COLOR_GREEN);
+								put("2,2", SCALE_COLOR_LIGHT_GREEN);
+								put("2,3", SCALE_COLOR_YELLOW);
+								put("2,4", SCALE_COLOR_ORANGE);
+								put("3,1", SCALE_COLOR_LIGHT_GREEN);
+								put("3,2", SCALE_COLOR_YELLOW);
+								put("3,3", SCALE_COLOR_RED);
+								put("3,4", SCALE_COLOR_RED);
+								put("4,1", SCALE_COLOR_LIGHT_GREEN);
+								put("4,2", SCALE_COLOR_ORANGE);
+								put("4,3", SCALE_COLOR_RED);
+								put("4,4", SCALE_COLOR_DARK_RED);
+							}}
+					)
+					.assessmentLookup(
+							(p, c) -> {
+								if (c == null || p == null) {
+									return null;
+								}
+								final String lookup = "" + c + p;
+								return switch (lookup) {
+									case "11", "12", "21" -> RiskAssessment.GREEN;
+									case "13", "14", "22", "31", "41" -> RiskAssessment.LIGHT_GREEN;
+									case "23", "32" -> RiskAssessment.YELLOW;
+									case "24", "42" -> RiskAssessment.ORANGE;
+									case "33", "34", "43", "44" -> RiskAssessment.RED;
+									default -> null;
+								};
+							}
+					)
+					.riskScore(List.of(
+							"Risikoscore = sandsynlighed * konsekvens",
+							"1-2 = Lav (grøn)",
+							"3-4 = Under middel (lysegrøn)",
+							"6 = Middel (gul)",
+							"8 = Over middel (orange)",
+							"9-12 = Høj (rød)",
+							"16 = Meget høj (mørkerød)"
+					))
+					.probabilityScore(List.of(
+							"1 = Usandsynligt",
+							"2 = Mindre sandsynligt",
+							"3 = Sandsynligt",
+							"4 = Forventet"
+					))
+					.consequenceNumber(List.of(
+							"1 = Ubetydeligt",
+							"2 = Mindre alvorligt",
+							"3 = Meget alvorligt",
+							"4 = Graverende"
+					))
+					.consequenceScale(Map.of(1, "GRØN", 2, "GUL", 3, "ORANGE", 4, "RØD"))
+					.build()
     );
     @Builder
     @Getter

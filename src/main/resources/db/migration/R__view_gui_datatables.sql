@@ -1,15 +1,7 @@
 CREATE OR REPLACE VIEW view_gridjs_suppliers AS
 SELECT s.id,
        TRIM(s.name)                                                         AS name,
-       (SELECT COUNT(DISTINCT a.id)
-        FROM assets a
-        WHERE a.deleted = false
-          AND (a.supplier_id = s.id
-               OR EXISTS (SELECT 1
-                          FROM relations rel
-                          WHERE (rel.relation_a_id = a.id AND rel.relation_a_type = 'ASSET' AND rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER')
-                             OR (rel.relation_b_id = a.id AND rel.relation_b_type = 'ASSET' AND rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER'))))
-        AS solution_count,
+       COALESCE(solutions.solution_count, 0)                                AS solution_count,
        s.updated_at                                                         AS updated,
        s.status,
        s.localized_enums,
@@ -19,9 +11,7 @@ SELECT s.id,
         WHERE a.supplier_id = s.id)                                         AS last_oversight_date,
        prop.prop_value                                                      AS kitos_uuid,
        (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id AND a.deleted = false) AS primary_asset_count,
-       (SELECT COUNT(1) FROM relations rel
-        WHERE (rel.relation_a_id = s.id AND rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET')
-           OR (rel.relation_b_id = s.id AND rel.relation_b_type = 'SUPPLIER' AND rel.relation_a_type = 'ASSET')) AS secondary_asset_count,
+       COALESCE(secondary.secondary_asset_count, 0)                         AS secondary_asset_count,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
        s.responsible_uuid,
@@ -30,6 +20,30 @@ FROM suppliers s
          LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
          LEFT JOIN supplier_tag rt ON rt.supplier_id = s.id
          LEFT JOIN tags tg ON rt.tag_id = tg.id
+         -- counted once for all suppliers; a per-supplier OR EXISTS over relations got a plan that scanned relations per asset
+         LEFT JOIN (SELECT pairs.supplier_id, COUNT(DISTINCT pairs.asset_id) AS solution_count
+                    FROM (SELECT a.supplier_id, a.id AS asset_id
+                          FROM assets a
+                          WHERE a.supplier_id IS NOT NULL
+                          UNION ALL
+                          SELECT rel.relation_b_id, rel.relation_a_id
+                          FROM relations rel
+                          WHERE rel.relation_a_type = 'ASSET' AND rel.relation_b_type = 'SUPPLIER'
+                          UNION ALL
+                          SELECT rel.relation_a_id, rel.relation_b_id
+                          FROM relations rel
+                          WHERE rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET') pairs
+                             JOIN assets a ON a.id = pairs.asset_id AND a.deleted = false
+                    GROUP BY pairs.supplier_id) solutions ON solutions.supplier_id = s.id
+         LEFT JOIN (SELECT sides.supplier_id, COUNT(1) AS secondary_asset_count
+                    FROM (SELECT rel.relation_b_id AS supplier_id
+                          FROM relations rel
+                          WHERE rel.relation_a_type = 'ASSET' AND rel.relation_b_type = 'SUPPLIER'
+                          UNION ALL
+                          SELECT rel.relation_a_id
+                          FROM relations rel
+                          WHERE rel.relation_a_type = 'SUPPLIER' AND rel.relation_b_type = 'ASSET') sides
+                    GROUP BY sides.supplier_id) secondary ON secondary.supplier_id = s.id
 WHERE s.deleted = false
 GROUP BY s.id;
 
@@ -60,8 +74,9 @@ SELECT t.id,
        COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) as `completed`,
        CASE
            WHEN COALESCE(`ts`.`id` is not null and (`t`.`task_type` = 'TASK' or `t`.`repetition` = 'NONE'), false) = true THEN 'COMPLETED'
+           WHEN t.in_progress = true THEN 'IN_PROGRESS'
            WHEN t.next_deadline IS NULL THEN NULL
-           WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
+           WHEN t.next_deadline >= CURRENT_DATE() THEN 'FUTURE'
            ELSE 'EXCEEDED'
        END as task_deadline_status,
        ts.completed                                                                    as last_completion_date,
@@ -303,10 +318,16 @@ SELECT a.id,
                           AND third_country_transfer = 'YES') THEN TRUE
            ELSE FALSE
        END                                                                  AS has_third_country_transfer,
+       -- one lookup per side so each uses its index; <> a.id keeps a self-relation counted once
        (SELECT COUNT(rel.id)
         FROM relations rel
-        WHERE (rel.relation_a_id = a.id OR rel.relation_b_id = a.id)
-          AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER')) as registers,
+        WHERE rel.relation_a_id = a.id
+          AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER'))
+       + (SELECT COUNT(rel.id)
+          FROM relations rel
+          WHERE rel.relation_b_id = a.id
+            AND rel.relation_a_id <> a.id
+            AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER')) as registers,
        ta_calcs.avg_probability,
        ta_calcs.avg_consequence_overall,
        ta_calcs.avg_consequence_confidentiality_registered,
@@ -338,6 +359,14 @@ SELECT a.id,
            )                                                                as criticality_order,
        a.socially_critical,
        a.ai_status,
+       ai_assessment.ai_risk_factor,
+       (CASE
+            WHEN ai_assessment.ai_risk_factor = 'MINIMAL' THEN 1
+            WHEN ai_assessment.ai_risk_factor = 'LIMITED' THEN 2
+            WHEN ai_assessment.ai_risk_factor = 'HIGH' THEN 3
+            WHEN ai_assessment.ai_risk_factor = 'PROHIBITED' THEN 4
+           END
+           )                                                                as ai_risk_factor_order,
        a.contract_date,
        a.contract_termination,
        a.termination_notice,
@@ -382,20 +411,32 @@ SELECT a.id,
            )                                                                as tia_status_order
 FROM assets a
          LEFT JOIN suppliers s on s.id = a.supplier_id
+         LEFT JOIN ai_assessment ON ai_assessment.asset_id = a.id AND a.ai_status = 'YES'
          LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
          LEFT JOIN properties old_kitos_prop ON old_kitos_prop.entity_id = a.id AND old_kitos_prop.prop_key = 'old_kitos_usage_uuid'
-         LEFT JOIN threat_assessments ta ON ta.id = (
-             SELECT tb.id
-             FROM threat_assessments tb
-             JOIN relations r ON (
-                 r.relation_a_id = a.id AND r.relation_b_id = tb.id AND r.relation_b_type = 'THREAT_ASSESSMENT'
-                 OR r.relation_b_id = a.id AND r.relation_a_id = tb.id AND r.relation_a_type = 'THREAT_ASSESSMENT'
-             )
-             WHERE tb.deleted = false
-               AND tb.hidden = false
-             ORDER BY tb.created_at DESC
-             LIMIT 1
-         )
+         -- ranked in one pass; a correlated newest-row lookup per asset cannot use the relation indexes
+         LEFT JOIN (
+             SELECT ranked.asset_id, ranked.threat_assessment_id
+             FROM (
+                 SELECT links.asset_id,
+                        tb.id AS threat_assessment_id,
+                        ROW_NUMBER() OVER (PARTITION BY links.asset_id ORDER BY tb.created_at DESC, tb.id ASC) AS rn
+                 FROM (
+                     SELECT r.relation_a_id AS asset_id, r.relation_b_id AS threat_assessment_id
+                     FROM relations r
+                     WHERE r.relation_b_type = 'THREAT_ASSESSMENT'
+                     UNION ALL
+                     SELECT r.relation_b_id, r.relation_a_id
+                     FROM relations r
+                     WHERE r.relation_a_type = 'THREAT_ASSESSMENT'
+                 ) links
+                 JOIN threat_assessments tb ON tb.id = links.threat_assessment_id
+                 WHERE tb.deleted = false
+                   AND tb.hidden = false
+             ) ranked
+             WHERE ranked.rn = 1
+         ) latest_ta ON latest_ta.asset_id = a.id
+         LEFT JOIN threat_assessments ta ON ta.id = latest_ta.threat_assessment_id
          LEFT JOIN (
              SELECT
                  tar.threat_assessment_id,
@@ -702,8 +743,7 @@ FROM (SELECT u.uuid,
                LEFT JOIN assets_responsible_users_mapping ar ON u.uuid = ar.user_uuid
                LEFT JOIN assets a ON ar.asset_id = a.id and deleted = 0) AS combined_ids
 GROUP BY uuid, name, user_id, email, active
-HAVING responsible_relatable_ids IS NOT NULL
-   AND responsible_relatable_ids <> '';
+HAVING responsible_relatable_ids IS NOT NULL;
 
 CREATE OR REPLACE VIEW view_gridjs_dbs_assets AS
 SELECT a.id,

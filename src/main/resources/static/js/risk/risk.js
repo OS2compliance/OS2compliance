@@ -1,7 +1,8 @@
 import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
-import {CreateThreatAssessmentService, initRegisterSelect, initAssetSelectRisk, userChanged, initSupplierSelectRisk} from "./createThreatAssessmentService.js";
+import {CreateThreatAssessmentService, initRegisterSelect, initAssetSelectRisk, initSupplierSelectRisk} from "./createThreatAssessmentService.js";
+import { choiceService } from "../choice-service.js";
 import { initSaveAsExcelButton } from "/js/excel-export/excel-export-init.js";
 import {BadgeData, createBadges} from "../component/badge.js";
 
@@ -390,7 +391,6 @@ function EditRiskService() {
     }
 
     this.onShown = function () {
-        let self = this;
         this.modalContainer = document.getElementById('editModal');
         this.initTypeSelect();
 
@@ -401,13 +401,9 @@ function EditRiskService() {
 
         this.userChoicesSelect = choiceService.initUserSelect("editUserSelect");
         this.ouChoicesSelect = choiceService.initOUSelect("editOuSelect");
+        choiceService.bindOuToUser(this.userChoicesSelect, this.ouChoicesSelect);
 
         initFormValidationForForm("editRiskModalForm", () => this.validate());
-
-        this.userChoicesSelect.passedElement.element.addEventListener('change', function () {
-            const userUuid = self.userChoicesSelect.passedElement.element.value;
-            userChanged(userUuid);
-        });
 
         const copyAssetSelect = this.getScopedElementById('copyAssetSelect');
         if (copyAssetSelect !== null) {
@@ -457,7 +453,7 @@ function EditRiskService() {
 
                     let user = data.users?.users[0];
                     if (user) {
-                        this.userChoicesSelect.setChoiceByValue(user.uuid);
+                        choiceService.setSelected(this.userChoicesSelect, user.uuid, choiceService.userLabel(user));
                     }
                 }))
             .catch(error => toastService.error(error));
@@ -632,7 +628,6 @@ function CopyRiskService() {
     }
 
     this.onShown = function () {
-        let self = this;
         this.modalContainer = document.getElementById('copyModal');
         const registerSelect = this.getScopedElementById('copyRegisterSelect');
         if (registerSelect !== null) {
@@ -649,14 +644,9 @@ function CopyRiskService() {
 
         this.userChoicesSelect = choiceService.initUserSelect("copyUserSelect");
         this.ouChoicesSelect = choiceService.initOUSelect("copyOuSelect");
+        choiceService.bindOuToUser(this.userChoicesSelect, this.ouChoicesSelect);
         initFormValidationForForm("copyRiskModalForm",
             () => this.validate());
-
-
-        this.userChoicesSelect.passedElement.element.addEventListener('change', function () {
-            const userUuid = self.userChoicesSelect.passedElement.element.value;
-            userChanged(userUuid);
-        });
 
         this.copyAssessmentModal = new bootstrap.Modal(this.modalContainer);
         this.copyAssessmentModal.show();

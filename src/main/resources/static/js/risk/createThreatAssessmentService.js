@@ -1,13 +1,15 @@
+import { choiceService } from "../choice-service.js";
+
 export class CreateThreatAssessmentService {
 
     init() {
         this.modalContainer = document.getElementById('createModal');
+        this.lockedToAsset = this.modalContainer.dataset.preselectedAsset !== undefined;
 
         this.initRegisterSelect()
         this.initAssetSelect()
         this.initSupplierSelect();
-        this.initUserSelect()
-        this.initOuSelect()
+        this.initResponsibleSelects()
 
         this.initTypeSelect()
         this.initRegisterResponsible()
@@ -31,6 +33,11 @@ export class CreateThreatAssessmentService {
     }
 
     initTypeSelect() {
+        if (this.lockedToAsset) {
+            this.lockToAsset();
+            return;
+        }
+
         this.typeChanged(this.getScopedElementById("threatAssessmentType").value);
         const element = this.getScopedElementById('threatAssessmentType')
         element.addEventListener('change', () => {
@@ -61,6 +68,11 @@ export class CreateThreatAssessmentService {
 
     initAssetSelect() {
         const assetSelect = this.getScopedElementById('assetSelect');
+        if (this.lockedToAsset) {
+            this.assetChoicesSelect = initSelect(assetSelect, 'form-control', { readOnly: true });
+            return;
+        }
+
         this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         this.assetChoicesSelect.passedElement.element.addEventListener('change', () => {
             this.clearAssetValidationError();
@@ -77,16 +89,10 @@ export class CreateThreatAssessmentService {
         });
     }
 
-    initUserSelect() {
+    initResponsibleSelects() {
         this.userChoicesSelect = choiceService.initUserSelect("createRiskUserSelect");
-        this.userChoicesSelect.passedElement.element.addEventListener('change', () => {
-            const userUuid = this.userChoicesSelect.passedElement.element.value;
-            userChanged(userUuid);
-        });
-    }
-
-    initOuSelect() {
         this.ouChoicesSelect = choiceService.initOUSelect("createRiskOuSelect");
+        choiceService.bindOuToUser(this.userChoicesSelect, this.ouChoicesSelect);
     }
 
     initSendEmail() {
@@ -110,7 +116,20 @@ export class CreateThreatAssessmentService {
         }
     }
 
+    lockToAsset() {
+        this.getScopedElementById("threatAssessmentTypeRow").hidden = true;
+        this.showRowsForType("ASSET");
+        this.modalContainer.addEventListener('show.bs.modal', () => this.loadAssetSection());
+    }
+
     typeChanged(selectedType) {
+        this.showRowsForType(selectedType);
+        this.registerChoicesSelect.removeActiveItems();
+        this.assetChoicesSelect.removeActiveItems();
+        this.supplierChoicesSelect.removeActiveItems();
+    }
+
+    showRowsForType(selectedType) {
         const rows = {
             ASSET: "assetSelectRow",
             REGISTER: "registerSelectRow",
@@ -122,9 +141,6 @@ export class CreateThreatAssessmentService {
         }
 
         this.getScopedElementById("inheritRow").style.display = 'none';
-        this.registerChoicesSelect.removeActiveItems();
-        this.assetChoicesSelect.removeActiveItems();
-        this.supplierChoicesSelect.removeActiveItems();
         this.selectedType = selectedType;
     }
 
@@ -200,7 +216,7 @@ export class CreateThreatAssessmentService {
                 .then(data => {
                     let user = data.users?.users[0];
                     if (user) {
-                        this.userChoicesSelect.setChoiceByValue(user.uuid);
+                        choiceService.setSelected(this.userChoicesSelect, user.uuid, choiceService.userLabel(user));
                     } else {
                         this.userChoicesSelect.removeActiveItems();
                     }
@@ -235,22 +251,6 @@ export class CreateThreatAssessmentService {
     getScopedElementById(id) {
         return this.modalContainer.querySelector(`#${id}`);
     }
-}
-
-export function userChanged(userUuid) {
-    fetch(`/rest/ous/user/` + userUuid)
-        .then(response => {
-            if (response.status === 204) {
-                return;
-            }
-
-            if (response.ok) {
-                response.json().then(data => {
-                    this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
-                    this.ouChoicesSelect.setChoiceByValue(data.uuid);
-                });
-            }
-        }).catch(error => toastService.error(error));
 }
 
 export function initRegisterSelect(registerSelectElement) {
@@ -301,7 +301,7 @@ function loadResponsible(url, userChoicesSelect) {
         .then(data => {
             const user = data.users[0];
             if (user) {
-                userChoicesSelect.setChoiceByValue(user.uuid);
+                choiceService.setSelected(userChoicesSelect, user.uuid, choiceService.userLabel(user));
             } else {
                 userChoicesSelect.removeActiveItems();
             }

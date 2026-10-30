@@ -1,0 +1,26 @@
+[
+  {
+    "identifier": "ai-personal-data-gate",
+    "caption": "Behandler AI-løsningen personoplysninger?"
+  },
+  {
+    "identifier": "ai-personal-data-followup-1",
+    "caption": "Kan løsningen afgrænse, hvilke datatyper der må indgå i input (prompts)?"
+  },
+  {
+    "identifier": "ai-personal-data-followup-2",
+    "caption": "Er det muligt at fremsøge, eksportere, berigtige og slette personoplysninger i input, output og logdata?"
+  },
+  {
+    "identifier": "ai-personal-data-followup-3",
+    "caption": "Har leverandøren dokumenteret, hvordan løsningen understøtter de registreredes rettigheder i praksis, herunder sletning af AI-genereret output, der indeholder personoplysninger?"
+  },
+  {
+    "identifier": "ai-personal-data-followup-4",
+    "caption": "Er det sikret kontraktuelt og teknisk, at kommunens data, input og output ikke anvendes til træning eller forbedring af generelle modeller til andre kunder?"
+  },
+  {
+    "identifier": "ai-personal-data-followup-5",
+    "caption": "Foreligger der en fortegnelse over samtlige underdatabehandlere og eksterne modeludbydere?"
+  }
+]

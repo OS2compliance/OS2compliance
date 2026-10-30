@@ -8,7 +8,7 @@ function RiskMatrixService() {
     this.onRiskMatrixFilterChange = function() {
         // Get all checked filter values
         const checkedFilters = [];
-        const filterCheckboxes = document.querySelectorAll('.risk-matrix-filters input[type="checkbox"]:checked');
+        const filterCheckboxes = document.querySelectorAll('.risk-matrix-filters input[data-risk-type]:checked');
 
         filterCheckboxes.forEach(checkbox => {
             checkedFilters.push(checkbox.value);
@@ -138,7 +138,7 @@ function RiskMatrixService() {
      */
     this.getCurrentFilters = function() {
         const checkedFilters = [];
-        const filterCheckboxes = document.querySelectorAll('.risk-matrix-filters input[type="checkbox"]:checked');
+        const filterCheckboxes = document.querySelectorAll('.risk-matrix-filters input[data-risk-type]:checked');
 
         filterCheckboxes.forEach(checkbox => {
             checkedFilters.push(checkbox.value);
@@ -148,31 +148,38 @@ function RiskMatrixService() {
     }
 
     /**
+     * Query params for the selected types and asset filters (criticality, socially critical, department)
+     * @param {Array} filters - Selected filter types
+     * @returns {URLSearchParams}
+     */
+    this.filterParams = function(filters) {
+        const params = new URLSearchParams();
+        const typeNames = { aktiv: 'ASSET', behandling: 'REGISTER', 'leverandør': 'SUPPLIER', scenarie: 'SCENARIO' };
+        if (filters && filters.length > 0) {
+            params.append('types', filters.map(filter => typeNames[filter] || filter).join(','));
+        }
+        const criticalities = [...document.querySelectorAll('.risk-matrix-filters input[data-risk-criticality]:checked')].map(c => c.value);
+        if (criticalities.length > 0) {
+            params.append('criticalities', criticalities.join(','));
+        }
+        if (document.getElementById('filter-socially-critical').checked) {
+            params.append('sociallyCriticalOnly', 'true');
+        }
+        const departments = [...document.getElementById('filter-departments').selectedOptions].map(o => o.value);
+        if (departments.length > 0) {
+            params.append('departments', departments.join(','));
+        }
+        return params;
+    }
+
+    /**
      * Fetch risk matrix data from backend using existing NetworkService
      * @param {Array} filters - Selected filter types
      * @returns {Promise} Matrix data
      */
     this.fetchRiskMatrixData = async function(filters) {
-        const params = new URLSearchParams();
-        if (filters && filters.length > 0) {
-            // Convert filter values to match backend enum names
-            const enumFilters = filters.map(filter => {
-                switch(filter) {
-                    case 'aktiv': return 'ASSET';
-                    case 'behandling': return 'REGISTER';
-                    case 'leverandør': return 'SUPPLIER';
-                    case 'scenarie': return 'SCENARIO';
-                    default: return filter;
-                }
-            });
-            params.append('types', enumFilters.join(','));
-        }
-
-        const url = `/rest/risks/dashboard/risk-matrix?${params}`;
-        const data = await networkService.Get(url);
-
-        return data;
-
+        const url = `/rest/risks/dashboard/risk-matrix?${riskMatrixService.filterParams(filters)}`;
+        return await networkService.Get(url);
     }
 
     /**
@@ -183,25 +190,8 @@ function RiskMatrixService() {
      * @returns {Promise} Risk detail items
      */
     this.fetchRiskDetails = async function(probability, consequence, filters) {
-        const params = new URLSearchParams();
-        if (filters && filters.length > 0) {
-            // Convert filter values to match backend enum names
-            const enumFilters = filters.map(filter => {
-                switch(filter) {
-                    case 'aktiv': return 'ASSET';
-                    case 'behandling': return 'REGISTER';
-                    case 'leverandør': return 'SUPPLIER';
-                    case 'scenarie': return 'SCENARIO';
-                    default: return filter;
-                }
-            });
-            params.append('types', enumFilters.join(','));
-        }
-
-        const url = `/rest/risks/dashboard/risk-matrix/${probability}/${consequence}?${params}`;
-        const data = await networkService.Get(url);
-
-        return data;
+        const url = `/rest/risks/dashboard/risk-matrix/${probability}/${consequence}?${riskMatrixService.filterParams(filters)}`;
+        return await networkService.Get(url);
     }
 
     /**
@@ -225,6 +215,7 @@ function RiskMatrixService() {
 
 function RiskChangeOverTimeService() {
     let chart = null; // Store chart instance
+    let latestRequest = 0;
 
     /**
      * Initialize the development over time section
@@ -253,8 +244,12 @@ function RiskChangeOverTimeService() {
      * @param {number} year - Selected year
      */
     this.loadChartData = async function(year) {
+        // a filter change can fire several requests; only the newest may draw the chart
+        const request = ++latestRequest;
         const chartData = await riskChangeOverTimeService.fetchChartData(year);
-        riskChangeOverTimeService.renderChart(chartData);
+        if (request === latestRequest) {
+            riskChangeOverTimeService.renderChart(chartData);
+        }
     }
 
     /**
@@ -384,7 +379,7 @@ function RiskChangeOverTimeService() {
      * @returns {Promise} Chart data
      */
     this.fetchChartData = async function(year) {
-        const url = `/rest/risks/dashboard/risk-over-time/${year}`;
+        const url = `/rest/risks/dashboard/risk-over-time/${year}?${riskMatrixService.filterParams(riskMatrixService.getCurrentFilters())}`;
         const data = await networkService.Get(url);
         return data;
     }
@@ -394,6 +389,7 @@ function initializeMatrixButtons() {
     document.addEventListener('change', function (e) {
         if (e.target.matches('[data-risk-filter]')) {
             riskMatrixService.onRiskMatrixFilterChange();
+            riskChangeOverTimeService.onYearChange();
         }
 
     })
@@ -408,6 +404,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Set colors first
     riskMatrixService.setColors();
+
+    choiceService.initOUSelect('filter-departments');
 
     // Initialize with default filters (all checked)
     riskMatrixService.onRiskMatrixFilterChange();

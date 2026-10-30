@@ -16,7 +16,7 @@
     position: absolute;
     top: 0.5rem;
     right: 0.75rem;
-    color: #6c757d;
+    color: var(--bs-secondary-color);
     pointer-events: none;
 }
 
@@ -27,7 +27,7 @@
 /* placeholder for empty fields */
 .click-to-edit .click-to-edit-content:empty::before {
     content: 'Klik for at tilføje tekst';
-    color: #6c757d;
+    color: var(--bs-secondary-color);
     font-style: italic;
 }
 

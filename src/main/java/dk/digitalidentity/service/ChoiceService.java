@@ -13,8 +13,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
+
 @Service
 public class ChoiceService {
+	// valp7 er artikel 9 og valp8 databeskyttelseslovens §8, så artikel 10 skal ind imellem dem
+	public static final Comparator<ChoiceValue> GDPR_ORDER = Comparator.comparingDouble(
+			c -> "register-gdpr-art10".equals(c.getIdentifier()) ? 7.5 : asNumber(c.getIdentifier()));
+
     private final ChoiceValueDao choiceValueDao;
     private final ChoiceListDao choiceListDao;
 

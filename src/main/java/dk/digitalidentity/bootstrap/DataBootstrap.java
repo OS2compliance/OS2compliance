@@ -160,6 +160,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(47, this::seedV47);
 		incrementAndPerformIfVersion(48, this::seedV48);
 		incrementAndPerformIfVersion(49, this::seedV49);
+		incrementAndPerformIfVersion(50, this::seedV50);
+		incrementAndPerformIfVersion(51, this::seedV51);
 	}
 
 	/**
@@ -197,6 +199,28 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	 */
 	private void seedV46() {
 		// Med vilje tom - se javadoc.
+	}
+
+	private void seedV51() {
+		try {
+			choiceImporter.importValues("./data/choices/register-values.json");
+			choiceImporter.importList("./data/choices/register-gdpr.json");
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private void seedV50() {
+		try {
+			choiceImporter.importValues("./data/choices/ai-requirement-values.json");
+			choiceImporter.importList("./data/choices/ai-requirement-list.json");
+			choiceImporter.importValues("./data/choices/ai-personal-data-values.json");
+			choiceImporter.importList("./data/choices/ai-personal-data-list.json");
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/** Sand som udgangspunkt, så ingen installation mister den fulde beskrivelse den har i dag. */
@@ -262,10 +286,10 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		settingsService.createSetting(Constants.DBS_OVERSIGHT_RECIPIENT_SETTING, "", "dbs", true);
 	}
 
-	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
+	void incrementAndPerformIfVersion(final int version, final Runnable applier) {
 		final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 		transactionTemplate.execute(status -> {
-			final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
+			final int currentVersion = settingsService.getIntForUpdate(DATA_MIGRATION_VERSION_SETTING, 0);
 			if (currentVersion == version) {
 				applier.run();
 				settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);

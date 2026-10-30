@@ -10,6 +10,10 @@
     "description": "Behandling af personoplysninger efter Artikel 9 stk. 2 (særlige kategorier af personoplysninger)",
     "childListIdentifier": "register-gdpr-p7"
   }, {
+    "identifier": "register-gdpr-art10",
+    "caption": "",
+    "description": "Behandling af personoplysninger efter Artikel 10 (oplysninger om straffedomme og lovovertrædelser)"
+  }, {
     "identifier": "register-gdpr-valp8",
     "caption": "§8",
     "description": "Nødvendig behandling af strafbare forhold"

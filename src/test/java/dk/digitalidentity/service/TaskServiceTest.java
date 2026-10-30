@@ -1,14 +1,17 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.Constants;
+import dk.digitalidentity.dao.DPIADao;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
+import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
+import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import org.junit.jupiter.api.Test;
@@ -28,6 +31,8 @@ import static org.mockito.Mockito.lenient;
 class TaskServiceTest {
 
     @Mock private DocumentDao documentDao;
+    @Mock private ThreatAssessmentDao threatAssessmentDao;
+    @Mock private DPIADao dpiaDao;
     @Mock private TaskDao taskDao;
     @Mock private TaskLogDao taskLogDao;
     @Mock private TaskGridDao taskGridDao;
@@ -180,6 +185,44 @@ class TaskServiceTest {
 
         assertThat(task.getNextDeadline()).isEqualTo(afterFirstCompletion);
         assertThat(document.getNextRevision()).isEqualTo(afterFirstCompletion);
+    }
+
+    @Test
+    void linkedRiskAssessmentRevisionFollowsTheCompletedCheck() {
+        final Task task = checkTask(LocalDate.of(2026, 12, 1), TaskRepetition.YEARLY);
+        task.getProperties().add(Property.builder()
+            .entity(task)
+            .key(Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY)
+            .value("7")
+            .build());
+        final ThreatAssessment assessment = new ThreatAssessment();
+        assessment.setNextRevision(LocalDate.of(2026, 12, 1));
+        lenient().when(threatAssessmentDao.findById(7L)).thenReturn(java.util.Optional.of(assessment));
+
+        taskService.completeTask(task, completedOn(LocalDate.of(2026, 11, 20)), null);
+
+        assertThat(assessment.getNextRevision()).isEqualTo(LocalDate.of(2027, 12, 1));
+    }
+
+    @Test
+    void startDateKeepsItsDistanceToTheDeadline() {
+        final Task task = checkTask(LocalDate.of(2026, 12, 1), TaskRepetition.YEARLY);
+        task.setStartDate(LocalDate.of(2026, 10, 1));
+
+        taskService.completeTask(task, completedOn(LocalDate.of(2026, 11, 20)), null);
+
+        assertThat(task.getStartDate()).isEqualTo(LocalDate.of(2027, 10, 1));
+    }
+
+    @Test
+    void startDateNeverReachesBackPastThePeriodItStarts() {
+        // Migrated tasks got their creation date as start date, often years before the deadline
+        final Task task = checkTask(LocalDate.of(2026, 12, 1), TaskRepetition.YEARLY);
+        task.setStartDate(LocalDate.of(2023, 5, 1));
+
+        taskService.completeTask(task, completedOn(LocalDate.of(2026, 11, 20)), null);
+
+        assertThat(task.getStartDate()).isEqualTo(LocalDate.of(2026, 12, 1));
     }
 
     private LocalDate intervalDeadline(final TaskRepetition repetition) {

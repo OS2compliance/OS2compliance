@@ -32,27 +32,10 @@ function EditTaskService() {
         this.editTaskDepartmentChoicesSelect = choiceService.initOUSelect('taskEditFormTaskDepartmentSelect');
 
         this.editTaskUserChoicesEditSelect = choiceService.initUserSelect('taskEditFormTaskUserSelect');
-        this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
-            var userUuid = self.editTaskUserChoicesEditSelect.passedElement.element.value;
-            fetch( `/rest/ous/user/` + userUuid).then(response =>  {
-                if (response.status === 204) {
-                    return;
-                }
-
-                if (response.ok) {
-                    response.json().then(orgUnit => {
-                        self.editTaskOuChoicesSelect.setChoiceByValue(orgUnit.uuid);
-                    })
-                }
-            }).catch(error => toastService.error(error));
-        })
+        choiceService.bindOuToUser(this.editTaskUserChoicesEditSelect, this.editTaskOuChoicesSelect);
 
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.editTaskUserChoicesEditSelect);
-        });
-
-        this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('removeItem', function() {
-            self.editTaskOuChoicesSelect.removeActiveItems();
         });
 
         this.initSubTaskButtons();
@@ -67,8 +50,12 @@ function EditTaskService() {
                     this.editTaskOuChoicesSelect
                 );
                 const subTasksValid = subTaskLinkService.validateAllSubTasks();
+                const datesValid = validateDeadlineNotBeforeStartDate(
+                    document.getElementById('taskEditFormTaskStartDate'),
+                    document.getElementById('taskEditFormTaskDeadline')
+                );
 
-                return choicesValid && subTasksValid;
+                return choicesValid && subTasksValid && datesValid;
             }
         );
 
@@ -183,7 +170,15 @@ function CopyTaskService() {
            //initTagSelect('copyTaskTagsSelect');
        }
 
-        initFormValidationForForm("copyTaskModalForm", () => subTaskLinkService.validateAllSubTasks());
+        initFormValidationForForm("copyTaskModalForm", () => {
+            const subTasksValid = subTaskLinkService.validateAllSubTasks();
+            const datesValid = validateDeadlineNotBeforeStartDate(
+                this.getScopedElementById('copyTaskStartDate'),
+                this.getScopedElementById('copyTaskDeadline')
+            );
+
+            return subTasksValid && datesValid;
+        });
         this.notificationSelectHandler = initNotificationSelect(
             'copyTaskNotificationSetting',
             'copyTaskNotificationSelectDiv',

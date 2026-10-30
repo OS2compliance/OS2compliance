@@ -8,6 +8,54 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 
+## [2.9.0] - 2026-10-30
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-318) (Generelt) Teksten i skrivefelterne er nu sort i stedet for grå, og kontrasten er øget på knapper, statusmarkeringer og links. Brugerfladen er samtidig opdateret til en nyere version af temaet
+- (https://os2web.atlassian.net/browse/COMPLY-334) Versionsnummeret vises i øverste højre hjørne ved siden af tandhjulet, med byggetidspunkt og commit-id ved mouseover
+- (https://os2web.atlassian.net/browse/COMPLY-422) (Fortegnelse) Artikel 30-rapporten kan hentes som Word for en enkelt behandlingsaktivitet, både fra oversigten og fra selve behandlingsaktiviteten, og for de behandlingsaktiviteter der er filtreret frem i oversigten
+- (https://os2web.atlassian.net/browse/COMPLY-430) (Fortegnelse) Fanen Formål & Lovhjemmel har fået fritekstfeltet "Øvrige lovhenvisninger" til lovhenvisninger, der ikke findes i KLE. Feltet kommer med i Artikel 30-rapporten og den globale søgning
+- (https://os2web.atlassian.net/browse/COMPLY-431) (Fortegnelse/Aktiver) "Forventede slettefrister" på fanen Databehandling kan nu indeholde flere slettefrister. Eksisterende værdier bevares, og Artikel 30-rapporten viser alle valgte frister
+- (https://os2web.atlassian.net/browse/COMPLY-437) (Risikovurderinger) Revideringsfrekvensen har fået de samme valg som opgaver, bl.a. månedligt, kvartalsvis og halvårligt. Revideringsdatoen foreslås ud fra den valgte frekvens, og dialogen viser hvornår næste revision falder
+- (https://os2web.atlassian.net/browse/COMPLY-441) (Aktiver) Aktivets risikofane har fået knappen "Ny risikovurdering" med aktivet forudvalgt. Den vises for ansvarlig, leder og superbrugere, så systemejer og systemkoordinator kan oprette risikovurderinger for deres egne aktiver uden superbrugerrollen
+- (https://os2web.atlassian.net/browse/COMPLY-445) (Aktiver) Aktiver der anvender AI har fået en AI-fane med aktørrolle, risikokategori efter AI-forordningen, krav efter risikoniveau og opfølgende spørgsmål om personoplysninger. Feltet "Vurdering af risiko ved AI-brug" under Generelt er flyttet hertil, og aktivlisten har fået kolonnen "AI risikokategori"
+- (https://os2web.atlassian.net/browse/COMPLY-478) (Risikovurderinger) Ny risikomodel "4x4 Køge" kan vælges under indstillinger. Matricen har fem farvetrin fra grøn til rød, og den højeste risiko (16) vises mørkerød
+- (Ad-hoc) (Risikobillede) Risikomatricen og grafen "Udvikling over tid" under Risikostyring kan filtreres på kritikalitet, samfundskritisk og afdeling, som rapporten under Rapporter. Grafen følger nu også typevalget
+
+### Fixed
+- (gitlab #103) (Opgaver/Risikovurderinger) Afdelingen blev ikke udfyldt, når man valgte en ansvarlig på opgaver og risikovurderinger. Den udfyldes nu med den ansvarliges afdeling, som på dokumenter
+- (gitlab #107) (Fortegnelse/Aktiver) Artikel 30-rapporten viste uddybningen af opbevaringsperioden to gange, den ene som fed overskrift, og et løst kolon når uddybningen var tom. Den vises nu én gang under overskriften "Uddybning"
+- (gitlab #113) (Opgaver) En opgave med slutdato før startdato førte til en fejlside ved oprettelse, redigering og kopiering. Fejlen vises nu i formularen
+- (gitlab #114) (Standarder) Fejlbeskeden blev vist forkert, når man oprettede en gruppe med et sektionsnummer der allerede fandtes
+- (Ad-hoc) (Fortegnelse) GDPR-forordningens artikel 10 (oplysninger om straffedomme og lovovertrædelser) manglede under GDPR lovhjemmel, så den ikke kunne skelnes fra databeskyttelseslovens §10 om statistiske og videnskabelige undersøgelser. Artikel 10 kan nu vælges efter artikel 9, også i Artikel 30-rapporten
+- (Ad-hoc) (OS2kitos-integration) Synkroniseringen fejlede ved hver kørsel, efter at KITOS havde tilføjet en ny værdi for opsigelsesvarslets løbetid på kontrakter, så ændringer fra KITOS ikke kom med. Kitos-klienten er opdateret, og nye ukendte værdier får ikke længere synkroniseringen til at fejle
+- (Ad-hoc) (Behandlingsaktiviteter) En behandlingsaktivitet kunne ikke gemmes, hvis "Hvem er ansvarlig for behandling af personoplysningerne" var over 255 tegn. Feltet er udvidet til lang tekst
+- (Ad-hoc) (Databehandling) Databehandlingen på fortegnelser og aktiver kunne ikke gemmes, når linket til brugerstyring eller logningsprocedure var over 255 tegn. Felterne tillader nu samme længde som linket til sletteprocedure
+- (Ad-hoc) Efter konverteringen til utf8mb4_danish_ci fejlede statusfilteret på opgaver og dashboard, siden "Inaktive ansvarlige" og backup med mysqldump med "Illegal mix of collations" på MariaDB
+- (Ad-hoc) Startede en ny instans mens den forrige stadig kørte opstartens dataopsætning, kunne de begge udføre samme trin, så fx diagramkonfigurationer blev oprettet to gange og opstarten derefter fejlede. Trinene låses nu, så kun én instans udfører dem
+- (Ad-hoc) Tabeller oprettet på databaseservere med utf8mb3 som standard fik utf8mb3 i stedet for utf8mb4/dansk sortering. Alle tabeller konverteres nu til utf8mb4_danish_ci, og databasens standard sættes, så nye tabeller også får det
+- (Ad-hoc) (Risikovurderinger) Excel-udtrækket af en risikovurdering viste truslerne i en anden rækkefølge end skærmen og Word-udtrækket og manglede de eksisterende foranstaltninger. Rækkefølgen følger nu skærmen, og foranstaltningerne har fået deres egen kolonne
+- (Ad-hoc) (Opgaver) En kontrol hvis deadline var flyttet til før startdatoen, fx via revisionsdatoen på en risikovurdering eller DPIA, kunne ikke gemmes efter redigering (400 Bad Request). Startdatoen følger nu med, og eksisterende kontroller er rettet
+- (Ad-hoc) Tilsynsopgaver oprettet uden ansvarlig fik aldrig en, og et fejlet kitos-match kunne kun genforsøges ved manuelt at nulstille vandmærket for DBS-synkroniseringen. Kitos-koblingen genforsøges nu ved hver kørsel, og ansvarlig udfyldes efterfølgende på åbne tilsynsopgaver der mangler en. Ramte installationer hvor DBS-integrationen blev slået til før OS2kitos
+- (OS2kitos-integration) Kontraktfelterne på et aktiv stod tomme, og et system hvis kontrakt var ophørt blev ved med at stå som aktivt. Kontraktdata hentes nu uanset om kontrakten er gyldig, og et aktiv sættes inaktivt når alle kontrakter på dets systemanvendelse er udløbet eller opsagt. En kontrakt der endnu ikke er startet, eller som er spærret af en ugyldig hovedkontrakt, inaktiverer ikke
+- (Ad-hoc) (Auditlog) Ændringer på elementer med et navn over 255 tegn, eller standarder med et langt id, blev ikke skrevet i auditloggen. Auditloggens kolonner til navn og id er udvidet til de længder, elementerne selv tillader
+- (Ad-hoc) (Aktiver) Sortering på kolonnerne "Ansvarlige forvaltninger" og "Driftsansvarlig" gav en fejl, og søgning i dem blev ignoreret. Begge dele virker nu, og en gemt sortering på en kolonne der ikke længere findes nulstiller listens gemte søgning og sortering i stedet for at fejle
+- (Ad-hoc) Den natlige oprydning af relationer kørte på alle noder samtidig og kunne fejle. Den kører nu kun hvor scheduling er slået til
+- (Ad-hoc) Oprydningen af auditloggen kørte på alle noder. Den kører nu kun hvor scheduling er slået til
+- (Ad-hoc) (KLE) Alle installationer hentede KLE kl. 02:30. Tidspunktet vælges nu tilfældigt mellem 02:00 og 02:59, medmindre det er sat i konfigurationen
+- (Ad-hoc) (Opgavecenter) Filtrering på status "I gang" gav ingen resultater, og Excel-eksporten fejlede når der var valgt en status i filteret. Eksporten viser nu status som tekst i stedet for true/false
+- (Ad-hoc) (Årshjul) En gentagen opgave kunne vises før sin første deadline, og en kontrol udført før tid stod som overskredet i den periode, den havde lukket. Udførte perioder vises nu ud fra udførelsesloggen
+- (Ad-hoc) (Opgaver) Startdatoen følger nu med, når en gentagen kontrol udføres, og der sendes ikke påmindelser før startdatoen
+- (Ad-hoc) (Risikovurderinger) Et skift af risikomodel kunne genberegne risikofarverne med den gamle model
+- (Ad-hoc) (Årshjul) Excel-udtrækket af årshjulet viste en gentagen kontrol som udført for altid efter første udførelse
+- (Ad-hoc) (Risikovurderinger/DPIA) Revideringsdatoen fulgte først kontrollens deadline, når revideringsdialogen blev åbnet, så aktivets "næste risikovurdering" kunne udfyldes med en forældet dato. Den følger nu med, når kontrollen udføres eller redigeres, og eksisterende datoer er rettet
+- (Ad-hoc) (OS2kitos-integration) Systemer hvis livscyklusfase i OS2kitos var "Ubesluttet" eller ikke angivet, blev sat inaktive. Kun "Ikke i brug" inaktiverer nu, og de berørte systemer bliver aktive igen ved den natlige fulde synkronisering
+- (Ad-hoc) (Leverandører) Leverandørlisten loadede meget langsomt eller slet ikke, også ved få leverandører og aktiver
+- (Ad-hoc) (Aktiver) Aktivlisten loadede meget langsomt eller slet ikke ved mange aktiver, relationer og risikovurderinger
+- (Ad-hoc) (Aktiver) Kolonnen "Samfundskritisk" kunne ikke filtreres. Den har nu et Ja/Nej-filter som de øvrige ja/nej-kolonner
+- (Ad-hoc) (Aktiver) Kolonnerne "Er der indgået databehandleraftale", "Anvender løsningen AI", "Systemet skal arkiveres", "Kritikalitet" og "Kategori" kunne ikke filtreres. De har nu en vælger med de mulige værdier, og filtre på en fast værdi rammer kun den værdi, så fx "Kritisk" ikke også viser "Ikke kritisk", og "Grøn" ikke også "Lysgrøn" i risikovurderingsfiltrene
+- (Ad-hoc) (Dashboard) Kolonnen "Risikovurdering" under Mine Aktiver viste aktivets kritikalitet. Den viser nu farven fra seneste risikovurdering som på aktivlisten, og kan filtreres på den
+
+
 ## [2.8.0] - 2026-09-25
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-45) (Generelt) Ensartede knapper på tværs af siderne

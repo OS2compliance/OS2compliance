@@ -4,12 +4,15 @@ import lombok.Getter;
 
 @Getter
 public enum AiRiskFactor {
-	HIGH("Høj risiko"),
-	LIMITED("Begrænset risiko"),
-	MINIMAL("Minimal risiko");
+	MINIMAL("Minimal eller ingen risiko", "bg-green"),
+	LIMITED("Begrænset risiko", "bg-orange"),
+	HIGH("Høj risiko", "bg-red"),
+	PROHIBITED("Forbudt/Uacceptabel risiko", "bg-danger");
 	private final String message;
+	private final String badgeClass;
 
-	AiRiskFactor(final String message) {
+	AiRiskFactor(final String message, final String badgeClass) {
 		this.message = message;
+		this.badgeClass = badgeClass;
 	}
 }

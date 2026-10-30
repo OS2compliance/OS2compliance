@@ -16,4 +16,10 @@
         type="button" class="btn btn-info btn-lg hstack gap-2">
     <i  th:class="${iconClass}"></i> <span class="vr"></span> <span th:text="${text}"></span>
 </button>
+
+<button th:fragment="infoButtonAllUsers(id, text, iconClass)"
+        th:id="${id}"
+        type="button" class="btn btn-info btn-lg hstack gap-2">
+    <i th:class="${iconClass}"></i><span class="spinner-border spinner-border-sm" role="status" hidden></span> <span class="vr"></span> <span th:text="${text}"></span>
+</button>
 </html>
