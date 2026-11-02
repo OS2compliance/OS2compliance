@@ -27,7 +27,7 @@
                     </div>
                     <div class="align-self-center d-inline-flex gap-2">
                         <div th:replace="~{fragments/component/pageTopButton :: openModalInfoButton(id='createIncidentButton', text='Ny hændelse', iconClass='ti-plus', target='#createIncidentDialog')}"></div>
-                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton(relatedId=${incident.id})}"></div>
                     </div>
                 </div>
             </div>
