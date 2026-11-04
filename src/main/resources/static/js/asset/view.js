@@ -75,7 +75,8 @@ function initEditButtons() {
     });
 
     if (editForm) {
-        initFormValidationForFormChoicesOnly('editForm', () => validateChoices(suppliersChoicesEditSelect));
+        // The supplier is locked for kitos assets, so an empty one must not block saving the other fields.
+        initFormValidationForFormChoicesOnly('editForm', () => isKitos || validateChoices(suppliersChoicesEditSelect));
     }
 }
 
