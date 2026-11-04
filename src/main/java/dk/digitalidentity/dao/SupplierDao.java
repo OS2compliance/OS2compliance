@@ -17,7 +17,9 @@ public interface SupplierDao extends TagableRepository<Supplier> {
 
 	Optional<Supplier> findFirstByCvr(final String cvr);
 
-    Optional<Supplier> findByNameIgnoreCase(final String name);
+	Optional<Supplier> findFirstByCvrAndDeletedFalse(final String cvr);
+
+    Optional<Supplier> findFirstByNameIgnoreCaseAndDeletedFalse(final String name);
 
     @Query("select s from Supplier s inner join Property p on p.entity=s where p.key=:key and p.value=:value")
     List<Supplier> findByPropertyKeyValue(@Param("key") final String propertyKey, @Param("value") final String propertyValue);

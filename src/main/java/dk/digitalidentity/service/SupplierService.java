@@ -85,12 +85,13 @@ public class SupplierService implements TagableService<Supplier> {
         supplierDao.delete(supplier);
     }
 
+    // Names are not unique, and a lookup that throws would stop the whole kitos sync.
     public Optional<Supplier> findByName(final String name) {
-        return supplierDao.findByNameIgnoreCase(name);
+        return supplierDao.findFirstByNameIgnoreCaseAndDeletedFalse(name);
     }
 
     public Optional<Supplier> findByCvr(final String cvr) {
-        return supplierDao.findFirstByCvr(cvr);
+        return supplierDao.findFirstByCvrAndDeletedFalse(cvr);
     }
 
 	public Page<SupplierGrid> getSuppliers(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {

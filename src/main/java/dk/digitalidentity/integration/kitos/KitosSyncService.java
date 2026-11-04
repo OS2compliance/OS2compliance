@@ -462,8 +462,8 @@ public class KitosSyncService {
 	}
 
     private boolean supplierOverriden(final Asset asset) {
-        //noinspection DataFlowIssue
-        return nullSafe(() -> asset.getSupplier().getProperties().stream().anyMatch(p -> KITOS_UUID_PROPERTY_KEY.equals(p.getKey())), true);
+        return asset.getSupplier() != null
+            && asset.getSupplier().getProperties().stream().anyMatch(p -> KITOS_UUID_PROPERTY_KEY.equals(p.getKey()));
     }
 
     private void createAsset(final ItSystemResponseDTO responseDTO) {

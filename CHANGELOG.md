@@ -6,6 +6,8 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- (Ad-hoc) (Aktiver) Et aktiv fra OS2kitos uden leverandør kunne ikke gemmes, da leverandøren var påkrævet, selvom feltet er låst. Den kræves ikke længere på OS2kitos-aktiver, og den natlige synkronisering udfylder den med rettighedshaveren fra OS2kitos
 
 
 ## [2.9.0] - 2026-10-30
