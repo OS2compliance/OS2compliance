@@ -23,7 +23,7 @@
                         </div>
                     </div>
                     <div class="align-self-center d-inline-flex justify-content-end gap-2">
-                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton(relatedId=${supplier.id})}"></div>
                     </div>
                 </div>
             </div>

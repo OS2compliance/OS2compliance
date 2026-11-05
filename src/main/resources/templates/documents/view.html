@@ -27,7 +27,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex justify-content-end">
-                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton(relatedId=${document.id})}"></div>
                     </div>
                 </div>
             </div>
