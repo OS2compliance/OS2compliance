@@ -927,7 +927,8 @@ function pageLoaded() {
     initCommentField();
 
     // init threatCatalog modal
+    // init threatCatalog modal
     const catalogSelect = document.getElementById('editThreatCatalogSelect');
-    initSelectWithConfirmation(catalogSelect);
+    initSelectWithConfirmation(catalogSelect, 'form-control', {searchChoices: true});
 
 }

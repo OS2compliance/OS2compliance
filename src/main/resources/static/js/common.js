@@ -76,7 +76,7 @@ const initSelect = (element, containerInner = 'form-control', extraOptions = {})
     return choices;
 }
 
-const initSelectWithConfirmation = (element, containerInner = 'form-control') => {
+const initSelectWithConfirmation = (element, containerInner = 'form-control', extraOptions = {}) => {
     const selectedValues = () => Array.from(element.options).filter(option => option.selected).map(option => option.value);
 
     // Læses før Choices tager over, så vi kan se hvad brugeren har fjernet når der gemmes
@@ -94,6 +94,7 @@ const initSelectWithConfirmation = (element, containerInner = 'form-control') =>
             containerInner: containerInner
         },
         duplicateItemsAllowed: false,
+        ...extraOptions
     });
 
     // Bekræftelsen hører ved gem, ikke ved klik på chippen: indtil der gemmes er der ikke sket noget, og
