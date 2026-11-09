@@ -89,12 +89,16 @@ function OversightService() {
                         const textField = document.getElementById("oversightConclusion");
                         const message = document.getElementById("conclusionAmountExceeded");
 
+                        // Valideres her, da browseren ikke kan vise required-fejlen på den skjulte select (formularen er novalidate)
+                        const responsibleChosen = checkInputField(oversightResponsibleUserChoices);
                         if (textField.value.length > 4096) {
                             textField.classList.add('is-invalid');
                         }
                         else {
                             textField.classList.remove('is-invalid');
-                            form.submit();
+                            if (responsibleChosen) {
+                                form.submit();
+                            }
                         }
                     });
                 }
