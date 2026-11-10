@@ -272,3 +272,8 @@ html {
 	white-space: pre-line;
 	text-align: left;
 }
+
+/* GPL-brug kræver at logoet vises, men vi vil ikke have et udgående link */
+.ck.ck-powered-by {
+	pointer-events: none;
+}
