@@ -402,6 +402,25 @@ class AssetOversightServiceTest {
         assertThat(created.getValue().getResponsibleUsers()).containsExactly(second);
     }
 
+    @Test
+    void setOversightResponsible_clearingRemovesOnlyThePreviousResponsibleFromTheCheck() {
+        final Asset asset = asset(otherModel());
+        final User previous = new User();
+        previous.setUuid("uuid-1");
+        final User other = new User();
+        other.setUuid("uuid-2");
+        asset.setOversightResponsibleUser(previous);
+        final Task check = oversightTask(1L, TaskType.CHECK, "Tilsyn af X", LocalDate.of(2026, 9, 1));
+        check.getResponsibleUsers().add(previous);
+        check.getResponsibleUsers().add(other);
+        when(relationService.findAllRelatedTo(asset)).thenReturn(List.<Relatable>of(check));
+
+        assetOversightService.setOversightResponsible(asset, null);
+
+        assertThat(asset.getOversightResponsibleUser()).isNull();
+        assertThat(check.getResponsibleUsers()).containsExactly(other);
+    }
+
     // ========== setAssetsToDbsOversight ==========
 
     @Test

@@ -232,7 +232,7 @@ public class AssetsRestController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
-        asset.setOversightResponsibleUser(null);
+        assetOversightService.setOversightResponsible(asset, null);
     }
 
     public record DPIASetFieldDTO(long id, String fieldName, String value) {}

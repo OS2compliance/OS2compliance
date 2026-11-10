@@ -67,6 +67,18 @@ public class AssetOversightService {
         assetOversightDao.delete(assetOversight);
     }
 
+    /** Tømmes feltet, fjernes den hidtidige tilsynsansvarlige også fra tilsynskontrollen. */
+    public void setOversightResponsible(final Asset asset, final User responsible) {
+        final User previous = asset.getOversightResponsibleUser();
+        asset.setOversightResponsibleUser(responsible);
+        if (responsible == null && previous != null) {
+            final Task check = findAssociatedOversightCheck(asset);
+            if (check != null) {
+                check.getResponsibleUsers().remove(previous);
+            }
+        }
+    }
+
     public void setAssetsToDbsOversight(final List<Asset> assets) {
         assets.forEach(asset -> {
             asset.setNextInspection(NextInspection.DBS);

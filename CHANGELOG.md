@@ -10,6 +10,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-479) (Opgaver) "Ny opgave" øverst til højre har nu det element man står på forudvalgt under Relationer, på aktiver, behandlingsaktiviteter, dokumenter, leverandører, hændelser, konsekvensanalyser og risikovurderinger
 
 ### Fixed
+- (Ad-hoc) (Aktiver) Blev fanen Tilsyn gemt uden en valgt ansvarlig, blev den første bruger på listen gemt som tilsynsansvarlig og ansvarlig for tilsynskontrollen, selvom feltet så tomt ud. Det samme skete for ansvarlig, når et tilsyn blev registreret. Et tomt felt gemmes nu som ingen ansvarlig, og registreringen kræver, at der vælges en. Tømmes feltet, fjernes den hidtidige tilsynsansvarlige også fra tilsynskontrollen
 - (Ad-hoc) (Aktiver) Et aktiv fra OS2kitos uden leverandør kunne ikke gemmes, da leverandøren var påkrævet, selvom feltet er låst. Den kræves ikke længere på OS2kitos-aktiver, og den natlige synkronisering udfylder den med rettighedshaveren fra OS2kitos
 
 

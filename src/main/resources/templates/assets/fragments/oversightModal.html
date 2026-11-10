@@ -6,7 +6,7 @@
         </div>
         <div class="modal-body" style="min-height: 200px;">
             <form id="createEditOversightForm" class="row g-3" action="#" th:action="@{/assets/oversight/edit}"
-                th:object="${oversight}" method="post">
+                th:object="${oversight}" method="post" novalidate>
                 <input id="id" name="id" th:field="*{id}" type="hidden">
                 <input id="redirectUrl" name="redirectUrl" type="hidden" th:field="*{redirect}">
                 <input th:unless="*{assetIds == null}" th:field="*{assetIds}" type="hidden">
@@ -43,7 +43,9 @@
                     <div class="col-sm-8">
                         <select class="form-control form-select choices__input" th:field="*{responsibleUser}"
                             data-trigger="" id="oversightUserSelect" hidden="" required>
-                            <option th:if="*{responsibleUser != null}" th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}"></option>
+                            <option th:if="*{responsibleUser?.uuid != null}" th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}"></option>
+                            <!-- Uden den sender et tomt felt første indlæste bruger; skal stå sidst, da browseren vælger første option -->
+                            <option value="">-- Vælg ansvarlig --</option>
                         </select>
                         <div class="invalid-feedback">Ansvarlig bruger påkrævet</div>
                     </div>

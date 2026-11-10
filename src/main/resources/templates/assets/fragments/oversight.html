@@ -50,6 +50,8 @@
                             <td>
                                 <select class="form-control form-select choices__input editField" th:field="*{oversightResponsibleUser}" data-trigger="" id="assetOversightUserSelect" hidden="" disabled>
                                     <option th:value="${asset.oversightResponsibleUser?.uuid}" th:text="'(' + ${asset.oversightResponsibleUser?.userId} + ') ' + ${asset.oversightResponsibleUser?.name}" th:if="${asset.oversightResponsibleUser != null}"></option>
+                                    <!-- Uden den sender et tomt felt første indlæste bruger; skal stå sidst, da browseren vælger første option -->
+                                    <option value="">-- Vælg ansvarlig --</option>
                                 </select>
                             </td>
                             <td>
