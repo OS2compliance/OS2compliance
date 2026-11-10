@@ -6,6 +6,9 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+
+## [2.9.1] - 2026-11-10
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-479) (Opgaver) "Ny opgave" øverst til højre har nu det element man står på forudvalgt under Relationer, på aktiver, behandlingsaktiviteter, dokumenter, leverandører, hændelser, konsekvensanalyser og risikovurderinger
 
