@@ -6,6 +6,8 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- (gitlab #116) (Risikovurderinger) Man kunne ikke søge i listen over trusselskataloger, når man oprettede en risikovurdering eller skiftede trusselskatalog på en eksisterende. Der kan nu søges som i de øvrige valgfelter
 
 
 ## [2.9.1] - 2026-11-10
