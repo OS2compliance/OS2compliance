@@ -71,12 +71,10 @@ public class DocumentsControllerEditTest extends BaseIntegrationTest {
 		return post("/documents/edit").with(csrf().asHeader())
 				.param("id", String.valueOf(document.getId()))
 				.param("name", document.getName())
-				.param("description", "Ny beskrivelse")
 				.param("documentTypeId", String.valueOf(document.getDocumentType().getId()))
 				.param("status", document.getStatus().name())
 				.param("revisionInterval", document.getRevisionInterval().name())
-				.param("responsibleUser", document.getResponsibleUser().getUuid())
-				.param("includeInYearWheel", "false");
+				.param("responsibleUser", document.getResponsibleUser().getUuid());
 	}
 
 	private static RequestPostProcessor as(final User user, final Set<String> roles) {
