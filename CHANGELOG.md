@@ -8,6 +8,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Fixed
 - (gitlab #116) (Risikovurderinger) Man kunne ikke søge i listen over trusselskataloger, når man oprettede en risikovurdering eller skiftede trusselskatalog på en eksisterende. Der kan nu søges som i de øvrige valgfelter
+- (Ad-hoc) (Dokumenter) Superbrugere fik "403 Forbudt", når de gemte ændringer på et dokument, de ikke selv var ansvarlige for, selvom de kunne åbne redigeringen. Superbrugere kan nu gemme ændringer på alle dokumenter
 
 
 ## [2.9.1] - 2026-11-10
