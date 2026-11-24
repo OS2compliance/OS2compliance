@@ -407,6 +407,65 @@ public class ScaleService {
 							"4 = Graverende"
 					))
 					.consequenceScale(Map.of(1, "GRØN", 2, "GUL", 3, "ORANGE", 4, "RØD"))
+					.build(),
+			ScaleSetting.builder()
+					.type(RiskScaleType.SCALE_1_4_RINGSTED)
+					.colorsMatrix(
+							new HashMap<>() {{
+								// consequence, probability
+								put("1,1", SCALE_COLOR_LIGHT_GREEN);
+								put("1,2", SCALE_COLOR_LIGHT_GREEN);
+								put("1,3", SCALE_COLOR_YELLOW);
+								put("1,4", SCALE_COLOR_YELLOW);
+								put("2,1", SCALE_COLOR_LIGHT_GREEN);
+								put("2,2", SCALE_COLOR_YELLOW);
+								put("2,3", SCALE_COLOR_ORANGE);
+								put("2,4", SCALE_COLOR_ORANGE);
+								put("3,1", SCALE_COLOR_YELLOW);
+								put("3,2", SCALE_COLOR_ORANGE);
+								put("3,3", SCALE_COLOR_ORANGE);
+								put("3,4", SCALE_COLOR_RED);
+								put("4,1", SCALE_COLOR_YELLOW);
+								put("4,2", SCALE_COLOR_ORANGE);
+								put("4,3", SCALE_COLOR_RED);
+								put("4,4", SCALE_COLOR_RED);
+							}}
+					)
+					.assessmentLookup(
+							(p, c) -> {
+								if (c == null || p == null) {
+									return null;
+								}
+								final String lookup = "" + c + p;
+								return switch (lookup) {
+									case "11", "12", "21" -> RiskAssessment.GREEN;
+									case "13", "14", "22", "31", "41" -> RiskAssessment.YELLOW;
+									case "23", "24", "32", "33", "42" -> RiskAssessment.ORANGE;
+									case "34", "43", "44" -> RiskAssessment.RED;
+									default -> null;
+								};
+							}
+					)
+					.riskScore(List.of(
+							"Risikoscore = sandsynlighed * konsekvens",
+							"1-2 = Lav (grøn)",
+							"3-4 = Under middel (gul)",
+							"6-9 = Over middel (orange)",
+							"12-16 = Høj (rød)"
+					))
+					.probabilityScore(List.of(
+							"1 = Usandsynligt",
+							"2 = Mindre sandsynligt",
+							"3 = Sandsynligt",
+							"4 = Forventet"
+					))
+					.consequenceNumber(List.of(
+							"1 = Lav",
+							"2 = Middel",
+							"3 = Høj",
+							"4 = Meget høj"
+					))
+					.consequenceScale(Map.of(1, "GRØN", 2, "GUL", 3, "ORANGE", 4, "RØD"))
 					.build()
     );
     @Builder

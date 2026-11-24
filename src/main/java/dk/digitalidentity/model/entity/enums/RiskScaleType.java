@@ -10,6 +10,7 @@ public enum	RiskScaleType {
     SCALE_1_4_HERNING("4x4 Herning"),
 	SCALE_1_4_DATATILSYNET("4x4 Datatilsynet"),
 	SCALE_1_4_KOEGE("4x4 Køge"),
+	SCALE_1_4_RINGSTED("4x4 Ringsted"),
 	SCALE_1_5_VIBORG("5x5 Viborg");
 
 	private final String name;
