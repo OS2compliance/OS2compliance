@@ -790,7 +790,7 @@ public class AssetsController {
         } else {
             asset.setNextInspectionDate(body.getNextInspectionDate());
         }
-        asset.setOversightResponsibleUser(body.getOversightResponsibleUser());
+        assetOversightService.setOversightResponsible(asset, body.getOversightResponsibleUser());
 
         assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
         return "redirect:/assets/" + asset.getId();

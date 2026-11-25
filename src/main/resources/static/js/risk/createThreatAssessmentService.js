@@ -19,7 +19,7 @@ export class CreateThreatAssessmentService {
         this.initPresentSelect()
 
         const catalogSelect = this.getScopedElementById('threatCatalogSelect');
-        initSelect(catalogSelect);
+        initSelect(catalogSelect, 'form-control', {searchChoices: true});
 
         this.initSocietyCheck()
 

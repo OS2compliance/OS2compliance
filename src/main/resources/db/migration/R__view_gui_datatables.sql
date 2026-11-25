@@ -148,8 +148,12 @@ SELECT r.id,
             WHEN pr.prop_value = 'ORANGE' THEN 4
             WHEN pr.prop_value = 'RED' THEN 5
            END)                                                                       as asset_assessment_order,
-       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')           AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')              AS tag_ids,
+       (SELECT GROUP_CONCAT(tg.value ORDER BY tg.value SEPARATOR ',')
+        FROM register_tag rt JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.register_id = r.id)                                                  AS tag_names,
+       (SELECT GROUP_CONCAT(tg.id ORDER BY tg.value SEPARATOR ',')
+        FROM register_tag rt JOIN tags tg ON rt.tag_id = tg.id
+        WHERE rt.register_id = r.id)                                                  AS tag_ids,
        ta_calcs.avg_probability,
        ta_calcs.avg_consequence_overall,
        ta_calcs.avg_consequence_confidentiality_registered,
@@ -258,8 +262,6 @@ FROM registers r
          LEFT JOIN registers_departments_mapping rdm ON rdm.register_id = r.id
          LEFT JOIN ous d ON rdm.ou_uuid = d.uuid
          LEFT JOIN properties pr on pr.entity_id = r.id and pr.prop_key = 'asset_assessment'
-         LEFT JOIN register_tag rt on rt.register_id = r.id
-         LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE r.deleted = false
 GROUP BY r.id;
 

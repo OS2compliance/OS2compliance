@@ -92,7 +92,7 @@ public class TasksController {
 
 	@RequireUpdateOwnerOnly
     @GetMapping("form")
-    public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
+    public String form(final Model model, @RequestParam(name = "id", required = false) final Long id, @RequestParam(name = "relatedId", required = false) final Long relatedId) {
 		ChoiceList choiceList = choiceService.findChoiceList("task-description-template")
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		List<ChoiceValueDTO> values = new ArrayList<>();
@@ -116,12 +116,14 @@ public class TasksController {
 				);
 			}
 			model.addAttribute("responsibleChooseable", responsibleChooseable);
-
             model.addAttribute("task",task);
-            model.addAttribute("formId", "taskCreateForm");
-            model.addAttribute("formTitle", "Ny opgave");
-            model.addAttribute("action", "/tasks/create");
-            model.addAttribute("relations", Collections.emptyList());
+			model.addAttribute("formId", "taskCreateForm");
+			model.addAttribute("formTitle", "Ny opgave");
+			model.addAttribute("action", "/tasks/create");
+			List<Relatable> relations = relatedId == null
+					? Collections.emptyList()
+					: relatableService.findById(relatedId).map(List::of).orElse(Collections.emptyList());
+			model.addAttribute("relations", relations);
 			model.addAttribute("isEditing", false);
         } else {
             final Task task = taskService.findById(id)

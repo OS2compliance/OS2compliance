@@ -137,7 +137,7 @@ public class DocumentsController {
 		final Document existingDocument = documentService.get(documentEditForm.getId())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if(!documentService.isResponsibleFor(existingDocument) && !SecurityUtil.isAdministrator()) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !documentService.isResponsibleFor(existingDocument)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 

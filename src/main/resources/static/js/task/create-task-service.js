@@ -12,8 +12,9 @@ document.addEventListener('DOMContentLoaded', (e) => {
     // Find create task button ( if it exists) and add event listener
     const createTaskButton = document.getElementById('createTaskButton');
     if (createTaskButton) {
+        const relatedId = createTaskButton.dataset.relatedId;
         createTaskButton.addEventListener('click', (e) => {
-            createTaskService.show()
+            createTaskService.show(null, relatedId)
         })
     }
     subTaskLinkService.init();
@@ -312,8 +313,12 @@ function CreateTaskService() {
         );
     }
 
-    this.show = function(elem = null) {
-        fetch(`/tasks/form`)
+    this.show = function(elem = null, relatedId = null) {
+        let url = '/tasks/form';
+        if (relatedId) {
+            url = `/tasks/form?relatedId=${relatedId}`;
+        }
+        fetch(url)
             .then(response => response.text()
                 .then(data => {
                     this.taskModalDialog = document.getElementById('taskFormDialog');

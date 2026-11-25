@@ -8,6 +8,27 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 
+## [2.9.2] - 2026-11-25
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-480) (Risikovurderinger) Ny risikomodel "4x4 Ringsted" kan vælges under indstillinger. Matricen har fire farvetrin fra grøn til rød, fordelt efter risikoscoren
+
+### Fixed
+- (gitlab #116) (Risikovurderinger) Man kunne ikke søge i listen over trusselskataloger, når man oprettede en risikovurdering eller skiftede trusselskatalog på en eksisterende. Der kan nu søges som i de øvrige valgfelter
+- (Ad-hoc) (Dokumenter) Superbrugere fik "403 Forbudt", når de gemte ændringer på et dokument, de ikke selv var ansvarlige for, selvom de kunne åbne redigeringen. Superbrugere kan nu gemme ændringer på alle dokumenter
+- (Ad-hoc) (Fortegnelse) Tags kunne stå flere gange i listevisningen og Excel-udtrækket, når en behandlingsaktivitet havde flere ansvarlige, afdelinger eller forvaltninger. Hvert tag vises nu én gang, som på aktivlisten
+- (Ad-hoc) (Risikovurderinger) Når en risikovurdering blev signeret, blev den markeret som signeret, men rapporten fik ingen signatur. Rapporten signeres nu
+
+
+## [2.9.1] - 2026-11-10
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-479) (Opgaver) "Ny opgave" øverst til højre har nu det element man står på forudvalgt under Relationer, på aktiver, behandlingsaktiviteter, dokumenter, leverandører, hændelser, konsekvensanalyser og risikovurderinger
+
+### Fixed
+- (Ad-hoc) (Generelt) "Powered by CKEditor"-logoet i skrivefelterne kan ikke længere klikkes og åbner ikke CKEditors hjemmeside
+- (Ad-hoc) (Aktiver) Blev fanen Tilsyn gemt uden en valgt ansvarlig, blev den første bruger på listen gemt som tilsynsansvarlig og ansvarlig for tilsynskontrollen, selvom feltet så tomt ud. Det samme skete for ansvarlig, når et tilsyn blev registreret. Et tomt felt gemmes nu som ingen ansvarlig, og registreringen kræver, at der vælges en. Tømmes feltet, fjernes den hidtidige tilsynsansvarlige også fra tilsynskontrollen
+- (Ad-hoc) (Aktiver) Et aktiv fra OS2kitos uden leverandør kunne ikke gemmes, da leverandøren var påkrævet, selvom feltet er låst. Den kræves ikke længere på OS2kitos-aktiver, og den natlige synkronisering udfylder den med rettighedshaveren fra OS2kitos
+
+
 ## [2.9.0] - 2026-10-30
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-318) (Generelt) Teksten i skrivefelterne er nu sort i stedet for grå, og kontrasten er øget på knapper, statusmarkeringer og links. Brugerfladen er samtidig opdateret til en nyere version af temaet

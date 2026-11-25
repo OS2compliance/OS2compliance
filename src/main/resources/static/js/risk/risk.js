@@ -431,7 +431,7 @@ function EditRiskService() {
         }
 
         const catalogSelect = this.getScopedElementById('editThreatCatalogSelect');
-        initSelectWithConfirmation(catalogSelect);
+        initSelectWithConfirmation(catalogSelect, 'form-control', {searchChoices: true});
 
         this.editAssessmentModal = new bootstrap.Modal(this.modalContainer);
         this.editAssessmentModal.show();

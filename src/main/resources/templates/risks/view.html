@@ -32,7 +32,7 @@
                         <p class="lead showIfReadOnly text-danger" style="display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten enten er sendt til signering eller allerede er signeret.</p>
                     </div>
                     <div class="align-self-center d-inline-flex gap-2 justify-content-end">
-                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton(relatedId=${risk.id})}"></div>
                         <button type="button" class="btn btn-success btn-lg hstack" id="toggleAllCategories">
                             <i class="pli-arrow-up" id="arrowTag"></i> <span class="vr"></span> Fold alle ud/ind
                         </button>
