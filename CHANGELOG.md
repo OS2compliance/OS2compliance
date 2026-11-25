@@ -6,6 +6,9 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+
+## [2.9.2] - 2026-11-25
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-480) (Risikovurderinger) Ny risikomodel "4x4 Ringsted" kan vælges under indstillinger. Matricen har fire farvetrin fra grøn til rød, fordelt efter risikoscoren
 
