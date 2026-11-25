@@ -6,6 +6,8 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- (Ad-hoc) CI: En integrationstest kunne efterlade sin databaseforbindelse med en anden kollation, så en senere test fejlede afhængigt af rækkefølgen. Kollationen sættes nu tilbage
 
 
 ## [2.9.2] - 2026-11-25
