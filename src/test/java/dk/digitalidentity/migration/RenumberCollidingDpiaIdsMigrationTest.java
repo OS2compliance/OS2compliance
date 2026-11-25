@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
@@ -179,6 +180,11 @@ public class RenumberCollidingDpiaIdsMigrationTest extends BaseIntegrationTest {
                 StandardCharsets.UTF_8).replaceAll("--[^\n]*", "");
         jdbcTemplate.execute((ConnectionCallback<Void>) connection -> {
             try (Statement statement = connection.createStatement()) {
+                final String previousCollation;
+                try (ResultSet rs = statement.executeQuery("SELECT @@collation_connection")) {
+                    rs.next();
+                    previousCollation = rs.getString(1);
+                }
                 // The migration's literals take the connection collation, which must match the converted columns
                 statement.execute("SET NAMES utf8mb4 COLLATE utf8mb4_danish_ci");
                 try {
@@ -193,6 +199,9 @@ public class RenumberCollidingDpiaIdsMigrationTest extends BaseIntegrationTest {
                     statement.execute("ROLLBACK");
                     statement.execute("SET FOREIGN_KEY_CHECKS = 1");
                     throw e;
+                } finally {
+                    // Left on the pooled connection, danish_ci breaks later tests comparing against view literals
+                    statement.execute("SET NAMES utf8mb4 COLLATE " + previousCollation);
                 }
             }
             return null;
