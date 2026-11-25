@@ -158,9 +158,6 @@ public class SigningController {
             if (!Objects.equals(approverUuid, SecurityUtil.getLoggedInUserUuid())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
             }
-
-            threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.SIGNED);
-            threatAssessmentService.save(threatAssessment);
 		} else if (dpiaReport != null) {
             if (!dpiaReport.getDpiaReportApprovalStatus().equals(DPIAReportReportApprovalStatus.WAITING)) {
 				return "sign/already_signed";
@@ -169,13 +166,19 @@ public class SigningController {
             if (!Objects.equals(dpiaReport.getReportApproverUuid(), SecurityUtil.getLoggedInUserUuid())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
             }
+        }
 
+        // Status last, so a failed signing does not leave the report marked signed without a signature
+        byte[] signedPDF = signPdf(s3Document);
+        s3Service.uploadWithKey(s3Document.getS3FileKey(), signedPDF);
+
+        if (threatAssessment != null) {
+            threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.SIGNED);
+            threatAssessmentService.save(threatAssessment);
+        } else {
             dpiaReport.setDpiaReportApprovalStatus(DPIAReportReportApprovalStatus.SIGNED);
             dpiaReportService.save(dpiaReport);
         }
-
-        byte[] signedPDF = signPdf(s3Document);
-        s3Service.uploadWithKey(s3Document.getS3FileKey(), signedPDF);
 
         return "sign/signed";
     }

@@ -53,7 +53,6 @@ class SigningControllerTest {
 	void signingRiskAssessmentUploadsSignedPdf() throws Exception {
 		final User approver = new User();
 		approver.setUuid("godkender");
-		approver.setName("Godkender");
 		final ThreatAssessment threatAssessment = new ThreatAssessment();
 		threatAssessment.setThreatAssessmentReportApprover(approver);
 		threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.WAITING);
@@ -63,7 +62,6 @@ class SigningControllerTest {
 		when(s3DocumentService.get(1L)).thenReturn(Optional.of(report));
 		when(threatAssessmentService.findByS3Document(report)).thenReturn(threatAssessment);
 		when(s3Service.downloadBytes("rapport")).thenReturn(emptyPdf());
-		when(userService.currentUser()).thenReturn(approver);
 		login(approver);
 
 		assertEquals("sign/signed", controller().signDocument(new ExtendedModelMap(), 1L));
@@ -81,7 +79,7 @@ class SigningControllerTest {
 
 	private static void login(final User user) {
 		final UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user.getUuid(), null, List.of());
-		auth.setDetails(TokenUser.builder().cvr("1234556").username(user.getUuid()).build());
+		auth.setDetails(TokenUser.builder().username(user.getUuid()).build());
 		SecurityContextHolder.getContext().setAuthentication(auth);
 	}
 
