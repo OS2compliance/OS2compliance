@@ -149,6 +149,10 @@ public class SigningController {
         }
 
         if (threatAssessment != null) {
+			model.addAttribute("threatAssessmentId", threatAssessment.getId());
+			if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.WAITING)) {
+				return "sign/already_signed";
+			}
 
             String approverUuid = threatAssessment.getThreatAssessmentReportApprover() != null ? threatAssessment.getThreatAssessmentReportApprover().getUuid() : null;
             if (!Objects.equals(approverUuid, SecurityUtil.getLoggedInUserUuid())) {
@@ -157,11 +161,6 @@ public class SigningController {
 
             threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.SIGNED);
             threatAssessmentService.save(threatAssessment);
-
-			model.addAttribute("threatAssessmentId", threatAssessment.getId());
-			if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.WAITING)) {
-				return "sign/already_signed";
-			}
 		} else if (dpiaReport != null) {
             if (!dpiaReport.getDpiaReportApprovalStatus().equals(DPIAReportReportApprovalStatus.WAITING)) {
 				return "sign/already_signed";
